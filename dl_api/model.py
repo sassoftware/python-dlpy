@@ -21,6 +21,11 @@ Model object for deep learning.
 '''
 
 
+from swat import *
+from .utils import random_name
+
+
+
 class Model:
     '''
     Model
@@ -29,12 +34,18 @@ class Model:
 
     ----------
     sess :
-        Specify the session of the CAS connection.
+        Specifies the session of the CAS connection.
     model_name : string
-        Specify the name of the deep learning model.
+        Specifies the name of the deep learning model.
     model_weights : string, dictionary or CAS table, optional
         Specify the weights of the deep learning model.
-        Default = None
+        If not specified, random initial will be used.
+        Default : None
+
+    Returns
+
+    -------
+    A deep learning model objects.
     '''
 
     def __init__(self, sess, model_name, model_weights=None):
@@ -53,6 +64,18 @@ class Model:
         self.valid_feature_maps = None
         self.valid_conf_mat = None
 
+    def load(self, path):
+
+        sess = self.sess
+        caslibname = random_name('Caslib', 6)
+        castblname = random_name('Table', 6)
+        sess.addCaslib(name=caslibname, path=path, activeOnAdd=False)
+
+        sess.image.saveImages(caslib=caslibname,
+                              images=vl(table=dict(name=self.tbl['name'])),
+                              labelLevels=1)
+        sess.dropcaslib(caslib=caslibname)
+
     def model_info(self):
         return self.sess.modelinfo(modelTable=self.model_name)
 
@@ -65,7 +88,9 @@ class Model:
             self.model_weights = model_weights
 
     def fit(self, trainTbl, inputs='_image_', target='_label_',
-            optimizer=None, dltrain_args=None):
+            miniBatchSize=1, maxEpochs=5, logLevel=3, optimizer=None,
+            **kwargs):
+
         '''
         Fit function of the deep learning model.
 
@@ -76,38 +101,60 @@ class Model:
             Specify the training data for the model.
         inputs : string, optional
             Specify the variable name of in the trainTbl, that is the input of the deep learning model.
-            Default = '_image_'.
+            Default : '_image_'.
         target : string, optional
             Specify the variable name of in the trainTbl, that is the response of the deep learning model.
-            Default = '_label_'.
+            Default : '_label_'.
+        miniBatchSize : integer, optional
+            Specify the number of observations per thread in a mini-batch..
+            Default : 1.
+        maxEpochs : int64, optional
+            Specify the maximum number of epochs.
+            Default : 5.
+        logLevel : int 0-3, optional
+            Specify  how progress messages are sent to the client.
+                0 : no messages are sent.
+                1 : send the start and end messages.
+                2 : send the iteration history for each epoch.
+                3 : send the iteration history for each batch.
+            Default : 3.
         optimizer: dictionary, optional
             Specify the options for the optimizer in the dltrain action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_dlcommon_dlOptimizerOpts.html#type_synchronous
             for detail.
-        dltrain_args: dictionary, optional
+        kwargs: dictionary, optional
             Specify the optional arguments for the dltrain action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlTrain.html
             for detail.
+
+        Returns
+
+        ----------
+        Retrun a fetch result to the client, about the trained model summary.
+        The updated model weights are automatically assigned to the Model object.
+
         '''
 
         if optimizer is None:
-            optimizer = dict(mode=dict(type='synchronous'),
-                             algorithm=dict(method='momentum',
+            optimizer = dict(algorithm=dict(method='momentum',
                                             clipgradmin=-1000,
                                             clipgradmax=1000,
                                             learningRate=0.0001,
                                             lrpolicy='step',
                                             stepsize=15,
-                                            # uselocking=False,
                                             ),
-                             miniBatchSize=1,
-                             maxEpochs=1,
+                             miniBatchSize=miniBatchSize,
+                             maxEpochs=maxEpochs,
                              regL2=0.0005,
-                             logLevel=3
+                             logLevel=logLevel
                              # ,snapshotfreq=10
                              )
-        if dltrain_args is None:
-            dltrain_args = dict(nthreads=12, seed=55020, targetOrder='ascending')
+        else:
+            key_args = ['miniBatchSize', 'maxEpochs', 'logLevel']
+            for key_arg in key_args:
+                if optimizer[key_arg] is None:
+                    optimizer[key_arg] = eval(key_arg)
+
         r = self.sess.dltrain(model=self.model_name,
                               table=trainTbl,
                               inputs=inputs,
@@ -115,33 +162,65 @@ class Model:
                               initWeights=self.model_weights,
                               modelWeights=dict(name='_model_weights_', replace=True),
                               optimizer=optimizer,
-                              **dltrain_args
-                              )
+                              **kwargs)
+
         self.set_weights('_model_weights_')
         return r
 
-    def predict(self, validTbl, layer_output=False):
+    def predict(self, validTbl, inputs='_image_', target='_label_',
+                layer_output=False, **kwargs):
+        '''
+        Function of scoring the deep learning model on a validation data set.
+
+        Parameters:
+
+        ----------
+        validTbl : CAS table
+            Specify the validating data for the model.
+        inputs : string, optional
+            Specify the variable name of in the validTbl, that is the input of the deep learning model.
+            Default : '_image_'.
+        target : string, optional
+            Specify the variable name of in the validTbl, that is the response of the deep learning model.
+            Default : '_label_'.
+        layer_output : boolean, optional
+            Specify whether to output the feather maps of the layers.
+        kwargs: dictionary, optional
+            Specify the optional arguments for the dlScore action.
+            see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
+            for detail.
+
+        Returns
+
+        ----------
+        Retrun a fetch result to the client, about the validation results.
+        The validation results are automatically assigned to the Model object.
+        '''
+
         if layer_output:
+
             res = self.sess.dlscore(model=self.model_name, initWeights=self.model_weights,
                                     table=validTbl,
-                                    copyVars=['_id_', '_path_', '_label_'],
+                                    copyVars=[inputs, target],
                                     layerOut=dict(name='Feature_maps', replace=True),
                                     layerImageType='jpg',
-                                    minibatchSize=1,
-                                    casout=dict(name='valid_res', replace=True))
+                                    casout=dict(name='valid_res', replace=True),
+                                    **kwargs)
+
             self.valid_res = self.sess.CASTable('valid_res')
             self.valid_feature_maps = self.sess.CASTable('Feature_maps')
             self.valid_conf_mat = self.sess.crosstab(
                 table='valid_res', row='_label_', col='_dl_predname_')
-            return res
+            return res, self.valid_conf_mat
+
         else:
             res = self.sess.dlscore(model=self.model_name, initWeights=self.model_weights,
                                     table=validTbl,
-                                    copyVars=['_id_', '_path_', '_label_'],
-                                    minibatchSize=1,
-                                    casout=dict(name='valid_res', replace=True)
-                                    )
+                                    copyVars=[inputs, target],
+                                    casout=dict(name='valid_res', replace=True),
+                                    **kwargs)
+
             self.valid_res = self.sess.CASTable('valid_res')
             self.valid_conf_mat = self.sess.crosstab(
                 table='valid_res', row='_label_', col='_dl_predname_')
-            return res
+            return res, self.valid_conf_mat
