@@ -94,96 +94,96 @@ def _VGG16_(sess, model_name, nchannels=3, width=224, height=224, scale=1,
 
     sess.buildmodel(model=dict(name=model_name, replace=True), type='CNN')
     sess.addLayer(model=model_name, name='data',
-               layer=dict(type='input', nchannels=nchannels, width=width, height=height,
-                          scale=scale, randomflip=randomflip, randomcrop=randomcrop,
-                          offsets=offsets)
-               )
+                  layer=dict(type='input', nchannels=nchannels, width=width, height=height,
+                             scale=scale, randomflip=randomflip, randomcrop=randomcrop,
+                             offsets=offsets)
+                  )
 
     # conv1
     sess.addLayer(model=model_name, name='conv1_1',
-               layer=dict(type='convolution', nFilters=64, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['data'])
+                  layer=dict(type='convolution', nFilters=64, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['data'])
     sess.addLayer(model=model_name, name='conv1_2',
-               layer=dict(type='convolution', nFilters=64, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv1_1'])
+                  layer=dict(type='convolution', nFilters=64, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv1_1'])
     sess.addLayer(model=model_name, name='pool1',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv1_2'])
+                  layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                  srcLayers=['conv1_2'])
 
     # conv2
     sess.addLayer(model=model_name, name='conv2_1',
-               layer=dict(type='convolution', nFilters=128, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['pool1'])
+                  layer=dict(type='convolution', nFilters=128, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['pool1'])
     sess.addLayer(model=model_name, name='conv2_2',
-               layer=dict(type='convolution', nFilters=128, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv2_1'])
+                  layer=dict(type='convolution', nFilters=128, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv2_1'])
     sess.addLayer(model=model_name, name='pool2',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv2_2'])
+                  layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                  srcLayers=['conv2_2'])
 
     # conv3
     sess.addLayer(model=model_name, name='conv3_1',
-               layer=dict(type='convolution', nFilters=256, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['pool2'])
+                  layer=dict(type='convolution', nFilters=256, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['pool2'])
     sess.addLayer(model=model_name, name='conv3_2',
-               layer=dict(type='convolution', nFilters=256, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv3_1'])
+                  layer=dict(type='convolution', nFilters=256, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv3_1'])
     sess.addLayer(model=model_name, name='conv3_3',
-               layer=dict(type='convolution', nFilters=256, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv3_2'])
+                  layer=dict(type='convolution', nFilters=256, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv3_2'])
     sess.addLayer(model=model_name, name='pool3',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv3_3'])
+                  layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                  srcLayers=['conv3_3'])
 
     # conv4
     sess.addLayer(model=model_name, name='conv4_1',
-               layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['pool3'])
+                  layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['pool3'])
     sess.addLayer(model=model_name, name='conv4_2',
-               layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv4_1'])
+                  layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv4_1'])
     sess.addLayer(model=model_name, name='conv4_3',
-               layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv4_2'])
+                  layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv4_2'])
     sess.addLayer(model=model_name, name='pool4',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv4_3'])
+                  layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                  srcLayers=['conv4_3'])
 
     # conv5
     sess.addLayer(model=model_name, name='conv5_1',
-               layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['pool4'])
+                  layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['pool4'])
     sess.addLayer(model=model_name, name='conv5_2',
-               layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv5_1'])
+                  layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv5_1'])
     sess.addLayer(model=model_name, name='conv5_3',
-               layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
-                          init="XAVIER", std=1e-1, truncfact=2, act="relu"),
-               srcLayers=['conv5_2'])
+                  layer=dict(type='convolution', nFilters=512, width=3, height=3, stride=1,
+                             init="XAVIER", std=1e-1, truncfact=2, act="relu"),
+                  srcLayers=['conv5_2'])
     sess.addLayer(model=model_name, name='pool5',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv5_3'])
+                  layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                  srcLayers=['conv5_3'])
 
     sess.addLayer(model=model_name, name='fc1',
-               layer=dict(type='fullconnect', n=4096, act='relu', std=1e-1, truncfact=2),
-               srcLayers=['pool5'])
+                  layer=dict(type='fullconnect', n=4096, act='relu', std=1e-1, truncfact=2),
+                  srcLayers=['pool5'])
     sess.addLayer(model=model_name, name='fc2',
-               layer=dict(type='fullconnect', n=4096, act='relu', std=1e-1, truncfact=2),
-               srcLayers=['fc1'])
+                  layer=dict(type='fullconnect', n=4096, act='relu', std=1e-1, truncfact=2),
+                  srcLayers=['fc1'])
     sess.addLayer(model=model_name, name='outlayer',
-               layer=dict(type='output', act='softmax'),
-               srcLayers=['fc2'])
+                  layer=dict(type='output', act='softmax'),
+                  srcLayers=['fc2'])
 
     return sess.CASTable(model_name)
