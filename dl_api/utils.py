@@ -16,17 +16,33 @@
 #  limitations under the License.
 #
 
-
-
-
 import random
 import string
 
 
-def random_name(name='ImageData', lenth=6):
+def random_name(name='ImageData', length=6):
     '''
     Function to generate ramdom name.
     '''
 
     return name + '_' + ''.join(random.sample(
-        string.ascii_uppercase + string.ascii_lowercase + string.digits, lenth))
+        string.ascii_uppercase + string.ascii_lowercase + string.digits, length))
+
+
+def input_table_check(input_table):
+    type_indicator = input_table.__class__.__name__
+    if type_indicator == "str":
+        input_table = dict(name=input_table)
+    elif type_indicator == "dict":
+        input_table = input_table
+    elif type_indicator == "Image":
+        input_table = input_table.tbl
+    elif type_indicator == "CASTable":
+        input_table = input_table
+    else:
+        raise TypeError('input_table must be one of the following:\n'
+                        '1. A CAS table object;\n'
+                        '2. A string specifies the name of the CAS table,\n'
+                        '3. A dictionary specifies the CAS table\n'
+                        '4. An Image object.')
+    return input_table
