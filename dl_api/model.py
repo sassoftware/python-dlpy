@@ -20,9 +20,8 @@
 Model object for deep learning.
 '''
 
-
-from swat import *
 from .utils import random_name
+from .utils import input_table_check
 
 
 
@@ -48,18 +47,25 @@ class Model:
     A deep learning model objects.
     '''
 
-    def __init__(self, sess, model_name, model_weights=None):
+    def __init__(self, sess, model_name=None, model_weights=None):
 
         if not sess.queryactionset('deepLearn')['deepLearn']:
             sess.loadactionset('deepLearn')
 
         # self.table = sess.CASTable(model_name)
-        self.model_name = model_name
         self.sess = sess
         if model_weights is None:
             self.model_weights = None
         else:
             self.set_weights(model_weights)
+
+        if model_name is None:
+            self.model_name = random_name('Model', 6)
+        elif type(model_name) is not str:
+            raise TypeError('model_name has to be a string type.')
+        else:
+            self.model_name = model_name
+
         self.valid_res = None
         self.valid_feature_maps = None
         self.valid_conf_mat = None
@@ -67,27 +73,36 @@ class Model:
     def load(self, path):
 
         sess = self.sess
-        caslibname = random_name('Caslib', 6)
-        castblname = random_name('Table', 6)
-        sess.addCaslib(name=caslibname, path=path, activeOnAdd=False)
 
-        sess.image.saveImages(caslib=caslibname,
-                              images=vl(table=dict(name=self.tbl['name'])),
-                              labelLevels=1)
-        sess.dropcaslib(caslib=caslibname)
+        dir_name, file_name = path.rsplit('/', 1)
+
+        CAS_LibName = random_name('Caslib', 6)
+        CAS_TblName = file_name.split('.')[0]
+        sess.addCaslib(name=CAS_LibName, path=dir_name, activeOnAdd=False)
+
+        sess.loadtable(caslib=CAS_LibName, path=file_name, casout=CAS_TblName)
+        model_name = sess.fetch(table=dict(name=CAS_TblName,
+                                           where='_DLKey1_= "modeltype"')).Fetch._DLKey0_[0]
+        self.model_name = model_name
+
+        if model_name is not CAS_TblName:
+            sess.partition(casout=model_name, table=CAS_TblName)
+            sess.droptable(table=CAS_TblName)
+        sess.dropcaslib(caslib=CAS_LibName)
 
     def model_info(self):
         return self.sess.modelinfo(modelTable=self.model_name)
 
     def set_weights(self, model_weights):
+        sess = self.sess
         if isinstance(model_weights, str):
-            self.model_weights = self.sess.CASTable(model_weights)
+            self.model_weights = sess.CASTable(model_weights)
         elif isinstance(model_weights, dict):
-            self.model_weights = self.sess.CASTable(**model_weights)
+            self.model_weights = sess.CASTable(**model_weights)
         else:
             self.model_weights = model_weights
 
-    def fit(self, trainTbl, inputs='_image_', target='_label_',
+    def fit(self, input_table, inputs='_image_', target='_label_',
             miniBatchSize=1, maxEpochs=5, logLevel=3, optimizer=None,
             **kwargs):
 
@@ -97,13 +112,14 @@ class Model:
         Parameters:
 
         ----------
-        trainTbl : CAS table
+        input_table : A CAS table object, a string specifies the name of the CAS table,
+                   a dictionary specifies the CAS table, or an Image object.
             Specify the training data for the model.
         inputs : string, optional
-            Specify the variable name of in the trainTbl, that is the input of the deep learning model.
+            Specify the variable name of in the input_table, that is the input of the deep learning model.
             Default : '_image_'.
         target : string, optional
-            Specify the variable name of in the trainTbl, that is the response of the deep learning model.
+            Specify the variable name of in the input_table, that is the response of the deep learning model.
             Default : '_label_'.
         miniBatchSize : integer, optional
             Specify the number of observations per thread in a mini-batch..
@@ -134,6 +150,8 @@ class Model:
         The updated model weights are automatically assigned to the Model object.
 
         '''
+        sess = self.sess
+        input_table = input_table_check(input_table)
 
         if optimizer is None:
             optimizer = dict(algorithm=dict(method='momentum',
@@ -155,33 +173,38 @@ class Model:
                 if optimizer[key_arg] is None:
                     optimizer[key_arg] = eval(key_arg)
 
-        r = self.sess.dltrain(model=self.model_name,
-                              table=trainTbl,
-                              inputs=inputs,
-                              target=target,
-                              initWeights=self.model_weights,
-                              modelWeights=dict(name='_model_weights_', replace=True),
-                              optimizer=optimizer,
-                              **kwargs)
+        r = sess.dltrain(model=self.model_name,
+                         table=input_table,
+                         inputs=inputs,
+                         target=target,
+                         initWeights=self.model_weights,
+                         modelWeights=dict(name='_model_weights_', replace=True),
+                         optimizer=optimizer,
+                         **kwargs)
 
         self.set_weights('_model_weights_')
+        self.training_history = r.OptIterHistory
+
         return r
 
-    def predict(self, validTbl, inputs='_image_', target='_label_',
-                layer_output=False, **kwargs):
+    def plot_training_history(self):
+        self.training_history[['Loss', 'FitError']].plot(figsize=(12, 5))
+
+    def predict(self, input_table, inputs='_image_', target='_label_',
+                output_feature_maps=None, **kwargs):
         '''
         Function of scoring the deep learning model on a validation data set.
 
         Parameters:
 
         ----------
-        validTbl : CAS table
+        input_table : CAS table
             Specify the validating data for the model.
         inputs : string, optional
-            Specify the variable name of in the validTbl, that is the input of the deep learning model.
+            Specify the variable name of in the input_table, that is the input of the deep learning model.
             Default : '_image_'.
         target : string, optional
-            Specify the variable name of in the validTbl, that is the response of the deep learning model.
+            Specify the variable name of in the input_table, that is the response of the deep learning model.
             Default : '_label_'.
         layer_output : boolean, optional
             Specify whether to output the feather maps of the layers.
@@ -196,31 +219,64 @@ class Model:
         Retrun a fetch result to the client, about the validation results.
         The validation results are automatically assigned to the Model object.
         '''
+        sess = self.sess
+        input_table = input_table_check(input_table)
 
-        if layer_output:
+        valid_res_tbl = random_name('Valid_Res')
 
-            res = self.sess.dlscore(model=self.model_name, initWeights=self.model_weights,
-                                    table=validTbl,
-                                    copyVars=[inputs, target],
-                                    layerOut=dict(name='Feature_maps', replace=True),
-                                    layerImageType='jpg',
-                                    casout=dict(name='valid_res', replace=True),
-                                    **kwargs)
+        if output_feature_maps:
+            feature_maps_table = random_name('Feature_map')
+            res = sess.dlscore(model=self.model_name, initWeights=self.model_weights,
+                               table=input_table,
+                               copyVars=[inputs, target],
+                               layerOut=dict(name=feature_maps_table, replace=True),
+                               layerImageType='jpg',
+                               layerList=output_feature_maps,
+                               casout=dict(name=valid_res_tbl, replace=True),
+                               **kwargs)
 
-            self.valid_res = self.sess.CASTable('valid_res')
-            self.valid_feature_maps = self.sess.CASTable('Feature_maps')
-            self.valid_conf_mat = self.sess.crosstab(
-                table='valid_res', row='_label_', col='_dl_predname_')
-            return res, self.valid_conf_mat
+            self.valid_feature_maps = sess.CASTable(valid_res_tbl)
+
 
         else:
-            res = self.sess.dlscore(model=self.model_name, initWeights=self.model_weights,
-                                    table=validTbl,
-                                    copyVars=[inputs, target],
-                                    casout=dict(name='valid_res', replace=True),
-                                    **kwargs)
+            res = sess.dlscore(model=self.model_name, initWeights=self.model_weights,
+                               table=input_table,
+                               copyVars=[inputs, target],
+                               casout=dict(name='valid_res', replace=True),
+                               **kwargs)
 
-            self.valid_res = self.sess.CASTable('valid_res')
-            self.valid_conf_mat = self.sess.crosstab(
-                table='valid_res', row='_label_', col='_dl_predname_')
-            return res, self.valid_conf_mat
+        self.valid_res = sess.CASTable(valid_res_tbl)
+        self.valid_score = res.ScoreInfo
+        self.valid_conf_mat = sess.crosstab(
+            table=valid_res_tbl, row=target, col='_dl_predname_')
+
+    def save_to_astore(self, filename):
+        sess = self.sess
+
+        if not sess.queryactionset('astore')['astore']:
+            sess.loadactionset('astore')
+        CAS_TblName = random_name('Model_astore')
+        sess.dlexportmodel(casout=CAS_TblName,
+                           initWeights=self.model_weights,
+                           modelTable=self.model_name)
+        model_astore = sess.download(rstore=CAS_TblName)
+        with open(filename, 'wb') as file:
+            file.write(model_astore['blob'])
+
+    def save_to_table(self, model_tbl_file, weight_tbl_file=None, attr_tbl_file=None):
+        sess = self.sess
+
+        sess.table.save(table=self.model_name,
+                        name=model_tbl_file,
+                        replace=True, caslib='CASUSER')
+        if weight_tbl_file is not None:
+            sess.table.save(table=self.model_weights,
+                            name=weight_tbl_file,
+                            replace=True, caslib='CASUSER')
+            if attr_tbl_file is not None:
+                CAS_TblName = random_name('Attr_Tbl')
+                sess.table.attribute(caslib='CASUSER', task='CONVERT', name=self.model_weights,
+                                     attrtable=CAS_TblName)
+                sess.table.save(table=CAS_TblName,
+                                name=attr_tbl_file,
+                                replace=True, caslib='CASUSER')
