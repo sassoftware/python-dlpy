@@ -30,6 +30,23 @@ def random_name(name='ImageData', length=6):
 
 
 def input_table_check(input_table):
+    '''
+    Function to unify the input_table format.
+
+
+    Parameters:
+
+    ----------
+
+    input_table : A CAS table object, a string specifies the name of the CAS table,
+                a dictionary specifies the CAS table, or an Image object.
+
+    Return:
+
+    ----------
+    A dictionary specifies the CAS table
+
+    '''
     type_indicator = input_table.__class__.__name__
     if type_indicator == "str":
         input_table = dict(name=input_table)
@@ -38,7 +55,7 @@ def input_table_check(input_table):
     elif type_indicator == "Image":
         input_table = input_table.tbl
     elif type_indicator == "CASTable":
-        input_table = input_table
+        input_table = dict(name=input_table.tableinfo().TableInfo.Name[0])
     else:
         raise TypeError('input_table must be one of the following:\n'
                         '1. A CAS table object;\n'
