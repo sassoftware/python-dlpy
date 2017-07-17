@@ -21,7 +21,7 @@ Model object for deep learning.
 '''
 
 from .utils import random_name
-from .utils import input_tbl_check
+from .utils import input_table_check
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -70,6 +70,8 @@ class Model:
         self.valid_res = None
         self.valid_feature_maps = None
         self.valid_conf_mat = None
+        self.n_epoch = None
+        self.training_history = None
 
     def load(self, path):
         '''
@@ -88,13 +90,13 @@ class Model:
 
         CAS_lib_name = random_name('Caslib', 6)
         CAS_tbl_name = file_name.split('.')[0]
-        sess.addCaslib(name=CAS_lib_name, path=dir_name, activeOnAdd=False)
+        sess.addCaslib(name=CAS_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
         sess.loadtable(caslib=CAS_lib_name, path=file_name, casout=CAS_tbl_name)
         model_name = sess.fetch(table=dict(name=CAS_tbl_name,
                                            where='_DLKey1_= "modeltype"')).Fetch['_DLKey0_'][0]
         self.model_name = model_name
 
-        if model_name is not CAS_tbl_name:
+        if model_name.lower() != CAS_tbl_name.lower():
             sess.partition(casout=model_name, table=CAS_tbl_name)
             sess.droptable(table=CAS_tbl_name)
         sess.dropcaslib(caslib=CAS_lib_name)
@@ -122,11 +124,12 @@ class Model:
 
         sess = self.sess
 
-        weight_tbl = input_tbl_check(weight_tbl)
+        weight_tbl = input_table_check(weight_tbl)
         self.model_weights = sess.CASTable(**weight_tbl)
 
-    def fit(self, input_tbl, inputs='_image_', target='_label_',
-            miniBatchSize=1, maxEpochs=5, logLevel=3, optimizer=None,
+    def fit(self, data, inputs='_image_', target='_label_',
+            miniBatchSize=1, maxEpochs=5, logLevel=3, lr=0.01,
+            optimizer=None,
             **kwargs):
 
         '''
@@ -135,7 +138,7 @@ class Model:
         Parameters:
 
         ----------
-        input_tbl : A CAS table object, a string specifies the name of the CAS table,
+        data : A CAS table object, a string specifies the name of the CAS table,
                    a dictionary specifies the CAS table, or an Image object.
             Specify the training data for the model.
         inputs : string, optional
@@ -174,19 +177,19 @@ class Model:
 
         '''
         sess = self.sess
-        input_tbl = input_tbl_check(input_tbl)
+        input_tbl = input_table_check(data)
 
         if optimizer is None:
             optimizer = dict(algorithm=dict(method='momentum',
                                             clipgradmin=-1000,
                                             clipgradmax=1000,
-                                            learningRate=0.0001,
+                                            learningRate=lr,
                                             lrpolicy='step',
                                             stepsize=15,
                                             ),
                              miniBatchSize=miniBatchSize,
                              maxEpochs=maxEpochs,
-                             regL2=0.0005,
+                             # regL2=0.0005,
                              logLevel=logLevel
                              # ,snapshotfreq=10
                              )
@@ -205,8 +208,16 @@ class Model:
                          optimizer=optimizer,
                          **kwargs)
 
+        if self.n_epoch is None:
+            self.n_epoch = maxEpochs
+            self.training_history = r.OptIterHistory
+        else:
+            temp = r.OptIterHistory
+            temp.Epoch += self.n_epoch
+            self.training_history = self.training_history.append(temp)
+            self.n_epoch += maxEpochs
+        self.training_history.index = range(0, self.n_epoch)
         self.set_weights('_model_weights_')
-        self.training_history = r.OptIterHistory
 
         return r
 
@@ -240,13 +251,15 @@ class Model:
 
         '''
         sess = self.sess
-        input_tbl = input_tbl_check(input_tbl)
+        input_tbl = input_table_check(input_tbl)
 
         valid_res_tbl = random_name('Valid_Res')
 
         res = sess.dlscore(model=self.model_name, initWeights=self.model_weights,
                            table=input_tbl,
                            copyVars=[inputs, target],
+                           randomFlip='NONE',
+                           randomCrop='NONE',
                            casout=dict(name=valid_res_tbl, replace=True),
                            **kwargs)
 
@@ -254,16 +267,17 @@ class Model:
         self.valid_score = res.ScoreInfo
         self.valid_conf_mat = sess.crosstab(
             table=valid_res_tbl, row=target, col='_dl_predname_')
+        return self.valid_score
 
-    def get_feature_maps(self, input_tbl, image_id=1, **kwargs):
+    def get_feature_maps(self, data, image_id=1, **kwargs):
         '''
         Function to extract the feature maps for a validation image.
 
         Parameters:
 
         ----------
-        input_tbl : A CAS table object, a string specifies the name of the CAS table,
-                      a dictionary specifies the CAS table, or an Image object.
+        data : A CAS table object, a string specifies the name of the CAS table,
+               a dictionary specifies the CAS table, or an Image object.
             Specify the table containing the image data.
         image_id : int, optional
             Specify the image id of the image.
@@ -280,22 +294,26 @@ class Model:
         '''
 
         sess = self.sess
-        input_tbl = input_tbl_check(input_tbl)
+        input_tbl = input_table_check(data)
 
         feature_maps_tbl = random_name('Feature_Maps') + '_{}'.format(image_id)
-
+        print(feature_maps_tbl)
         sess.dlscore(model=self.model_name, initWeights=self.model_weights,
-                     table=dict(**input_tbl, where='_id_={}'.format(image_id)),
+                     table=dict(**input_tbl),
+                     # , where='_id_={}'.format(image_id)),
                      layerOut=dict(name=feature_maps_tbl, replace=True),
+                     randomFlip='NONE',
+                     randomCrop='NONE',
                      layerImageType='jpg',
                      **kwargs)
-
+        print('checked')
         layer_out_jpg = sess.CASTable(feature_maps_tbl)
         feature_maps_names = [i for i in layer_out_jpg.columninfo().ColumnInfo.Column]
         feature_maps_structure = dict()
         for feature_map_name in feature_maps_names:
             feature_maps_structure[int(feature_map_name.split('_')[2])] = int(feature_map_name.split('_')[4]) + 1
-        self.valid_feature_maps = Feature_Maps(feature_maps_tbl, structure=feature_maps_structure)
+
+        self.valid_feature_maps = Feature_Maps(self.sess, feature_maps_tbl, structure=feature_maps_structure)
 
     def get_features(self, input_tbl, dense_layer, target='_label_', **kwargs):
         '''
@@ -305,7 +323,7 @@ class Model:
 
         ----------
         input_tbl : A CAS table object, a string specifies the name of the CAS table,
-                      a dictionary specifies the CAS table, or an Image object.
+                    a dictionary specifies the CAS table, or an Image object.
             Specify the table containing the image data.
         dense_layer : str
             Specify the name of the layer that is extracted.
@@ -324,9 +342,9 @@ class Model:
         y : ndarray of size n.
             The response variable of the original data.
         '''
-        
+
         sess = self.sess
-        input_tbl = input_tbl_check(input_tbl)
+        input_tbl = input_table_check(input_tbl)
         feature_tbl = random_name('Features')
 
         sess.dlscore(model=self.model_name, initWeights=self.model_weights,
@@ -334,9 +352,11 @@ class Model:
                      layerOut=dict(name=feature_tbl, replace=True),
                      layerList=dense_layer,
                      layerImageType='wide',
+                     randomFlip='NONE',
+                     randomCrop='NONE',
                      **kwargs)
         X = sess.CASTable(feature_tbl).as_matrix()
-        y = sess.CASTable(input_tbl)[target].as_matrix().ravel()
+        y = sess.CASTable(**input_tbl)[target].as_matrix().ravel()
 
         return X, y
 
@@ -363,7 +383,7 @@ class Model:
         with open(filename, 'wb') as file:
             file.write(model_astore['blob'])
 
-    def save_to_tbl(self, model_tbl_file, weight_tbl_file=None, attr_tbl_file=None):
+    def save_to_table(self, file_name):
 
         '''
         Function to save the model as sas dataset.
@@ -385,30 +405,33 @@ class Model:
         The specified files in the 'CASUSER' library.
 
         '''
-        
-        
+
+        _file_name_, _extension_ = file_name.rsplit('.', 1)
+        model_tbl_file = file_name
+        weight_tbl_file = _file_name_ + '_weight' + _extension_
+        attr_tbl_file = _file_name_ + '_weight_attr' + _extension_
+
         sess = self.sess
 
         sess.table.save(table=self.model_name,
                         name=model_tbl_file,
                         replace=True, caslib='CASUSER')
-        if weight_tbl_file is not None:
-            sess.table.save(table=self.model_weights,
-                            name=weight_tbl_file,
-                            replace=True, caslib='CASUSER')
-            if attr_tbl_file is not None:
-                CAS_tbl_name = random_name('Attr_Tbl')
-                sess.table.attribute(caslib='CASUSER', task='CONVERT', name=self.model_weights,
-                                     attrtable=CAS_tbl_name)
-                sess.table.save(table=CAS_tbl_name,
-                                name=attr_tbl_file,
-                                replace=True, caslib='CASUSER')
+        sess.table.save(table=self.model_weights,
+                        name=weight_tbl_file,
+                        replace=True, caslib='CASUSER')
+        CAS_tbl_name = random_name('Attr_Tbl')
+        sess.table.attribute(caslib='CASUSERHDFS', task='CONVERT', name=self.model_weights.name,
+                             attrtable=CAS_tbl_name)
+        sess.table.save(table=CAS_tbl_name,
+                        name=attr_tbl_file,
+                        replace=True, caslib='CASUSER')
 
 
 class Feature_Maps:
     '''
     A class for feature maps.
     '''
+
     def __init__(self, sess, feature_maps_tbl, structure=None):
         self.sess = sess
         self.tbl = feature_maps_tbl
@@ -447,6 +470,6 @@ class Feature_Maps:
             image = self.sess.fetchimages(table=self.tbl, image=col_name).Images.Image[0]
             image = np.asarray(image)
             fig.add_subplot(n_row, n_col, i + 1)
-            plt.imshow(image)
+            plt.imshow(image, cmap='gray')
             plt.xticks([]), plt.yticks([])
         plt.suptitle('{}'.format(title))
