@@ -41,7 +41,7 @@ class Sequential(Model):
 
     def add(self, layer):
 
-        if self.layers == [] and layer.config['type'] is not 'input':
+        if self.layers == [] and layer.config['type'].lower() != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         if len(self.layers) > 0 and layer.config['type'] is 'input':
             raise ValueError('Only the first layer of the Sequential model can be an input layer')
@@ -68,28 +68,55 @@ class Sequential(Model):
         conv_num = 1
         fc_num = 1
         block_num = 1
-        srcLayer = 'data'
 
         for layer in self.layers:
             if layer.config['type'] == 'input':
-                s.addLayer(model=self.model_name, name=srcLayer,
-                           layer=layer)
+                s.addLayer(model=self.model_name, name='Data',
+                           layer=layer.config)
+                layer.name = 'Data'
+
             else:
-                if layer.config['type'].lower() == 'convolution':
+
+                if layer.config['type'].lower() in ('convo', 'convolution'):
                     layer_name = 'Conv{}_{}'.format(block_num, conv_num)
                     conv_num += 1
-                elif layer.config['type'].lower() == 'pooling':
+
+                elif layer.config['type'].lower() in ('pool', 'pooling'):
                     layer_name = 'Pool{}'.format(block_num)
                     block_num += 1
                     conv_num = 1
-                elif layer.config['type'].lower() == 'fullconnect':
+
+                elif layer.config['type'].lower() in ('fc', 'fullconnect'):
                     layer_name = 'FC{}'.format(fc_num)
                     fc_num += 1
+
                 elif layer.config['type'].lower() == 'output':
                     layer_name = 'Output'
+
                 else:
-                    raise ValueError('{} is not a valid layer type'.format(layer['type']))
+                    raise ValueError('{} is not a supported layer type'.format(layer['type']))
+
+                print(layer_name)
+                print(layer.config)
                 s.addLayer(model=self.model_name, name=layer_name,
-                           layer=layer.config, srcLayers=srcLayer)
-                layer.summary['name'] = layer_name
-                srcLayer = layer_name
+                           layer=layer.config, srcLayers=src_layers.name)
+                layer.name = layer_name
+                layer.src_layers = src_layers
+            src_layers = layer
+
+    def summary(self):
+        bar_line = '*' + '=' * 15 + '*' + '=' * 15 + '*' + '=' * 10 + '*' + \
+                   '=' * 12 + '*' + '=' * 20 + '*' + '=' * 30 + '*\n'
+        h_line = '*' + '-' * 15 + '*' + '-' * 15 + '*' + '-' * 10 + '*' + \
+                 '-' * 12 + '*' + '-' * 20 + '*' + '-' * 30 + '*\n'
+        title_line = '|{:^15}'.format('Layer Name') + \
+                     '|{:^15}'.format('Kernel Size') + \
+                     '|{:^10}'.format('Stride') + \
+                     '|{:^12}'.format('Activation') + \
+                     '|{:^20}'.format('Output Size') + \
+                     '|{:^30}|\n'.format('Number of Parameters')
+        output = bar_line + title_line + h_line
+        for layer in self.layers:
+            output = output + layer.summary()
+        output = output + bar_line
+        print(output)
