@@ -52,6 +52,7 @@ class Image:
             sess.loadactionset('image')
         self.path = path
         self.sess = sess
+        self.blocksize = blocksize
 
         self.patch_level = 0
 
@@ -98,6 +99,8 @@ class Image:
         sess.partition(casout=dict(**self.tbl, replace=True),
                        table=dict(**self.tbl, computedVars=computedvars,
                                   computedVarsProgram=SASCode))
+        sess.shuffle(casout=dict(**self.tbl, replace=True),
+                     table=dict(**self.tbl))
         self._summary()
 
     def save(self, path):
@@ -438,6 +441,8 @@ class Image:
                 imagefunctions=[dict(functionoptions=
                                      dict(functionType="RESIZE",
                                           w=width, h=height))])
+            sess.partition(casout=dict(**self.tbl, replace=True),
+                           table=dict(**self.tbl))
             self._summary()
         else:
             Image_new = self.copy()
@@ -529,6 +534,8 @@ class Image:
                            table=dict(**self.tbl,
                                       computedVars=computedvars,
                                       computedVarsProgram=SASCode))
+            sess.shuffle(casout=dict(**self.tbl, replace=True),
+                         table=dict(**self.tbl))
 
             self.patch_level += 1
             self._summary()
