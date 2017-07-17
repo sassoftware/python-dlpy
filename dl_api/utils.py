@@ -47,6 +47,7 @@ def input_table_check(input_table):
     A dictionary specifies the CAS table
 
     '''
+
     type_indicator = input_table.__class__.__name__
     if type_indicator == "str":
         input_table = dict(name=input_table)
@@ -63,3 +64,29 @@ def input_table_check(input_table):
                         '3. A dictionary specifies the CAS table\n'
                         '4. An Image object.')
     return input_table
+
+
+def prod_without_none(array):
+    '''
+    Function to compute the product of an iterable array with None as its element.
+
+
+    Parameters:
+
+    ----------
+
+    array : an iterable array, e.g. list, tuple, numpy array.
+
+    Return:
+
+    ----------
+    prod : the product of all the elements of the array.
+
+    '''
+    prod = 1
+    for i in array:
+        if i is not None:
+            prod *= i
+    return prod
+
+
