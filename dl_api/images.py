@@ -16,9 +16,10 @@
 #  limitations under the License.
 #
 
-from swat import *
 import matplotlib.pyplot as plt
 import numpy as np
+
+from swat import *
 from .utils import random_name
 
 
@@ -60,7 +61,7 @@ class Image:
         self.tbl = dict(name=CAS_TblName)
 
         if path is not None:
-            self.load(path, blocksize=blocksize)
+            self.load(path, blocksize=self.blocksize)
 
     def load(self, path, blocksize=64, **kwargs):
         '''
@@ -85,10 +86,13 @@ class Image:
         Load the images in the specified directory into the CAS table name by Image.tbl.
         '''
 
+        if blocksize is not None:
+            self.blocksize = blocksize
+
         sess = self.sess
 
         sess.image.loadimages(
-            casout=dict(**self.tbl, replace=True, blocksize=blocksize),
+            casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
             distribution=dict(type='random'), recurse=True, labelLevels=-1,
             path=path, **kwargs)
 
@@ -96,11 +100,10 @@ class Image:
         SASCode = "length _filename_0 varchar(*);\
                    _loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),'/')+2;\
                    _filename_0 = SUBSTR(_path_,_loc1);"
-        sess.partition(casout=dict(**self.tbl, replace=True),
-                       table=dict(**self.tbl, computedVars=computedvars,
-                                  computedVarsProgram=SASCode))
-        sess.shuffle(casout=dict(**self.tbl, replace=True),
-                     table=dict(**self.tbl))
+
+        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                     table=dict(**self.tbl, computedVars=computedvars,
+                                computedVarsProgram=SASCode))
         self._summary()
 
     def save(self, path):
@@ -138,13 +141,14 @@ class Image:
         '''
 
         sess = self.sess
-        Image_new = Image(sess)
-        Image_new.path = self.path
-        Image_new.patch_level = self.patch_level
+        image_new = Image(sess)
+        image_new.blocksize = self.blocksize
+        image_new.path = self.path
+        image_new.patch_level = self.patch_level
 
-        sess.partition(casout=dict(**Image_new.tbl, replace=True),
+        sess.partition(casout=dict(**image_new.tbl, replace=True, blocksize=self.blocksize),
                        table=dict(**self.tbl))
-        return Image_new
+        return image_new
 
     def drop(self):
         '''
@@ -158,7 +162,7 @@ class Image:
         del self.sess, self.patch_level, self.tbl, self.path, self.summary, \
             self.channel_means, self.label_freq
 
-    def two_way_split(self, test_rate=20, blocksize=64):
+    def two_way_split(self, test_rate=20):
         '''
         Function to split image data into training and testing sets.
 
@@ -187,7 +191,7 @@ class Image:
             sess.loadactionset('sampling')
 
         partindname = random_name(name='PartInd_', length=2)
-        sess.stratified(output=dict(casOut=dict(**self.tbl, blocksize=blocksize,
+        sess.stratified(output=dict(casOut=dict(**self.tbl, blocksize=self.blocksize,
                                                 replace=True),
                                     copyVars="ALL", PARTINDNAME=partindname),
                         samppct=test_rate, samppct2=100 - test_rate,
@@ -197,7 +201,7 @@ class Image:
         image_tr = Image(sess)
         image_tr.path = self.path
         image_tr.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_tr.tbl, replace=True),
+        sess.partition(casout=dict(**image_tr.tbl, replace=True, blocksize=self.blocksize),
                        table=dict(**self.tbl, where='{}=2'.format(partindname),
                                   groupby='_label_'))
 
@@ -205,7 +209,7 @@ class Image:
         image_te.path = self.path
         image_te.patch_level = self.patch_level
 
-        sess.partition(casout=dict(**image_te.tbl, replace=True),
+        sess.partition(casout=dict(**image_te.tbl, replace=True, blocksize=self.blocksize),
                        table=dict(**self.tbl, where='{}=1'.format(partindname),
                                   groupby='_label_'))
         image_tr._summary()
@@ -213,7 +217,7 @@ class Image:
 
         return image_tr, image_te
 
-    def three_way_split(self, valid_rate=20, test_rate=20, blocksize=64):
+    def three_way_split(self, valid_rate=20, test_rate=20):
         '''
         Function to split image data into training and testing sets.
 
@@ -248,7 +252,7 @@ class Image:
             sess.loadactionset('sampling')
 
         partindname = random_name(name='PartInd_', length=2)
-        sess.stratified(output=dict(casOut=dict(**self.tbl, blocksize=blocksize,
+        sess.stratified(output=dict(casOut=dict(**self.tbl, blocksize=self.blocksize,
                                                 replace=True),
                                     copyVars="ALL", PARTINDNAME=partindname),
                         samppct=valid_rate, samppct2=test_rate,
@@ -258,21 +262,21 @@ class Image:
         image_tr = Image(sess)
         image_tr.path = self.path
         image_tr.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_tr.tbl, replace=True),
+        sess.partition(casout=dict(**image_tr.tbl, replace=True, blocksize=self.blocksize),
                        table=dict(**self.tbl, where='{}=0'.format(partindname),
                                   groupby='_label_'))
 
         image_valid = Image(sess)
         image_valid.path = self.path
         image_valid.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_valid.tbl, replace=True),
+        sess.partition(casout=dict(**image_valid.tbl, replace=True, blocksize=self.blocksize),
                        table=dict(**self.tbl, where='{}=1'.format(partindname),
                                   groupby='_label_'))
 
         image_te = Image(sess)
         image_te.path = self.path
         image_te.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_te.tbl, replace=True),
+        sess.partition(casout=dict(**image_te.tbl, replace=True, blocksize=self.blocksize),
                        table=dict(**self.tbl, where='{}=2'.format(partindname),
                                   groupby='_label_'))
         image_tr._summary()
@@ -338,7 +342,7 @@ class Image:
             plt.imshow(image)
             plt.xticks([]), plt.yticks([])
 
-    def crop(self, x=0, y=0, width=None, height=None, replace=True):
+    def crop(self, x=0, y=0, width=None, height=None):
         '''
         Function to crop images.
 
@@ -358,15 +362,7 @@ class Image:
             Specify the height of the cropped images.
             If not specified, height will be set to be equal to width.
             Default : None.
-        replace: boolean, optional.
-            Specifies whether to update the original images or create a new set of images.
-            Default: True
 
-
-        Returns
-
-        -------
-        If replace = Flase, it will return a new Image object with the cropped images.
         '''
         sess = self.sess
 
@@ -378,24 +374,23 @@ class Image:
             height = width
 
         image_table = self.tbl
+        self.blocksize = width * height * 3 * 8 / 1024
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
-        if replace:
-            sess.processimages(
-                imageTable=image_table,
-                copyVars=column_names,
-                casout=dict(**self.tbl, replace=True),
-                imagefunctions=[dict(functionoptions=
-                                     dict(functionType="GET_PATCH", x=x, y=y,
-                                          w=width, h=height))])
-            self._summary()
-        else:
-            Image_new = self.copy()
-            Image_new.crop(x=x, y=x, width=width, height=height)
+        sess.processimages(
+            imageTable=image_table,
+            copyVars=column_names,
+            casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+            imagefunctions=[dict(functionoptions=
+                                 dict(functionType="GET_PATCH", x=x, y=y,
+                                      w=width, h=height))])
 
-            return Image_new
+        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                     table=dict(**self.tbl))
 
-    def resize(self, width=None, height=None, replace=True):
+        self._summary()
+
+    def resize(self, width=None, height=None):
         '''
         Function to resize images.
 
@@ -409,15 +404,7 @@ class Image:
             Specify the target height of the resized images.
             If not specified, height will be set to be equal to width.
             Default : None.
-        replace: boolean, optional.
-            Specifies whether to update the original images or create a new set of images.
-            Default: True
 
-
-        Returns
-
-        -------
-        If replace = Flase, it will return a new Image object with the resized images.
         '''
 
         sess = self.sess
@@ -429,28 +416,26 @@ class Image:
         if height is None:
             height = width
 
+        self.blocksize = width * height * 3 * 8 / 1024
+
         image_table = self.tbl
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
-        if replace:
-            sess.processimages(
-                imageTable=image_table,
-                copyVars=column_names,
-                casout=dict(**self.tbl, replace=True),
-                imagefunctions=[dict(functionoptions=
-                                     dict(functionType="RESIZE",
-                                          w=width, h=height))])
-            sess.partition(casout=dict(**self.tbl, replace=True),
-                           table=dict(**self.tbl))
-            self._summary()
-        else:
-            Image_new = self.copy()
-            Image_new.resize(width=width, height=height)
-            return Image_new
+        sess.processimages(
+            imageTable=image_table,
+            copyVars=column_names,
+            casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+            imagefunctions=[dict(functionoptions=
+                                 dict(functionType="RESIZE",
+                                      w=width, h=height))])
+        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                     table=dict(**self.tbl))
 
-    def patches(self, x=0, y=0, width=None, height=None, stepSize=None,
-                outputWidth=None, outputHeight=None, replace=True):
+        self._summary()
+
+    def patches(self, x=0, y=0, width=None, height=None, step_size=None,
+                output_width=None, output_height=None):
         '''
         Function to get patches from the images.
 
@@ -470,26 +455,18 @@ class Image:
             Specify the width of the patches.
             If not specified, height will be set to be equal to width.
             Default : None.
-        stepSize : int, optional.
+        step_size : int, optional.
             Specify the step size of the moving windows for extracting the patches.
-            Default : None, meaning stepSize = width.
-        outputWidth : int, optional.
+            Default : None, meaning step_size = width.
+        output_width : int, optional.
             Specify the output width of the patches.
             If not equal to width, the patches will be resize to the output width.
-            Default : None, meaning outputWidth = width.
-        outputHeight : int, optional.
+            Default : None, meaning output_width = width.
+        output_height : int, optional.
             Specify the output height of the patches.
             If not equal to height, the patches will be resize to the output height.
-            Default : None, meaning outputHeight = height.
-        replace: boolean, optional.
-            Specifies whether to update the original images or create a new set of images.
-            Default: True
+            Default : None, meaning output_height = height.
 
-
-        Returns
-
-        -------
-        If replace = Flase, it will return a new Image object with the patches of the images.
         '''
 
         sess = self.sess
@@ -500,55 +477,47 @@ class Image:
             width = height
         if height is None:
             height = width
-        if stepSize is None:
-            stepSize = width
-        if outputWidth is None:
-            outputWidth = width
-        if outputHeight is None:
-            outputHeight = height
+        if step_size is None:
+            step_size = width
+        if output_width is None:
+            output_width = width
+        if output_height is None:
+            output_height = height
+
+        self.blocksize = output_width * output_height * 3 * 8 / 1024
 
         image_table = self.tbl
         croplist = [dict(sweepImage=True, x=x, y=y,
                          width=width, height=height,
-                         stepSize=stepSize,
-                         outputWidth=outputWidth,
-                         outputHeight=outputHeight)]
+                         stepSize=step_size,
+                         outputWidth=output_width,
+                         outputHeight=output_height)]
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
-        if replace:
-            sess.augmentImages(imageTable=image_table,
-                               copyVars=column_names,
-                               casout=dict(**self.tbl, replace=True),
-                               cropList=croplist)
-            # The following code generate the latest file name according to the number of patches operations.
-            computedvars = '_filename_{}'.format(self.patch_level + 1)
-            SASCode = "length _filename_{} varchar(*); ".format(self.patch_level + 1) + \
-                      "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; ".format(
-                          self.patch_level) + \
-                      "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1)||".format(
-                          self.patch_level, self.patch_level + 1) + \
-                      "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); ".format(
-                          self.patch_level, self.patch_level + 1)
-            sess.partition(casout=dict(**self.tbl, replace=True),
-                           table=dict(**self.tbl,
-                                      computedVars=computedvars,
-                                      computedVarsProgram=SASCode))
-            sess.shuffle(casout=dict(**self.tbl, replace=True),
-                         table=dict(**self.tbl))
+        sess.augmentImages(imageTable=image_table,
+                           copyVars=column_names,
+                           casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                           cropList=croplist)
+        # The following code generate the latest file name according to the number of patches operations.
+        computedvars = '_filename_{}'.format(self.patch_level + 1)
+        SASCode = "length _filename_{} varchar(*); ".format(self.patch_level + 1) + \
+                  "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; ".format(
+                      self.patch_level) + \
+                  "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1)||".format(
+                      self.patch_level, self.patch_level + 1) + \
+                  "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); ".format(
+                      self.patch_level, self.patch_level + 1)
+        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                     table=dict(**self.tbl,
+                                computedVars=computedvars,
+                                computedVarsProgram=SASCode))
 
-            self.patch_level += 1
-            self._summary()
-
-        else:
-            Image_new = self.copy()
-            Image_new.patches(x=x, y=y, width=width, height=height, stepSize=stepSize,
-                              outputWidth=outputWidth, outputHeight=outputHeight)
-
-            return Image_new
+        self.patch_level += 1
+        self._summary()
 
     def random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
-                       stepSize=None, outputWidth=None, outputHeight=None, replace=True):
+                       step_size=None, output_width=None, output_height=None):
         '''
         Function to generate patches from the images randomly.
 
@@ -571,27 +540,19 @@ class Image:
             Specify the width of the patches.
             If not specified, height will be set to be equal to width.
             Default : None.
-        stepSize : int, optional.
+        step_size : int, optional.
             Specify the step size of the moving windows for extracting the patches.
             If not specified, it will be set to be equal to width.
             Default : None.
-        outputWidth : int, optional.
+        output_width : int, optional.
             Specify the output width of the patches.
             If not specified, it will be set to be equal to width.
             Default : None.
-        outputHeight : int, optional.
+        output_height : int, optional.
             Specify the output height of the patches.
             If not specified, it will be set to be equal to height.
             Default : None.
-        replace: boolean, optional.
-            Specifies whether to update the original images or create a new set of images.
-            Default: True
 
-
-        Returns
-
-        -------
-        If replace = Flase, it will return a new Image object with the patches of the images.
         '''
 
         sess = self.sess
@@ -602,54 +563,45 @@ class Image:
             width = height
         if height is None:
             height = width
-        if stepSize is None:
-            stepSize = width
-        if outputWidth is None:
-            outputWidth = width
-        if outputHeight is None:
-            outputHeight = height
+        if step_size is None:
+            step_size = width
+        if output_width is None:
+            output_width = width
+        if output_height is None:
+            output_height = height
+
+        self.blocksize = output_width * output_height * 3 * 8 / 1024
 
         image_table = self.tbl
         croplist = [dict(sweepImage=True, x=x, y=y,
                          width=width, height=height,
-                         stepSize=stepSize,
-                         outputWidth=outputWidth,
-                         outputHeight=outputHeight)]
+                         stepSize=step_size,
+                         outputWidth=output_width,
+                         outputHeight=output_height)]
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
-        if replace:
-            sess.augmentImages(imageTable=image_table,
-                               copyVars=column_names,
-                               casout=dict(**self.tbl, replace=True),
-                               cropList=croplist,
-                               randomRatio=random_ratio,
-                               writeRandomly=True)
-            # The following code generate the latest file name according to the number of patches operations.
-            computedvars = '_filename_{}'.format(self.patch_level + 1)
-            SASCode = "length _filename_{} varchar(*); ".format(self.patch_level + 1) + \
-                      "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; ".format(
-                          self.patch_level) + \
-                      "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1)||".format(
-                          self.patch_level, self.patch_level + 1) + \
-                      "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); ".format(
-                          self.patch_level, self.patch_level + 1)
-            sess.partition(casout=dict(**self.tbl, replace=True),
-                           table=dict(**self.tbl,
-                                      computedVars=computedvars,
-                                      computedVarsProgram=SASCode))
-            self.patch_level += 1
-            self._summary()
-
-        else:
-            Image_new = self.copy()
-            Image_new.random_patches(random_ratio=random_ratio,
-                                     x=x, y=y,
-                                     width=width, height=height,
-                                     stepSize=stepSize,
-                                     outputWidth=outputWidth, outputHeight=outputHeight)
-
-            return Image_new
+        sess.augmentImages(imageTable=image_table,
+                           copyVars=column_names,
+                           casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                           cropList=croplist,
+                           randomRatio=random_ratio,
+                           writeRandomly=True)
+        # The following code generate the latest file name according to the number of patches operations.
+        computedvars = '_filename_{}'.format(self.patch_level + 1)
+        SASCode = "length _filename_{} varchar(*); ".format(self.patch_level + 1) + \
+                  "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; ".format(
+                      self.patch_level) + \
+                  "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1)||".format(
+                      self.patch_level, self.patch_level + 1) + \
+                  "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); ".format(
+                      self.patch_level, self.patch_level + 1)
+        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
+                     table=dict(**self.tbl,
+                                computedVars=computedvars,
+                                computedVarsProgram=SASCode))
+        self.patch_level += 1
+        self._summary()
 
     def _summary(self):
         '''
