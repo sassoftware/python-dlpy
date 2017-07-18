@@ -383,7 +383,7 @@ class Model:
         with open(filename, 'wb') as file:
             file.write(model_astore['blob'])
 
-    def save_to_table(self, file_name):
+    def save_to_table(self):
 
         '''
         Function to save the model as sas dataset.
@@ -406,8 +406,9 @@ class Model:
 
         '''
 
-        _file_name_, _extension_ = file_name.rsplit('.', 1)
-        model_tbl_file = file_name
+        _file_name_ = self.model_name
+        _extension_ = '.sashdat'
+        model_tbl_file = _file_name_ + _extension_
         weight_tbl_file = _file_name_ + '_weight' + _extension_
         attr_tbl_file = _file_name_ + '_weight_attr' + _extension_
 
@@ -425,6 +426,28 @@ class Model:
         sess.table.save(table=CAS_tbl_name,
                         name=attr_tbl_file,
                         replace=True, caslib='CASUSER')
+
+    def deploy(self, output_format='ASTORE'):
+        '''
+        Function to deploy the deep learning model.
+
+        Parameters:
+
+        ----------
+
+        format : string, optional.
+            specifies the format of the deployed model.
+            Supported format: ASTORE, CASTABLE
+            Default: ASTORE
+
+
+        '''
+
+        if output_format.lower() == 'astore':
+            filename = self.model_name + '.astore'
+            self.save_to_astore(filename=filename)
+        elif output_format.lower() in ('castable', 'table'):
+            self.save_to_table()
 
 
 class Feature_Maps:
