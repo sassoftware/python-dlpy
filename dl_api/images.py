@@ -22,6 +22,122 @@ from swat.cas.table import CASTable
 from .utils import random_name
 
 
+def two_way_split(tbl, test_rate=20, stratify_by='_label_', casout=None):
+    '''
+    Function to split image data into training and testing sets
+
+    Parameters:
+    ----------
+    tbl : CASTable
+        The CAS table to split
+    test_rate : double, optional
+        Specify the proportion of the testing data set,
+        e.g. 20 mean 20% of the images will be in the testing set.
+    stratify_by : string, optional
+        The variable to stratify by
+    casout : dict, optional
+        Additional parameters for statified output table
+
+    Returns
+    -------
+    ( training CASTable, testing CASTable )
+
+    '''
+    if casout is None:
+        casout = tbl.to_outtable_params()
+    elif isinstance(casout, CASTable):
+        casout = casout.to_outputtable_params()
+
+    tbl._retrieve('loadactionset', actionset='sampling')
+
+    partindname = random_name(name='PartInd_', length=2)
+
+    tbl._retrieve('sampling.stratified',
+                   output=dict(casout=casout, copyvars='all', partindname=partindname),
+                   samppct=test_rate, samppct2=100 - test_rate,
+                   partind=True,
+                   table=dict(**tbl.to_table_params(), groupby=stratify_by))
+
+    train = tbl.copy()
+    out = tbl._retrieve('table.partition',
+                        table=dict(**train.to_table_params(),
+                                   where='{}=2'.format(partindname),
+                                   groupby=stratify_by))['casTable']
+    train.params.update(out.params)
+
+    test = tbl.copy()
+    out = tbl._retrieve('table.partition',
+                        table=dict(**test.to_table_params(),
+                                   where='{}=1'.format(partindname),
+                                   groupby=stratify_by))['casTable']
+    test.params.update(out.params)
+
+    return train, test
+
+def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', casout=None):
+    '''
+    Function to split image data into training and testing sets.
+
+    Parameters
+    ----------
+    tbl : CASTable
+        The CAS table to split
+    valid_rate : double, optional
+        Specify the proportion of the validation data set,
+        e.g. 20 mean 20% of the images will be in the validation set.
+    test_rate : double, optional
+        Specify the proportion of the testing data set,
+        e.g. 20 mean 20% of the images will be in the testing set.
+        Note: the total of valid_rate and test_rate cannot be exceed 100
+    stratify_by : string, optional
+        The variable to stratify by
+    casout : dict, optional
+        Additional parameters for statified output table
+
+    Returns
+    -------
+    ( train CASTable, valid CASTable, test CASTable )
+
+    '''
+    if casout is None:
+        casout = tbl.to_outtable_params()
+    elif isinstance(casout, CASTable):
+        casout = casout.to_outputtable_params()
+
+    tbl._retrieve('loadactionset', actionset='sampling')
+
+    partindname = random_name(name='PartInd_', length=2)
+
+    tbl._retrieve('sampling.stratified',
+                  output=dict(casout=casout, copyvars='all', partindname=partindname),
+                   samppct=valid_rate, samppct2=test_rate,
+                   partind=True,
+                   table=dict(**tbl.to_table_params(), groupby=stratify_by))
+
+    train = tbl.copy()
+    out = tbl._retrieve('sampling.partition',
+                        table=dict(**train.to_table_params(),
+                                   where='{}=0'.format(partindname),
+                                   groupby=stratify_by))['casTable']
+    train.params.update(out.params)
+
+    valid = tbl.copy()
+    out = tbl._retrieve('sampling.partition',
+                        table=dict(**valid.to_table_params(),
+                                   where='{}=1'.format(partindname),
+                                   groupby=stratify_by))['casTable']
+    valid.params.update(out.params)
+
+    test = tbl.copy()
+    out = tbl._retrieve('sampling.partition',
+                        table=dict(**test.to_table_params(),
+                                   where='{}=2'.format(partindname),
+                                   groupby=stratify_by))
+    test.params.update(out.params)
+
+    return train, valid, test
+
+
 class ImageTable(CASTable):
 
     @classmethod
@@ -77,12 +193,27 @@ class ImageTable(CASTable):
 
         out = cls(**casout)
         out.set_connection(conn)
+        out.blocksize = blocksize
+        out.path = path
         return out
 
     def __init__(self, name, blocksize=64, **table_params):
         CASTable.__init__(self, name, **table_params)
         self.blocksize = blocksize
+        self.path = None
         self.patch_level = 0
+
+    def __copy__(self):
+        out = CASTable.__copy__(self)
+        out.path = self.path
+        out.patch_level = self.patch_level
+        return out
+
+    def __deepcopy__(self, memo):
+        out = CASTable.__deepcopy__(self)
+        out.path = self.path
+        out.patch_level = self.patch_level
+        return out
 
     def save_images(self, path):
         '''
@@ -99,7 +230,7 @@ class ImageTable(CASTable):
 
         file_name = '_filename_{}'.format(self.patch_level)
         self._retrieve('image.saveimages', caslib=caslib,
-                       images=dict(table=self, path=file_name),
+                       images=dict(table=self.to_table_params(), path=file_name),
                        labellevels=1)
 
         self._retrieve('dropcaslib', caslib=caslib)
@@ -121,130 +252,11 @@ class ImageTable(CASTable):
         if casout is None:
             casout = {}
 
-        out = self._retrieve('table.partition', casout=casout, table=self)['casTable']
-
-        out = type(self)(**out.params)
-        out.set_connection(self.get_connection())
-        out.path = self.path
-        out.patch_level = self.patch_level
+        out = self.copy()
+        res = self._retrieve('table.partition', casout=casout, table=self)['casTable']
+        out.params.update(res.params)
 
         return out
-
-    def two_way_split(self, test_rate=20, blocksize=None):
-        '''
-        Function to split image data into training and testing sets
-
-        Parameters:
-        ----------
-        test_rate : double, optional.
-            Specify the proportion of the testing data set,
-            e.g. 20 mean 20% of the images will be in the testing set.
-        blocksize : int
-            Specifies the number of bytes to use for blocks that are read
-            by threads.
-
-        Returns
-        -------
-        ( training ImageTable, testing ImageTable )
-
-        '''
-        blocksize = blocksize or self.blocksize or 64
-
-        self._retrieve('loadactionset', actionset='sampling')
-
-        partindname = random_name(name='PartInd_', length=2)
-        self._retrieve('sampling.stratified',
-                       output=dict(casout=dict(**self.params,
-                                               blocksize=blocksize,
-                                               replace=True),
-                                   copyvars='all', partindname=partindname),
-                       samppct=test_rate, samppct2=100 - test_rate,
-                       partind=True,
-                       table=dict(**self.tbl, groupby='_label_'))
-
-        train = self._retrieve('table.partition', 
-                               table=dict(**self.to_table_params(),
-                                          where='{}=2'.format(partindname),
-                                          groupby='_label_'))['casTable']
-        train = type(self)(**train.params)
-        train.set_connection(self.get_connection())
-        train.path = self.path
-        train.patch_level = self.patch_level
-
-        test = self._retrieve('table.partition', 
-                              table=dict(**self.to_table_params(),
-                                         where='{}=1'.format(partindname),
-                                         groupby='_label_'))['casTable']
-        test = type(self)(**test.params)
-        test.set_connection(self.get_connection())
-        test.path = self.path
-        test.patch_level = self.patch_level
-
-        return train, test
-
-    def three_way_split(self, valid_rate=20, test_rate=20, blocksize=None):
-        '''
-        Function to split image data into training and testing sets.
-
-        Parameters
-        ----------
-        valid_rate : double, optional
-            Specify the proportion of the validation data set,
-            e.g. 20 mean 20% of the images will be in the validation set.
-        test_rate : double, optional
-            Specify the proportion of the testing data set,
-            e.g. 20 mean 20% of the images will be in the testing set.
-            Note: the total of valid_rate and test_rate cannot be exceed 100
-        blocksize : int
-            Specifies the number of bytes to use for blocks that are read by threads.
-
-        Returns
-        -------
-        ( train ImageTable, valid ImageTable, test ImageTable ) 
-
-        '''
-        blocksize = blocksize or self.blocksize or 64
-
-        self._retrieve('loadactionset', actionset='sampling')
-
-        partindname = random_name(name='PartInd_', length=2)
-        self._retrieve('sampling.stratified', 
-                       output=dict(casout=dict(**self.to_outtable_params(),
-                                               blocksize=blocksize,
-                                               replace=True),
-                                    copyvars='all',
-                                    partindname=partindname),
-                        samppct=valid_rate, samppct2=test_rate,
-                        partind=True,
-                        table=dict(**self.to_table_params(), groupby='_label_'))
-
-        train = self._retrieve('sampling.partition', 
-                               table=dict(**self.to_table_params(),
-                                          where='{}=0'.format(partindname),
-                                          groupby='_label_'))['casTable']
-        train = ImageTable(**train.params)
-        train.set_connection(self.get_connection())
-        train.path = self.path
-        train.patch_level = train.patch_level
-
-        valid = self._retrieve('sampling.partition', 
-                               table=dict(**self.to_table_params(),
-                                          where='{}=1'.format(partindname),
-                                          groupby='_label_'))['casTable']
-        valid = ImageTable(**valid.params)
-        valid.set_connection(self.get_connection())
-        valid.path = self.path
-        valid.patch_level = train.patch_level
-
-        test = self._retrieve('sampling.partition',
-                              table=dict(**self.to_table_params(),
-                                         where='{}=2'.format(partindname),
-                                         groupby='_label_'))
-        test.set_connection(self.get_connection())
-        test.path = self.path
-        test.patch_level = self.patch_level
-
-        return train, valid, test
 
     def display_images(self, nimages=5, ncol=8, randomize=False):
         '''
@@ -334,9 +346,8 @@ class ImageTable(CASTable):
         if height is None:
             height = width
 
-        image_table = self.tbl
-
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
+
         if inplace:
             self._retrieve('image.processimages',
                            imagetable=self.to_table_params(),
