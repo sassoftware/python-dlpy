@@ -56,20 +56,20 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', casout=None):
                    output=dict(casout=casout, copyvars='all', partindname=partindname),
                    samppct=test_rate, samppct2=100 - test_rate,
                    partind=True,
-                   table=dict(**tbl.to_table_params(), groupby=stratify_by))
+                   table=dict(groupby=stratify_by, **tbl.to_table_params()))
 
     train = tbl.copy()
     out = tbl._retrieve('table.partition',
-                        table=dict(**train.to_table_params(),
-                                   where='{}=2'.format(partindname),
-                                   groupby=stratify_by))['casTable']
+                        table=dict(where='{}=2'.format(partindname),
+                                   groupby=stratify_by,
+                                   **train.to_table_params()))['casTable']
     train.params.update(out.params)
 
     test = tbl.copy()
     out = tbl._retrieve('table.partition',
-                        table=dict(**test.to_table_params(),
-                                   where='{}=1'.format(partindname),
-                                   groupby=stratify_by))['casTable']
+                        table=dict(where='{}=1'.format(partindname),
+                                   groupby=stratify_by,
+                                   **test.to_table_params()))['casTable']
     test.params.update(out.params)
 
     return train, test
@@ -110,29 +110,29 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', cas
 
     tbl._retrieve('sampling.stratified',
                   output=dict(casout=casout, copyvars='all', partindname=partindname),
-                   samppct=valid_rate, samppct2=test_rate,
-                   partind=True,
-                   table=dict(**tbl.to_table_params(), groupby=stratify_by))
+                  samppct=valid_rate, samppct2=test_rate,
+                  partind=True,
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
 
     train = tbl.copy()
     out = tbl._retrieve('sampling.partition',
-                        table=dict(**train.to_table_params(),
-                                   where='{}=0'.format(partindname),
-                                   groupby=stratify_by))['casTable']
+                        table=dict(where='{}=0'.format(partindname),
+                                   groupby=stratify_by,
+                                   **train.to_table_params()))['casTable']
     train.params.update(out.params)
 
     valid = tbl.copy()
     out = tbl._retrieve('sampling.partition',
-                        table=dict(**valid.to_table_params(),
-                                   where='{}=1'.format(partindname),
-                                   groupby=stratify_by))['casTable']
+                        table=dict(where='{}=1'.format(partindname),
+                                   groupby=stratify_by,
+                                   **valid.to_table_params()))['casTable']
     valid.params.update(out.params)
 
     test = tbl.copy()
     out = tbl._retrieve('sampling.partition',
-                        table=dict(**test.to_table_params(),
-                                   where='{}=2'.format(partindname),
-                                   groupby=stratify_by))
+                        table=dict(where='{}=2'.format(partindname),
+                                   groupby=stratify_by,
+                                   **test.to_table_params()))
     test.params.update(out.params)
 
     return train, valid, test
@@ -167,6 +167,8 @@ class ImageTable(CASTable):
 
         if casout is None:
             casout = {}
+        elif isinstance(casout, CASTable):
+            casout = casout.to_outtable_params()
 
         if 'blocksize' not in casout:
             casout['blocksize'] = blocksize
@@ -184,12 +186,11 @@ class ImageTable(CASTable):
                "_filename_0 = SUBSTR(_path_,_loc1);"
 
         conn.retrieve('table.partition', _messagelevel='error',
-                      casout=dict(**casout, replace=True),
-                      table=dict(**casout,
-                                 computedvars=['_filename_0'],
-                                 computedvarsprogram=code))
+                      casout=casout,
+                      table=dict(computedvars=['_filename_0'],
+                                 computedvarsprogram=code, **casout))
         conn.retrieve('sampling.shuffle', _messagelevel='error',
-                      casout=dict(**casout, replace=True), table=casout)
+                      casout=dict(replace=True, **casout), table=casout)
 
         out = cls(**casout)
         out.set_connection(conn)
@@ -285,10 +286,11 @@ class ImageTable(CASTable):
 
         if randomize:
             temp_tbl = self._retrieve('image.fetchimages', 
-                                      imagetable=dict(**self.to_table_params(),
+                                      imagetable=dict(
                                           computedvars=['random_index'],
                                           computedvarsprogram='call streaminit(-1);\
-                                                               random_index=rand("UNIFORM");'),
+                                                               random_index=rand("UNIFORM");',
+                                          **self.to_table_params()),
                                       sortby='random_index', to=nimages)
         else:
             temp_tbl = self._retrieve('image.fetchimages', 
@@ -352,7 +354,7 @@ class ImageTable(CASTable):
             self._retrieve('image.processimages',
                            imagetable=self.to_table_params(),
                            copyvars=column_names,
-                           casout=dict(**self.to_outtable_params(), replace=True),
+                           casout=dict(replace=True, **self.to_outtable_params()),
                            imagefunctions=[dict(functionoptions=
                                                 dict(functiontype='GET_PATCH', x=x, y=y,
                                                      w=width, h=height))])
@@ -398,12 +400,12 @@ class ImageTable(CASTable):
             self._retrieve('image.processimages',
                            imagetable=self.to_table_params(),
                            copyvars=column_names,
-                           casout=dict(**self.to_outtable_params(), replace=True),
+                           casout=dict(replace=True, **self.to_outtable_params()),
                            imagefunctions=[dict(functionoptions=
                                                 dict(functiontype='RESIZE',
                                                      w=width, h=height))])
             self._retrieve('image.partition', 
-                           casout=dict(**self.to_outtable_params(), replace=True),
+                           casout=dict(replace=True, **self.to_outtable_params()),
                            table=self.to_table_params())
 
         else:
@@ -477,7 +479,7 @@ class ImageTable(CASTable):
             self._retrieve('image.augmentimages',
                            imagetable=self.to_table_params(),
                            copyvars=column_names,
-                           casout=dict(**self.to_outtable_params(), replace=True),
+                           casout=dict(replace=True, **self.to_outtable_params()),
                            croplist=croplist)
 
             # The following code generate the latest file name according
@@ -490,12 +492,12 @@ class ImageTable(CASTable):
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.partition', 
-                           casout=dict(**self.to_outtable_params(), replace=True),
-                           table=dict(**self.to_table_params(),
-                                      computedvars=computedvars,
-                                      computedvarsprogram=code))
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           table=dict(computedvars=computedvars,
+                                      computedvarsprogram=code,
+                                      **self.to_table_params()))
             self._retrieve('sampling.shuffle',
-                           casout=dict(**self.to_outtable_params(), replace=True),
+                           casout=dict(replace=True, **self.to_outtable_params()),
                            table=self.to_table_params())
             self.patch_level += 1
 
@@ -571,7 +573,7 @@ class ImageTable(CASTable):
             self._retrieve('image.augmentimages', 
                            imagetable=self.to_table_params(),
                            copyvars=column_names,
-                           casout=dict(**self.to_outtable_params(), replace=True),
+                           casout=dict(replace=True, **self.to_outtable_params()),
                            croplist=croplist,
                            randomratio=random_ratio,
                            writerandomly=True)
@@ -586,10 +588,10 @@ class ImageTable(CASTable):
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.partition',
-                           casout=dict(**self.to_outtable_params(), replace=True),
-                           table=dict(**self.to_table_params(),
-                                      computedvars=computedvars,
-                                      computedvarsprogram=code))
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           table=dict(computedvars=computedvars,
+                                      computedvarsprogram=code,
+                                      **self.to_table_params()))
             self.patch_level += 1
 
         else:
