@@ -224,7 +224,7 @@ class ImageTable(CASTable):
         out.patch_level = self.patch_level
         return out
 
-    def save_images(self, path):
+    def to_files(self, path):
         '''
         Function to save the images to the specified directory
 
@@ -267,7 +267,7 @@ class ImageTable(CASTable):
 
         return out
 
-    def display_images(self, nimages=5, ncol=8, randomize=False):
+    def show(self, nimages=5, ncol=8, randomize=False):
         '''
         Display a grid of images
 
@@ -284,10 +284,6 @@ class ImageTable(CASTable):
             columns in the plots.
         randomize : boolean, optional
             Specifies whether to randomly choose the images for display.
-
-        Returns
-        -------
-        matplotlib.figure
 
         '''
         nimages = min(nimages, len(self))
@@ -323,9 +319,7 @@ class ImageTable(CASTable):
             plt.imshow(image)
             plt.xticks([]), plt.yticks([])
 
-        return fig
-
-    def crop_images(self, x=0, y=0, width=None, height=None, inplace=True):
+    def crop(self, x=0, y=0, width=None, height=None, inplace=True):
         '''
         Crop images in the table
 
@@ -373,7 +367,7 @@ class ImageTable(CASTable):
             out.crop(x=x, y=x, width=width, height=height)
             return out
 
-    def resize_images(self, width=None, height=None, inplace=True):
+    def resize(self, width=None, height=None, inplace=True):
         '''
         Resize images in the table
 
@@ -420,8 +414,8 @@ class ImageTable(CASTable):
             out.resize_images(width=width, height=height)
             return out
 
-    def get_patches(self, x=0, y=0, width=None, height=None, step_size=None,
-                    output_width=None, output_height=None, inplace=True):
+    def create_patches(self, x=0, y=0, width=None, height=None, step_size=None,
+                       output_width=None, output_height=None, inplace=True):
         '''
         Generate patches from images in the table
 
@@ -512,9 +506,9 @@ class ImageTable(CASTable):
                             output_width=output_width, output_height=output_height)
             return out
 
-    def get_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
-                           step_size=None, output_width=None, output_height=None,
-                           inplace=True):
+    def create_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
+                              step_size=None, output_width=None, output_height=None,
+                              inplace=True):
         '''
         Generate random patches from images in the table
 
