@@ -162,5 +162,7 @@ class OutputLayer(Layer):
 def _unpack_config(config):
     kwargs = config['kwargs']
     del config['self'], config['name'], config['src_layers'], config['kwargs']
-    config = dict(**config, **kwargs)
-    return config
+    out = {}
+    out.update(config)
+    out.update(kwargs)
+    return out
