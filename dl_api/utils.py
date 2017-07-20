@@ -39,7 +39,7 @@ def input_table_check(input_table):
     ----------
 
     input_table : A CAS table object, a string specifies the name of the CAS table,
-                a dictionary specifies the CAS table, or an Image object.
+                a dictionary specifies the CAS table, or an ImageTable object.
 
     Return:
 
@@ -53,16 +53,14 @@ def input_table_check(input_table):
         input_table = dict(name=input_table)
     elif type_indicator == "dict":
         input_table = input_table
-    elif type_indicator == "Image":
-        input_table = input_table.tbl
-    elif type_indicator == "CASTable":
-        input_table = dict(name=input_table.tableinfo().TableInfo.Name[0])
+    elif type_indicator in ("ImageTable", "CASTable"):
+        input_table = input_table.to_table_params()
     else:
         raise TypeError('input_table must be one of the following:\n'
-                        '1. A CAS table object;\n'
+                        '1. A CAS table;\n'
                         '2. A string specifies the name of the CAS table,\n'
                         '3. A dictionary specifies the CAS table\n'
-                        '4. An Image object.')
+                        '4. An Image table.')
     return input_table
 
 
