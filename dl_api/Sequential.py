@@ -105,16 +105,16 @@ class Sequential(Model):
             src_layers = layer
 
     def summary(self):
-        bar_line = '*' + '=' * 15 + '*' + '=' * 15 + '*' + '=' * 10 + '*' + \
-                   '=' * 12 + '*' + '=' * 20 + '*' + '=' * 30 + '*\n'
-        h_line = '*' + '-' * 15 + '*' + '-' * 15 + '*' + '-' * 10 + '*' + \
-                 '-' * 12 + '*' + '-' * 20 + '*' + '-' * 30 + '*\n'
-        title_line = '|{:^15}'.format('Layer Name') + \
+        bar_line = '*' + '=' * 15 + '*' + '=' * 15 + '*' + '=' * 8 + '*' + \
+                   '=' * 12 + '*' + '=' * 17 + '*' + '=' * 22 + '*\n'
+        h_line = '*' + '-' * 15 + '*' + '-' * 15 + '*' + '-' * 8 + '*' + \
+                 '-' * 12 + '*' + '-' * 17 + '*' + '-' * 22 + '*\n'
+        title_line = '|{:^15}'.format('Layer (Type)') + \
                      '|{:^15}'.format('Kernel Size') + \
-                     '|{:^10}'.format('Stride') + \
+                     '|{:^8}'.format('Stride') + \
                      '|{:^12}'.format('Activation') + \
-                     '|{:^20}'.format('Output Size') + \
-                     '|{:^30}|\n'.format('Number of Parameters')
+                     '|{:^17}'.format('Output Size') + \
+                     '|{:^22}|\n'.format('Number of Parameters')
         output = bar_line + title_line + h_line
         for layer in self.layers:
             output = output + layer.summary()
