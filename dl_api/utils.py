@@ -88,3 +88,21 @@ def prod_without_none(array):
     return prod
 
 
+
+def get_max_size(start_path='.'):
+    max_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            file_size = os.path.getsize(fp)
+            if file_size > max_size:
+                max_size = file_size
+    return max_size
+
+
+def update_blocksize(width, height):
+    '''
+    Function to determine blocksize according to imagesize in the table.
+    '''
+    return width * height * 3 * 8 / 1024
+
