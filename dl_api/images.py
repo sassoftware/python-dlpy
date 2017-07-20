@@ -414,8 +414,8 @@ class ImageTable(CASTable):
             out.resize_images(width=width, height=height)
             return out
 
-    def create_patches(self, x=0, y=0, width=None, height=None, step_size=None,
-                       output_width=None, output_height=None, inplace=True):
+    def as_patches(self, x=0, y=0, width=None, height=None, step_size=None,
+                   output_width=None, output_height=None, inplace=True):
         '''
         Generate patches from images in the table
 
@@ -506,16 +506,16 @@ class ImageTable(CASTable):
                             output_width=output_width, output_height=output_height)
             return out
 
-    def create_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
-                              step_size=None, output_width=None, output_height=None,
-                              inplace=True):
+    def as_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
+                          step_size=None, output_width=None, output_height=None,
+                          inplace=True):
         '''
         Generate random patches from images in the table
 
         Parameters
         ----------
         random_ratio: double, optional
-            Specifies the proportion of the generated pateches to output.
+            Specifies the proportion of the generated patches to output.
         x : int, optional
             Specifies the x location of the top-left corner of the first patches.
         y : int, optional
