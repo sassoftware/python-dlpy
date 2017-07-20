@@ -82,19 +82,19 @@ class Layer:
                 self.output_size = None
 
         name = '{}({})'.format(self.name, self.config['type'])
-        col1 = '|{:<15}'.format('{}'.format(name))
+        col1 = '| {:<14}'.format('{}'.format(name))
         col2 = '|{:^15}'.format('{}'.format(self.kernel_size))
         if 'stride' not in self.config.keys():
-            col3 = '|{:^10}'.format('None')
+            col3 = '|{:^8}'.format('None')
         else:
-            col3 = '|{:^10}'.format('{}'.format(self.config['stride']))
+            col3 = '|{:^8}'.format('{}'.format(self.config['stride']))
         if 'act' not in self.config.keys():
             col4 = '|{:^12}'.format('None')
         else:
             col4 = '|{:^12}'.format('{}'.format(self.config['act']))
-        col5 = '|{:^20}'.format('{}'.format(self.output_size))
+        col5 = '|{:^17}'.format('{}'.format(self.output_size))
         num_paras = '{} / {}'.format(self.num_weights, self.num_bias)
-        col6 = '|{:^30}|\n'.format(num_paras)
+        col6 = '|{:^22}|\n'.format(num_paras)
 
         return col1 + col2 + col3 + col4 + col5 + col6
 
@@ -149,6 +149,15 @@ class Dense(Layer):
         Layer.__init__(self, name, config, src_layers)
 
 
+class Recurrent(Layer):
+    def __init__(self, n, act='AUTO', rnnType='RNN', outputType='ENCODING',
+                 name=None, src_layers=None, **kwargs):
+        config = locals()
+        config = _unpack_config(config)
+        config['type'] = 'recurrent'
+        Layer.__init__(self, name, config, src_layers)
+
+
 class OutputLayer(Layer):
     def __init__(self, n=None, act='softmax', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -162,5 +171,7 @@ class OutputLayer(Layer):
 def _unpack_config(config):
     kwargs = config['kwargs']
     del config['self'], config['name'], config['src_layers'], config['kwargs']
-    config = dict(**config, **kwargs)
-    return config
+    out = {}
+    out.update(config)
+    out.update(kwargs)
+    return out
