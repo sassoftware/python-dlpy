@@ -18,354 +18,333 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-
-from swat import *
+from swat.cas.table import CASTable
 from .utils import random_name
 
 
-class Image:
+def two_way_split(tbl, test_rate=20, stratify_by='_label_', casout=None):
     '''
-    An Image class, that support the following functions:
-    load, train_test_split, display, crop, resize, patches, summary, freq
-
+    Function to split image data into training and testing sets
 
     Parameters:
-
     ----------
-    sess :
-        Specifies the session of the CAS connection.
-    path : string
-        Specifies the path of the image data.
-        Note: images should be save in the form of parent_dir/label/image_files.
-    blocksize : int
-        Specifies the number of bytes to use for blocks that are read by threads.
-        Default: 64
-
+    tbl : CASTable
+        The CAS table to split
+    test_rate : double, optional
+        Specify the proportion of the testing data set,
+        e.g. 20 mean 20% of the images will be in the testing set.
+    stratify_by : string, optional
+        The variable to stratify by
+    casout : dict, optional
+        Additional parameters for statified output table
 
     Returns
-
     -------
-    An image class in the session.
+    ( training CASTable, testing CASTable )
+
     '''
+    if casout is None:
+        casout = tbl.to_outtable_params()
+    elif isinstance(casout, CASTable):
+        casout = casout.to_outputtable_params()
 
-    def __init__(self, sess, path=None, blocksize=64):
-        if not sess.queryactionset('image')['image']:
-            sess.loadactionset('image')
-        self.path = path
-        self.sess = sess
-        self.blocksize = blocksize
+    tbl._retrieve('loadactionset', actionset='sampling')
 
+    partindname = random_name(name='PartInd_', length=2)
+
+    tbl._retrieve('sampling.stratified',
+                   output=dict(casout=casout, copyvars='all', partindname=partindname),
+                   samppct=test_rate, samppct2=100 - test_rate,
+                   partind=True,
+                   table=dict(groupby=stratify_by, **tbl.to_table_params()))
+
+    train = tbl.copy()
+    out = tbl._retrieve('table.partition',
+                        table=dict(where='{}=2'.format(partindname),
+                                   groupby=stratify_by,
+                                   **train.to_table_params()))['casTable']
+    train.params.update(out.params)
+
+    test = tbl.copy()
+    out = tbl._retrieve('table.partition',
+                        table=dict(where='{}=1'.format(partindname),
+                                   groupby=stratify_by,
+                                   **test.to_table_params()))['casTable']
+    test.params.update(out.params)
+
+    return train, test
+
+def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', casout=None):
+    '''
+    Function to split image data into training and testing sets.
+
+    Parameters
+    ----------
+    tbl : CASTable
+        The CAS table to split
+    valid_rate : double, optional
+        Specify the proportion of the validation data set,
+        e.g. 20 mean 20% of the images will be in the validation set.
+    test_rate : double, optional
+        Specify the proportion of the testing data set,
+        e.g. 20 mean 20% of the images will be in the testing set.
+        Note: the total of valid_rate and test_rate cannot be exceed 100
+    stratify_by : string, optional
+        The variable to stratify by
+    casout : dict, optional
+        Additional parameters for statified output table
+
+    Returns
+    -------
+    ( train CASTable, valid CASTable, test CASTable )
+
+    '''
+    if casout is None:
+        casout = tbl.to_outtable_params()
+    elif isinstance(casout, CASTable):
+        casout = casout.to_outputtable_params()
+
+    tbl._retrieve('loadactionset', actionset='sampling')
+
+    partindname = random_name(name='PartInd_', length=2)
+
+    tbl._retrieve('sampling.stratified',
+                  output=dict(casout=casout, copyvars='all', partindname=partindname),
+                  samppct=valid_rate, samppct2=test_rate,
+                  partind=True,
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
+
+    train = tbl.copy()
+    out = tbl._retrieve('sampling.partition',
+                        table=dict(where='{}=0'.format(partindname),
+                                   groupby=stratify_by,
+                                   **train.to_table_params()))['casTable']
+    train.params.update(out.params)
+
+    valid = tbl.copy()
+    out = tbl._retrieve('sampling.partition',
+                        table=dict(where='{}=1'.format(partindname),
+                                   groupby=stratify_by,
+                                   **valid.to_table_params()))['casTable']
+    valid.params.update(out.params)
+
+    test = tbl.copy()
+    out = tbl._retrieve('sampling.partition',
+                        table=dict(where='{}=2'.format(partindname),
+                                   groupby=stratify_by,
+                                   **test.to_table_params()))
+    test.params.update(out.params)
+
+    return train, valid, test
+
+
+class ImageTable(CASTable):
+
+    @classmethod
+    def from_table(cls, tbl):
+        '''
+        Create an ImageTable from a CASTable
+
+        Parameters
+        ----------
+        tbl : CASTable
+            The CASTable object to use as the source
+
+        Returns
+        -------
+        :class:`ImageTable`
+
+        '''
+        out = cls(**tbl.params)
+        out.set_connection(tbl.get_connection())
+        return out
+
+    @classmethod
+    def load_path(cls, conn, path, casout=None, **kwargs):
+        '''
+        Create a new ImageTable using images in `path`
+
+        Parameters
+        ----------
+        conn : CAS
+            The CAS connection object
+        path : string
+            The path to the image directory on the server
+        casout : dict, optional
+            The output table specifications
+        **kwargs : keyword arguments, optional
+            Additional keyword arguments to the `image.loadimages` action
+
+        Returns
+        -------
+        :class:`ImageTable`
+
+        '''
+        conn.loadactionset('image', _messagelevel='error')
+
+        if casout is None:
+            casout = {}
+        elif isinstance(casout, CASTable):
+            casout = casout.to_outtable_params()
+
+        if 'name' not in casout:
+            casout['name'] = random_name()
+
+        conn.retrieve('image.loadimages', _messagelevel='error',
+                      casout=casout,
+                      distribution=dict(type='random'),
+                      recurse=True, labellevels=-1,
+                      path=path, **kwargs)
+
+        code = "length _filename_0 varchar(*); " + \
+               "_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),'/')+2; " + \
+               "_filename_0 = SUBSTR(_path_,_loc1);"
+
+        conn.retrieve('table.shuffle', _messagelevel='error',
+                      table=dict(computedvars=['_filename_0'],
+                                 computedvarsprogram=code,
+                                 **casout),
+                      casout=dict(replace=True, **casout))
+
+        out = cls(**casout)
+        out.set_connection(conn)
+        return out
+
+    def __init__(self, name, **table_params):
+        CASTable.__init__(self, name, **table_params)
         self.patch_level = 0
 
-        CAS_TblName = random_name()
-        self.tbl = dict(name=CAS_TblName)
+    def __copy__(self):
+        out = CASTable.__copy__(self)
+        out.patch_level = self.patch_level
+        return out
 
-        if path is not None:
-            self.load(path, blocksize=self.blocksize)
+    def __deepcopy__(self, memo):
+        out = CASTable.__deepcopy__(self, memo)
+        out.patch_level = self.patch_level
+        return out
 
-    def load(self, path, blocksize=64, **kwargs):
+    def to_files(self, path):
         '''
-        Function to load images
+        Function to save the images to the specified directory
 
         Parameters:
-
         ----------
         path : string
-            Specifies the path of the image data.
-            Note: images should be save in the form of parent_dir/label/image_files.
-        blocksize : int
-            Specifies the number of bytes to use for blocks that are read by threads.
-            Default: 64
-        kwargs: dictionary, optional
-            Specify the optional arguments for the loadimages action.
+            Specifies the directory on the server to save the images
 
-
-        Returns
-
-        -------
-        Load the images in the specified directory into the CAS table name by Image.tbl.
         '''
-
-        if blocksize is not None:
-            self.blocksize = blocksize
-
-        sess = self.sess
-
-        sess.image.loadimages(
-            casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-            distribution=dict(type='random'), recurse=True, labelLevels=-1,
-            path=path, **kwargs)
-
-        computedvars = '_filename_0'
-        SASCode = "length _filename_0 varchar(*);\
-                   _loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),'/')+2;\
-                   _filename_0 = SUBSTR(_path_,_loc1);"
-
-        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                     table=dict(**self.tbl, computedVars=computedvars,
-                                computedVarsProgram=SASCode))
-        self._summary()
-
-    def save(self, path):
-        '''
-        Function to save the images to the specified directory.
-
-
-        Parameters:
-
-        ----------
-        path: string.
-            Specifies the directory to save the images.
-            Note: the directory must be accessible from the CAS server.
-
-
-        Returns
-
-        -------
-        '''
-
-        sess = self.sess
-
-        CAS_LibName = random_name('Caslib', 6)
-        sess.addCaslib(name=CAS_LibName, path=path, activeOnAdd=False)
+        caslib = random_name('Caslib', 6)
+        self._retrieve('addcaslib', name=caslib, path=path, activeonadd=False)
 
         file_name = '_filename_{}'.format(self.patch_level)
-        sess.image.saveImages(caslib=CAS_LibName,
-                              images=vl(table=dict(**self.tbl), path=file_name),
-                              labelLevels=1)
-        sess.dropcaslib(caslib=CAS_LibName)
+        self._retrieve('image.saveimages', caslib=caslib,
+                       images=dict(table=self.to_table_params(), path=file_name),
+                       labellevels=1)
 
-    def copy(self):
+        self._retrieve('dropcaslib', caslib=caslib)
+
+    def copy_table(self, casout=None):
         '''
-        Function to create a copy the image object.
-        '''
+        Function to create a copy the image object
 
-        sess = self.sess
-        image_new = Image(sess)
-        image_new.blocksize = self.blocksize
-        image_new.path = self.path
-        image_new.patch_level = self.patch_level
-
-        sess.partition(casout=dict(**image_new.tbl, replace=True, blocksize=self.blocksize),
-                       table=dict(**self.tbl))
-        return image_new
-
-    def drop(self):
-        '''
-        Function to remove the image object and delete the associated CAS table.
-        '''
-
-        sess = self.sess
-
-        sess.droptable(**self.tbl)
-
-        del self.sess, self.patch_level, self.tbl, self.path, self.summary, \
-            self.channel_means, self.label_freq
-
-    def two_way_split(self, test_rate=20):
-        '''
-        Function to split image data into training and testing sets.
-
-
-        Parameters:
-
+        Parameters
         ----------
-        test_rate : double, between 0 and 100, optional.
-            Specify the proportion of the testing data set, e.g. 20 mean 20% of the images will be in the testing set.
-            Default : 20.
-        blocksize : int
-            Specifies the number of bytes to use for blocks that are read by threads.
-            Default: 64
-
+        casout : dict, optional
+            Output CAS table parameters
 
         Returns
-
         -------
-        image_tr : an Image object containing the training data
-        image_te : an Image object containing the testing data
+        :class:`ImageTable`
+
         '''
+        if casout is None:
+            casout = {}
 
-        sess = self.sess
+        out = self.copy()
+        res = self._retrieve('table.partition', casout=casout, table=self)['casTable']
+        out.params.update(res.params)
 
-        if not sess.queryactionset('sampling')['sampling']:
-            sess.loadactionset('sampling')
+        return out
 
-        partindname = random_name(name='PartInd_', length=2)
-        sess.stratified(output=dict(casOut=dict(**self.tbl, blocksize=self.blocksize,
-                                                replace=True),
-                                    copyVars="ALL", PARTINDNAME=partindname),
-                        samppct=test_rate, samppct2=100 - test_rate,
-                        partind=True,
-                        table=dict(**self.tbl, groupby='_label_'))
-
-        image_tr = Image(sess)
-        image_tr.path = self.path
-        image_tr.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_tr.tbl, replace=True, blocksize=self.blocksize),
-                       table=dict(**self.tbl, where='{}=2'.format(partindname),
-                                  groupby='_label_'))
-
-        image_te = Image(sess)
-        image_te.path = self.path
-        image_te.patch_level = self.patch_level
-
-        sess.partition(casout=dict(**image_te.tbl, replace=True, blocksize=self.blocksize),
-                       table=dict(**self.tbl, where='{}=1'.format(partindname),
-                                  groupby='_label_'))
-        image_tr._summary()
-        image_te._summary()
-
-        return image_tr, image_te
-
-    def three_way_split(self, valid_rate=20, test_rate=20):
+    def show(self, nimages=5, ncol=8, randomize=False):
         '''
-        Function to split image data into training and testing sets.
-
+        Display a grid of images
 
         Parameters:
-
         ----------
-        valid_rate : double, between 0 and 100, optional.
-            Specify the proportion of the validation data set,
-            e.g. 20 mean 20% of the images will be in the validation set.
-            Default : 20.
-        test_rate : double, between 0 and 100, optional.
-            Specify the proportion of the testing data set,
-            e.g. 20 mean 20% of the images will be in the testing set.
-            Default : 20.
-            Note: the total of valid_rate and test_rate cannot be exceed 100
-        blocksize : int
-            Specifies the number of bytes to use for blocks that are read by threads.
-            Default: 64
-
-
-        Returns
-
-        -------
-        image_tr : an Image object containing the training data
-        image_te : an Image object containing the testing data
-        '''
-
-        sess = self.sess
-
-        if not sess.queryactionset('sampling')['sampling']:
-            sess.loadactionset('sampling')
-
-        partindname = random_name(name='PartInd_', length=2)
-        sess.stratified(output=dict(casOut=dict(**self.tbl, blocksize=self.blocksize,
-                                                replace=True),
-                                    copyVars="ALL", PARTINDNAME=partindname),
-                        samppct=valid_rate, samppct2=test_rate,
-                        partind=True,
-                        table=dict(**self.tbl, groupby='_label_'))
-
-        image_tr = Image(sess)
-        image_tr.path = self.path
-        image_tr.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_tr.tbl, replace=True, blocksize=self.blocksize),
-                       table=dict(**self.tbl, where='{}=0'.format(partindname),
-                                  groupby='_label_'))
-
-        image_valid = Image(sess)
-        image_valid.path = self.path
-        image_valid.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_valid.tbl, replace=True, blocksize=self.blocksize),
-                       table=dict(**self.tbl, where='{}=1'.format(partindname),
-                                  groupby='_label_'))
-
-        image_te = Image(sess)
-        image_te.path = self.path
-        image_te.patch_level = self.patch_level
-        sess.partition(casout=dict(**image_te.tbl, replace=True, blocksize=self.blocksize),
-                       table=dict(**self.tbl, where='{}=2'.format(partindname),
-                                  groupby='_label_'))
-        image_tr._summary()
-        image_valid._summary()
-        image_te._summary()
-
-        return image_tr, image_valid, image_te
-
-    def display(self, nimages=5, ncol=8, random_flag=False):
-        '''
-        Function to display images.
-
-        Parameters:
-
-        ----------
-        nimages : int, optional.
-            Specify the number of images to be displayed. If nimage is greater than the maximum number of images in the
+        nimages : int, optional
+            Specifies the number of images to be displayed.
+            If nimage is greater than the maximum number of images in the
             table, it will be set to this maximum number.
-            Default : 5.
-            Note: large nimages costs a lot of memory to display.
-        ncol : int, optional.
-            Specifies the layout of the display, determine the number of columns in the plots.
-            Default: 8.
-        random_flag: boolean, optional.
+            Note: Specifying a large value for nimages can lead to slow
+            performance.
+        ncol : int, optional
+            Specifies the layout of the display, determine the number of
+            columns in the plots.
+        randomize : boolean, optional
             Specifies whether to randomly choose the images for display.
-            Default: False
-
-
-        Returns
-
-        -------
-        Plot the specified number of images.
 
         '''
+        nimages = min(nimages, len(self))
 
-        sess = self.sess
+        conn = self.get_connection()
 
-        nmax = sess.CASTable(**self.tbl).numrows().numrows
-        nimages = min(nimages, nmax)
-
-        if random_flag:
-            temp_tbl = sess.fetchimages(imagetable=sess.CASTable(
-                **self.tbl,
-                computedvars=['random_index'],
-                computedvarsprogram="call streaminit(-1);random_index=rand(\"UNIFORM\");"),
-                sortby='random_index', to=nimages)
+        if randomize:
+            temp_tbl = conn.retrieve('image.fetchimages', _messagelevel='error',
+                                     imagetable=dict(
+                                         computedvars=['random_index'],
+                                         computedvarsprogram='call streaminit(-1);\
+                                                              random_index=rand("UNIFORM");',
+                                         **self.to_table_params()),
+                                     sortby='random_index', to=nimages)
         else:
-            temp_tbl = sess.fetchimages(imagetable=sess.CASTable(**self.tbl), to=nimages)
+            temp_tbl = conn.retrieve('image.fetchimages', _messagelevel='error',
+                                     imagetable=self.to_table_params(), to=nimages)
 
         if nimages > ncol:
             nrow = nimages // ncol + 1
         else:
             nrow = 1
             ncol = nimages
+
         fig = plt.figure(figsize=(16, 16 // ncol * nrow))
 
         for i in range(nimages):
-            image = temp_tbl.Images.Image[i]
-            label = temp_tbl.Images.Label[i]
+            image = temp_tbl['Images']['Image'][i]
+            label = temp_tbl['Images']['Label'][i]
             image = np.asarray(image)
             ax = fig.add_subplot(nrow, ncol, i + 1)
             ax.set_title('{}'.format(label))
             plt.imshow(image)
             plt.xticks([]), plt.yticks([])
 
-    def crop(self, x=0, y=0, width=None, height=None):
+    def crop(self, x=0, y=0, width=None, height=None, inplace=True):
         '''
-        Function to crop images.
+        Crop images in the table
 
-        Parameters:
-
+        Parameters
         ----------
-        x : int, optional.
-            Specify the x location of the top left corn of the cropped images.
-            Default : 0.
-        y : int, optional.
-            Specify the y location of the top left corn of the cropped images.
-            Default : 0.
-        width : int, optional.
+        x : int, optional
+            Specify the x location of the top-left corner of the cropped images.
+        y : int, optional
+            Specify the y location of the top-left corner of the cropped images.
+        width : int, optional
             Specify the width of the cropped images.
-            Default : 224.
-        height : int, optional.
+        height : int, optional
             Specify the height of the cropped images.
             If not specified, height will be set to be equal to width.
-            Default : None.
+        inplace: boolean, optional
+            Specifies whether to update the original table, or to create a new one.
+
+        Returns
+        -------
+        ImageTable
+            If `inplace=False`
+        None
+            If `inplace=True`
 
         '''
-        sess = self.sess
-
         if (width is None) and (height is None):
             width = 224
         if width is None:
@@ -373,42 +352,44 @@ class Image:
         if height is None:
             height = width
 
-        image_table = self.tbl
-        self.blocksize = width * height * 3 * 8 / 1024
-
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
-        sess.processimages(
-            imageTable=image_table,
-            copyVars=column_names,
-            casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-            imagefunctions=[dict(functionoptions=
-                                 dict(functionType="GET_PATCH", x=x, y=y,
-                                      w=width, h=height))])
 
-        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                     table=dict(**self.tbl))
+        if inplace:
+            self._retrieve('image.processimages',
+                           copyvars=column_names,
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           imagefunctions=[dict(functionoptions=
+                                                dict(functiontype='GET_PATCH', x=x, y=y,
+                                                     w=width, h=height))])
 
-        self._summary()
+        else:
+            out = self.copy_table()
+            out.crop(x=x, y=x, width=width, height=height)
+            return out
 
-    def resize(self, width=None, height=None):
+    def resize(self, width=None, height=None, inplace=True):
         '''
-        Function to resize images.
+        Resize images in the table
 
-        Parameters:
-
+        Parameters
         ----------
-        width : int, optional.
+        width : int, optional
             Specify the target width of the resized images.
-            Default : 224.
-        height : int, optional.
+        height : int, optional
             Specify the target height of the resized images.
             If not specified, height will be set to be equal to width.
-            Default : None.
+        inplace: boolean, optional
+            Specifies whether to update the original table, or to create
+            a new one.
+
+        Returns
+        -------
+        ImageTable
+            If `inplace=False`
+        None
+            If `inplace=True`
 
         '''
-
-        sess = self.sess
-
         if (width is None) and (height is None):
             width = 224
         if width is None:
@@ -416,60 +397,61 @@ class Image:
         if height is None:
             height = width
 
-        self.blocksize = width * height * 3 * 8 / 1024
-
-        image_table = self.tbl
-
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
-        sess.processimages(
-            imageTable=image_table,
-            copyVars=column_names,
-            casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-            imagefunctions=[dict(functionoptions=
-                                 dict(functionType="RESIZE",
-                                      w=width, h=height))])
-        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                     table=dict(**self.tbl))
+        if inplace:
+            self._retrieve('image.processimages',
+                           copyvars=column_names,
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           imagefunctions=[dict(functionoptions=
+                                                dict(functiontype='RESIZE',
+                                                     w=width, h=height))])
+            self._retrieve('table.partition', 
+                           casout=dict(replace=True, **self.to_outtable_params()))
 
-        self._summary()
+        else:
+            out = self.copy_table()
+            out.resize_images(width=width, height=height)
+            return out
 
-    def patches(self, x=0, y=0, width=None, height=None, step_size=None,
-                output_width=None, output_height=None):
+    def as_patches(self, x=0, y=0, width=None, height=None, step_size=None,
+                   output_width=None, output_height=None, inplace=True):
         '''
-        Function to get patches from the images.
+        Generate patches from images in the table
 
-        Parameters:
-
+        Parameters
         ----------
-        x : int, optional.
-            Specify the x location of the top left corn of the first patches.
-            Default : 0.
-        y : int, optional.
-            Specify the y location of the top left corn of the first patches.
-            Default : 0.
-        width : int, optional.
+        x : int, optional
+            Specify the x location of the top-left corner of the first patches.
+        y : int, optional
+            Specify the y location of the top-left corner of the first patches.
+        width : int, optional
             Specify the width of the patches.
-            Default : 224.
-        height : int, optional.
+        height : int, optional
             Specify the width of the patches.
             If not specified, height will be set to be equal to width.
-            Default : None.
-        step_size : int, optional.
+        step_size : int, optional
             Specify the step size of the moving windows for extracting the patches.
-            Default : None, meaning step_size = width.
-        output_width : int, optional.
+            Default : None, meaning step_size=width.
+        output_width : int, optional
             Specify the output width of the patches.
             If not equal to width, the patches will be resize to the output width.
-            Default : None, meaning output_width = width.
-        output_height : int, optional.
+            Default : None, meaning output_width=width.
+        output_height : int, optional
             Specify the output height of the patches.
             If not equal to height, the patches will be resize to the output height.
-            Default : None, meaning output_height = height.
+            Default : None, meaning output_height=height.
+        inplace: boolean, optional
+            Specifies whether to update the original table, or create a new one.
+
+        Returns
+        -------
+        ImageTable
+            If `inplace=False`
+        None
+            If `inplace=True`
 
         '''
-
-        sess = self.sess
 
         if (width is None) and (height is None):
             width = 224
@@ -477,142 +459,158 @@ class Image:
             width = height
         if height is None:
             height = width
+
         if step_size is None:
             step_size = width
+
         if output_width is None:
             output_width = width
         if output_height is None:
             output_height = height
 
-        self.blocksize = output_width * output_height * 3 * 8 / 1024
-
-        image_table = self.tbl
-        croplist = [dict(sweepImage=True, x=x, y=y,
+        croplist = [dict(sweepimage=True, x=x, y=y,
                          width=width, height=height,
-                         stepSize=step_size,
-                         outputWidth=output_width,
-                         outputHeight=output_height)]
+                         stepsize=step_size,
+                         outputwidth=output_width,
+                         outputheight=output_height)]
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
-        sess.augmentImages(imageTable=image_table,
-                           copyVars=column_names,
-                           casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                           cropList=croplist)
-        # The following code generate the latest file name according to the number of patches operations.
-        computedvars = '_filename_{}'.format(self.patch_level + 1)
-        SASCode = "length _filename_{} varchar(*); ".format(self.patch_level + 1) + \
-                  "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; ".format(
-                      self.patch_level) + \
-                  "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1)||".format(
-                      self.patch_level, self.patch_level + 1) + \
-                  "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); ".format(
-                      self.patch_level, self.patch_level + 1)
-        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                     table=dict(**self.tbl,
-                                computedVars=computedvars,
-                                computedVarsProgram=SASCode))
+        if inplace:
+            self._retrieve('image.augmentimages',
+                           copyvars=column_names,
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           croplist=croplist)
 
-        self.patch_level += 1
-        self._summary()
+            # The following code generate the latest file name according
+            # to the number of patches operations.
+            computedvars = '_filename_{}'.format(self.patch_level + 1)
+            code = "length _filename_{1} varchar(*); " + \
+                   "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; " + \
+                   "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1) || " + \
+                   "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); "
+            code = code.format(self.patch_level, self.patch_level + 1)
 
-    def random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
-                       step_size=None, output_width=None, output_height=None):
+            self._retrieve('table.partition', 
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           table=dict(computedvars=computedvars,
+                                      computedvarsprogram=code,
+                                      **self.to_table_params()))
+            self._retrieve('table.shuffle',
+                           casout=dict(replace=True, **self.to_outtable_params()))
+            self.patch_level += 1
+
+        else:
+            out = self.copy_table()
+            out.get_patches(x=x, y=y, width=width, height=height, step_size=step_size,
+                            output_width=output_width, output_height=output_height)
+            return out
+
+    def as_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
+                          step_size=None, output_width=None, output_height=None,
+                          inplace=True):
         '''
-        Function to generate patches from the images randomly.
+        Generate random patches from images in the table
 
-        Parameters:
-
+        Parameters
         ----------
         random_ratio: double, optional
-            Specifies the proportion of the generated pateches to output.
-            Default : 0.5.
-        x : int, optional.
-            Specify the x location of the top left corn of the first patches.
-            Default : 0.
-        y : int, optional.
-            Specify the y location of the top left corn of the first patches.
-            Default : 0.
-        width : int, optional.
-            Specify the width of the patches.
-            Default : 224.
-        height : int, optional.
-            Specify the width of the patches.
+            Specifies the proportion of the generated patches to output.
+        x : int, optional
+            Specifies the x location of the top-left corner of the first patches.
+        y : int, optional
+            Specifies the y location of the top-left corner of the first patches.
+        width : int, optional
+            Specifies the width of the patches.
+        height : int, optional
+            Specifies the width of the patches.
             If not specified, height will be set to be equal to width.
-            Default : None.
-        step_size : int, optional.
-            Specify the step size of the moving windows for extracting the patches.
+        step_size : int, optional
+            Specifies the step size of the moving windows for extracting the patches.
             If not specified, it will be set to be equal to width.
-            Default : None.
-        output_width : int, optional.
-            Specify the output width of the patches.
+        output_width : int, optional
+            Specifies the output width of the patches.
             If not specified, it will be set to be equal to width.
-            Default : None.
-        output_height : int, optional.
-            Specify the output height of the patches.
+        output_height : int, optional
+            Specifies the output height of the patches.
             If not specified, it will be set to be equal to height.
-            Default : None.
+        inplace: boolean, optional
+            Specifies whether to update the original table, or create a new one.
+
+        Returns
+        -------
+        ImageTable
+            If `inplace=True`
+        None
+            If `inplace=False`
 
         '''
-
-        sess = self.sess
-
         if (width is None) and (height is None):
             width = 224
         if width is None:
             width = height
         if height is None:
             height = width
+
         if step_size is None:
             step_size = width
+
         if output_width is None:
             output_width = width
         if output_height is None:
             output_height = height
 
-        self.blocksize = output_width * output_height * 3 * 8 / 1024
-
-        image_table = self.tbl
-        croplist = [dict(sweepImage=True, x=x, y=y,
+        croplist = [dict(sweepimage=True, x=x, y=y,
                          width=width, height=height,
-                         stepSize=step_size,
-                         outputWidth=output_width,
-                         outputHeight=output_height)]
+                         stepsize=step_size,
+                         outputwidth=output_width,
+                         outputheight=output_height)]
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
-        sess.augmentImages(imageTable=image_table,
-                           copyVars=column_names,
-                           casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                           cropList=croplist,
-                           randomRatio=random_ratio,
-                           writeRandomly=True)
-        # The following code generate the latest file name according to the number of patches operations.
-        computedvars = '_filename_{}'.format(self.patch_level + 1)
-        SASCode = "length _filename_{} varchar(*); ".format(self.patch_level + 1) + \
-                  "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; ".format(
-                      self.patch_level) + \
-                  "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1)||".format(
-                      self.patch_level, self.patch_level + 1) + \
-                  "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); ".format(
-                      self.patch_level, self.patch_level + 1)
-        sess.shuffle(casout=dict(**self.tbl, replace=True, blocksize=self.blocksize),
-                     table=dict(**self.tbl,
-                                computedVars=computedvars,
-                                computedVarsProgram=SASCode))
-        self.patch_level += 1
-        self._summary()
+        if inplace:
+            self._retrieve('image.augmentimages', 
+                           copyvars=column_names,
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           croplist=croplist,
+                           randomratio=random_ratio,
+                           writerandomly=True)
 
-    def _summary(self):
-        '''
-        Functioin to summarize the image table.
-        '''
-        sess = self.sess
+            # The following code generate the latest file name according
+            # to the number of patches operations.
+            computedvars = '_filename_{}'.format(self.patch_level + 1)
+            code = "length _filename_{1} varchar(*); " + \
+                   "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; " + \
+                   "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1) || " + \
+                   "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); "
+            code = code.format(self.patch_level, self.patch_level + 1)
 
-        summary = sess.image.summarizeimages(imageTable=self.tbl)
-        label_freq = sess.freq(table=self.tbl, inputs='_label_')
-        channel_means = summary['Summary'].ix[0, ['mean1stChannel', 'mean2ndChannel', 'mean3rdChannel']].tolist()
+            self._retrieve('table.partition',
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           table=dict(computedvars=computedvars,
+                                      computedvarsprogram=code,
+                                      **self.to_table_params()))
+            self.patch_level += 1
 
-        self.summary = summary
-        self.label_freq = label_freq
-        self.channel_means = channel_means
+        else:
+            out = self.copy_table()
+            out.get_random_patches(random_ratio=random_ratio,
+                                   x=x, y=y,
+                                   width=width, height=height,
+                                   step_size=step_size,
+                                   output_width=output_width,
+                                   output_height=output_height)
+            return out
+
+    @property
+    def image_summary(self):
+        return self._retrieve('image.summarizeimages')['Summary']
+
+    @property
+    def label_freq(self):
+        return self._retrieve('simple.freq', table=self, inputs=['_label_'])['Frequency']
+
+    @property
+    def channel_means(self):
+        return self.image_summary.ix[0, ['mean1stChannel', 'mean2ndChannel',
+                                         'mean3rdChannel']].tolist()

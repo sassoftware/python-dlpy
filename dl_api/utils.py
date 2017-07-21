@@ -39,7 +39,7 @@ def input_table_check(input_table):
     ----------
 
     input_table : A CAS table object, a string specifies the name of the CAS table,
-                a dictionary specifies the CAS table, or an Image object.
+                a dictionary specifies the CAS table, or an ImageTable object.
 
     Return:
 
@@ -53,16 +53,14 @@ def input_table_check(input_table):
         input_table = dict(name=input_table)
     elif type_indicator == "dict":
         input_table = input_table
-    elif type_indicator == "Image":
-        input_table = input_table.tbl
-    elif type_indicator == "CASTable":
-        input_table = dict(name=input_table.tableinfo().TableInfo.Name[0])
+    elif type_indicator in ("ImageTable", "CASTable"):
+        input_table = input_table.to_table_params()
     else:
         raise TypeError('input_table must be one of the following:\n'
-                        '1. A CAS table object;\n'
+                        '1. A CAS table;\n'
                         '2. A string specifies the name of the CAS table,\n'
                         '3. A dictionary specifies the CAS table\n'
-                        '4. An Image object.')
+                        '4. An Image table.')
     return input_table
 
 
@@ -89,4 +87,22 @@ def prod_without_none(array):
             prod *= i
     return prod
 
+
+
+def get_max_size(start_path='.'):
+    max_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            file_size = os.path.getsize(fp)
+            if file_size > max_size:
+                max_size = file_size
+    return max_size
+
+
+def update_blocksize(width, height):
+    '''
+    Function to determine blocksize according to imagesize in the table.
+    '''
+    return width * height * 3 * 8 / 1024
 
