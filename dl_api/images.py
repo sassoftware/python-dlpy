@@ -160,7 +160,7 @@ class ImageTable(CASTable):
         return out
 
     @classmethod
-    def load_path(cls, conn, path, casout=None, **kwargs):
+    def load_files(cls, conn, path, casout=None, **kwargs):
         '''
         Create a new ImageTable using images in `path`
 
@@ -604,13 +604,21 @@ class ImageTable(CASTable):
 
     @property
     def image_summary(self):
-        return self._retrieve('image.summarizeimages')['Summary']
+        out = self._retrieve('image.summarizeimages')['Summary']
+        out = out.T.drop(['Column'])[0]
+        out.name = None
+        return out
 
     @property
     def label_freq(self):
-        return self._retrieve('simple.freq', table=self, inputs=['_label_'])['Frequency']
+        out = self._retrieve('simple.freq', table=self, inputs=['_label_'])['Frequency']
+        out = out[['FmtVar', 'Level', 'Frequency']]
+        out = out.set_index('FmtVar')
+        out.index.name = 'Label'
+        out = out.astype('int64')
+        return out
 
     @property
     def channel_means(self):
-        return self.image_summary.ix[0, ['mean1stChannel', 'mean2ndChannel',
-                                         'mean3rdChannel']].tolist()
+        return self.image_summary[['mean1stChannel', 'mean2ndChannel',
+                                   'mean3rdChannel']].tolist()
