@@ -39,6 +39,7 @@ class Layer:
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
+            self._color_code_ = '#F0FF00'
         elif self.config['type'].lower() in ('convo', 'convolution'):
             self.output_size = (self.src_layers.output_size[0] // self.config['stride'],
                                 self.src_layers.output_size[1] // self.config['stride'],
@@ -47,6 +48,7 @@ class Layer:
             self.num_weights = self.config['width'] * self.config['height'] * self.config['nFilters'] * \
                                self.src_layers.output_size[2]
             self.num_bias = self.config['nFilters']
+            self._color_code_ = '#6CFF00'
         elif self.config['type'].lower() in ('pool', 'pooling'):
             self.output_size = (self.src_layers.output_size[0] // self.config['stride'],
                                 self.src_layers.output_size[1] // self.config['stride'],
@@ -54,6 +56,7 @@ class Layer:
             self.kernel_size = (self.config['width'], self.config['height'])
             self.num_weights = 0
             self.num_bias = 0
+            self._color_code_ = '#FF9700'
         elif self.config['type'].lower() in ('fc', 'fullconnect'):
             if isinstance(self.src_layers.output_size, int):
                 num_features = self.src_layers.output_size
@@ -64,6 +67,7 @@ class Layer:
             self.kernel_size = (num_features, self.config['n'])
             self.num_weights = num_features * self.config['n']
             self.num_bias = self.config['n']
+            self._color_code_ = '#00ECFF'
         elif self.config['type'].lower() == 'output':
             if isinstance(self.src_layers.output_size, int):
                 num_features = self.src_layers.output_size
@@ -80,6 +84,7 @@ class Layer:
                 self.num_weights = None
                 self.num_bias = None
                 self.output_size = None
+            self._color_code_ = '#C8C8C8'
 
         name = '{}({})'.format(self.name, self.config['type'])
         col1 = '| {:<14}'.format('{}'.format(name))
@@ -100,7 +105,7 @@ class Layer:
 
 
 class InputLayer(Layer):
-    def __init__(self, nChannels=3, width=224, height=224, scale=1, dropout=0, offsets=None,
+    def __init__(self, nChannels=3, width=224, height=224, scale=1, dropout=0, offsets='NONE',
                  name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
