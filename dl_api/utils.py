@@ -19,6 +19,7 @@
 import random
 import string
 import os
+from swat.cas.table import CASTable
 
 
 def random_name(name='ImageData', length=6):
@@ -149,3 +150,114 @@ def model_to_graph(model):
             model_graph.edge(**layer_to_edge(layer))
 
     return model_graph
+
+
+def two_way_split(tbl, test_rate=20, stratify_by='_label_'):
+    '''
+    Function to split image data into training and testing sets
+
+    Parameters:
+    ----------
+    tbl : CASTable
+        The CAS table to split
+    test_rate : double, optional
+        Specify the proportion of the testing data set,
+        e.g. 20 mean 20% of the images will be in the testing set.
+    stratify_by : string, optional
+        The variable to stratify by
+
+
+    Returns
+    -------
+    ( training CASTable, testing CASTable )
+
+    '''
+
+    train_tbl_name = random_name()
+    test_tbl_name = random_name()
+    temp_tbl_name = random_name('Temp')
+
+    tbl._retrieve('loadactionset', actionset='sampling')
+
+    partindname = random_name(name='PartInd_', length=2)
+
+    tbl._retrieve('sampling.stratified',
+                  output=dict(casout=temp_tbl_name, copyvars='all', partindname=partindname),
+                  samppct=test_rate, samppct2=100 - test_rate,
+                  partind=True,
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
+
+    train = tbl._retrieve('table.partition',
+                          table=dict(where='{}=2'.format(partindname),
+                                     groupby=stratify_by),
+                          casout=train_tbl_name)['casTable']
+
+    test = tbl._retrieve('table.partition',
+                         table=dict(where='{}=1'.format(partindname),
+                                    groupby=stratify_by),
+                         casout=test_tbl_name)['casTable']
+
+    tbl._retrieve('table.dropTable',
+                  name=temp_tbl_name)
+
+    return train, test
+
+
+def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_'):
+    '''
+    Function to split image data into training and testing sets.
+
+    Parameters
+    ----------
+    tbl : CASTable
+        The CAS table to split
+    valid_rate : double, optional
+        Specify the proportion of the validation data set,
+        e.g. 20 mean 20% of the images will be in the validation set.
+    test_rate : double, optional
+        Specify the proportion of the testing data set,
+        e.g. 20 mean 20% of the images will be in the testing set.
+        Note: the total of valid_rate and test_rate cannot be exceed 100
+    stratify_by : string, optional
+        The variable to stratify by
+
+    Returns
+    -------
+    ( train CASTable, valid CASTable, test CASTable )
+
+    '''
+
+    train_tbl_name = random_name()
+    valid_tbl_name = random_name()
+    test_tbl_name = random_name()
+    temp_tbl_name = random_name('Temp')
+
+    tbl._retrieve('loadactionset', actionset='sampling')
+
+    partindname = random_name(name='PartInd_', length=2)
+
+    tbl._retrieve('sampling.stratified',
+                  output=dict(casout=temp_tbl_name, copyvars='all', partindname=partindname),
+                  samppct=valid_rate, samppct2=test_rate,
+                  partind=True,
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
+
+    train = tbl._retrieve('sampling.partition',
+                          table=dict(where='{}=0'.format(partindname),
+                                     groupby=stratify_by),
+                          casout=train_tbl_name)['casTable']
+
+    valid = tbl._retrieve('sampling.partition',
+                          table=dict(where='{}=1'.format(partindname),
+                                     groupby=stratify_by),
+                          casout=valid_tbl_name)['casTable']
+
+    test = tbl._retrieve('sampling.partition',
+                         table=dict(where='{}=2'.format(partindname),
+                                    groupby=stratify_by),
+                         casout=test_tbl_name)['casTable']
+
+    tbl._retrieve('table.dropTable',
+                  name=temp_tbl_name)
+
+    return train, valid, test
