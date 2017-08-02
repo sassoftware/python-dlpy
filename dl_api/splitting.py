@@ -21,7 +21,7 @@ from .images import ImageTable
 from .utils import random_name
 
 
-def two_way_split(tbl, test_rate=20, stratify_by='_label_'):
+def two_way_split(tbl, test_rate=20, stratify_by='_label_', **kwargs):
     '''
     Function to split image data into training and testing sets
 
@@ -34,6 +34,8 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_'):
         e.g. 20 mean 20% of the images will be in the testing set.
     stratify_by : string, optional
         The variable to stratify by
+    **kwargs : keyword arguments, optional
+        Additional keyword arguments to the `sample.stratified` action
 
 
     Returns
@@ -54,7 +56,7 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_'):
                   output=dict(casout=temp_tbl_name, copyvars='all', partindname=partindname),
                   samppct=test_rate, samppct2=100 - test_rate,
                   partind=True,
-                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
 
     train = tbl._retrieve('table.partition',
                           table=dict(where='{}=2'.format(partindname),
@@ -72,7 +74,7 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_'):
     return ImageTable.from_table(train), ImageTable.from_table(test)
 
 
-def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_'):
+def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **kwargs):
     '''
     Function to split image data into training and testing sets.
 
@@ -89,6 +91,8 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_'):
         Note: the total of valid_rate and test_rate cannot be exceed 100
     stratify_by : string, optional
         The variable to stratify by
+    **kwargs : keyword arguments, optional
+        Additional keyword arguments to the `sample.stratified` action
 
     Returns
     -------
@@ -109,7 +113,7 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_'):
                   output=dict(casout=temp_tbl_name, copyvars='all', partindname=partindname),
                   samppct=valid_rate, samppct2=test_rate,
                   partind=True,
-                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
 
     train = tbl._retrieve('table.partition',
                           table=dict(where='{}=0'.format(partindname),
