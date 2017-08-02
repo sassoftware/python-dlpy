@@ -24,11 +24,11 @@ from .model import Model
 
 
 class RNN(Model):
-    def __init__(self, sess, layers=None, model_name=None):
-        if not sess.queryactionset('deepLearn')['deepLearn']:
-            sess.loadactionset('deepLearn')
+    def __init__(self, conn, layers=None, model_name=None):
+        if not conn.queryactionset('deepLearn')['deepLearn']:
+            conn.loadactionset('deepLearn')
 
-        Model.__init__(self, sess, model_name=model_name)
+        Model.__init__(self, conn, model_name=model_name)
 
         if layers is None:
             self.layers = []
@@ -68,7 +68,7 @@ class RNN(Model):
             raise ValueError('The first layer of the model must be an input layer')
         if self.layers[-1].config['type'] != 'output':
             raise ValueError('The last layer of the model must be an output layer')
-        s = self.sess
+        s = self.conn
         s.buildmodel(model=dict(name=self.model_name, replace=True), type='RNN')
 
         layer_num = 1
