@@ -19,7 +19,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
-from .utils import random_name
+from .utils import random_name, image_blocksize
 
 
 def two_way_split(tbl, test_rate=20, stratify_by='_label_', casout=None):
@@ -53,10 +53,10 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', casout=None):
     partindname = random_name(name='PartInd_', length=2)
 
     tbl._retrieve('sampling.stratified',
-                   output=dict(casout=casout, copyvars='all', partindname=partindname),
-                   samppct=test_rate, samppct2=100 - test_rate,
-                   partind=True,
-                   table=dict(groupby=stratify_by, **tbl.to_table_params()))
+                  output=dict(casout=casout, copyvars='all', partindname=partindname),
+                  samppct=test_rate, samppct2=100 - test_rate,
+                  partind=True,
+                  table=dict(groupby=stratify_by, **tbl.to_table_params()))
 
     train = tbl.copy()
     out = tbl._retrieve('table.partition',
@@ -73,6 +73,7 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', casout=None):
     test.params.update(out.params)
 
     return train, test
+
 
 def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', casout=None):
     '''
@@ -139,7 +140,6 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', cas
 
 
 class ImageTable(CASTable):
-
     @classmethod
     def from_table(cls, tbl):
         '''
@@ -351,13 +351,14 @@ class ImageTable(CASTable):
             width = height
         if height is None:
             height = width
+        blocksize = image_blocksize(width, height)
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
         if inplace:
             self._retrieve('image.processimages',
                            copyvars=column_names,
-                           casout=dict(replace=True, **self.to_outtable_params()),
+                           casout=dict(replace=True, **self.to_outtable_params(), blocksize=blocksize),
                            imagefunctions=[dict(functionoptions=
                                                 dict(functiontype='GET_PATCH', x=x, y=y,
                                                      w=width, h=height))])
@@ -396,18 +397,20 @@ class ImageTable(CASTable):
             width = height
         if height is None:
             height = width
-
+        blocksize = image_blocksize(width, height)
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
         if inplace:
             self._retrieve('image.processimages',
                            copyvars=column_names,
-                           casout=dict(replace=True, **self.to_outtable_params()),
+                           casout=dict(replace=True, **self.to_outtable_params(),
+                                       blocksize=blocksize),
                            imagefunctions=[dict(functionoptions=
                                                 dict(functiontype='RESIZE',
                                                      w=width, h=height))])
-            self._retrieve('table.partition', 
-                           casout=dict(replace=True, **self.to_outtable_params()))
+            # self._retrieve('table.partition',
+            #                casout=dict(replace=True, **self.to_outtable_params(),
+            #                            blocksize=blocksize))
 
         else:
             out = self.copy_table()
@@ -468,6 +471,7 @@ class ImageTable(CASTable):
         if output_height is None:
             output_height = height
 
+        blocksize = image_blocksize(output_width, output_height)
         croplist = [dict(sweepimage=True, x=x, y=y,
                          width=width, height=height,
                          stepsize=step_size,
@@ -491,13 +495,12 @@ class ImageTable(CASTable):
                    "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); "
             code = code.format(self.patch_level, self.patch_level + 1)
 
-            self._retrieve('table.partition', 
-                           casout=dict(replace=True, **self.to_outtable_params()),
+            self._retrieve('table.shuffle',
+                           casout=dict(replace=True, **self.to_outtable_params(),
+                                       blocksize=blocksize),
                            table=dict(computedvars=computedvars,
                                       computedvarsprogram=code,
                                       **self.to_table_params()))
-            self._retrieve('table.shuffle',
-                           casout=dict(replace=True, **self.to_outtable_params()))
             self.patch_level += 1
 
         else:
@@ -560,6 +563,8 @@ class ImageTable(CASTable):
         if output_height is None:
             output_height = height
 
+        blocksize = image_blocksize(output_width, output_height)
+
         croplist = [dict(sweepimage=True, x=x, y=y,
                          width=width, height=height,
                          stepsize=step_size,
@@ -569,7 +574,7 @@ class ImageTable(CASTable):
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
         if inplace:
-            self._retrieve('image.augmentimages', 
+            self._retrieve('image.augmentimages',
                            copyvars=column_names,
                            casout=dict(replace=True, **self.to_outtable_params()),
                            croplist=croplist,
@@ -585,11 +590,13 @@ class ImageTable(CASTable):
                    "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); "
             code = code.format(self.patch_level, self.patch_level + 1)
 
-            self._retrieve('table.partition',
-                           casout=dict(replace=True, **self.to_outtable_params()),
+            self._retrieve('table.shuffle',
+                           casout=dict(replace=True, **self.to_outtable_params(),
+                                       blocksize=blocksize),
                            table=dict(computedvars=computedvars,
                                       computedvarsprogram=code,
                                       **self.to_table_params()))
+
             self.patch_level += 1
 
         else:
@@ -614,7 +621,8 @@ class ImageTable(CASTable):
         out = self._retrieve('simple.freq', table=self, inputs=['_label_'])['Frequency']
         out = out[['FmtVar', 'Level', 'Frequency']]
         out = out.set_index('FmtVar')
-        out.index.name = 'Label'
+        # out.index.name = 'Label'
+        out.index.name = None
         out = out.astype('int64')
         return out
 
