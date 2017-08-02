@@ -24,6 +24,7 @@ from .utils import random_name
 from .utils import input_table_check
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 class Model:
@@ -33,8 +34,8 @@ class Model:
     Parameters:
 
     ----------
-    sess :
-        Specifies the session of the CAS connection.
+    conn :
+        Specifies the CAS connection.
     model_name : string
         Specifies the name of the deep learning model.
     model_weights : string, dictionary or CAS table, optional
@@ -48,18 +49,13 @@ class Model:
     A deep learning model objects.
     '''
 
-    def __init__(self, sess, model_name=None, model_weights=None):
+    def __init__(self, conn, model_name=None, model_weights=None):
 
-        if not sess.queryactionset('deepLearn')['deepLearn']:
-            sess.loadactionset('deepLearn')
+        if not conn.queryactionset('deepLearn')['deepLearn']:
+            conn.loadactionset(actionSet='deepLearn', _messagelevel='error')
 
-        # self.table = sess.CASTable(model_name)
-        self.sess = sess
-        if model_weights is None:
-            self.model_weights = None
-        else:
-            self.set_weights(model_weights)
-
+        # self.table = conn.CASTable(model_name)
+        self.conn = conn
         if model_name is None:
             self.model_name = random_name('Model', 6)
         elif type(model_name) is not str:
@@ -67,10 +63,15 @@ class Model:
         else:
             self.model_name = model_name
 
+        if model_weights is None:
+            self.model_weights = conn.CASTable('{}_weights'.format(self.model_name))
+        else:
+            self.set_weights(model_weights)
+
         self.valid_res = None
         self.valid_feature_maps = None
         self.valid_conf_mat = None
-        self.n_epoch = None
+        self.n_Epoch = 0
         self.training_history = None
 
     def load(self, path):
@@ -84,28 +85,57 @@ class Model:
             Specify the full path of the table.
             Note: the path need to be in Linux path format.
         '''
-        sess = self.sess
+        conn = self.conn
 
         dir_name, file_name = path.rsplit('/', 1)
 
         CAS_lib_name = random_name('Caslib', 6)
-        CAS_tbl_name = file_name.split('.')[0]
-        sess.addCaslib(name=CAS_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
-        sess.loadtable(caslib=CAS_lib_name, path=file_name, casout=CAS_tbl_name)
-        model_name = sess.fetch(table=dict(name=CAS_tbl_name,
+        conn.addCaslib(_messagelevel='error',
+                       name=CAS_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+
+        conn.table.loadTable(_messagelevel='error',
+                             caslib=CAS_lib_name,
+                             path=file_name,
+                             casout=dict(name=self.model_name,
+                                         replace=True))
+
+        model_name = conn.fetch(_messagelevel='error',
+                                table=dict(name=self.model_name,
                                            where='_DLKey1_= "modeltype"')).Fetch['_DLKey0_'][0]
-        self.model_name = model_name
 
-        if model_name.lower() != CAS_tbl_name.lower():
-            sess.partition(casout=model_name, table=CAS_tbl_name)
-            sess.droptable(table=CAS_tbl_name)
-        sess.dropcaslib(caslib=CAS_lib_name)
+        if model_name.lower() != self.model_name.lower():
+            conn.partition(casout=dict(name=model_name, replace=True),
+                           table=self.model_name)
 
-    def model_info(self):
-        '''
-        Function to return the information of the model table.
-        '''
-        return self.sess.modelinfo(modelTable=self.model_name)
+            conn.droptable(_messagelevel='error',
+                           table=self.model_name)
+
+            print('NOTE: Model table is loaded successfully!\n'
+                  'NOTE: Model is renamed to "{}" according to the model name in the table.'.format(model_name))
+            self.model_name = model_name
+            self.model_weights = conn.CASTable('{}_weights'.format(self.model_name))
+
+        _file_name_, _extension_ = os.path.splitext(file_name)
+
+        _file_name_list_ = list(conn.fileinfo(caslib=CAS_lib_name, includeDirectories=False).FileInfo.Name)
+
+        if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
+            conn.table.loadTable(_messagelevel='error',
+                                 caslib=CAS_lib_name,
+                                 path=_file_name_ + '_weights' + _extension_,
+                                 casout=dict(name=self.model_name + '_weights',
+                                             replace=True))
+            self.set_weights(self.model_name + '_weights')
+
+            if (_file_name_ + '_weights_attr' + _extension_) in _file_name_list_:
+                conn.table.loadTable(_messagelevel='error',
+                                     caslib=CAS_lib_name,
+                                     path=_file_name_ + '_weights_attr' + _extension_,
+                                     casout=dict(name=self.model_name + '_weights_attr',
+                                                 replace=True))
+                self.set_weights_attr(self.model_name + '_weights_attr')
+
+        conn.dropcaslib(_messagelevel='error', caslib=CAS_lib_name)
 
     def set_weights(self, weight_tbl):
 
@@ -122,10 +152,130 @@ class Model:
 
         '''
 
-        sess = self.sess
+        conn = self.conn
 
         weight_tbl = input_table_check(weight_tbl)
-        self.model_weights = sess.CASTable(**weight_tbl)
+        weight_name = self.model_name + '_weights'
+
+        if weight_tbl['name'].lower() != weight_name.lower():
+            conn.partition(casout=dict(name=self.model_name + '_weights', replace=True),
+                           table=weight_tbl)
+
+        self.model_weights = conn.CASTable(name=self.model_name + '_weights')
+        print('NOTE: Model weights are attached successfully!')
+
+    def load_weights(self, path):
+
+        '''
+        Function to load the weights form a file.
+
+
+        Parameters:
+
+        ----------
+        path : str
+            Specify the directory of the file that store the weight table.
+
+        '''
+
+        conn = self.conn
+
+        dir_name, file_name = path.rsplit('/', 1)
+
+        CAS_lib_name = random_name('Caslib', 6)
+        conn.addCaslib(_messagelevel='error',
+                       name=CAS_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+
+        conn.table.loadTable(_messagelevel='error',
+                             caslib=CAS_lib_name,
+                             path=file_name,
+                             casout=dict(name=self.model_name + '_weights',
+                                         replace=True))
+
+        self.set_weights(self.model_name + '_weights')
+
+        _file_name_, _extension_ = os.path.splitext(file_name)
+
+        _file_name_list_ = list(conn.fileinfo(caslib=CAS_lib_name, includeDirectories=False).FileInfo.Name)
+
+        if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
+            conn.table.loadTable(_messagelevel='error',
+                                 caslib=CAS_lib_name,
+                                 path=_file_name_ + '_weights_attr' + _extension_,
+                                 casout=dict(name=self.model_name + '_weights_attr',
+                                             replace=True))
+
+            self.set_weights_attr(self.model_name + '_weights_attr')
+
+        self.model_weights = conn.CASTable(name=self.model_name + '_weights')
+
+        conn.dropcaslib(_messagelevel='error',
+                        caslib=CAS_lib_name)
+
+    def set_weights_attr(self, attr_tbl, clear=True):
+
+        '''
+        Function to attach the weights attribute.
+
+        Parameters:
+
+        ----------
+        attr_tbl : castable parameter
+            Specifies the weights attribute table.
+        clear : boolean, optional
+            Specifies whether to drop the attribute table after attach it into the weight table.
+
+        '''
+
+        self.conn.retrieve('table.attribute', _messagelevel='error',
+                           task='ADD', attrtable=attr_tbl,
+                           **self.model_weights.to_table_params())
+
+        if clear:
+            self.conn.retrieve('table.droptable', _messagelevel='error',
+                               table=attr_tbl)
+
+        print('NOTE: Model attributes are attached successfully!')
+
+    def load_weights_attr(self, path):
+
+        '''
+        Function to load the weights attribute form a file.
+
+
+        Parameters:
+
+        ----------
+        path : str
+            Specify the directory of the file that store the weight attribute table.
+
+        '''
+
+        conn = self.conn
+
+        dir_name, file_name = path.rsplit('/', 1)
+
+        CAS_lib_name = random_name('Caslib', 6)
+        conn.addCaslib(_messagelevel='error',
+                       name=CAS_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+
+        conn.table.loadTable(_messagelevel='error',
+                             caslib=CAS_lib_name,
+                             path=file_name,
+                             casout=dict(name=self.model_name + '_weights_attr',
+                                         replace=True))
+
+        self.set_weights_attr(self.model_name + '_weights_attr')
+
+        conn.dropcaslib(_messagelevel='error', caslib=CAS_lib_name)
+
+    def model_info(self):
+
+        '''
+        Function to return the information of the model table.
+        '''
+
+        return self.conn.modelinfo(modelTable=self.model_name)
 
     def fit(self, data, inputs='_image_', target='_label_',
             miniBatchSize=1, maxEpochs=5, logLevel=3, lr=0.01,
@@ -151,13 +301,13 @@ class Model:
             Specify the number of observations per thread in a mini-batch..
             Default : 1.
         maxEpochs : int64, optional
-            Specify the maximum number of epochs.
+            Specify the maximum number of Epochs.
             Default : 5.
         logLevel : int 0-3, optional
             Specify  how progress messages are sent to the client.
                 0 : no messages are sent.
                 1 : send the start and end messages.
-                2 : send the iteration history for each epoch.
+                2 : send the iteration history for each Epoch.
                 3 : send the iteration history for each batch.
             Default : 3.
         optimizer: dictionary, optional
@@ -176,7 +326,7 @@ class Model:
         The updated model weights are automatically assigned to the Model object.
 
         '''
-        sess = self.sess
+        conn = self.conn
         input_tbl = input_table_check(data)
 
         if optimizer is None:
@@ -189,45 +339,54 @@ class Model:
                                             ),
                              miniBatchSize=miniBatchSize,
                              maxEpochs=maxEpochs,
-                             # regL2=0.0005,
-                             logLevel=logLevel
-                             # ,snapshotfreq=10
-                             )
+                             logLevel=logLevel)
         else:
             key_args = ['miniBatchSize', 'maxEpochs', 'logLevel']
             for key_arg in key_args:
                 if optimizer[key_arg] is None:
                     optimizer[key_arg] = eval(key_arg)
 
-        r = sess.dltrain(model=self.model_name,
+        if self.model_weights.to_table_params()['name'].upper() in list(conn.tableinfo().TableInfo.Name):
+            init_weights = self.model_weights
+        else:
+            init_weights = None
+            print('NOTE: Training from scratch.')
+
+        r = conn.dltrain(model=self.model_name,
                          table=input_tbl,
                          inputs=inputs,
                          target=target,
-                         initWeights=self.model_weights,
-                         modelWeights=dict(name='_model_weights_', replace=True),
+                         initWeights=init_weights,
+                         modelWeights=dict(**self.model_weights.to_table_params(), replace=True),
                          optimizer=optimizer,
                          **kwargs)
+        temp = r.OptIterHistory
+        temp.Epoch += 1  # Epochs should start from 1
+        temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
 
-        if self.n_epoch is None:
-            self.n_epoch = maxEpochs
-            self.training_history = r.OptIterHistory
+        if self.n_Epoch == 0:
+            self.n_Epoch = maxEpochs
+            self.training_history = temp
         else:
-            temp = r.OptIterHistory
-            temp.Epoch += self.n_epoch
+            temp.Epoch += self.n_Epoch
             self.training_history = self.training_history.append(temp)
-            self.n_epoch += maxEpochs
-        self.training_history.index = range(0, self.n_epoch)
-        self.set_weights('_model_weights_')
+            self.n_Epoch += maxEpochs
+        self.training_history.index = range(0, self.n_Epoch)
 
         return r
 
-    def plot_training_history(self):
+    def plot_training_history(self, items=('Loss', 'FitError'), fig_size=(12, 5)):
+
         '''
         Function to display the training iteration history.
         '''
-        self.training_history[['Loss', 'FitError']].plot(figsize=(12, 5))
+
+        self.training_history.plot(x=['Epoch'], y=list(items),
+                                   xticks=self.training_history.Epoch,
+                                   figsize=fig_size)
 
     def predict(self, input_tbl, inputs='_image_', target='_label_', **kwargs):
+
         '''
         Function of scoring the deep learning model on a validation data set.
 
@@ -250,12 +409,13 @@ class Model:
 
 
         '''
-        sess = self.sess
+
+        conn = self.conn
         input_tbl = input_table_check(input_tbl)
 
         valid_res_tbl = random_name('Valid_Res')
 
-        res = sess.dlscore(model=self.model_name, initWeights=self.model_weights,
+        res = conn.dlscore(model=self.model_name, initWeights=self.model_weights,
                            table=input_tbl,
                            copyVars=[inputs, target],
                            randomFlip='NONE',
@@ -263,9 +423,9 @@ class Model:
                            casout=dict(name=valid_res_tbl, replace=True),
                            **kwargs)
 
-        self.valid_res = sess.CASTable(valid_res_tbl)
+        self.valid_res = conn.CASTable(valid_res_tbl)
         self.valid_score = res.ScoreInfo
-        self.valid_conf_mat = sess.crosstab(
+        self.valid_conf_mat = conn.crosstab(
             table=valid_res_tbl, row=target, col='_dl_predname_')
         return self.valid_score
 
@@ -293,12 +453,12 @@ class Model:
         Retrun an instance variable of the Model object, which is a feature map object.
         '''
 
-        sess = self.sess
+        conn = self.conn
         input_tbl = input_table_check(data)
 
         feature_maps_tbl = random_name('Feature_Maps') + '_{}'.format(image_id)
-        print(feature_maps_tbl)
-        sess.dlscore(model=self.model_name, initWeights=self.model_weights,
+        # print(feature_maps_tbl)
+        conn.dlscore(model=self.model_name, initWeights=self.model_weights,
                      table=dict(**input_tbl),
                      # , where='_id_={}'.format(image_id)),
                      layerOut=dict(name=feature_maps_tbl, replace=True),
@@ -306,14 +466,14 @@ class Model:
                      randomCrop='NONE',
                      layerImageType='jpg',
                      **kwargs)
-        print('checked')
-        layer_out_jpg = sess.CASTable(feature_maps_tbl)
+        # print('NOTE: checked')
+        layer_out_jpg = conn.CASTable(feature_maps_tbl)
         feature_maps_names = [i for i in layer_out_jpg.columninfo().ColumnInfo.Column]
         feature_maps_structure = dict()
         for feature_map_name in feature_maps_names:
             feature_maps_structure[int(feature_map_name.split('_')[2])] = int(feature_map_name.split('_')[4]) + 1
 
-        self.valid_feature_maps = Feature_Maps(self.sess, feature_maps_tbl, structure=feature_maps_structure)
+        self.valid_feature_maps = Feature_Maps(self.conn, feature_maps_tbl, structure=feature_maps_structure)
 
     def get_features(self, input_tbl, dense_layer, target='_label_', **kwargs):
         '''
@@ -343,11 +503,11 @@ class Model:
             The response variable of the original data.
         '''
 
-        sess = self.sess
+        conn = self.conn
         input_tbl = input_table_check(input_tbl)
         feature_tbl = random_name('Features')
 
-        sess.dlscore(model=self.model_name, initWeights=self.model_weights,
+        conn.dlscore(model=self.model_name, initWeights=self.model_weights,
                      table=dict(**input_tbl),
                      layerOut=dict(name=feature_tbl, replace=True),
                      layerList=dense_layer,
@@ -355,35 +515,46 @@ class Model:
                      randomFlip='NONE',
                      randomCrop='NONE',
                      **kwargs)
-        X = sess.CASTable(feature_tbl).as_matrix()
-        y = sess.CASTable(**input_tbl)[target].as_matrix().ravel()
+        x = conn.CASTable(feature_tbl).as_matrix()
+        y = conn.CASTable(**input_tbl)[target].as_matrix().ravel()
 
-        return X, y
+        return x, y
 
-    def save_to_astore(self, filename):
+    def save_to_astore(self, path):
         '''
         Function to save the model to an astore object, and write it into a file.
         
          Parameters:
 
         ----------
-        filename: str
-            Specify the name of the file to write.
+        path: str
+            Specify the name of the path to store the model astore.
         '''
+        conn = self.conn
 
-        sess = self.sess
+        if not conn.queryactionset('astore')['astore']:
+            conn.loadactionset('astore', _messagelevel='error')
 
-        if not sess.queryactionset('astore')['astore']:
-            sess.loadactionset('astore')
         CAS_tbl_name = random_name('Model_astore')
-        sess.dlexportmodel(casout=CAS_tbl_name,
+
+        conn.dlexportmodel(_messagelevel='error',
+                           casout=CAS_tbl_name,
                            initWeights=self.model_weights,
                            modelTable=self.model_name)
-        model_astore = sess.download(rstore=CAS_tbl_name)
-        with open(filename, 'wb') as file:
+
+        model_astore = conn.download(_messagelevel='error',
+                                     rstore=CAS_tbl_name)
+
+        file_name = self.model_name + '.astore'
+        path = os.path.abspath(path)
+
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        file_name = os.path.join(path, file_name)
+        with open(file_name, 'wb') as file:
             file.write(model_astore['blob'])
 
-    def save_to_table(self):
+    def save_to_table(self, path):
 
         '''
         Function to save the model as sas dataset.
@@ -391,13 +562,8 @@ class Model:
         Parameters:
 
         ----------
-        model_tbl_file: str
-            Specify the name of the file to store the model table.
-        model_tbl_file: str, optional
-            Specify the name of the file to store the model weights table.
-        model_tbl_file: str, optional
-            Specify the name of the file to store the attribute of the model weights.
-
+        path: str
+            Specify the name of the path to store the model tables.
 
         Return:
 
@@ -406,35 +572,50 @@ class Model:
 
         '''
 
-        _file_name_ = self.model_name
+        conn = self.conn
+
+        CAS_lib_name = random_name('CASLIB')
+        conn.addcaslib(_messagelevel='error',
+                       activeonadd=False, datasource=dict(srcType="DNFS"), name=CAS_lib_name,
+                       path=path)
+
+        _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.sashdat'
         model_tbl_file = _file_name_ + _extension_
-        weight_tbl_file = _file_name_ + '_weight' + _extension_
-        attr_tbl_file = _file_name_ + '_weight_attr' + _extension_
+        weight_tbl_file = _file_name_ + '_weights' + _extension_
+        attr_tbl_file = _file_name_ + '_weights_attr' + _extension_
 
-        sess = self.sess
+        conn = self.conn
 
-        sess.table.save(table=self.model_name,
+        conn.table.save(_messagelevel='error',
+                        table=self.model_name,
                         name=model_tbl_file,
-                        replace=True, caslib='CASUSER')
-        sess.table.save(table=self.model_weights,
+                        replace=True, caslib=CAS_lib_name)
+        conn.table.save(_messagelevel='error',
+                        table=self.model_weights,
                         name=weight_tbl_file,
-                        replace=True, caslib='CASUSER')
+                        replace=True, caslib=CAS_lib_name)
         CAS_tbl_name = random_name('Attr_Tbl')
-        sess.table.attribute(caslib='CASUSERHDFS', task='CONVERT', name=self.model_weights.name,
+        conn.table.attribute(_messagelevel='error',
+                             task='CONVERT', **self.model_weights.to_table_params(),
                              attrtable=CAS_tbl_name)
-        sess.table.save(table=CAS_tbl_name,
+        conn.table.save(_messagelevel='error',
+                        table=CAS_tbl_name,
                         name=attr_tbl_file,
-                        replace=True, caslib='CASUSER')
+                        replace=True, caslib=CAS_lib_name)
 
-    def deploy(self, output_format='ASTORE'):
+        conn.dropcaslib(_messagelevel='error',
+                        caslib=CAS_lib_name)
+
+    def deploy(self, path, output_format='ASTORE'):
         '''
         Function to deploy the deep learning model.
 
         Parameters:
 
         ----------
-
+        path : string,
+            Specify the name of the path to store the model tables or astore.
         format : string, optional.
             specifies the format of the deployed model.
             Supported format: ASTORE, CASTABLE
@@ -444,10 +625,11 @@ class Model:
         '''
 
         if output_format.lower() == 'astore':
-            filename = self.model_name + '.astore'
-            self.save_to_astore(filename=filename)
+            self.save_to_astore(path=path)
         elif output_format.lower() in ('castable', 'table'):
-            self.save_to_table()
+            self.save_to_table(path=path)
+        else:
+            raise TypeError('output_format must be "astore", "castable" or "table"')
 
 
 class Feature_Maps:
@@ -455,8 +637,8 @@ class Feature_Maps:
     A class for feature maps.
     '''
 
-    def __init__(self, sess, feature_maps_tbl, structure=None):
-        self.sess = sess
+    def __init__(self, conn, feature_maps_tbl, structure=None):
+        self.conn = conn
         self.tbl = feature_maps_tbl
         self.structure = structure
 
@@ -490,7 +672,8 @@ class Feature_Maps:
 
         for i in range(n_images):
             col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, i)
-            image = self.sess.fetchimages(table=self.tbl, image=col_name).Images.Image[0]
+            image = self.conn.fetchimages(_messagelevel='error',
+                                          table=self.tbl, image=col_name).Images.Image[0]
             image = np.asarray(image)
             fig.add_subplot(n_row, n_col, i + 1)
             plt.imshow(image, cmap='gray')
