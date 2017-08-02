@@ -24,11 +24,11 @@ from .model import Model
 
 
 class Sequential(Model):
-    def __init__(self, sess, layers=None, model_name=None):
-        if not sess.queryactionset('deepLearn')['deepLearn']:
-            sess.loadactionset('deepLearn')
+    def __init__(self, conn, layers=None, model_name=None):
+        if not conn.queryactionset('deepLearn')['deepLearn']:
+            conn.loadactionset('deepLearn')
 
-        Model.__init__(self, sess, model_name=model_name)
+        Model.__init__(self, conn, model_name=model_name)
 
         if layers is None:
             self.layers = []
@@ -46,7 +46,22 @@ class Sequential(Model):
         if len(self.layers) > 0 and layer.config['type'] is 'input':
             raise ValueError('Only the first layer of the Sequential model can be an input layer')
         self.layers.append(layer)
-        if layer.config['type'] is 'output':
+
+        if layer.config['type'].lower() == 'input':
+            print('NOTE: An input layer is add to the model.')
+
+        elif layer.config['type'].lower() in ('convo', 'convolution'):
+            print('NOTE: A convolutional layer is add to the model.')
+
+        elif layer.config['type'].lower() in ('pool', 'pooling'):
+            print('NOTE: A pooling layer is add to the model.')
+
+        elif layer.config['type'].lower() in ('fc', 'fullconnect'):
+            print('NOTE: A fully-connected layer is add to the model.')
+
+        elif layer.config['type'].lower() == 'output':
+            print('NOTE: An output layer is add to the model.\n'
+                  'NOTE: Start compiling the model')
             self.compile()
 
     def pop(self, loc=-1):
@@ -62,7 +77,7 @@ class Sequential(Model):
             raise ValueError('The first layer of the model must be an input layer')
         if self.layers[-1].config['type'] != 'output':
             raise ValueError('The last layer of the model must be an output layer')
-        s = self.sess
+        s = self.conn
         s.buildmodel(model=dict(name=self.model_name, replace=True), type='CNN')
 
         conv_num = 1
@@ -96,13 +111,13 @@ class Sequential(Model):
                 else:
                     raise ValueError('{} is not a supported layer type'.format(layer['type']))
 
-                print(layer_name)
-                print(layer.config)
                 s.addLayer(model=self.model_name, name=layer_name,
                            layer=layer.config, srcLayers=src_layers.name)
                 layer.name = layer_name
                 layer.src_layers = src_layers
+
             src_layers = layer
+        print('NOTE: Model compiled successfully.')
 
     def summary(self):
         bar_line = '*' + '=' * 15 + '*' + '=' * 15 + '*' + '=' * 8 + '*' + \
@@ -120,3 +135,53 @@ class Sequential(Model):
             output = output + layer.summary()
         output = output + bar_line
         print(output)
+
+    def plot_network(self):
+        '''
+        Function to plot the model DAG
+        '''
+
+        from IPython.display import display
+        import os
+        os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+
+        display(model_to_graph(self))
+
+
+def layer_to_node(layer):
+    cell1 = r'{}\n({})'.format(layer.name, layer.config['type'])
+    cell21 = '<Kernel> Kernel Size:'
+    cell22 = '<Output> Output Size:'
+    cell31 = '{}'.format(layer.kernel_size)
+    cell32 = '{}'.format(layer.output_size)
+
+    label = cell1 + '|{' + cell21 + '|' + cell22 + '}|' + '{' + cell31 + '|' + cell32 + '}'
+    label = r'{}'.format(label)
+    return dict(name=layer.name, label=label, fillcolor=layer._color_code_)
+
+
+def layer_to_edge(layer):
+    return dict(tail_name='{}'.format(layer.src_layers.name),
+                head_name='{}'.format(layer.name),
+                len='0.2')
+
+
+def model_to_graph(model):
+    import graphviz as gv
+    model_graph = gv.Digraph(name=model.model_name,
+                             node_attr=dict(shape='record', style='filled,rounded'))
+    # can be added later for adjusting figure size.
+    # fixedsize='True', width = '4', height = '1'))
+
+    model_graph.attr(label=r'DAG for {}:'.format(model.model_name),
+                     labelloc='top', labeljust='left')
+    model_graph.attr(fontsize='20')
+
+    for layer in model.layers:
+        if layer.config['type'].lower() == 'input':
+            model_graph.node(**layer_to_node(layer))
+        else:
+            model_graph.node(**layer_to_node(layer))
+            model_graph.edge(**layer_to_edge(layer))
+
+    return model_graph
