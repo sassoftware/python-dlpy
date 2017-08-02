@@ -30,7 +30,7 @@ def VGG11(conn, model_name=None,
 
       ----------
       conn :
-          Specifies the connion of the CAS connection.
+          Specifies the connection of the CAS connection.
       model_name : string
           Specifies the name of CAS table to store the model.
       pre_train_weight : boolean, optional.
@@ -110,7 +110,7 @@ def VGG13(conn, model_name=None,
 
       ----------
       conn :
-          Specifies the connion of the CAS connection.
+          Specifies the connection of the CAS connection.
       model_name : string
           Specifies the name of CAS table to store the model.
       pre_train_weight : boolean, optional.
@@ -294,7 +294,7 @@ def VGG19(conn, model_name=None,
 
       ----------
       conn :
-          Specifies the connion of the CAS connection.
+          Specifies the connection of the CAS connection.
       model_name : string
           Specifies the name of CAS table to store the model.
       pre_train_weight : boolean, optional.
