@@ -20,8 +20,8 @@ from .layers import *
 from .Sequential import Sequential
 
 
-def VGG11(sess, model_name=None,
-          nChannels=3, width=224, height=224, scale=1,
+def VGG11(conn, model_name=None,
+          nChannels=3, width=224, height=224, nclass=None, scale=1,
           randomFlip='HV', randomCrop='unique', offsets=(85, 111, 139)):
     '''
       Function to generate a deep learning model with VGG16 architecture.
@@ -29,8 +29,8 @@ def VGG11(sess, model_name=None,
       Parameters:
 
       ----------
-      sess :
-          Specifies the session of the CAS connection.
+      conn :
+          Specifies the connion of the CAS connection.
       model_name : string
           Specifies the name of CAS table to store the model.
       pre_train_weight : boolean, optional.
@@ -71,7 +71,7 @@ def VGG11(sess, model_name=None,
 
       '''
 
-    model = Sequential(sess=sess, model_name=model_name)
+    model = Sequential(conn=conn, model_name=model_name)
 
     model.add(InputLayer(nChannels=nChannels, width=width, height=height,
                          scale=scale, offsets=offsets, randomFlip=randomFlip,
@@ -97,11 +97,11 @@ def VGG11(sess, model_name=None,
 
     model.add(Dense(n=4096, dropout=0.5))
     model.add(Dense(n=4096, dropout=0.5))
-    model.add(OutputLayer())
+    model.add(OutputLayer(n=nclass))
 
 
-def VGG13(sess, model_name=None,
-          nChannels=3, width=224, height=224, scale=1,
+def VGG13(conn, model_name=None,
+          nChannels=3, width=224, height=224, nclass=None, scale=1,
           randomFlip='HV', randomCrop='unique', offsets=(85, 111, 139)):
     '''
       Function to generate a deep learning model with VGG16 architecture.
@@ -109,8 +109,8 @@ def VGG13(sess, model_name=None,
       Parameters:
 
       ----------
-      sess :
-          Specifies the session of the CAS connection.
+      conn :
+          Specifies the connion of the CAS connection.
       model_name : string
           Specifies the name of CAS table to store the model.
       pre_train_weight : boolean, optional.
@@ -151,7 +151,7 @@ def VGG13(sess, model_name=None,
 
       '''
 
-    model = Sequential(sess=sess, model_name=model_name)
+    model = Sequential(conn=conn, model_name=model_name)
 
     model.add(InputLayer(nChannels=nChannels, width=width, height=height,
                          scale=scale, offsets=offsets, randomFlip=randomFlip,
@@ -179,11 +179,11 @@ def VGG13(sess, model_name=None,
 
     model.add(Dense(n=4096, dropout=0.5))
     model.add(Dense(n=4096, dropout=0.5))
-    model.add(OutputLayer())
+    model.add(OutputLayer(n=nclass))
 
 
-def VGG16(sess, model_name=None, pre_train_weight=False, include_top=False,
-          nChannels=3, width=224, height=224, scale=1,
+def VGG16(conn, model_name=None, pre_train_weight=False, include_top=False,
+          nChannels=3, width=224, height=224, nclass=None, scale=1,
           randomFlip='HV', randomCrop='unique', offsets=(85, 111, 139)):
     '''
     Function to generate a deep learning model with VGG16 architecture.
@@ -191,8 +191,8 @@ def VGG16(sess, model_name=None, pre_train_weight=False, include_top=False,
     Parameters:
 
     ----------
-    sess :
-        Specifies the session of the CAS connection.
+    conn :
+        Specifies the connection of the CAS connection.
     model_name : string
         Specifies the name of CAS table to store the model.
     pre_train_weight : boolean, optional.
@@ -233,7 +233,10 @@ def VGG16(sess, model_name=None, pre_train_weight=False, include_top=False,
 
     '''
 
-    model = Sequential(sess=sess, model_name=model_name)
+    if include_top:
+        nclass = 1000
+
+    model = Sequential(conn=conn, model_name=model_name)
 
     model.add(InputLayer(nChannels=nChannels, width=width, height=height,
                          scale=scale, offsets=offsets, randomFlip=randomFlip,
@@ -264,20 +267,25 @@ def VGG16(sess, model_name=None, pre_train_weight=False, include_top=False,
 
     model.add(Dense(n=4096, dropout=0.5))
     model.add(Dense(n=4096, dropout=0.5))
-    model.add(OutputLayer(act='softmax'))
+    model.add(OutputLayer(n=nclass))
 
     if pre_train_weight:
-        sess.loadtable(casout={'replace': True, 'name': '_imagenet_vgg16_weights'},
-                       caslib='CASTestTmp', path='vgg/vgg16_weights_table.sashdat')
+        conn.table.loadTable(_messagelevel='error',
+                             casout=dict(replace=True, name='_imagenet_vgg16_weights_'),
+                             caslib='CASTestTmp', path='vgg/vgg16_weights_table.sashdat')
         if include_top:
-            model.set_weights('_imagenet_vgg16_weights')
+            model.set_weights('_imagenet_vgg16_weights_')
+            conn.table.loadTable(_messagelevel='error',
+                                 casout=dict(replace=True, name='_imagenet_vgg16_weights_attr_'),
+                       caslib='CASTestTmp', path='vgg16_weights_attrib.sashdat')
+            model.set_weights_attr('_imagenet_vgg16_weights_attr_')
         else:
             model.set_weights(weight_tbl=dict(name='_imagenet_vgg16_weights', where='_layerid_<18'))
     return model
 
 
-def VGG19(sess, model_name=None,
-          nChannels=3, width=224, height=224, scale=1,
+def VGG19(conn, model_name=None,
+          nChannels=3, width=224, height=224, nclass=None, scale=1,
           randomFlip='HV', randomCrop='unique', offsets=(85, 111, 139)):
     '''
       Function to generate a deep learning model with VGG16 architecture.
@@ -285,8 +293,8 @@ def VGG19(sess, model_name=None,
       Parameters:
 
       ----------
-      sess :
-          Specifies the session of the CAS connection.
+      conn :
+          Specifies the connion of the CAS connection.
       model_name : string
           Specifies the name of CAS table to store the model.
       pre_train_weight : boolean, optional.
@@ -327,7 +335,7 @@ def VGG19(sess, model_name=None,
 
       '''
 
-    model = Sequential(sess=sess, model_name=model_name)
+    model = Sequential(conn=conn, model_name=model_name)
 
     model.add(InputLayer(nChannels=nChannels, width=width, height=height,
                          scale=scale, offsets=offsets, randomFlip=randomFlip,
@@ -361,6 +369,6 @@ def VGG19(sess, model_name=None,
 
     model.add(Dense(n=4096, dropout=0.5))
     model.add(Dense(n=4096, dropout=0.5))
-    model.add(OutputLayer())
+    model.add(OutputLayer(n=nclass))
 
     return model
