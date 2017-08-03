@@ -39,7 +39,7 @@ class Model:
     model_name : string
         Specifies the name of the deep learning model.
     model_weights : string, dictionary or CAS table, optional
-        Specify the weights of the deep learning model.
+        Specifies the weights of the deep learning model.
         If not specified, random initial will be used.
         Default : None
 
@@ -71,6 +71,7 @@ class Model:
         self.valid_res = None
         self.valid_feature_maps = None
         self.valid_conf_mat = None
+        self.valid_score = None
         self.n_Epoch = 0
         self.training_history = None
 
@@ -82,7 +83,7 @@ class Model:
 
         ----------
         path: str
-            Specify the full path of the table.
+            Specifies the full path of the table.
             Note: the path need to be in Linux path format.
         '''
         conn = self.conn
@@ -148,7 +149,7 @@ class Model:
         ----------
         weight_tbl : A CAS table object, a string specifies the name of the CAS table,
                    a dictionary specifies the CAS table.
-            Specify the weights for the model.
+            Specifies the weights for the model.
 
         '''
 
@@ -174,7 +175,7 @@ class Model:
 
         ----------
         path : str
-            Specify the directory of the file that store the weight table.
+            Specifies the directory of the file that store the weight table.
 
         '''
 
@@ -247,7 +248,7 @@ class Model:
 
         ----------
         path : str
-            Specify the directory of the file that store the weight attribute table.
+            Specifies the directory of the file that store the weight attribute table.
 
         '''
 
@@ -290,32 +291,32 @@ class Model:
         ----------
         data : A CAS table object, a string specifies the name of the CAS table,
                    a dictionary specifies the CAS table, or an Image object.
-            Specify the training data for the model.
+            Specifies the training data for the model.
         inputs : string, optional
-            Specify the variable name of in the input_tbl, that is the input of the deep learning model.
+            Specifies the variable name of in the input_tbl, that is the input of the deep learning model.
             Default : '_image_'.
         target : string, optional
-            Specify the variable name of in the input_tbl, that is the response of the deep learning model.
+            Specifies the variable name of in the input_tbl, that is the response of the deep learning model.
             Default : '_label_'.
         miniBatchSize : integer, optional
-            Specify the number of observations per thread in a mini-batch..
+            Specifies the number of observations per thread in a mini-batch..
             Default : 1.
         maxEpochs : int64, optional
-            Specify the maximum number of Epochs.
+            Specifies the maximum number of Epochs.
             Default : 5.
         logLevel : int 0-3, optional
-            Specify  how progress messages are sent to the client.
+            Specifies  how progress messages are sent to the client.
                 0 : no messages are sent.
                 1 : send the start and end messages.
                 2 : send the iteration history for each Epoch.
                 3 : send the iteration history for each batch.
             Default : 3.
         optimizer: dictionary, optional
-            Specify the options for the optimizer in the dltrain action.
+            Specifies the options for the optimizer in the dltrain action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_dlcommon_dlOptimizerOpts.html#type_synchronous
             for detail.
         kwargs: dictionary, optional
-            Specify the optional arguments for the dltrain action.
+            Specifies the optional arguments for the dltrain action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlTrain.html
             for detail.
 
@@ -385,7 +386,7 @@ class Model:
                                    xticks=self.training_history.Epoch,
                                    figsize=fig_size)
 
-    def predict(self, input_tbl, inputs='_image_', target='_label_', **kwargs):
+    def predict(self, data, inputs='_image_', target='_label_', **kwargs):
 
         '''
         Function of scoring the deep learning model on a validation data set.
@@ -393,17 +394,17 @@ class Model:
         Parameters:
 
         ----------
-        input_tbl : A CAS table object, a string specifies the name of the CAS table,
+        data : A CAS table object, a string specifies the name of the CAS table,
                       a dictionary specifies the CAS table, or an Image object.
-            Specify the validating data for the prediction.
+            Specifies the validating data for the prediction.
         inputs : string, optional
-            Specify the variable name of in the input_tbl, that is the input of the deep learning model.
+            Specifies the variable name of in the data, that is the input of the deep learning model.
             Default : '_image_'.
         target : string, optional
-            Specify the variable name of in the input_tbl, that is the response of the deep learning model.
+            Specifies the variable name of in the data, that is the response of the deep learning model.
             Default : '_label_'.
         kwargs: dictionary, optional
-            Specify the optional arguments for the dlScore action.
+            Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
@@ -411,7 +412,7 @@ class Model:
         '''
 
         conn = self.conn
-        input_tbl = input_table_check(input_tbl)
+        input_tbl = input_table_check(data)
 
         valid_res_tbl = random_name('Valid_Res')
 
@@ -421,29 +422,88 @@ class Model:
                            randomFlip='NONE',
                            randomCrop='NONE',
                            casout=dict(name=valid_res_tbl, replace=True),
+                           encodeName=True,
                            **kwargs)
 
-        self.valid_res = conn.CASTable(valid_res_tbl)
         self.valid_score = res.ScoreInfo
         self.valid_conf_mat = conn.crosstab(
-            table=valid_res_tbl, row=target, col='_dl_predname_')
+            table=valid_res_tbl, row=target, col='I__label_')
+
+        temp_tbl = conn.CASTable(valid_res_tbl)
+        temp_columns = temp_tbl.columninfo().ColumnInfo.Column
+
+        columns = [item for item in temp_columns if item[0:9] == 'P__label_' or item == 'I__label_']
+        img_table = conn.image.fetchimages(_messagelevel='error', fetchimagesvars=columns,
+                                           imagetable=temp_tbl, to=1000)
+        img_table = img_table.Images
+
+        self.valid_res = img_table
+
         return self.valid_score
 
-    def get_feature_maps(self, data, image_id=1, **kwargs):
+    def plot_predict_res(self, type='A', image_id=0):
         '''
-        Function to extract the feature maps for a validation image.
+        Function to plot the classification results.
 
         Parameters:
 
         ----------
-        data : A CAS table object, a string specifies the name of the CAS table,
-               a dictionary specifies the CAS table, or an Image object.
-            Specify the table containing the image data.
+        type : str, optional.
+            Specifies the type of classification results to plot.
+        image_id : int, optional.
+            Specifies the image to be displayed.
+
+        '''
+        from .utils import plot_predict_res
+
+        if type == 'A':
+            img_table = self.valid_res
+        elif type == 'C':
+            img_table = self.valid_res
+            img_table = img_table[img_table['Label'] == img_table['I__label_']]
+        elif type == 'M':
+            img_table = self.valid_res
+            img_table = img_table[img_table['Label'] != img_table['I__label_']]
+        else:
+            raise ValueError('type must be one of the following:\n'
+                             'A: for all the images\n'
+                             'C: for correctly classified images\n'
+                             'M: for misclassified images\n')
+        img_table.index = range(len(img_table.index))
+
+        columns_for_pred = [item for item in img_table.columns if item[0:9] == 'P__label_']
+
+        image = img_table['Image'][image_id]
+        label = img_table['Label'][image_id]
+
+        labels = [item[9:].title() for item in columns_for_pred]
+        values = np.asarray(img_table[columns_for_pred].iloc[image_id])
+        values, labels = zip(*sorted(zip(values, labels)))
+        values = values[-5:]
+        labels = labels[-5:]
+        labels = [item[:(item.find('__') > 0) * item.find('__') + (item.find('__') < 0) * len(item)]
+                  for item in labels]
+        labels = [item.replace('_', '\n') for item in labels]
+
+        plot_predict_res(image, label, labels, values)
+
+    def get_feature_maps(self, data, label=None, image_id=0, **kwargs):
+        '''
+        Function to extract the feature maps for a single image.
+
+        Parameters:
+
+        ----------
+        data : An ImageTable object.
+            Specifies the table containing the image data.
+        label: str, optional
+            Specifies the which class of image to use.
+            Default : None
         image_id : int, optional
-            Specify the image id of the image.
+            Specifies which image to use in the table.
             Default : 1.
         kwargs: dictionary, optional
-            Specify the optional arguments for the dlScore action.
+            Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
@@ -454,19 +514,29 @@ class Model:
         '''
 
         conn = self.conn
+        uid = data._uid_
+        if label is None:
+            label = uid.iloc[0, 0]
+        uid = uid.loc[uid['_label_'] == label]
+
+        if image_id >= uid.shape[0]:
+            raise ValueError('image_id should be an integer between 0'
+                             ' and {} here.'.format(uid.shape[0] - 1))
+        uid_value = uid.iloc[image_id, 1]
+        uid_name = uid.columns[1]
+
         input_tbl = input_table_check(data)
 
         feature_maps_tbl = random_name('Feature_Maps') + '_{}'.format(image_id)
-        # print(feature_maps_tbl)
         conn.dlscore(model=self.model_name, initWeights=self.model_weights,
-                     table=dict(**input_tbl),
-                     # , where='_id_={}'.format(image_id)),
+                     table=dict(**input_tbl,
+                                where='{}="{}"'.format(uid_name, uid_value)),
                      layerOut=dict(name=feature_maps_tbl, replace=True),
                      randomFlip='NONE',
                      randomCrop='NONE',
                      layerImageType='jpg',
+                     encodeName=True,
                      **kwargs)
-        # print('NOTE: checked')
         layer_out_jpg = conn.CASTable(feature_maps_tbl)
         feature_maps_names = [i for i in layer_out_jpg.columninfo().ColumnInfo.Column]
         feature_maps_structure = dict()
@@ -475,36 +545,36 @@ class Model:
 
         self.valid_feature_maps = Feature_Maps(self.conn, feature_maps_tbl, structure=feature_maps_structure)
 
-    def get_features(self, input_tbl, dense_layer, target='_label_', **kwargs):
+    def get_features(self, data, dense_layer, target='_label_', **kwargs):
         '''
         Function to extract the features for a data table.
 
         Parameters:
 
         ----------
-        input_tbl : A CAS table object, a string specifies the name of the CAS table,
+        data : A CAS table object, a string specifies the name of the CAS table,
                     a dictionary specifies the CAS table, or an Image object.
-            Specify the table containing the image data.
+            Specifies the table containing the image data.
         dense_layer : str
-            Specify the name of the layer that is extracted.
+            Specifies the name of the layer that is extracted.
         target : str, optional
-            Specify the name of the column including the response variable.
+            Specifies the name of the column including the response variable.
         kwargs: dictionary, optional
-            Specify the optional arguments for the dlScore action.
+            Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
         Returns
 
         ----------
-        X : ndarray of size n by p, where n is the sample size and p is the number of features.
+        x : ndarray of size n by p, where n is the sample size and p is the number of features.
             The features extracted by the model at the specified dense_layer.
         y : ndarray of size n.
             The response variable of the original data.
         '''
 
         conn = self.conn
-        input_tbl = input_table_check(input_tbl)
+        input_tbl = input_table_check(data)
         feature_tbl = random_name('Features')
 
         conn.dlscore(model=self.model_name, initWeights=self.model_weights,
@@ -514,6 +584,7 @@ class Model:
                      layerImageType='wide',
                      randomFlip='NONE',
                      randomCrop='NONE',
+                     encodeName=True,
                      **kwargs)
         x = conn.CASTable(feature_tbl).as_matrix()
         y = conn.CASTable(**input_tbl)[target].as_matrix().ravel()
@@ -523,12 +594,12 @@ class Model:
     def save_to_astore(self, path):
         '''
         Function to save the model to an astore object, and write it into a file.
-        
+
          Parameters:
 
         ----------
         path: str
-            Specify the name of the path to store the model astore.
+            Specifies the name of the path to store the model astore.
         '''
         conn = self.conn
 
@@ -563,7 +634,7 @@ class Model:
 
         ----------
         path: str
-            Specify the name of the path to store the model tables.
+            Specifies the name of the path to store the model tables.
 
         Return:
 
@@ -615,7 +686,7 @@ class Model:
 
         ----------
         path : string,
-            Specify the name of the path to store the model tables or astore.
+            Specifies the name of the path to store the model tables or astore.
         format : string, optional.
             specifies the format of the deployed model.
             Supported format: ASTORE, CASTABLE
@@ -642,7 +713,7 @@ class Feature_Maps:
         self.tbl = feature_maps_tbl
         self.structure = structure
 
-    def display(self, layer_id):
+    def display(self, layer_id, filter_id=None):
         '''
         Function to display the feature maps.
 
@@ -651,7 +722,7 @@ class Feature_Maps:
         ----------
 
         layer_id : int
-            Specify the id of the layer to be displayed
+            Specifies the id of the layer to be displayed
 
         Return:
 
@@ -660,22 +731,44 @@ class Feature_Maps:
 
 
         '''
-        n_images = self.structure[layer_id]
-        if n_images > 64:
-            n_col = int(np.ceil(np.sqrt(n_images)))
-        else:
-            n_col = min(n_images, 8)
+        from PIL import Image
+        from IPython.display import display
+
+        if filter_id is None:
+            n_images = self.structure[layer_id]
+            filter_id = list(range(n_images))
+
+        if len(filter_id) > 64:
+            filter_id = filter_id[0:64]
+            print('NOTE: The maximum number of filters to be displayed is 64.\n'
+                  'NOTE: Only the first 64 filters are displayed.')
+
+        n_images = len(filter_id)
+        n_col = min(n_images, 8)
         n_row = int(np.ceil(n_images / n_col))
 
         fig = plt.figure(figsize=(16, 16 // n_col * n_row))
-        title = '_LayerAct_{}'.format(layer_id)
+        title = 'Activation Maps for Layer_{}'.format(layer_id)
 
-        for i in range(n_images):
-            col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, i)
-            image = self.conn.fetchimages(_messagelevel='error',
-                                          table=self.tbl, image=col_name).Images.Image[0]
-            image = np.asarray(image)
-            fig.add_subplot(n_row, n_col, i + 1)
-            plt.imshow(image, cmap='gray')
-            plt.xticks([]), plt.yticks([])
-        plt.suptitle('{}'.format(title))
+        if layer_id == 0:
+            image = []
+            for i in range(3):
+                col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, i)
+                temp = self.conn.fetchimages(_messagelevel='error',
+                                             table=self.tbl, image=col_name).Images.Image[0]
+                image.append(np.asarray(temp))
+            image = np.dstack((image[2], image[1], image[0]))
+            image = Image.fromarray(image, 'RGB')
+            display(image)
+        else:
+            for i in range(n_images):
+                filter_num = filter_id[i]
+                col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, filter_num)
+                image = self.conn.fetchimages(_messagelevel='error',
+                                              table=self.tbl, image=col_name).Images.Image[0]
+                image = np.asarray(image)
+                fig.add_subplot(n_row, n_col, i + 1)
+                plt.imshow(image, cmap='gray')
+                plt.xticks([]), plt.yticks([])
+                plt.title('Filter {}'.format(filter_num))
+            plt.suptitle(title, fontsize=20)
