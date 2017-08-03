@@ -108,3 +108,55 @@ def image_blocksize(width, height):
     Function to determine blocksize according to imagesize in the table.
     '''
     return width * height * 3 * 8 / 1024
+
+
+def predicted_prob_barplot(ax, labels, values):
+    '''
+    Function to generate a horizontal barplot for the predict probability.
+
+    Parameters:
+
+    ----------
+
+    ax : a matplotlib.axes.Axes object.
+
+    labels: class labels.
+
+    values: predicted probabilities.
+
+    Return:
+
+    ----------
+
+    ax : a matplotlib.axes.Axes object including the barplot.
+
+
+    '''
+
+    import numpy as np
+
+    y_pos = (0.2 + np.arange(len(labels))) / (1 + len(labels))
+    width = 0.8 / (1 + len(labels))
+    colors = ['blue', 'green', 'yellow', 'orange', 'red']
+    for i in range(len(labels)):
+        ax.barh(y_pos[i], values[i], width, align='center', color=colors[i], ecolor='black')
+        ax.text(values[i] + 0.01, y_pos[i], '{:.2%}'.format(values[i]))
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(labels, rotation=45)
+    ax.set_xlabel('Probability')
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1, 1.1])
+    ax.set_xticklabels(["0%", '25%', '50%', '75%', "100%"])
+    ax.set_title('Predicted Probability')
+
+    return ax
+
+
+def plot_predict_res(image, label, labels, values):
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(12, 5))
+    ax1 = fig.add_subplot(1, 2, 1)
+    ax1.set_title('{}'.format(label))
+    ax1.imshow(image)
+    ax1.axis('off')
+    ax2 = fig.add_subplot(1, 2, 2)
+    predicted_prob_barplot(ax2, labels, values)
