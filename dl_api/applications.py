@@ -270,17 +270,28 @@ def VGG16(conn, model_name=None, pre_train_weight=False, include_top=False,
     model.add(OutputLayer(n=nclass))
 
     if pre_train_weight:
+        from .utils import random_name
+        CAS_lib_name = random_name('CASLIB')
+        conn.addCaslib(_messagelevel='error',
+                       activeonadd=False,
+                       name=CAS_lib_name,
+                       path='/dept/cas/leliuz/DL_MODELS',
+                       dataSource=dict(srcType="DNFS"))
+
         conn.table.loadTable(_messagelevel='error',
-                             casout=dict(replace=True, name='_imagenet_vgg16_weights_'),
-                             caslib='CASTestTmp', path='vgg/vgg16_weights_table.sashdat')
+                             casout=dict(replace=True, name='{}_weights'.format(model_name)),
+                             caslib=CAS_lib_name, path='VGG16_WEIGHTS.sashdat')
         if include_top:
-            model.set_weights('_imagenet_vgg16_weights_')
+            model.set_weights('{}_weights'.format(model_name))
             conn.table.loadTable(_messagelevel='error',
-                                 casout=dict(replace=True, name='_imagenet_vgg16_weights_attr_'),
-                       caslib='CASTestTmp', path='vgg16_weights_attrib.sashdat')
-            model.set_weights_attr('_imagenet_vgg16_weights_attr_')
+                                 casout=dict(replace=True, name='{}_weights_attr'.format(model_name)),
+                                 caslib=CAS_lib_name, path='VGG16_WEIGHTS_ATTR.sashdat')
+            model.set_weights_attr('{}_weights_attr'.format(model_name))
         else:
-            model.set_weights(weight_tbl=dict(name='_imagenet_vgg16_weights', where='_layerid_<18'))
+            model.set_weights(weight_tbl=dict(name='{}_weights'.format(model_name), where='_layerid_<18'))
+
+        conn.dropcaslib(_messagelevel='error',
+                        caslib=CAS_lib_name)
     return model
 
 
