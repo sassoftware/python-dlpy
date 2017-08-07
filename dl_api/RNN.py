@@ -61,11 +61,10 @@ class RNN(Model):
             #     print('NOTE: A fully-connected layer is add to the model.')
 
             elif _layer.config['type'].lower() in ('rnn', 'recurrent'):
-                print('NOTE: A recurrent layer is add to the model.')
+                print('NOTE: Recurrent layer added.')
 
             elif _layer.config['type'].lower() == 'output':
-                print('NOTE: An output layer is add to the model.\n'
-                      'NOTE: Start compiling the model')
+                print('NOTE: Output layer added')
 
         self.layers.append(layer)
         if layer[0].config['type'] is 'output':
@@ -85,7 +84,7 @@ class RNN(Model):
         if self.layers[-1][0].config['type'] != 'output':
             raise ValueError('The last layer of the model must be an output layer')
         conn = self.conn
-        conn.buildmodel(model=dict(name=self.model_name, replace=True), type='RNN')
+        conn.retrieve('buildmodel', model=dict(name=self.model_name, replace=True), type='RNN')
 
         layer_num = 1
         block_num = 0
@@ -93,7 +92,7 @@ class RNN(Model):
         for layer_s in self.layers:
             for layer in layer_s:
                 if layer.config['type'] == 'input':
-                    conn.addLayer(model=self.model_name, name='Data',
+                    conn.retrieve('addlayer', model=self.model_name, name='Data',
                                   layer=layer.config)
                     layer.name = 'Data'
 
@@ -111,7 +110,7 @@ class RNN(Model):
 
                     src_layer_names = [src_layer.name for src_layer in src_layers]
 
-                    conn.addLayer(model=self.model_name, name=layer_name,
+                    conn.retrieve('addlayer', model=self.model_name, name=layer_name,
                                   layer=layer.config, srcLayers=src_layer_names)
                     layer.name = layer_name
                     layer.src_layers = src_layers
