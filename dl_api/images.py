@@ -313,7 +313,7 @@ class ImageTable(CASTable):
         for i in range(nimages):
             image = temp_tbl['Images']['Image'][i]
             label = temp_tbl['Images']['Label'][i]
-            image = np.asarray(image)
+            # image = np.asarray(image)
             ax = fig.add_subplot(nrow, ncol, i + 1)
             ax.set_title('{}'.format(label))
             plt.imshow(image)
@@ -630,3 +630,10 @@ class ImageTable(CASTable):
     def channel_means(self):
         return self.image_summary[['mean1stChannel', 'mean2ndChannel',
                                    'mean3rdChannel']].tolist()
+
+    @property
+    def uid(self):
+        file_name = '_filename_{}'.format(self.patch_level)
+        uid = self[['_label_', file_name]].to_frame()
+        # uid = uid.rename(columns={file_name: '_uid_'})
+        return uid
