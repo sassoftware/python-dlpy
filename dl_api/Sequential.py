@@ -48,20 +48,19 @@ class Sequential(Model):
         self.layers.append(layer)
 
         if layer.config['type'].lower() == 'input':
-            print('NOTE: An input layer is add to the model.')
+            print('NOTE: Input layer added.')
 
         elif layer.config['type'].lower() in ('convo', 'convolution'):
-            print('NOTE: A convolutional layer is add to the model.')
+            print('NOTE: Convolutional layer added.')
 
         elif layer.config['type'].lower() in ('pool', 'pooling'):
-            print('NOTE: A pooling layer is add to the model.')
+            print('NOTE: Pooling layer added.')
 
         elif layer.config['type'].lower() in ('fc', 'fullconnect'):
-            print('NOTE: A fully-connected layer is add to the model.')
+            print('NOTE: Fully-connected layer added.')
 
         elif layer.config['type'].lower() == 'output':
-            print('NOTE: An output layer is add to the model.\n'
-                  'NOTE: Start compiling the model')
+            print('NOTE: Output layer added.')
             self.compile()
 
     def pop(self, loc=-1):
@@ -77,8 +76,8 @@ class Sequential(Model):
             raise ValueError('The first layer of the model must be an input layer')
         if self.layers[-1].config['type'] != 'output':
             raise ValueError('The last layer of the model must be an output layer')
-        s = self.conn
-        s.buildmodel(model=dict(name=self.model_name, replace=True), type='CNN')
+        conn = self.conn
+        conn.retrieve('buildmodel', model=dict(name=self.model_name, replace=True), type='CNN')
 
         conv_num = 1
         fc_num = 1
@@ -86,8 +85,8 @@ class Sequential(Model):
 
         for layer in self.layers:
             if layer.config['type'] == 'input':
-                s.addLayer(model=self.model_name, name='Data',
-                           layer=layer.config)
+                conn.retrieve('addlayer', model=self.model_name, name='Data',
+                              layer=layer.config)
                 layer.name = 'Data'
 
             else:
@@ -111,8 +110,8 @@ class Sequential(Model):
                 else:
                     raise ValueError('{} is not a supported layer type'.format(layer['type']))
 
-                s.addLayer(model=self.model_name, name=layer_name,
-                           layer=layer.config, srcLayers=src_layers.name)
+                conn.retrieve('addlayer', model=self.model_name, name=layer_name,
+                              layer=layer.config, srcLayers=src_layers.name)
                 layer.name = layer_name
                 layer.src_layers = src_layers
 
@@ -157,7 +156,7 @@ def layer_to_node(layer):
 
     label = cell1 + '|{' + cell21 + '|' + cell22 + '}|' + '{' + cell31 + '|' + cell32 + '}'
     label = r'{}'.format(label)
-    return dict(name=layer.name, label=label, fillcolor=layer._color_code_)
+    return dict(name=layer.name, label=label, fillcolor=layer.color_code)
 
 
 def layer_to_edge(layer):
