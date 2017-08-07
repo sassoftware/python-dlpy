@@ -36,18 +36,18 @@ class Layer:
     def summary(self):
         # Note: this will be moved to complie.
         if self.config['type'].lower() == 'input':
-            self.output_size = (self.config['width'], self.config['height'], self.config['nChannels'])
+            self.output_size = (self.config['width'], self.config['height'], self.config['nchannels'])
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
         elif self.config['type'].lower() in ('convo', 'convolution'):
             self.output_size = (self.src_layers.output_size[0] // self.config['stride'],
                                 self.src_layers.output_size[1] // self.config['stride'],
-                                self.config['nFilters'])
+                                self.config['n_filters'])
             self.kernel_size = (self.config['width'], self.config['height'])
-            self.num_weights = self.config['width'] * self.config['height'] * self.config['nFilters'] * \
+            self.num_weights = self.config['width'] * self.config['height'] * self.config['nfilters'] * \
                                self.src_layers.output_size[2]
-            self.num_bias = self.config['nFilters']
+            self.num_bias = self.config['n_filters']
         elif self.config['type'].lower() in ('pool', 'pooling'):
             self.output_size = (self.src_layers.output_size[0] // self.config['stride'],
                                 self.src_layers.output_size[1] // self.config['stride'],
@@ -101,17 +101,17 @@ class Layer:
 
 
 class InputLayer(Layer):
-    def __init__(self, nChannels=3, width=224, height=224, scale=1, dropout=0, offsets='NONE',
+    def __init__(self, n_channels=3, width=224, height=224, scale=1, dropout=0, offsets='NONE',
                  name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
         config['type'] = 'input'
         Layer.__init__(self, name, config, src_layers)
-        self._color_code_ = '#F0FF00'
+        self.color_code = '#F0FF00'
 
 
 class Conv2d(Layer):
-    def __init__(self, nFilters, width=None, height=None, stride=1, act="relu", dropout=0,
+    def __init__(self, n_filters, width=None, height=None, stride=1, act="relu", dropout=0,
                  name=None, src_layers=None, **kwargs):
         if (width is None) and (height is None):
             width = 3
@@ -123,7 +123,7 @@ class Conv2d(Layer):
         config = _unpack_config(config)
         config['type'] = 'convo'
         Layer.__init__(self, name, config, src_layers)
-        self._color_code_ = '#6CFF00'
+        self.color_code = '#6CFF00'
 
 
 class Pooling(Layer):
@@ -141,7 +141,7 @@ class Pooling(Layer):
         config = _unpack_config(config)
         config['type'] = 'pool'
         Layer.__init__(self, name, config, src_layers)
-        self._color_code_ = '#FF9700'
+        self.color_code = '#FF9700'
 
 
 class Dense(Layer):
@@ -151,17 +151,17 @@ class Dense(Layer):
         config = _unpack_config(config)
         config['type'] = 'fc'
         Layer.__init__(self, name, config, src_layers)
-        self._color_code_ = '#00ECFF'
+        self.color_code = '#00ECFF'
 
 
 class Recurrent(Layer):
-    def __init__(self, n, act='AUTO', rnnType='RNN', outputType='ENCODING', Reversed=False,
+    def __init__(self, n, act='AUTO', rnn_type='RNN', output_type='ENCODING', reversed_=False,
                  name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
         config['type'] = 'recurrent'
         Layer.__init__(self, name, config, src_layers)
-        self._color_code_ = '#FFA4A4'
+        self.color_code = '#FFA4A4'
 
 
 class OutputLayer(Layer):
@@ -172,7 +172,7 @@ class OutputLayer(Layer):
         if config['n'] is None:
             del config['n']
         Layer.__init__(self, name, config, src_layers)
-        self._color_code_ = '#C8C8C8'
+        self.color_code = '#C8C8C8'
 
 
 def _unpack_config(config):
@@ -181,4 +181,9 @@ def _unpack_config(config):
     out = {}
     out.update(config)
     out.update(kwargs)
+    for key in out.keys():
+        if '_' in key:
+            new_key = key.replace('_', '')
+            out[new_key] = out[key]
+            out.pop(key)
     return out
