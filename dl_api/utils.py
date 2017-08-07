@@ -107,7 +107,7 @@ def image_blocksize(width, height):
     '''
     Function to determine blocksize according to imagesize in the table.
     '''
-    return width * height * 3 * 8 / 1024
+    return width * height * 3 / 1024
 
 
 def predicted_prob_barplot(ax, labels, values):
