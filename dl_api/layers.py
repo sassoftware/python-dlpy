@@ -43,11 +43,11 @@ class Layer:
         elif self.config['type'].lower() in ('convo', 'convolution'):
             self.output_size = (self.src_layers.output_size[0] // self.config['stride'],
                                 self.src_layers.output_size[1] // self.config['stride'],
-                                self.config['n_filters'])
+                                self.config['nfilters'])
             self.kernel_size = (self.config['width'], self.config['height'])
             self.num_weights = self.config['width'] * self.config['height'] * self.config['nfilters'] * \
                                self.src_layers.output_size[2]
-            self.num_bias = self.config['n_filters']
+            self.num_bias = self.config['nfilters']
         elif self.config['type'].lower() in ('pool', 'pooling'):
             self.output_size = (self.src_layers.output_size[0] // self.config['stride'],
                                 self.src_layers.output_size[1] // self.config['stride'],
