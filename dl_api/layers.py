@@ -181,7 +181,7 @@ def _unpack_config(config):
     out = {}
     out.update(config)
     out.update(kwargs)
-    for key in out.keys():
+    for key in out:
         if '_' in key:
             new_key = key.replace('_', '')
             out[new_key] = out[key]
