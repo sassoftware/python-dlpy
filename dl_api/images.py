@@ -17,7 +17,6 @@
 #
 
 import matplotlib.pyplot as plt
-import numpy as np
 from swat.cas.table import CASTable
 from .utils import random_name, image_blocksize
 
@@ -142,6 +141,7 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', cas
 class ImageTable(CASTable):
     @classmethod
     def from_table(cls, tbl):
+
         '''
         Create an ImageTable from a CASTable
 
@@ -156,7 +156,10 @@ class ImageTable(CASTable):
 
         '''
         out = cls(**tbl.params)
-        out.set_connection(tbl.get_connection())
+
+        conn = tbl.get_connection()
+        conn.loadactionset('image', _messagelevel='error')
+        out.set_connection(conn)
         return out
 
     @classmethod
@@ -244,6 +247,25 @@ class ImageTable(CASTable):
 
         self._retrieve('dropcaslib', caslib=caslib)
 
+    def to_sashdat(self, path=None, name=None, **kwargs):
+        '''
+        Function to save the image table to a sashdat file.
+
+        Parameters:
+        ----------
+        path : string
+            Specifies the directory on the server to save the images
+
+        '''
+        caslib = random_name('Caslib', 6)
+        self._retrieve('addcaslib', name=caslib, path=path, activeonadd=False,
+                       datasource=dict(srcType="DNFS"))
+        if name is None:
+            name = self.to_params()['name'] + '.sashdat'
+
+        self._retrieve('table.save', caslib=caslib, name=name, table=self.to_params(), **kwargs)
+        self._retrieve('dropcaslib', caslib=caslib)
+
     def copy_table(self, casout=None):
         '''
         Function to create a copy the image object
@@ -267,7 +289,7 @@ class ImageTable(CASTable):
 
         return out
 
-    def show(self, nimages=5, ncol=8, randomize=False):
+    def show(self, nimages=5, ncol=8, randomize=False, figsize=None):
         '''
         Display a grid of images
 
@@ -288,32 +310,30 @@ class ImageTable(CASTable):
         '''
         nimages = min(nimages, len(self))
 
-        conn = self.get_connection()
-
         if randomize:
-            temp_tbl = conn.retrieve('image.fetchimages', _messagelevel='error',
-                                     imagetable=dict(
-                                         computedvars=['random_index'],
-                                         computedvarsprogram='call streaminit(-1);\
+            temp_tbl = self._retrieve('image.fetchimages', _messagelevel='error',
+                                      imagetable=dict(
+                                          computedvars=['random_index'],
+                                          computedvarsprogram='call streaminit(-1);\
                                                               random_index=rand("UNIFORM");',
-                                         **self.to_table_params()),
-                                     sortby='random_index', to=nimages)
+                                          **self.to_table_params()),
+                                      sortby='random_index', to=nimages)
         else:
-            temp_tbl = conn.retrieve('image.fetchimages', _messagelevel='error',
-                                     imagetable=self.to_table_params(), to=nimages)
+            temp_tbl = self._retrieve('image.fetchimages', _messagelevel='error',
+                                      imagetable=self.to_table_params(), to=nimages)
 
         if nimages > ncol:
             nrow = nimages // ncol + 1
         else:
             nrow = 1
             ncol = nimages
-
-        fig = plt.figure(figsize=(16, 16 // ncol * nrow))
+        if figsize is None:
+            figsize = (16, 16 // ncol * nrow)
+        fig = plt.figure(figsize=figsize)
 
         for i in range(nimages):
             image = temp_tbl['Images']['Image'][i]
             label = temp_tbl['Images']['Label'][i]
-            # image = np.asarray(image)
             ax = fig.add_subplot(nrow, ncol, i + 1)
             ax.set_title('{}'.format(label))
             plt.imshow(image)
@@ -358,7 +378,8 @@ class ImageTable(CASTable):
         if inplace:
             self._retrieve('image.processimages',
                            copyvars=column_names,
-                           casout=dict(replace=True, **self.to_outtable_params(), blocksize=blocksize),
+                           casout=dict(replace=True, blocksize=blocksize,
+                                       **self.to_outtable_params()),
                            imagefunctions=[dict(functionoptions=
                                                 dict(functiontype='GET_PATCH', x=x, y=y,
                                                      w=width, h=height))])
@@ -403,14 +424,14 @@ class ImageTable(CASTable):
         if inplace:
             self._retrieve('image.processimages',
                            copyvars=column_names,
-                           casout=dict(replace=True, **self.to_outtable_params(),
-                                       blocksize=blocksize),
+                           casout=dict(replace=True, blocksize=blocksize,
+                                       **self.to_outtable_params()),
                            imagefunctions=[dict(functionoptions=
                                                 dict(functiontype='RESIZE',
                                                      w=width, h=height))])
             # self._retrieve('table.partition',
-            #                casout=dict(replace=True, **self.to_outtable_params(),
-            #                            blocksize=blocksize))
+            #                casout=dict(replace=True, blocksize=blocksize,
+            #                           **self.to_outtable_params())
 
         else:
             out = self.copy_table()
@@ -496,8 +517,8 @@ class ImageTable(CASTable):
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.shuffle',
-                           casout=dict(replace=True, **self.to_outtable_params(),
-                                       blocksize=blocksize),
+                           casout=dict(replace=True, blocksize=blocksize,
+                                       **self.to_outtable_params()),
                            table=dict(computedvars=computedvars,
                                       computedvarsprogram=code,
                                       **self.to_table_params()))
@@ -591,8 +612,8 @@ class ImageTable(CASTable):
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.shuffle',
-                           casout=dict(replace=True, **self.to_outtable_params(),
-                                       blocksize=blocksize),
+                           casout=dict(replace=True, blocksize=blocksize,
+                                       **self.to_outtable_params()),
                            table=dict(computedvars=computedvars,
                                       computedvarsprogram=code,
                                       **self.to_table_params()))
