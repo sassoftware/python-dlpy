@@ -24,7 +24,7 @@ def VGG11(conn, model_name=None,
           n_channels=3, width=224, height=224, n_classes=None, scale=1,
           random_flip='HV', random_crop='unique', offsets=(85, 111, 139)):
     '''
-      Function to generate a deep learning model with VGG16 architecture.
+      Function to generate a deep learning model with VGG11 architecture.
 
       Parameters:
 
@@ -104,7 +104,7 @@ def VGG13(conn, model_name=None,
           n_channels=3, width=224, height=224, n_classes=None, scale=1,
           random_flip='HV', random_crop='unique', offsets=(85, 111, 139)):
     '''
-      Function to generate a deep learning model with VGG16 architecture.
+      Function to generate a deep learning model with VGG13 architecture.
 
       Parameters:
 
@@ -299,7 +299,7 @@ def VGG19(conn, model_name=None,
           n_channels=3, width=224, height=224, n_classes=None, scale=1,
           random_flip='HV', random_crop='unique', offsets=(85, 111, 139)):
     '''
-      Function to generate a deep learning model with VGG16 architecture.
+      Function to generate a deep learning model with VGG19 architecture.
 
       Parameters:
 
@@ -380,6 +380,76 @@ def VGG19(conn, model_name=None,
 
     model.add(Dense(n=4096, dropout=0.5))
     model.add(Dense(n=4096, dropout=0.5))
+    model.add(OutputLayer(n=n_classes))
+
+    return model
+
+
+def LeNet5(conn, model_name=None,
+           n_channels=1, width=28, height=28, n_classes=None, scale=1,
+           random_flip='NONE', random_crop='NONE', offsets=(85, 111, 139)):
+    '''
+      Function to generate a deep learning model with LeNet5 architecture.
+
+      Parameters:
+
+      ----------
+      conn :
+          Specifies the connection of the CAS connection.
+      model_name : string
+          Specifies the name of CAS table to store the model.
+      pre_train_weight : boolean, optional.
+          Specifies whether to use the pre-trained weights from ImageNet data set.
+          Default : False.
+      include_top : boolean, optional.
+          Specifies whether to include pre-trained weights of the top layers, i.e. the FC layers.
+          Default : False.
+      n_channels : double, optional.
+          Specifies the number of the channels of the input layer.
+          Default : 3.
+      width : double, optional.
+          Specifies the width of the input layer.
+          Default : 224.
+      height : double, optional.
+          Specifies the height of the input layer.
+          Default : 224.
+      scale : double, optional.
+          Specifies a scaling factor to apply to each image..
+          Default : 1.
+      random_flip : string, "H" | "HV" | "NONE" | "V"
+          Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
+          is subject to flipping.
+          Default	: "HV"
+      random_crop : string, "NONE" or "UNIQUE"
+          Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
+           are specified in the width and height parameters. Only the images with one or both dimensions that are larger
+           than those sizes are cropped.
+          Default	: "UNIQUE"
+      offsets=(double-1 <, double-2, ...>), optional
+          Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
+          subtracting the specified offsets.
+      Default : (85, 111, 139)
+
+      Returns
+      -------
+      A model object using VGG16 architecture.
+
+      '''
+
+    model = Sequential(conn=conn, model_name=model_name)
+
+    model.add(InputLayer(n_channels=n_channels, width=width, height=height,
+                         scale=scale, offsets=offsets, random_flip=random_flip,
+                         random_crop=random_crop))
+
+    model.add(Conv2d(n_filters=6, width=5, height=5, stride=1))
+    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+
+    model.add(Conv2d(n_filters=16, width=5, height=5, stride=1))
+    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+
+    model.add(Dense(n=120))
+    model.add(Dense(n=84))
     model.add(OutputLayer(n=n_classes))
 
     return model
