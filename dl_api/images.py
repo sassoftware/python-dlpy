@@ -311,16 +311,15 @@ class ImageTable(CASTable):
         nimages = min(nimages, len(self))
 
         if randomize:
-            temp_tbl = self._retrieve('image.fetchimages', _messagelevel='error',
-                                      imagetable=dict(
-                                          computedvars=['random_index'],
-                                          computedvarsprogram='call streaminit(-1);\
+            temp_tbl = self.conn.retrieve('image.fetchimages', _messagelevel='error',
+                                          imagetable=dict(
+                                              computedvars=['random_index'],
+                                              computedvarsprogram='call streaminit(-1);\
                                                               random_index=rand("UNIFORM");',
-                                          **self.to_table_params()),
-                                      sortby='random_index', to=nimages)
+                                              **self.to_table_params()),
+                                          sortby='random_index', to=nimages)
         else:
-            temp_tbl = self._retrieve('image.fetchimages', _messagelevel='error',
-                                      imagetable=self.to_table_params(), to=nimages)
+            temp_tbl = self._retrieve('image.fetchimages', to=nimages)
 
         if nimages > ncol:
             nrow = nimages // ncol + 1
