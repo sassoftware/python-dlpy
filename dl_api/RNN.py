@@ -204,7 +204,7 @@ def layer_to_node(layer):
 
     label = cell1 + '|{' + cell21 + '|' + cell22 + '}|' + '{' + cell31 + '|' + cell32 + '}'
     label = r'{}'.format(label)
-    return dict(name=layer.name, label=label, fillcolor=layer._color_code_)
+    return dict(name=layer.name, label=label, fillcolor=layer.color_code)
 
 
 def layer_to_edge(layer):
