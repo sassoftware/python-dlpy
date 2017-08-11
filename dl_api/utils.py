@@ -160,3 +160,16 @@ def plot_predict_res(image, label, labels, values):
     ax1.axis('off')
     ax2 = fig.add_subplot(1, 2, 2)
     predicted_prob_barplot(ax2, labels, values)
+
+
+def camelcase_to_underscore(strings):
+    import re
+
+    '''
+    Function to convert camelcase to underscore.
+    '''
+
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', strings)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
