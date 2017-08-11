@@ -25,9 +25,6 @@ from .model import Model
 
 class Sequential(Model):
     def __init__(self, conn, layers=None, model_name=None):
-        if not conn.queryactionset('deepLearn')['deepLearn']:
-            conn.loadactionset('deepLearn')
-
         Model.__init__(self, conn, model_name=model_name)
 
         if layers is None:
