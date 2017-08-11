@@ -228,12 +228,12 @@ class Model:
 
         '''
 
-        self.self.retrieve(_name_='table.attribute',
+        self.retrieve(_name_='table.attribute',
                            task='ADD', attrtable=attr_tbl,
                            **self.model_weights.to_table_params())
 
         if clear:
-            self.self.retrieve(_name_='table.droptable',
+            self.retrieve(_name_='table.droptable',
                                table=attr_tbl)
 
         print('NOTE: Model attributes are attached successfully!')
@@ -274,7 +274,7 @@ class Model:
         Function to return the information of the model table.
         '''
 
-        return self.self.retrieve(_name_='modelinfo', modelTable=self.model_name)
+        return self.retrieve(_name_='modelinfo', modelTable=self.model_name)
 
     def fit(self, data, inputs='_image_', target='_label_',
             mini_batch_size=1, max_epochs=5, log_level=3, lr=0.01,
