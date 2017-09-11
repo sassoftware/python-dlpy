@@ -69,7 +69,7 @@ class Model:
             self.set_weights(model_weights)
 
         self.valid_res = None
-        self.valid_feature_maps = None
+        self.feature_maps = None
         self.valid_conf_mat = None
         self.valid_score = None
         self.n_epochs = 0
@@ -229,12 +229,12 @@ class Model:
         '''
 
         self.retrieve(_name_='table.attribute',
-                           task='ADD', attrtable=attr_tbl,
-                           **self.model_weights.to_table_params())
+                      task='ADD', attrtable=attr_tbl,
+                      **self.model_weights.to_table_params())
 
         if clear:
             self.retrieve(_name_='table.droptable',
-                               table=attr_tbl)
+                          table=attr_tbl)
 
         print('NOTE: Model attributes are attached successfully!')
 
@@ -332,23 +332,31 @@ class Model:
         input_tbl = input_table_check(data)
 
         if optimizer is None:
-            optimizer = dict(algorithm=dict(method='momentum',
-                                            clipgradmin=-1000,
-                                            clipgradmax=1000,
-                                            learningRate=lr,
-                                            lrpolicy='step',
-                                            stepsize=15,
-                                            ),
-                             miniBatchSize=mini_batch_size,
-                             maxEpochs=max_epochs,
-                             logLevel=log_level)
+            optimizer = dict(algorithm=dict(learningrate=lr),
+                             minibatchsize=mini_batch_size,
+                             maxepochs=max_epochs,
+                             loglevel=log_level)
+        elif isinstance(optimizer, dict):
+            optimizer = dict((k.lower(), v) for k, v in optimizer.items())
+            opt_keys = optimizer.keys()
+            if 'minibatchsize' not in opt_keys:
+                optimizer['minibatchsize'] = mini_batch_size
+            if 'maxepochs' not in opt_keys:
+                optimizer['maxepochs'] = max_epochs
+            if 'loglevel' not in opt_keys:
+                optimizer['loglevel'] = log_level
+            if 'algorithm' in opt_keys:
+                algorithm = dict((k.lower(), v) for k, v in optimizer['algorithm'].items())
+                alg_keys = algorithm.keys()
+                if 'learningrate' not in alg_keys:
+                    algorithm['learningrate'] = lr
+                optimizer['algorithm'] = algorithm
+            else:
+                optimizer['algorithm']['learningrate'] = lr
         else:
-            key_args = ['mini_batch_size', 'max_epochs', 'log_level']
-            opt_keys = [item.lower() for item in optimizer.keys()]
-            for key_arg in key_args:
-                key_arg = key_arg.replace('_', '')
-                if key_arg not in opt_keys:
-                    optimizer[key_arg.strip('_')] = eval(key_arg)
+            raise TypeError('optimizer should be a dictionary of optimization options.')
+
+        max_epochs = optimizer['maxepochs']
 
         train_options = dict(model=self.model_name,
                              table=input_tbl,
@@ -382,6 +390,17 @@ class Model:
             self.training_history = self.training_history.append(temp)
             self.n_epochs += max_epochs
         self.training_history.index = range(0, self.n_epochs)
+
+        return r
+
+    def tune(self, data, inputs='_image_', target='_label_', **kwargs):
+
+        r = self.retrieve(_name_='dltune',
+                          message_level='note', model=self.model_name,
+                          table=data,
+                          inputs=inputs,
+                          target=target,
+                          **kwargs)
 
         return r
 
@@ -550,7 +569,7 @@ class Model:
         for feature_map_name in feature_maps_names:
             feature_maps_structure[int(feature_map_name.split('_')[2])] = int(feature_map_name.split('_')[4]) + 1
 
-        self.valid_feature_maps = FeatureMaps(self.conn, feature_maps_tbl, structure=feature_maps_structure)
+        self.feature_maps = FeatureMaps(self.conn, feature_maps_tbl, structure=feature_maps_structure)
 
     def get_features(self, data, dense_layer, target='_label_', **kwargs):
         '''
@@ -611,7 +630,7 @@ class Model:
         if not self.conn.queryactionset('astore')['astore']:
             self.conn.loadactionset('astore', _messagelevel='error')
 
-        CAS_tbl_name = random_name('Model_astore')
+        CAS_tbl_name = self.model_name+'_astore'
 
         self.retrieve(_name_='dlexportmodel',
                       casout=CAS_tbl_name,
