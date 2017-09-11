@@ -140,7 +140,7 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', cas
 
 class ImageTable(CASTable):
     @classmethod
-    def from_table(cls, tbl):
+    def from_table(cls, tbl, image_col='_image_', label_col='_label_', path_col=None, casout=None):
 
         '''
         Create an ImageTable from a CASTable
@@ -149,6 +149,16 @@ class ImageTable(CASTable):
         ----------
         tbl : CASTable
             The CASTable object to use as the source
+        image_col : str, optional
+            Specifies the column name for the image data.
+            Default = '_image_'
+        label_col : str, optional
+            Specifies the column name for the labels.
+            Default = '_label_'
+        path_col : str, optional
+            Specifies the column name that stores the path for each image.
+            Default = None, and the unique image ID will be generated from the labels.
+
 
         Returns
         -------
@@ -159,7 +169,54 @@ class ImageTable(CASTable):
 
         conn = tbl.get_connection()
         conn.loadactionset('image', _messagelevel='error')
+
+        if casout is None:
+            casout = {}
+        elif isinstance(casout, CASTable):
+            casout = casout.to_outtable_params()
+
+        if 'name' not in casout:
+            casout['name'] = random_name()
+
+        if '_filename_0' in tbl.columninfo().ColumnInfo.Column.tolist():
+            computedvars = []
+            code = ''
+        else:
+            computedvars = ['_filename_0']
+            code = "length _filename_0 varchar(*); "
+            if path_col is not None:
+                code = code + "_loc1 = LENGTH({0}) - INDEX(REVERSE({0}),'/')+2; ".format(path_col) + \
+                       "_filename_0 = SUBSTR({},_loc1);".format(path_col)
+            else:
+                code = code + 'call streaminit(-1);shuffle_id=rand(\"UNIFORM\")*10**10;' + \
+                       '_filename_0=cats({},"_",put(put(shuffle_id,z10.),$char10.),".jpg");'.format(label_col)
+
+        if image_col != '_image_':
+            computedvars.append('_image_')
+            code = code + '_image_ = {};'.format(image_col)
+
+        if label_col != '_label_':
+            computedvars.append('_label_')
+            code = code + '_label_ = {};'.format(label_col)
+
+        if computedvars:
+            table_opts = dict(computedvars=computedvars,
+                              computedvarsprogram=code,
+                              **tbl.params)
+        else:
+            table_opts = dict(**tbl.params)
+
+        conn.retrieve('table.shuffle', _messagelevel='error',
+                      table=table_opts,
+                      casout=dict(replace=True, blocksize=32, **casout))
+
+        conn.retrieve('table.partition', _messagelevel='error',
+                      table=dict(Vars=['_image_', '_label_', '_filename_0'], **casout),
+                      casout=dict(replace=True, blocksize=32, **casout))
+
+        out = cls(**casout)
         out.set_connection(conn)
+
         return out
 
     @classmethod
@@ -208,6 +265,10 @@ class ImageTable(CASTable):
                                  computedvarsprogram=code,
                                  **casout),
                       casout=dict(replace=True, **casout))
+
+        conn.retrieve('table.partition', _messagelevel='error',
+                      table=dict(Vars=['_image_', '_label_', '_filename_0'], **casout),
+                      casout=dict(replace=True, blocksize=32, **casout))
 
         out = cls(**casout)
         out.set_connection(conn)
