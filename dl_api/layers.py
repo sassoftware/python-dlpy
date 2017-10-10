@@ -46,29 +46,31 @@ class Layer:
     def summary(self):
         # Note: this will be moved to complie.
         if self.config['type'].lower() == 'input':
-            self.output_size = (self.config['width'], self.config['height'], self.config['nchannels'])
+            self.output_size = (int(self.config['width']), int(self.config['height']), int(self.config['nchannels']))
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
 
         elif self.config['type'].lower() in ('convo', 'convolution'):
-            self.output_size = (self.src_layers[0].output_size[0] // self.config['stride'],
-                                self.src_layers[0].output_size[1] // self.config['stride'],
-                                self.config['nfilters'])
-            self.kernel_size = (self.config['width'], self.config['height'])
-            self.num_weights = self.config['width'] * self.config['height'] * self.config['nfilters'] * \
-                               self.src_layers[0].output_size[2]
+            self.output_size = (int(self.src_layers[0].output_size[0] // self.config['stride']),
+                                int(self.src_layers[0].output_size[1] // self.config['stride']),
+                                int(self.config['nfilters']))
+            self.kernel_size = (int(self.config['width']), int(self.config['height']))
+            self.num_weights = int(self.config['width'] * self.config['height'] * self.config['nfilters'] * \
+                                   self.src_layers[0].output_size[2])
             if 'includeBias' in self.config.keys():
                 if self.config['includeBias'] is False:
                     self.num_bias = 0
+                else:
+                    self.num_bias = int(self.config['nfilters'])
             else:
-                self.num_bias = self.config['nfilters']
+                self.num_bias = int(self.config['nfilters'])
 
         elif self.config['type'].lower() in ('pool', 'pooling'):
-            self.output_size = (self.src_layers[0].output_size[0] // self.config['stride'],
-                                self.src_layers[0].output_size[1] // self.config['stride'],
-                                self.src_layers[0].output_size[2])
-            self.kernel_size = (self.config['width'], self.config['height'])
+            self.output_size = (int(self.src_layers[0].output_size[0] // self.config['stride']),
+                                int(self.src_layers[0].output_size[1] // self.config['stride']),
+                                int(self.src_layers[0].output_size[2]))
+            self.kernel_size = (int(self.config['width']), int(self.config['height']))
             self.num_weights = 0
             self.num_bias = 0
 
@@ -76,12 +78,12 @@ class Layer:
             self.output_size = self.src_layers[0].output_size
             self.kernel_size = None
             self.num_weights = 0
-            self.num_bias = 2 * self.src_layers[0].output_size[2]
+            self.num_bias = int(2 * self.src_layers[0].output_size[2])
 
         elif self.config['type'].lower() == 'residual':
-            self.output_size = (min([item.output_size[0] for item in self.src_layers]),
-                                min([item.output_size[1] for item in self.src_layers]),
-                                max([item.output_size[2] for item in self.src_layers]))
+            self.output_size = (int(min([item.output_size[0] for item in self.src_layers])),
+                                int(min([item.output_size[1] for item in self.src_layers])),
+                                int(max([item.output_size[2] for item in self.src_layers])))
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
@@ -91,10 +93,10 @@ class Layer:
                 num_features = self.src_layers[0].output_size
             else:
                 num_features = prod_without_none(self.src_layers[0].output_size)
-            self.output_size = (self.config['n'])
-            self.kernel_size = (num_features, self.config['n'])
-            self.num_weights = num_features * self.config['n']
-            self.num_bias = self.config['n']
+            self.output_size = int(self.config['n'])
+            self.kernel_size = (int(num_features), int(self.config['n']))
+            self.num_weights = int(num_features * self.config['n'])
+            self.num_bias = int(self.config['n'])
 
         elif self.config['type'].lower() == 'output':
             self.type_name = 'Output'
@@ -104,10 +106,10 @@ class Layer:
                 num_features = prod_without_none(self.src_layers[0].output_size)
 
             if 'n' in self.config.keys():
-                self.output_size = (self.config['n'])
-                self.kernel_size = (num_features, self.config['n'])
-                self.num_weights = num_features * self.config['n']
-                self.num_bias = self.config['n']
+                self.output_size = int(self.config['n'])
+                self.kernel_size = (int(num_features), int(self.config['n']))
+                self.num_weights = int(num_features * self.config['n'])
+                self.num_bias = int(self.config['n'])
             else:
                 self.kernel_size = None
                 self.num_weights = None
@@ -115,14 +117,17 @@ class Layer:
                 self.output_size = None
 
         name = '{}({})'.format(self.name, self.type_name)
-        col1 = '| {:<17}'.format('{}'.format(name))
+        if len(name) > 17:
+            col1 = '| {:<17}'.format('{}'.format(name[:14] + '...'))
+        else:
+            col1 = '| {:<17}'.format('{}'.format(name))
 
         col2 = '|{:^15}'.format('{}'.format(self.kernel_size))
 
         if 'stride' not in self.config.keys():
             col3 = '|{:^8}'.format('None')
         else:
-            col3 = '|{:^8}'.format('{}'.format(self.config['stride']))
+            col3 = '|{:^8}'.format('{}'.format(int(self.config['stride'])))
 
         col4 = '|{:^12}'.format('{}'.format(self.activation))
 
@@ -142,8 +147,11 @@ class Layer:
 
 
 class InputLayer(Layer):
-    def __init__(self, n_channels=3, width=224, height=224, scale=1, dropout=0, offsets='NONE',
+    def __init__(self, n_channels=3, width=224, height=224, scale=1, dropout=0, offsets=None,
                  name=None, src_layers=None, **kwargs):
+        if offsets is None:
+            offsets = [0] * n_channels
+
         config = locals()
         config = _unpack_config(config)
         config['type'] = 'input'
