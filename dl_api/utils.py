@@ -16,9 +16,9 @@
 #  limitations under the License.
 #
 
+import os
 import random
 import string
-import os
 
 
 def random_name(name='ImageData', length=6):
@@ -133,8 +133,6 @@ def predicted_prob_barplot(ax, labels, values):
 
     '''
 
-    import numpy as np
-
     y_pos = (0.2 + np.arange(len(labels))) / (1 + len(labels))
     width = 0.8 / (1 + len(labels))
     colors = ['blue', 'green', 'yellow', 'orange', 'red']
@@ -152,7 +150,6 @@ def predicted_prob_barplot(ax, labels, values):
 
 
 def plot_predict_res(image, label, labels, values):
-    import matplotlib.pyplot as plt
     fig = plt.figure(figsize=(12, 5))
     ax1 = fig.add_subplot(1, 2, 1)
     ax1.set_title('{}'.format(label))
@@ -163,11 +160,79 @@ def plot_predict_res(image, label, labels, values):
 
 
 def camelcase_to_underscore(strings):
-    import re
-
     '''
     Function to convert camelcase to underscore.
     '''
+    import re
 
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', strings)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+
+def add_caslib(conn, path):
+    '''
+    Function to add caslib, if the path is not in the cas libraries in the conn session.
+    Otherwise, a new caslib will be created.
+
+
+    Parameters:
+
+    ----------
+
+    conn : a cas connection.
+
+    path : str
+        Specifies the path to check.
+
+    Return:
+
+    ----------
+
+    The name of the cas library pointing to the path.
+    '''
+
+    if path in conn.caslibinfo().CASLibInfo.Path.tolist():
+        cas_lib_name = conn.caslibinfo().CASLibInfo[conn.caslibinfo().CASLibInfo.Path == path]['Name']
+
+        return cas_lib_name.tolist()[0]
+    else:
+        cas_lib_name = random_name('Caslib', 6)
+        conn.retrieve(_name_='addcaslib', message_level='error',
+                      name=cas_lib_name, path=path, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+        return cas_lib_name
+
+
+def upload_astore(conn, path, table_name=None):
+    '''
+    Function to load the local astore file to server
+
+    Parameters:
+
+    ----------
+
+    conn : a cas connection.
+
+    path : str
+        Specifies the full path of the astore file.
+
+    table_name : str
+        Specifies the name of the cas table on server, to hold the astore object.
+
+
+    Return:
+
+    ----------
+
+    None
+
+    '''
+    conn.loadactionset('astore')
+
+    with open(path, 'br') as f:
+        astore_byte = f.read()
+
+    store_ = sw.blob(astore_byte)
+
+    if table_name is None:
+        table_name = random_name('ASTORE')
+    conn.astore.upload(rstore=table_name, store=store_)
