@@ -31,30 +31,24 @@ import os
 
 
 class Model:
-    '''
-    Model
-
-    Parameters:
-
-    ----------
-    conn :
-        Specifies the CAS connection.
-    model_name : string
-        Specifies the name of the deep learning model.
-    model_weights : string, dictionary or CAS table, optional
-        Specifies the weights of the deep learning model.
-        If not specified, random initial will be used.
-        Default : None
-
-    Returns
-
-    -------
-    A deep learning model objects.
-    '''
 
     @classmethod
     def from_table(cls, model_table):
+        '''
+        Create a Model object from CAS table that defines a deep learning model.
 
+        Parameters:
+
+        ----------
+        model_table : a CAS table object.
+            Specifies the CAS table that defines the deep learning model.
+
+
+        Returns
+
+        -------
+        A deep learning model objects.
+        '''
         model = cls(conn=model_table.get_connection())
         model_name = model.retrieve(_name_='table.fetch',
                                     table=dict(where='_DLKey1_= "modeltype"',
@@ -108,6 +102,26 @@ class Model:
         return model
 
     def __init__(self, conn, model_name=None, model_weights=None):
+        '''
+        Model
+
+        Parameters:
+
+        ----------
+        conn :
+            Specifies the CAS connection.
+        model_name : string
+            Specifies the name of the deep learning model.
+        model_weights : string, dictionary or CAS table, optional
+            Specifies the weights of the deep learning model.
+            If not specified, random initial will be used.
+            Default : None
+
+        Returns
+
+        -------
+        A deep learning model objects.
+        '''
 
         if not conn.queryactionset('deepLearn')['deepLearn']:
             conn.loadactionset(actionSet='deepLearn', _messagelevel='error')
@@ -236,8 +250,7 @@ class Model:
     def set_weights(self, weight_tbl):
 
         '''
-        Function to assign the weight to the model.
-
+        Assign weights to the Model object.
 
         Parameters:
 
@@ -259,10 +272,10 @@ class Model:
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
         print('NOTE: Model weights attached successfully!')
 
-    def load_weights(self, path, kwarg):
+    def load_weights(self, path, **kwargs):
 
         '''
-        Function to load the weights form a file.
+        Load the weights form a data file specified by ‘path’. Currently support HDF5 and sashdat files.
 
 
         Parameters:
@@ -277,11 +290,12 @@ class Model:
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         if file_name.lower().endswith('.h5'):
-            self.load_weights_from_HDF5(path, **kwarg)
+            self.load_weights_from_CAFFE(path, **kwargs)
 
-    def load_weights_from_HDF5(self, path, kwarg):
+    def load_weights_from_CAFFE(self, path, **kwargs):
         '''
         Function to load the model weights from a HDF5 file.
+
         Parameters:
 
         ----------
@@ -290,7 +304,7 @@ class Model:
         '''
         self.retrieve(_name_='dlimportmodelweights', model=self.model_name,
                       modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                      formatType="HDF5", weightFilePath=path, **kwarg)
+                      formatType="CAFFE", weightFilePath=path, **kwargs)
 
     def load_weights_from_table(self, path):
 
@@ -341,7 +355,8 @@ class Model:
     def set_weights_attr(self, attr_tbl, clear=True):
 
         '''
-        Function to attach the weights attribute.
+        Attach the weights attribute to the model weights.
+
 
         Parameters:
 
@@ -366,7 +381,7 @@ class Model:
     def load_weights_attr(self, path):
 
         '''
-        Function to load the weights attribute form a file.
+        Load the weights attribute form a sashdat file.
 
 
         Parameters:
@@ -499,18 +514,21 @@ class Model:
 
         r = self.retrieve(message_level='note', _name_='dltrain', **train_options)
 
-        temp = r.OptIterHistory
-        temp.Epoch += 1  # Epochs should start from 1
-        temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
+        try:
+            temp = r.OptIterHistory
+            temp.Epoch += 1  # Epochs should start from 1
+            temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
 
-        if self.n_epochs == 0:
-            self.n_epochs = max_epochs
-            self.training_history = temp
-        else:
-            temp.Epoch += self.n_epochs
-            self.training_history = self.training_history.append(temp)
-            self.n_epochs += max_epochs
-        self.training_history.index = range(0, self.n_epochs)
+            if self.n_epochs == 0:
+                self.n_epochs = max_epochs
+                self.training_history = temp
+            else:
+                temp.Epoch += self.n_epochs
+                self.training_history = self.training_history.append(temp)
+                self.n_epochs += max_epochs
+            self.training_history.index = range(0, self.n_epochs)
+        except:
+            pass
 
         return r
 
@@ -528,7 +546,7 @@ class Model:
     def plot_training_history(self, items=('Loss', 'FitError'), fig_size=(12, 5)):
 
         '''
-        Function to display the training iteration history.
+        Display the training iteration history.
         '''
 
         self.training_history.plot(x=['Epoch'], y=list(items),
@@ -538,7 +556,7 @@ class Model:
     def predict(self, data, inputs='_image_', target='_label_', **kwargs):
 
         '''
-        Function of scoring the deep learning model on a validation data set.
+        Evaluate the deep learning model on a specified validation data set.
 
         Parameters:
 
@@ -594,7 +612,7 @@ class Model:
 
     def plot_predict_res(self, type='A', image_id=0):
         '''
-        Function to plot the classification results.
+        Plot the classification results.
 
         Parameters:
 
@@ -644,7 +662,7 @@ class Model:
 
     def get_feature_maps(self, data, label=None, image_id=0, **kwargs):
         '''
-        Function to extract the feature maps for a single image.
+        Extract the feature maps for a single image.
 
         Parameters:
 
@@ -701,7 +719,7 @@ class Model:
 
     def get_features(self, data, dense_layer, target='_label_', **kwargs):
         '''
-        Function to extract the features for a data table.
+        Extract the linear features for a data table from the layer specified by dense_layer.
 
         Parameters:
 
@@ -744,9 +762,10 @@ class Model:
 
         return x, y
 
-    def heat_map_analysis(self, data, mask_width=None, mask_height=None, step_size=None):
+    def heat_map_analysis(self, data, mask_width=None, mask_height=None, step_size=None, **kwargs):
         '''
-        Function to create a heat map on the image, indicating the important region related with classification.
+        Conduct a heat map analysis on the image, indicating the important region related with classification.
+        Detail process can be found at: https://arxiv.org/pdf/1311.2901.pdf
 
 
         Parameters:
@@ -754,22 +773,21 @@ class Model:
         ----------
         data : A ImageTable object, containing the column of '_image_', '_label_','_filename_0'
             Specifies the table containing the image data.
-        dense_layer : str
-            Specifies the name of the layer that is extracted.
-        target : str, optional
-            Specifies the name of the column including the response variable.
+        mask_width : int
+            Specifies the width of the mask which cover the region of the image.
+        mask_height : int
+            Specifies the height of the mask which cover the region of the image.
+        step_size: int
+            Specifies the stepsize of the movement of the the mask.
         kwargs: dictionary, optional
             Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
         Returns
-
+            self.model_explain_table: a table
         ----------
-        x : ndarray of size n by p, where n is the sample size and p is the number of features.
-            The features extracted by the model at the specified dense_layer.
-        y : ndarray of size n.
-            The response variable of the original data.
+
         '''
 
         output_width = int(data.image_summary.minWidth)
@@ -789,6 +807,8 @@ class Model:
         copy_vars = data.columns.tolist()
         masked_image_table = random_name('MASKED_IMG')
         blocksize = image_blocksize(output_width, output_height)
+
+        # Prepare masked images for analysis.
         self.retrieve(_name_='image.augmentImages',
                       table=data.to_table_params(),
                       copyvars=copy_vars,
@@ -809,6 +829,7 @@ class Model:
                                randomCrop='NONE',
                                casout=dict(replace=True, name=valid_res_tbl),
                                encodeName=True)
+        dlscore_options.update(kwargs)
         self.retrieve(_name_='dlscore', **dlscore_options)
 
         col_list = self.conn.CASTable(valid_res_tbl).columns.tolist()
@@ -832,9 +853,10 @@ class Model:
             y = int(row['y'])
             x_step = int(row['width'])
             y_step = int(row['height'])
-            true_pred_prob_col = 'P__label_' + row['_label_']
+            true_class = row['_label_'].replace(' ','_')
+            true_pred_prob_col = 'P__label_' + true_class
             prob = row[true_pred_prob_col]
-            model_explain_table[name][x:x + x_step, y:y + y_step, count_for_subject[name]] = prob
+            model_explain_table[name][y:y + y_step, x:x + x_step, count_for_subject[name]] = prob
             count_for_subject[name] += 1
 
         original_image_table = data.fetchimages(fetchVars=data.columns.tolist()).Images
@@ -861,7 +883,7 @@ class Model:
     def plot_heat_map(self, image_id=0, alpha=.2):
 
         '''
-        Function to plot the heat map analysis results.
+        Display the heat maps analysis results.
 
         Parameters:
 
@@ -880,22 +902,25 @@ class Model:
         label = self.model_explain_table['_label_'][image_id]
 
         img = self.model_explain_table['_image_'][image_id]
-        img_size = img.size
-        extent = [0, img_size[0], 0, img_size[1]]
 
         heat_map = self.model_explain_table['heat_map'][image_id]
+
+        img_size = heat_map.shape
+        extent = [0, img_size[0], 0, img_size[1]]
+
         vmin = heat_map.min()
+        vmax = heat_map.max()
         fig, (ax0, ax2, ax1) = plt.subplots(ncols=3, figsize=(12, 4))
         ax0.imshow(img, extent=extent)
         ax0.axis('off')
         ax0.set_title('Original Image: {}'.format(label))
 
-        color_bar = ax1.imshow(heat_map, vmax=1, vmin=vmin, interpolation='none', extent=extent)
+        color_bar = ax1.imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none', extent=extent, cmap='jet_r')
         ax1.axis('off')
         ax1.set_title('Heat Map')
 
         ax2.imshow(img, extent=extent)
-        ax2.imshow(heat_map, vmax=1, vmin=vmin, interpolation='none', alpha=alpha, extent=extent)
+        ax2.imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none', alpha=alpha, extent=extent, cmap='jet_r')
         ax2.axis('off')
         ax2.set_title('Overlayed Image')
 
@@ -992,7 +1017,7 @@ class Model:
 
     def deploy(self, path, output_format='ASTORE'):
         '''
-        Function to deploy the deep learning model.
+        Deploy the deep learning model to a data file. Currently, this function support sashdat and astore formats.
 
         Parameters:
 
@@ -1032,6 +1057,9 @@ class Model:
         return int(count)
 
     def summary(self):
+        '''
+        Display a tabula that summarizes the model architecture.
+        '''
         bar_line = '*' + '=' * 18 + '*' + '=' * 15 + '*' + '=' * 8 + '*' + \
                    '=' * 12 + '*' + '=' * 17 + '*' + '=' * 22 + '*\n'
         h_line = '*' + '-' * 18 + '*' + '-' * 15 + '*' + '-' * 8 + '*' + \
@@ -1056,7 +1084,7 @@ class Model:
 
     def plot_network(self):
         '''
-        Function to plot the model DAG
+        Display a graph that summarizes the model architecture.
         '''
 
         from IPython.display import display
