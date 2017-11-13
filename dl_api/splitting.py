@@ -21,7 +21,7 @@ from .images import ImageTable
 from .utils import random_name
 
 
-def two_way_split(tbl, test_rate=20, stratify_by='_label_', **kwargs):
+def two_way_split(tbl, test_rate=20, stratify_by='_label_', image_col='_image_', **kwargs):
     '''
     Function to split image data into training and testing sets
 
@@ -71,7 +71,8 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', **kwargs):
     tbl._retrieve('table.dropTable',
                   name=temp_tbl_name)
 
-    return ImageTable.from_table(train), ImageTable.from_table(test)
+    return ImageTable.from_table(train, label_col=stratify_by, image_col=image_col),\
+           ImageTable.from_table(test, label_col=stratify_by, image_col=image_col)
 
 
 def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **kwargs):
