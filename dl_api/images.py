@@ -17,6 +17,7 @@
 #
 
 import matplotlib.pyplot as plt
+
 from swat.cas.table import CASTable
 from .utils import random_name, image_blocksize
 
@@ -31,7 +32,7 @@ class ImageTable(CASTable):
         Parameters
         ----------
         tbl : CASTable
-            The CASTable object to use as the source
+            The CASTable object to use as the source.
         image_col : str, optional
             Specifies the column name for the image data.
             Default = '_image_'
@@ -105,7 +106,7 @@ class ImageTable(CASTable):
     @classmethod
     def load_files(cls, conn, path, casout=None, **kwargs):
         '''
-        Create a new ImageTable using images in `path`
+        Load images under the directory specified by ‘path’ and create a new ImageTable accordingly.
 
         Parameters
         ----------
@@ -174,7 +175,7 @@ class ImageTable(CASTable):
 
     def to_files(self, path):
         '''
-        Function to save the images to the specified directory
+        Save the images in the original format under the specified directory.
 
         Parameters:
         ----------
@@ -194,7 +195,7 @@ class ImageTable(CASTable):
 
     def to_sashdat(self, path=None, name=None, **kwargs):
         '''
-        Function to save the image table to a sashdat file.
+        Save the ImageTable to a sashdat file.
 
         Parameters:
         ----------
@@ -213,7 +214,7 @@ class ImageTable(CASTable):
 
     def copy_table(self, casout=None):
         '''
-        Function to create a copy the image object
+        Create a copy of the ImageTable.
 
         Parameters
         ----------
@@ -237,7 +238,7 @@ class ImageTable(CASTable):
 
     def show(self, nimages=5, ncol=8, randomize=False, figsize=None):
         '''
-        Display a grid of images
+        Display a grid of images.
 
         Parameters:
         ----------
@@ -257,13 +258,13 @@ class ImageTable(CASTable):
         nimages = min(nimages, len(self))
 
         if randomize:
-            temp_tbl = self.conn.retrieve('image.fetchimages', _messagelevel='error',
-                                          imagetable=dict(
-                                              computedvars=['random_index'],
-                                              computedvarsprogram='call streaminit(-1);\
+            temp_tbl = self.retrieve('image.fetchimages', _messagelevel='error',
+                                     table=dict(
+                                         computedvars=['random_index'],
+                                         computedvarsprogram='call streaminit(-1);\
                                                               random_index=rand("UNIFORM");',
-                                              **self.to_table_params()),
-                                          sortby='random_index', to=nimages)
+                                         **self.to_table_params()),
+                                     sortby='random_index', to=nimages)
         else:
             temp_tbl = self._retrieve('image.fetchimages', to=nimages)
 
@@ -286,7 +287,7 @@ class ImageTable(CASTable):
 
     def crop(self, x=0, y=0, width=None, height=None, inplace=True):
         '''
-        Crop images in the table
+        Crop the images in the ImageTable.
 
         Parameters
         ----------
@@ -336,7 +337,7 @@ class ImageTable(CASTable):
 
     def resize(self, width=None, height=None, inplace=True):
         '''
-        Resize images in the table
+        Resize the images in the ImageTable.
 
         Parameters
         ----------
@@ -386,7 +387,8 @@ class ImageTable(CASTable):
     def as_patches(self, x=0, y=0, width=None, height=None, step_size=None,
                    output_width=None, output_height=None, inplace=True):
         '''
-        Generate patches from images in the table
+        Generate patches from the images in the ImageTable, by creating crops with fixed window size and moving the
+        window along the images.
 
         Parameters
         ----------
@@ -479,7 +481,8 @@ class ImageTable(CASTable):
                           step_size=None, output_width=None, output_height=None,
                           inplace=True):
         '''
-        Generate random patches from images in the table
+        Generate random patches from the images in the ImageTable, by randomly selecting the patches generated.
+
 
         Parameters
         ----------
@@ -577,6 +580,9 @@ class ImageTable(CASTable):
 
     @property
     def image_summary(self):
+        '''
+        Summarize the images in the ImageTable.
+        '''
         out = self._retrieve('image.summarizeimages')['Summary']
         out = out.T.drop(['Column'])[0]
         out.name = None
@@ -584,6 +590,9 @@ class ImageTable(CASTable):
 
     @property
     def label_freq(self):
+        '''
+        Summarize the distribution of different classes (labels) in the ImageTable.
+        '''
         out = self._retrieve('simple.freq', table=self, inputs=['_label_'])['Frequency']
         out = out[['FmtVar', 'Level', 'Frequency']]
         out = out.set_index('FmtVar')
@@ -594,6 +603,9 @@ class ImageTable(CASTable):
 
     @property
     def channel_means(self):
+        '''
+        A list of the means of the image intensities in each color channel.
+        '''
         return self.image_summary[['mean1stChannel', 'mean2ndChannel',
                                    'mean3rdChannel']].tolist()
 
