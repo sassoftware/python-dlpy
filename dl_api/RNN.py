@@ -16,14 +16,15 @@
 #  limitations under the License.
 #
 
-'''
-RNN Model object for deep learning.
-'''
+''' RNN Model object for deep learning '''
 
 from .model import Model
 
 
 class RNN(Model):
+
+    # TODO: Needs docstring
+
     def __init__(self, conn, layers=None, model_name=None):
         if not conn.queryactionset('deepLearn')['deepLearn']:
             conn.loadactionset('deepLearn')
@@ -40,7 +41,7 @@ class RNN(Model):
                 self.compile()
 
     def add(self, layer):
-
+        # TODO: Needs docstring
         if layer.__class__ is not list:
             layer = [layer]
 
@@ -71,13 +72,16 @@ class RNN(Model):
             self.compile()
 
     def pop(self, loc=-1):
+        # TODO: Needs docstring
         if len(self.layers) > 0:
             self.layers.pop(loc)
 
     def switch(self, loc1, loc2):
+        # TODO: Needs docstring
         self.layers[loc1], self.layers[loc2] = self.layers[loc2], self.layers[loc1]
 
     def compile(self):
+        # TODO: Needs docstring
 
         if self.layers[0][0].config['type'] != 'input':
             raise ValueError('The first layer of the model must be an input layer')
@@ -122,6 +126,9 @@ class RNN(Model):
         print('NOTE: Model compiled successfully.')
 
     def summary(self):
+        # TODO: Needs docstring
+        # TODO: This should create a DataFrame and just return it rather
+        #       than displaying it.
         bar_line = '*' + '=' * 20 + '*' + '=' * 14 + '*' + '=' * 10 + '*' + \
                    '=' * 20 + '*' + '=' * 12 + '*' + '=' * 8 + '*' + '=' * 17 + '*\n'
         h_line = '*' + '-' * 20 + '*' + '-' * 14 + '*' + '-' * 10 + '*' + \
@@ -176,10 +183,9 @@ class RNN(Model):
         print(output)
 
     def plot_network(self):
-        '''
-        Function to plot the model DAG
-        '''
-
+        ''' Function to plot the model DAG '''
+        # TODO: Don't modify the path.  You won't even know if you are on Windows.
+        # TODO: This should return the graph and let the client display it.
         from IPython.display import display
         import os
         os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
@@ -188,6 +194,7 @@ class RNN(Model):
 
 
 def layer_to_node(layer):
+    # TODO: Needs docstring
     cell1 = r'{}\n({})'.format(layer.name, layer.config['type'])
     cell21 = '<Type> Type:'
     cell22 = '<Neuron> Neuron:'
@@ -208,6 +215,7 @@ def layer_to_node(layer):
 
 
 def layer_to_edge(layer):
+    # TODO: Needs docstring
     options = []
     for src_layer in layer.src_layers:
         options.append(dict(tail_name='{}'.format(src_layer.name),
@@ -217,6 +225,7 @@ def layer_to_edge(layer):
 
 
 def model_to_graph(model):
+    # TODO: Needs docstring
     import graphviz as gv
     model_graph = gv.Digraph(name=model.model_name,
                              node_attr=dict(shape='record', style='filled,rounded'))

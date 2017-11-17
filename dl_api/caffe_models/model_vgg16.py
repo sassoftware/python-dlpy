@@ -1,14 +1,34 @@
-import sys
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# Copyright SAS Institute
+#
+#  Licensed under the Apache License, Version 2.0 (the License);
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
 
 
-# VGG16 model definition
 def VGG16_Model(s, inputCropType=None, inputChannelOffset=None):
+    '''
+    VGG16 model definition
+
+    '''
+    # TODO: Document parameters
+    # TODO: Use underscore-delimited parameter names
     # quick error-checking and default setting
-    if (inputCropType == None):
+    if inputCropType is None:
         inputCropType = "NONE"
-    else:
-        if (inputCropType.upper() != "NONE") and (inputCropType.upper() != "UNIQUE"):
-            sys.exit("ERROR: inputCropType can only be NONE or UNIQUE")
+    elif inputCropType.upper() not in ["NONE", "UNIQUE"]:
+        raise ValueEror('inputCropType can only be NONE or UNIQUE')
 
     if (inputChannelOffset == None):
         inputChannelOffset = [103.939, 116.779, 123.68]
@@ -138,8 +158,3 @@ def VGG16_Model(s, inputCropType=None, inputChannelOffset=None):
     s.addLayer(model='VGG16', name='fc8',
                layer=dict(type='output', n=1000, act='softmax'),
                srcLayers=['fc7'])
-
-
-#########################################################################################
-if __name__ == "__main__":
-    sys.exit("ERROR: this module defines the VGG-16 model.  Do not call directly.")

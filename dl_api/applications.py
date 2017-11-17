@@ -23,53 +23,58 @@ from .layers import *
 from .model import Model
 from .utils import random_name
 
+# TODO: Needs docstring
 
 def LeNet5(conn, model_name='LENET5',
            n_classes=10, n_channels=1, width=28, height=28, scale=1.0 / 255,
            random_flip='NONE', random_crop='NONE', offsets=0):
     '''
-    Function to generate a deep learning model with LeNet5 architecture.
+    Generate a deep learning model with LeNet5 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.    
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 1.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 28.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 28.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 1
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 28
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 28
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model
+        will automatically detect the number of classes based on the
+        training set.
         Default: 10
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default : "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default : "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (0)
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data
+        is used. Images are cropped to the values that are specified in the
+        width and height parameters. Only the images with one or both
+        dimensions that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: 0
 
     Returns
     -------
-    A model object with LeNet5 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -98,56 +103,61 @@ def LeNet5_bn(conn, model_name='LENET_BN',
               random_flip='NONE', random_crop='NONE', offsets=0,
               pre_train_weight=False, include_top=False):
     '''
-    Function to generate a LeNet Model with Batch normalization.
+    Generate a LeNet Model with Batch normalization
 
-    Parameters:
-
+    Parameters
     ----------
-
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.    
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 1.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 28.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 28.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 1
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 28
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 28
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 10
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default : "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default : "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (0)
-    pre_train_weight : boolean, optional.
-        Specifies whether to use the pre-trained weights from MNIST data set.
-        Default : False.
-    include_top : boolean, optional.
-        Specifies whether to include pre-trained weights of the top layers, i.e. the FC layers.
-        Default : False.
-
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: 0
+    pre_train_weight : boolean, optional
+        Specifies whether to use the pre-trained weights from MNIST data set
+        Default: False
+    include_top : boolean, optional
+        Specifies whether to include pre-trained weights of the top layers,
+        i.e. the FC layers.
+        Default: False
 
     Returns
     -------
-    A LeNet model object with Batch Normalization.
+    :class:`Sequential`
+        If `pre_train_weight` is `False`
+    :class:`Model`
+        If `pre_train_weight` is `True`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -192,51 +202,53 @@ def VGG11(conn, model_name='VGG11',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with VGG11 architecture.
+    Generate a deep learning model with VGG11 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+    Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with VGG11 architecture.
+    :class:`Sequential`
 
     '''
-
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
     if offsets is None:
         offsets = (103.939, 116.779, 123.68)
@@ -276,52 +288,54 @@ def VGG11_bn(conn, model_name='VGG11',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with VGG11 architecture with batch normalization layers.
+    Generate deep learning model with VGG11 architecture with batch normalization layers
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-        Default: "VGG11_BN"
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+        Default: 'VGG11_BN'
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model
+        will automatically detect the number of classes based on the
+        training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data
+        is used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data
+        is used. Images are cropped to the values that are specified in the
+        width and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with VGG11 architecture with batch normalization layers.
+    :class:`Sequential`
 
     '''
-
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
     if offsets is None:
         offsets = (103.939, 116.779, 123.68)
@@ -370,49 +384,51 @@ def VGG13(conn, model_name='VGG13',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with VGG13 architecture.
+    Generate a deep learning model with VGG13 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
-
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default	: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with VGG13 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -467,48 +483,51 @@ def VGG13_bn(conn, model_name='VGG13',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='NONE', random_crop='NONE', offsets=None):
     '''
-    Function to generate a deep learning model with VGG13 architecture with batch normalization layers.
+    Generate deep learning model with VGG13 architecture with batch normalization layers
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: None
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of--doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+    Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with VGG13 architecture with batch normalization layers.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -554,54 +573,58 @@ def VGG16(conn, model_name='VGG16',
           random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
           pre_train_weight=False, include_top=False):
     '''
-    Function to generate a deep learning model with VGG16 architecture.
+    Generate a deep learning model with VGG16 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
-    pre_train_weight : boolean, optional.
-        Specifies whether to use the pre-trained weights from ImageNet data set.
-        Default : False.
-    include_top : boolean, optional.
-        Specifies whether to include pre-trained weights of the top layers, i.e. the FC layers.
-        Default : False.
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions that
+        are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
+    pre_train_weight : boolean, optional
+        Specifies whether to use the pre-trained weights from ImageNet data set
+        Default: False
+    include_top : boolean, optional
+        Specifies whether to include pre-trained weights of the top layers,
+        i.e. the FC layers
+        Default: False
 
     Returns
     -------
-    A model object with VGG16 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -672,49 +695,50 @@ def VGG16_bn(conn, model_name='VGG16',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with VGG16 architecture with batch normalization layers.
+    Generate deep learning model with VGG16 architecture with batch normalization layers
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: None
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
-
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions that
+        are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+    Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with VGG16 architecture with batch normalization layers.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -773,54 +797,60 @@ def VGG19(conn, model_name='VGG19',
           random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
           pre_train_weight=False, include_top=False):
     '''
-    Function to generate a deep learning model with VGG19 architecture.
+    Generate a deep learning model with VGG19 architecture
 
-    Parameters:
-
-        ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
-    pre_train_weight : boolean, optional.
-        Specifies whether to use the pre-trained weights from ImageNet data set.
-        Default : False.
-    include_top : boolean, optional.
-        Specifies whether to include pre-trained weights of the top layers, i.e. the FC layers.
-        Default : False.
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions that
+        are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (103.939, 116.779, 123.68)
+    pre_train_weight : boolean, optional
+        Specifies whether to use the pre-trained weights from ImageNet data set
+        Default: False
+    include_top : boolean, optional
+        Specifies whether to include pre-trained weights of the top layers,
+        i.e. the FC layers.
+        Default: False
 
     Returns
     -------
-    A model object with VGG19 architecture.
+    :class:`Sequential`
+        If `pre_train_weight` is False
+    :class:`Model`
+        If `pre_train_teight` is True
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -864,6 +894,7 @@ def VGG19(conn, model_name='VGG19',
 
         return model
     else:
+        # TODO: Remove internal SAS paths
         model_vgg19.VGG19_Model(s=conn, model_name=model_name, inputCropType=random_crop,
                                 inputChannelOffset=offsets, include_top=include_top)
         if include_top:
@@ -895,48 +926,51 @@ def VGG19_bn(conn, model_name='VGG19',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with VGG19 architecture with batch normalization layers.
+    Generate deep learning model with VGG19 architecture with batch normalization layers
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
+    conn : CAS
+        Specifies the CAS connection object
     model_name : string
-        Specifies the name of CAS table to store the model.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+        Specifies the name of CAS table to store the model in
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions that
+        are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default	: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with VGG19 architecture with batch normalization layers.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1000,54 +1034,59 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                  random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with ResNet18 architecture.
+    Generate a deep learning model with ResNet18 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-        Default : 'RESNET18_SAS'.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: True.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+        Default: 'RESNET18_SAS'
+    batch_norm_first: boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: True
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions that
+        are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default	: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+    Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with ResNet18 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1094,56 +1133,60 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    random_flip='NONE', random_crop='NONE', offsets=None):
     '''
-    Function to generate a deep learning model with ResNet18 architecture with convolution shortcut.
+    Generate a deep learning model with ResNet18 architecture with convolution shortcut
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-        model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: False.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: False
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with ResNet18 architecture with convolution shortcut.
+    :class:`Sequential`
 
     '''
-
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
 
     model = Sequential(conn=conn, model_name=model_name)
@@ -1189,53 +1232,58 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                  random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with ResNet34 architecture.
+    Generate a deep learning model with ResNet34 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: True.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first: boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: True
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+    Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with ResNet34 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1282,53 +1330,58 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    random_flip='NONE', random_crop='NONE', offsets=None):
     '''
-    Function to generate a deep learning model with ResNet34 architecture with convolution shortcut.
+    Generate deep learning model with ResNet34 architecture with convolution shortcut
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-        model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: False.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: False
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions that
+        are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with ResNet34 architecture with convolution shortcut.
+    :class:`Sequential`
 
     '''
 
@@ -1383,53 +1436,58 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                  random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with ResNet50 architecture.
+    Generate a deep learning model with ResNet50 architecture
     
-    Parameters:
-    
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: True.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: True
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or list-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+    Default: (103.939, 116.779, 123.68)
     
     Returns
     -------
-    A model object with ResNet50 architecture.
+    :class:`Sequential`
     
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1477,59 +1535,68 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
                    random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
                    pre_train_weight=False, include_top=False):
     '''
-    Function to generate a deep learning model with ResNet50 architecture with convolution shortcut.
+    Generate deep learning model with ResNet50 architecture with convolution shortcut
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: False.
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: False
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
-    pre_train_weight : boolean, optional.
-        Specifies whether to use the pre-trained weights from ImageNet data set.
-        Default : False.
-    include_top : boolean, optional.
-        Specifies whether to include pre-trained weights of the top layers, i.e. the last layer for classification.
-        Default : False.
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
+    pre_train_weight : boolean, optional
+        Specifies whether to use the pre-trained weights from ImageNet data set
+        Default: False
+    include_top : boolean, optional
+        Specifies whether to include pre-trained weights of the top layers,
+        i.e. the last layer for classification.
+        Default: False
     
     Returns
     -------
-    A model object with ResNet50 architecture with convolution shortcut.
+    :class:`Sequential`
+        If `pre_train_weight` is `False`
+    :class:`Model`
+        If `pre_train_weight` is `True`
     
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1604,53 +1671,58 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
                   n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                   random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with ResNet101 architecture.
+    Generate a deep learning model with ResNet101 architecture
     
-    Parameters:
-    
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: True.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: True
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-    Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data
+        is used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default	: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
     
     Returns
     -------
-    A model object with ResNet101 architecture.
+    :class:`Sequential`
     
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1698,61 +1770,71 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
                     random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
                     pre_train_weight=False, include_top=False):
     '''
-    Function to generate a deep learning model with ResNet101 architecture with convolution shortcut.
+    Generate deep learning model with ResNet101 architecture with convolution shortcut
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: False.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: False
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
-    pre_train_weight : boolean, optional.
-        Specifies whether to use the pre-trained weights from ImageNet data set.
-        Default : False.
-    include_top : boolean, optional.
-        Specifies whether to include pre-trained weights of the top layers, i.e. the last layer for classification.
-        Default : False.
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
+    pre_train_weight : boolean, optional
+        Specifies whether to use the pre-trained weights from ImageNet data set
+        Default: False
+    include_top : boolean, optional
+        Specifies whether to include pre-trained weights of the top layers,
+        i.e. the last layer for classification.
+        Default: False.
 
     Returns
     -------
-    A model object with ResNet101 architecture with convolution shortcut.
+    :class:`Sequential`
+        If `pre_train_weight` is `False`
+    :class:`Model`
+        If `pre_train_weight` is `True`
 
     '''
+    # TODO: Remove internal SAS paths
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
 
     if not pre_train_weight:
@@ -1825,53 +1907,58 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
                   n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                   random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
     '''
-    Function to generate a deep learning model with ResNet152 architecture.
+    Generate a deep learning model with ResNet152 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: True.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: True
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with ResNet152 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1920,59 +2007,68 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
                     random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
                     pre_train_weight=False, include_top=False):
     '''
-    Function to generate a deep learning model with ResNet152 architecture with convolution shortcut.
+    Generate deep learning model with ResNet152 architecture with convolution shortcut
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: False.
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: False
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "NONE"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "NONE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
-    pre_train_weight : boolean, optional.
-        Specifies whether to use the pre-trained weights from ImageNet data set.
-        Default : False.
-    include_top : boolean, optional.
-        Specifies whether to include pre-trained weights of the top layers, i.e. the last layer for classification.
-        Default : False.
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'NONE'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'NONE'
+    offsets : double, or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
+    pre_train_weight : boolean, optional
+        Specifies whether to use the pre-trained weights from ImageNet data set
+        Default: False
+    include_top : boolean, optional
+        Specifies whether to include pre-trained weights of the top layers,
+        i.e. the last layer for classification.
+        Default : False
 
     Returns
     -------
-    A model object with ResNet152 architecture with convolution shortcut.
+    :class:`Sequential`
+        If `pre_train_weight` is `False`
+    :class:`Model`
+        If `pre_train_weight` is `True`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -2044,63 +2140,68 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             return model
 
 
-def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2, k=4, n_classes=None,
-                n_channels=3, width=32, height=32, scale=1,
+def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
+                k=4, n_classes=None, n_channels=3, width=32, height=32, scale=1,
                 random_flip='H', random_crop='NONE', offsets=(114, 122, 125)):
     '''
-    Function to generate a deep learning model with ResNet152 architecture.
+    Generate a deep learning model with ResNet152 architecture
 
-    Parameters:
-
+    Parameters
     ----------
-    conn :
-        Specifies the connection of the CAS connection.
-    model_name : string
-        Specifies the name of CAS table to store the model.
-    batch_norm_first: boolean, optional.
-        Specifies whether to have batch normalization layer before the convolution layer in the residual block.
-        For a detailed discussion about this, please refer to this paper:
-        He, Kaiming, et al. "Identity mappings in deep residual networks." European Conference on Computer Vision. Springer International Publishing, 2016.
-        Default: True.
-    depth : Int
-        Specifies the number of convolution layers added into the model.
-        Default : 2
-    k : Int
-        Specifies the widening factor.
-        Default : 4
-    n_classes : int, optional.
-        Specifies the number of classes. If None is assigned, the model will automatically detect the number of
-        classes based on the training set.
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model in
+    batch_norm_first : boolean, optional
+        Specifies whether to have batch normalization layer before the
+        convolution layer in the residual block.  For a detailed discussion
+        about this, please refer to this paper: He, Kaiming, et al. "Identity
+        mappings in deep residual networks." European Conference on Computer
+        Vision. Springer International Publishing, 2016.
+        Default: True
+    depth : int
+        Specifies the number of convolution layers added into the model
+        Default: 2
+    k : int
+        Specifies the widening factor
+        Default: 4
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
         Default: 1000
-    n_channels : int, optional.
-        Specifies the number of the channels of the input layer.
-        Default : 3.
-    width : int, optional.
-        Specifies the width of the input layer.
-        Default : 224.
-    height : int, optional.
-        Specifies the height of the input layer.
-        Default : 224.
-    scale : double, optional.
-        Specifies a scaling factor to apply to each image..
-        Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
-        Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
-        is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
-        Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
-        are specified in the width and height parameters. Only the images with one or both dimensions that are larger
-        than those sizes are cropped.
-        Default	: "UNIQUE"
-    offsets : double, or list/tuple of double, optional
-        Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
-        subtracting the specified offsets.
-        Default : (103.939, 116.779, 123.68)
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    scale : double, optional
+        Specifies a scaling factor to apply to each image
+        Default: 1
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Default: 'HV'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'NONE' or 'UNIQUE'
+        Default: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
-    A model object with ResNet152 architecture.
+    :class:`Sequential`
 
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')

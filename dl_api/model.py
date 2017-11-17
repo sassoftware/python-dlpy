@@ -16,38 +16,78 @@
 #  limitations under the License.
 #
 
-"""
-Model object for deep learning.
-"""
+''' Model object for deep learning '''
 
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from .layers import *
 from .utils import random_name
 from .utils import input_table_check
 from .utils import image_blocksize
-from .layers import *
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import os
 
 
 class Model:
+    '''
+    Model
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of the deep learning model.
+    model_weights : CASTable or string or dict
+        Specifies the CASTable containing weights of the deep learning model.
+        If not specified, random initial will be used.
+        Default: None
+
+    Returns
+    -------
+    :class:`Model`
+
+    '''
+
+    def __init__(self, conn, model_name=None, model_weights=None):
+        if not conn.queryactionset('deepLearn')['deepLearn']:
+            conn.loadactionset(actionSet='deepLearn', _messagelevel='error')
+
+            # self.table = conn.CASTable(model_name)
+        self.conn = conn
+        if model_name is None:
+            self.model_name = random_name('Model', 6)
+        elif type(model_name) is not str:
+            raise TypeError('model_name has to be a string type.')
+        else:
+            self.model_name = model_name
+
+        if model_weights is None:
+            self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
+        else:
+            self.set_weights(model_weights)
+        self.layers = []
+        self.valid_res = None
+        self.feature_maps = None
+        self.valid_conf_mat = None
+        self.valid_score = None
+        self.n_epochs = 0
+        self.training_history = None
 
     @classmethod
     def from_table(cls, model_table):
         '''
-        Create a Model object from CAS table that defines a deep learning model.
+        Create a Model object from CAS table that defines a deep learning model
 
-        Parameters:
-
+        Parameters
         ----------
         model_table : a CAS table object.
             Specifies the CAS table that defines the deep learning model.
 
-
         Returns
-
         -------
-        A deep learning model objects.
+        :class:`Model`
+
         '''
         model = cls(conn=model_table.get_connection())
         model_name = model.retrieve(_name_='table.fetch',
@@ -97,76 +137,48 @@ class Model:
 
     @classmethod
     def from_sashdat(cls, conn, path):
+        '''
+        Load model information from sashdat file
+
+        Parameters
+        ----------
+        conn : CAS
+            The CAS connection object
+        path : string
+            The server-side path of the sashdat file
+
+        Returns
+        -------
+        :class:`Model`
+
+        '''
         model = Model(conn)
         model.load(path=path)
         return model
 
-    def __init__(self, conn, model_name=None, model_weights=None):
-        '''
-        Model
-
-        Parameters:
-
-        ----------
-        conn :
-            Specifies the CAS connection.
-        model_name : string
-            Specifies the name of the deep learning model.
-        model_weights : string, dictionary or CAS table, optional
-            Specifies the weights of the deep learning model.
-            If not specified, random initial will be used.
-            Default : None
-
-        Returns
-
-        -------
-        A deep learning model objects.
-        '''
-
-        if not conn.queryactionset('deepLearn')['deepLearn']:
-            conn.loadactionset(actionSet='deepLearn', _messagelevel='error')
-
-            # self.table = conn.CASTable(model_name)
-        self.conn = conn
-        if model_name is None:
-            self.model_name = random_name('Model', 6)
-        elif type(model_name) is not str:
-            raise TypeError('model_name has to be a string type.')
-        else:
-            self.model_name = model_name
-
-        if model_weights is None:
-            self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
-        else:
-            self.set_weights(model_weights)
-        self.layers = []
-        self.valid_res = None
-        self.feature_maps = None
-        self.valid_conf_mat = None
-        self.valid_score = None
-        self.n_epochs = 0
-        self.training_history = None
-
+    # TODO: I don't think this should be a public method.
     def retrieve(self, message_level='error', **kwargs):
         return self.conn.retrieve(_messagelevel=message_level, **kwargs)
 
     def load(self, path):
         '''
-        Function to load the deep learning model architecture from existing table.
+        Load the deep learning model architecture from existing table
 
-        Parameters:
-
+        Parameters
         ----------
-        path: str
-            Specifies the full path of the table.
-            Note: the path need to be in Linux path format.
-        '''
+        path: string
+            Specifies the absolute server-side path of the table file
 
+        '''
+        # TODO: This may need to detect the server host type, or possibly
+        #       use a regular expression to support UNIX and Windows-style
+        #       paths.
         dir_name, file_name = path.rsplit('/', 1)
 
         cas_lib_name = random_name('Caslib', 6)
         self.retrieve(_name_='addcaslib',
-                      name=cas_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+                      name=cas_lib_name, path=dir_name,
+                      activeOnAdd=False, dataSource=dict(srcType="DNFS"))
 
         self.retrieve(_name_='table.loadtable',
                       caslib=cas_lib_name,
@@ -226,7 +238,8 @@ class Model:
         _file_name_, _extension_ = os.path.splitext(file_name)
 
         _file_name_list_ = list(self.retrieve(_name_='table.fileinfo',
-                                              caslib=cas_lib_name, includeDirectories=False).FileInfo.Name)
+                                              caslib=cas_lib_name,
+                                              includeDirectories=False).FileInfo.Name)
 
         if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
             print('NOTE: ' + _file_name_ + '_weights' + _extension_ + ' is used as model weigths.')
@@ -248,19 +261,15 @@ class Model:
         self.retrieve(_name_='dropcaslib', caslib=cas_lib_name)
 
     def set_weights(self, weight_tbl):
-
         '''
-        Assign weights to the Model object.
+        Assign weights to the Model object
 
-        Parameters:
-
+        Parameters
         ----------
-        weight_tbl : A CAS table object, a string specifies the name of the CAS table,
-                   a dictionary specifies the CAS table.
-            Specifies the weights for the model.
+        weight_tbl : CASTable or string or dict
+            Specifies the weights CAS table for the model
 
         '''
-
         weight_tbl = input_table_check(weight_tbl)
         weight_name = self.model_name + '_weights'
 
@@ -273,19 +282,21 @@ class Model:
         print('NOTE: Model weights attached successfully!')
 
     def load_weights(self, path, **kwargs):
-
         '''
-        Load the weights form a data file specified by ‘path’. Currently support HDF5 and sashdat files.
+        Load the weights form a data file specified by ‘path’
 
-
-        Parameters:
-
+        Parameters
         ----------
-        path : str
-            Specifies the directory of the file that store the weight table.
+        path : string
+            Specifies the server-side directory of the file that
+            contains the weight table.
+
+        Notes
+        -----
+        Currently support HDF5 and sashdat files.
 
         '''
-
+        # TODO: Must support UNIX and Windows-style paths
         dir_name, file_name = path.rsplit('/', 1)
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
@@ -294,37 +305,37 @@ class Model:
 
     def load_weights_from_CAFFE(self, path, **kwargs):
         '''
-        Function to load the model weights from a HDF5 file.
+        Load the model weights from a HDF5 file
 
-        Parameters:
-
+        Parameters
         ----------
-        path : str
-            Specifies the directory of the HDF5 file that store the weight table.
+        path : string
+            Specifies the server-side directory of the HDF5 file that
+            contains the weight table.
+
         '''
+        # TODO: Does CAFFEE need to be all-caps?
         self.retrieve(_name_='dlimportmodelweights', model=self.model_name,
                       modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                       formatType="CAFFE", weightFilePath=path, **kwargs)
 
     def load_weights_from_table(self, path):
-
         '''
-        Function to load the weights form a file.
+        Load the weights from a file
 
-
-        Parameters:
-
+        Parameters
         ----------
-        path : str
-            Specifies the directory of the file that store the weight table.
+        path : string
+            Specifies the server-side directory of the file that
+            contains the weight table.
 
         '''
-
         dir_name, file_name = path.rsplit('/', 1)
 
         cas_lib_name = random_name('Caslib', 6)
         self.retrieve(_name_='addcaslib',
-                      name=cas_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+                      name=cas_lib_name, path=dir_name,
+                      activeOnAdd=False, dataSource=dict(srcType="DNFS"))
 
         self.retrieve(_name_='table.loadtable',
                       caslib=cas_lib_name,
@@ -336,7 +347,8 @@ class Model:
         _file_name_, _extension_ = os.path.splitext(file_name)
 
         _file_name_list_ = list(
-            self.retrieve(_name_='table.fileinfo', caslib=cas_lib_name, includeDirectories=False).FileInfo.Name)
+            self.retrieve(_name_='table.fileinfo', caslib=cas_lib_name,
+                          includeDirectories=False).FileInfo.Name)
 
         if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
             print('NOTE: ' + _file_name_ + '_attr' + _extension_ + ' is used as weigths attribute.')
@@ -353,21 +365,18 @@ class Model:
                       caslib=cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
-
         '''
-        Attach the weights attribute to the model weights.
+        Attach the weights attribute to the model weights
 
-
-        Parameters:
-
+        Parameters
         ----------
-        attr_tbl : castable parameter
-            Specifies the weights attribute table.
+        attr_tbl : CASTable or string or dict
+            Specifies the CAS table that contains the weights attribute table
         clear : boolean, optional
-            Specifies whether to drop the attribute table after attach it into the weight table.
+            Specifies whether to drop the attribute table after attach it
+            into the weight table.
 
         '''
-
         self.retrieve(_name_='table.attribute',
                       task='ADD', attrtable=attr_tbl,
                       **self.model_weights.to_table_params())
@@ -379,24 +388,23 @@ class Model:
         print('NOTE: Model attributes attached successfully!')
 
     def load_weights_attr(self, path):
-
         '''
-        Load the weights attribute form a sashdat file.
+        Load the weights attribute form a sashdat file
 
-
-        Parameters:
-
+        Parameters
         ----------
-        path : str
-            Specifies the directory of the file that store the weight attribute table.
+        path : string
+            Specifies the server-side directory of the file that
+            contains the weight attribute table.
 
         '''
-
+        # TODO: This needs to support UNIX and Windows-style paths
         dir_name, file_name = path.rsplit('/', 1)
 
         cas_lib_name = random_name('Caslib', 6)
         self.retrieve(_name_='addcaslib',
-                      name=cas_lib_name, path=dir_name, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+                      name=cas_lib_name, path=dir_name,
+                      activeOnAdd=False, dataSource=dict(srcType="DNFS"))
 
         self.retrieve(_name_='table.loadtable',
                       caslib=cas_lib_name,
@@ -408,66 +416,66 @@ class Model:
         self.retrieve(_name_='dropcaslib', caslib=cas_lib_name)
 
     def model_info(self):
+        '''
+        Return the information about the model table
+
+        Returns
+        -------
+        :class:`CASResults`
 
         '''
-        Function to return the information of the model table.
-        '''
-
+        # TODO: Should this be a property?  If not, it should be get_model_info.
         return self.retrieve(_name_='modelinfo', modelTable=self.model_name)
 
     def fit(self, data, inputs='_image_', target='_label_',
             mini_batch_size=1, max_epochs=5, log_level=3, lr=0.01,
-            optimizer=None,
-            **kwargs):
-
+            optimizer=None, **kwargs):
         '''
-        Train the deep learning model using the given data.
+        Train the deep learning model using the given data
 
-        Parameters:
-
+        Parameters
         ----------
-        data : A CAS table object, a string specifies the name of the CAS table,
-                a dictionary specifies the CAS table, or an Image object.
-            Specifies the training data for the model.
+        data : CASTable or string or dict
+            Specifies the CAS table containing the training data for the model
         inputs : string, optional
-            Specifies the variable name of in the input_tbl, that is the input of the deep learning model.
-            Default : '_image_'.
+            Specifies the variable name of in the input_tbl, that is the
+            input of the deep learning model.
+            Default: '_image_'
         target : string, optional
-            Specifies the variable name of in the input_tbl, that is the response of the deep learning model.
-            Default : '_label_'.
+            Specifies the variable name of in the input_tbl, that is the
+            response of the deep learning model.
+            Default: '_label_'
         mini_batch_size : integer, optional
-            Specifies the number of observations per thread in a mini-batch..
-            Default : 1.
+            Specifies the number of observations per thread in a mini-batch
+            Default: 1
         max_epochs : int64, optional
-            Specifies the maximum number of Epochs.
-            Default : 5.
-        log_level : int 0-3, optional
-            Specifies  how progress messages are sent to the client.
-                0 : no messages are sent.
-                1 : send the start and end messages.
-                2 : send the iteration history for each Epoch.
-                3 : send the iteration history for each batch.
-            Default : 3.
+            Specifies the maximum number of Epochs
+            Default: 5
+        log_level : int, optional
+            Specifies how progress messages are sent to the client
+            0 - no messages are sent.
+            1 - send the start and end messages.
+            2 - send the iteration history for each Epoch.
+            3 - send the iteration history for each batch.
+            Default: 3
         lr : double, optional
-            Specifies the learning rate of the algorithm.
-            Default : 0.01.
-        optimizer: dictionary, optional
+            Specifies the learning rate of the algorithm
+            Default: 0.01
+        optimizer : dictionary, optional
             Specifies the options for the optimizer in the dltrain action.
-            see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_dlcommon_dlOptimizerOpts.html
+            See http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_dlcommon_dlOptimizerOpts.html
             for detail.
-        kwargs: dictionary, optional
+        **kwargs: keyword arguments, optional
             Specifies the optional arguments for the dltrain action.
-            see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlTrain.html
+            See http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlTrain.html
             for detail.
 
         Returns
-
         ----------
-        Return a fetch result to the client, about the trained model summary.
-        The updated model weights are automatically assigned to the Model object.
+        :class:`CASResults`
 
         '''
-
+        # TODO: Remove internal URLs from docstring above
         input_tbl = input_table_check(data)
 
         if optimizer is None:
@@ -501,7 +509,8 @@ class Model:
                              table=input_tbl,
                              inputs=inputs,
                              target=target,
-                             modelWeights=dict(replace=True, **self.model_weights.to_table_params()),
+                             modelWeights=dict(replace=True,
+                                               **self.model_weights.to_table_params()),
                              optimizer=optimizer,
                              **kwargs)
 
@@ -533,51 +542,53 @@ class Model:
         return r
 
     def tune(self, data, inputs='_image_', target='_label_', **kwargs):
-
+        # TODO: Needs docstring
         r = self.retrieve(_name_='dltune',
                           message_level='note', model=self.model_name,
                           table=data,
                           inputs=inputs,
                           target=target,
                           **kwargs)
-
         return r
 
     def plot_training_history(self, items=('Loss', 'FitError'), fig_size=(12, 5)):
-
         '''
         Display the training iteration history.
-        '''
 
+        '''
+        # TODO: Needs parameter doc
         self.training_history.plot(x=['Epoch'], y=list(items),
                                    xticks=self.training_history.Epoch,
                                    figsize=fig_size)
 
     def predict(self, data, inputs='_image_', target='_label_', **kwargs):
-
         '''
-        Evaluate the deep learning model on a specified validation data set.
+        Evaluate the deep learning model on a specified validation data set
 
-        Parameters:
-
+        Parameters
         ----------
-        data : A CAS table object, a string specifies the name of the CAS table,
-                      a dictionary specifies the CAS table, or an Image object.
-            Specifies the validating data for the prediction.
+        data : CASTable or string or dict
+            Specifies the CAS table containing the validating data
+            for the prediction
         inputs : string, optional
-            Specifies the variable name of in the data, that is the input of the deep learning model.
-            Default : '_image_'.
+            Specifies the variable name of in the data, that is the input
+            of the deep learning model.
+            Default: '_image_'
         target : string, optional
-            Specifies the variable name of in the data, that is the response of the deep learning model.
-            Default : '_label_'.
-        kwargs: dictionary, optional
+            Specifies the variable name of in the data, that is the response
+            of the deep learning model.
+            Default: '_label_'
+        **kwargs: keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
+        Returns
+        -------
+        :class:`CASResults`
 
         '''
-
+        # TODO: Remove internal links from docstring above
         input_tbl = input_table_check(data)
         input_tbl = self.conn.CASTable(**input_tbl)
         copy_vars = input_tbl.columns.tolist()
@@ -612,19 +623,17 @@ class Model:
 
     def plot_predict_res(self, type='A', image_id=0):
         '''
-        Plot the classification results.
+        Plot the classification results
 
-        Parameters:
-
+        Parameters
         ----------
         type : str, optional.
-            Specifies the type of classification results to plot.
-            A : All type of results;
-            C : Correctly classified results;
-            M : Miss classified results.
-
-        image_id : int, optional.
-            Specifies the image to be displayed, starting from 0.
+            Specifies the type of classification results to plot
+            A - All type of results
+            C - Correctly classified results
+            M - Miss classified results
+        image_id : int, optional
+            Specifies the image to be displayed, starting from 0
 
         '''
         from .utils import plot_predict_res
@@ -662,30 +671,25 @@ class Model:
 
     def get_feature_maps(self, data, label=None, image_id=0, **kwargs):
         '''
-        Extract the feature maps for a single image.
+        Extract the feature maps for a single image
 
-        Parameters:
-
+        Parameters
         ----------
-        data : An ImageTable object.
+        data : ImageTable
             Specifies the table containing the image data.
         label: str, optional
             Specifies the which class of image to use.
             Default : None
         image_id : int, optional
             Specifies which image to use in the table.
-            Default : 1.
-        kwargs: dictionary, optional
+            Default: 1
+        **kwargs: keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
-        Returns
-
-        ----------
-        Return an instance variable of the Model object, which is a feature map object.
         '''
-
+        # TODO: Remove internal URL from docstring above
         uid = data.uid
         if label is None:
             label = uid.iloc[0, 0]
@@ -719,32 +723,30 @@ class Model:
 
     def get_features(self, data, dense_layer, target='_label_', **kwargs):
         '''
-        Extract the linear features for a data table from the layer specified by dense_layer.
+        Extract linear features for a data table from the layer specified by dense_layer
 
-        Parameters:
-
+        Parameters
         ----------
-        data : A CAS table object, a string specifies the name of the CAS table,
-                    a dictionary specifies the CAS table, or an Image object.
-            Specifies the table containing the image data.
-        dense_layer : str
-            Specifies the name of the layer that is extracted.
-        target : str, optional
-            Specifies the name of the column including the response variable.
-        kwargs: dictionary, optional
+        data : CASTable or string or dict
+            Specifies the table containing the image data
+        dense_layer : string
+            Specifies the name of the layer that is extracted
+        target : string, optional
+            Specifies the name of the column including the response variable
+        **kwargs: keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
         Returns
+        -------
+        ( nxp-ndarray, n-ndarray )
+            The first ndarray is of size n by p, where n is the sample size
+            and p is the number of features.  The features extracted by the
+            model at the specified dense_layer.  The second ndarray is of
+            size n and contains the response variable of the original data.
 
-        ----------
-        x : ndarray of size n by p, where n is the sample size and p is the number of features.
-            The features extracted by the model at the specified dense_layer.
-        y : ndarray of size n.
-            The response variable of the original data.
         '''
-
         input_tbl = input_table_check(data)
         feature_tbl = random_name('Features')
         score_options = dict(model=self.model_name, initWeights=self.model_weights,
@@ -759,37 +761,39 @@ class Model:
         self.retrieve(_name_='dlscore', **score_options)
         x = self.conn.CASTable(feature_tbl).as_matrix()
         y = self.conn.CASTable(**input_tbl)[target].as_matrix().ravel()
-
         return x, y
 
-    def heat_map_analysis(self, data, mask_width=None, mask_height=None, step_size=None, **kwargs):
+    def heat_map_analysis(self, data, mask_width=None, mask_height=None,
+                          step_size=None, **kwargs):
         '''
-        Conduct a heat map analysis on the image, indicating the important region related with classification.
-        Detail process can be found at: https://arxiv.org/pdf/1311.2901.pdf
+        Conduct a heat map analysis on the image
 
-
-        Parameters:
-
+        Parameters
         ----------
-        data : A ImageTable object, containing the column of '_image_', '_label_','_filename_0'
-            Specifies the table containing the image data.
+        data : ImageTable object
+            Specifies the table containing the image data which must contain
+            the columns '_image_', '_label_', and '_filename_0'.
         mask_width : int
             Specifies the width of the mask which cover the region of the image.
         mask_height : int
             Specifies the height of the mask which cover the region of the image.
-        step_size: int
+        step_size : int
             Specifies the stepsize of the movement of the the mask.
-        kwargs: dictionary, optional
+        **kwargs: keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
             see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
+        Notes
+        -----
+        Heat map indicates the important region related with classification.
+        Details of the process can be found at: https://arxiv.org/pdf/1311.2901.pdf.
+
         Returns
-            self.model_explain_table: a table
-        ----------
+        -------
+        :class:`pandas.DataFrame`
 
         '''
-
         output_width = int(data.image_summary.minWidth)
         output_height = int(data.image_summary.minHeight)
 
@@ -881,24 +885,23 @@ class Model:
         return output_table
 
     def plot_heat_map(self, image_id=0, alpha=.2):
-
         '''
-        Display the heat maps analysis results.
+        Display the heat maps analysis results
 
-        Parameters:
-
+        Parameters
         ----------
         image_id : int, optional
             Specifies the image to be displayed, starting from 0.
         alpha : double, between 0 and 1, optional
             Specifies transparent ratio of the overlayed image.
 
-        Returns
-
+        Notes
         ----------
-        A plot of three images, orignal, overlay and heatmap, from left to right.
+        Displays plot of three images: orignal, overlay and heatmap,
+        from left to right.
 
         '''
+        # TODO: Should this show the plot, or just return it?
         label = self.model_explain_table['_label_'][image_id]
 
         img = self.model_explain_table['_image_'][image_id]
@@ -915,32 +918,34 @@ class Model:
         ax0.axis('off')
         ax0.set_title('Original Image: {}'.format(label))
 
-        color_bar = ax1.imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none', extent=extent, cmap='jet_r')
+        color_bar = ax1.imshow(heat_map, vmax=vmax, vmin=vmin,
+                               interpolation='none', extent=extent, cmap='jet_r')
         ax1.axis('off')
         ax1.set_title('Heat Map')
 
         ax2.imshow(img, extent=extent)
-        ax2.imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none', alpha=alpha, extent=extent, cmap='jet_r')
+        ax2.imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none',
+                   alpha=alpha, extent=extent, cmap='jet_r')
         ax2.axis('off')
         ax2.set_title('Overlayed Image')
 
         box = ax1.get_position()
-        ax3 = fig.add_axes([box.x1 * 1.02, box.y0 + box.height * 0.06, box.width * 0.05, box.height * 0.88])
+        ax3 = fig.add_axes([box.x1 * 1.02, box.y0 + box.height * 0.06,
+                            box.width * 0.05, box.height * 0.88])
         plt.colorbar(color_bar, cax=ax3)
 
         plt.show()
 
     def save_to_astore(self, path=None):
         '''
-        Function to save the model to an astore object, and write it into a file.
+        Save the model to an astore object, and write it into a file.
 
-         Parameters:
-
+        Parameters
         ----------
-        path: str
-            Specifies the name of the path to store the model astore.
-        '''
+        path: string
+            Specifies the client-side path to store the model astore
 
+        '''
         if not self.conn.queryactionset('astore')['astore']:
             self.conn.loadactionset('astore', _messagelevel='error')
 
@@ -966,27 +971,20 @@ class Model:
         print('NOTE: Model astore file saved successfully.')
 
     def save_to_table(self, path):
-
         '''
-        Function to save the model as sas dataset.
+        Function to save the model as SAS dataset
 
-        Parameters:
-
+        Parameters
         ----------
-        path: str
-            Specifies the name of the path to store the model tables.
-
-        Return:
-
-        ----------
-        The specified files in the 'CASUSER' library.
+        path : string
+            Specifies the server-side path to store the model tables
 
         '''
 
         cas_lib_name = random_name('CASLIB')
         self.retrieve(_name_='addcaslib',
-                      activeonadd=False, datasource=dict(srcType="DNFS"), name=cas_lib_name,
-                      path=path)
+                      activeonadd=False, datasource=dict(srcType="DNFS"),
+                      name=cas_lib_name, path=path)
 
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.sashdat'
@@ -1017,21 +1015,22 @@ class Model:
 
     def deploy(self, path, output_format='ASTORE'):
         '''
-        Deploy the deep learning model to a data file. Currently, this function support sashdat and astore formats.
+        Deploy the deep learning model to a data file
 
-        Parameters:
-
+        Parameters
         ----------
-        path : string,
-            Specifies the name of the path to store the model tables or astore.
-        format : string, optional.
-            specifies the format of the deployed model.
-            Supported format: ASTORE, CASTABLE
+        path : string
+            Specifies the server-side path to store the model tables or astore
+        format : string, optional
+            Specifies the format of the deployed model
+            Supported format: ASTORE or CASTABLE
             Default: ASTORE
 
+        Notes
+        -----
+        Currently, this function only supports sashdat and astore formats.
 
         '''
-
         if output_format.lower() == 'astore':
             self.save_to_astore(path=path)
         elif output_format.lower() in ('castable', 'table'):
@@ -1040,6 +1039,7 @@ class Model:
             raise TypeError('output_format must be "astore", "castable" or "table"')
 
     def count_params(self):
+        # TODO: Needs docstring
         count = 0
         for layer in self.layers:
 
@@ -1057,9 +1057,9 @@ class Model:
         return int(count)
 
     def summary(self):
-        '''
-        Display a tabula that summarizes the model architecture.
-        '''
+        ''' Display a table that summarizes the model architecture '''
+        # TODO: I think this should just create a DataFrame and return it
+        #       instead of displaying it.
         bar_line = '*' + '=' * 18 + '*' + '=' * 15 + '*' + '=' * 8 + '*' + \
                    '=' * 12 + '*' + '=' * 17 + '*' + '=' * 22 + '*\n'
         h_line = '*' + '-' * 18 + '*' + '-' * 15 + '*' + '-' * 8 + '*' + \
@@ -1085,19 +1085,21 @@ class Model:
     def plot_network(self):
         '''
         Display a graph that summarizes the model architecture.
-        '''
 
+        '''
+        # TODO: Don't change PATH variables.  You won't know where the executables
+        #       are or even if it's on Windows.
+        # TODO: Just return the graph and let the client handle it.  Don't
+        #       use display.
         from IPython.display import display
         import os
         os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-
         display(model_to_graph(self))
 
 
 class FeatureMaps:
-    '''
-    A class for feature maps.
-    '''
+
+    # TODO: Needs docstring
 
     def __init__(self, conn, feature_maps_tbl, structure=None):
         self.conn = conn
@@ -1106,22 +1108,16 @@ class FeatureMaps:
 
     def display(self, layer_id, filter_id=None):
         '''
-        Function to display the feature maps.
+        Function to display the feature maps
 
-        Parameters:
-
+        Parameters
         ----------
-
         layer_id : int
             Specifies the id of the layer to be displayed
 
-        Return:
-
-        ----------
-        Plot of the feature maps.
-
-
         '''
+        # TODO: Document filter_id parameter
+        # TODO: Why does this use two different ways of displaying output?
         from PIL import Image
         from IPython.display import display
 
@@ -1167,22 +1163,23 @@ class FeatureMaps:
 
 def get_num_configs(keys, layer_type_prefix, layer_table):
     '''
-    Function to extract the numerical options from the model table
-    Parameters:
+    Extract the numerical options from the model table
 
+    Parameters
     ----------
-
-    keys : list
-        Specifies the list of numerical variables.
-    layer_type_prefix : str
-        Specifies the prefix of the options in the model table.
+    keys : list-of-strings
+        Specifies the list of numerical variables
+    layer_type_prefix : string
+        Specifies the prefix of the options in the model table
     layer_table : table
-        Specifies the selection of table containing the information for the layer.
+        Specifies the selection of table containing the information
+        for the layer.
 
-    Return:
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
 
-    ----------
-    dictionary of the options that can pass to layer definition.
     '''
     layer_config = dict()
     for key in keys:
@@ -1196,22 +1193,23 @@ def get_num_configs(keys, layer_type_prefix, layer_table):
 
 def get_str_configs(keys, layer_type_prefix, layer_table):
     '''
-    Function to extract the str options from the model table
-    Parameters:
+    Extract the str options from the model table
 
+    Parameters
     ----------
-
-    keys : list
-        Specifies the list of str variables.
-    layer_type_prefix : str
-        Specifies the prefix of the options in the model table.
+    keys : list-of-strings
+        Specifies the list of str variables
+    layer_type_prefix : string
+        Specifies the prefix of the options in the model table
     layer_table : table
-        Specifies the selection of table containing the information for the layer.
+        Specifies the selection of table containing the information
+        for the layer
 
-    Return:
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
 
-    ----------
-    dictionary of the options that can pass to layer definition.
     '''
     layer_config = dict()
     for key in keys:
@@ -1224,6 +1222,7 @@ def get_str_configs(keys, layer_type_prefix, layer_table):
 
 
 def extract_input_layer(layer_table):
+    # TODO: Needs docstring
     num_keys = ['n_channels', 'width', 'height', 'dropout', 'scale']
     input_layer_config = dict()
     input_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
@@ -1265,8 +1264,9 @@ def extract_input_layer(layer_table):
 
 
 def extract_conv_layer(layer_table):
-    num_keys = ['n_filters', 'width', 'height', 'stride', 'std', 'mean', 'initbias', 'dropout', 'truncationFactor',
-                'initB', 'truncFact']
+    # TODO: Needs docstring
+    num_keys = ['n_filters', 'width', 'height', 'stride', 'std', 'mean',
+                'initbias', 'dropout', 'truncationFactor', 'initB', 'truncFact']
     str_keys = ['act', 'init']
 
     conv_layer_config = dict()
@@ -1284,6 +1284,7 @@ def extract_conv_layer(layer_table):
 
 
 def extract_pooling_layer(layer_table):
+    # TODO: Needs docstring
     num_keys = ['width', 'height', 'stride']
     str_keys = ['act', 'poolingtype']
 
@@ -1300,6 +1301,7 @@ def extract_pooling_layer(layer_table):
 
 
 def extract_batchnorm_layer(layer_table):
+    # TODO: Needs docstring
     bn_layer_config = dict()
     bn_layer_config.update(get_str_configs(['act'], 'bnopts', layer_table))
     bn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
@@ -1309,6 +1311,7 @@ def extract_batchnorm_layer(layer_table):
 
 
 def extract_residual_layer(layer_table):
+    # TODO: Needs docstring
     res_layer_config = dict()
 
     res_layer_config.update(get_str_configs(['act'], 'residualopts', layer_table))
@@ -1319,8 +1322,9 @@ def extract_residual_layer(layer_table):
 
 
 def extract_fc_layer(layer_table):
-    num_keys = ['n', 'width', 'height', 'stride', 'std', 'mean', 'initbias', 'dropout', 'truncationFactor', 'initB',
-                'truncFact']
+    # TODO: Needs docstring
+    num_keys = ['n', 'width', 'height', 'stride', 'std', 'mean',
+                'initbias', 'dropout', 'truncationFactor', 'initB', 'truncFact']
     str_keys = ['act', 'init']
 
     fc_layer_config = dict()
@@ -1338,8 +1342,9 @@ def extract_fc_layer(layer_table):
 
 
 def extract_output_layer(layer_table):
-    num_keys = ['n', 'width', 'height', 'stride', 'std', 'mean', 'initbias', 'dropout', 'truncationFactor', 'initB',
-                'truncFact']
+    # TODO: Needs docstring
+    num_keys = ['n', 'width', 'height', 'stride', 'std', 'mean',
+                'initbias', 'dropout', 'truncationFactor', 'initB', 'truncFact']
     str_keys = ['act', 'init']
 
     output_layer_config = dict()
@@ -1357,6 +1362,7 @@ def extract_output_layer(layer_table):
 
 
 def layer_to_node(layer):
+    # TODO: Needs docstring
     cell1 = r'{}\n({})'.format(layer.name, layer.config['type'])
 
     keys = ['<Act>Activation:', '<Kernel>Kernel Size:']
@@ -1391,6 +1397,7 @@ def layer_to_node(layer):
 
 
 def layer_to_edge(layer):
+    # TODO: Needs docstring
     gv_params = []
     for item in layer.src_layers:
         gv_params.append(dict(tail_name='{}'.format(item.name),
@@ -1400,6 +1407,7 @@ def layer_to_edge(layer):
 
 
 def model_to_graph(model):
+    # TODO: Needs docstring
     import graphviz as gv
     model_graph = gv.Digraph(name=model.model_name,
                              node_attr=dict(shape='record', style='filled,rounded'))
