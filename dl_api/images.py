@@ -16,13 +16,46 @@
 #  limitations under the License.
 #
 
-import matplotlib.pyplot as plt
+# TODO: Needs docstring
 
+import matplotlib.pyplot as plt
 from swat.cas.table import CASTable
 from .utils import random_name, image_blocksize
 
 
 class ImageTable(CASTable):
+    '''
+    Specialized CASTable for Image Data
+
+    Parameters
+    ----------
+    name : string
+        The name of the CAS table
+    **table_params : keyword arguments, optional
+        Parameters to the :class:`CASTable` constructor
+
+    Attributes
+    ----------
+    image_summary : pandas.Series
+        ???
+    label_freq : pandas.Series
+        ???
+    channel_means : tuple
+        ???
+    uid : string
+        ???
+
+    Returns
+    -------
+    :class:`ImageTable`
+
+    '''
+    # TODO: Fill in missing information in docstring above
+
+    def __init__(self, name, **table_params):
+        CASTable.__init__(self, name, **table_params)
+        self.patch_level = 0
+
     @classmethod
     def from_table(cls, tbl, image_col='_image_', label_col='_label_', path_col=None, casout=None):
 
@@ -42,7 +75,6 @@ class ImageTable(CASTable):
         path_col : str, optional
             Specifies the column name that stores the path for each image.
             Default = None, and the unique image ID will be generated from the labels.
-
 
         Returns
         -------
@@ -106,7 +138,7 @@ class ImageTable(CASTable):
     @classmethod
     def load_files(cls, conn, path, casout=None, **kwargs):
         '''
-        Load images under the directory specified by ‘path’ and create a new ImageTable accordingly.
+        Create ImageTable from files in `path`
 
         Parameters
         ----------
@@ -159,10 +191,6 @@ class ImageTable(CASTable):
         out.set_connection(conn)
         return out
 
-    def __init__(self, name, **table_params):
-        CASTable.__init__(self, name, **table_params)
-        self.patch_level = 0
-
     def __copy__(self):
         out = CASTable.__copy__(self)
         out.patch_level = self.patch_level
@@ -175,9 +203,9 @@ class ImageTable(CASTable):
 
     def to_files(self, path):
         '''
-        Save the images in the original format under the specified directory.
+        Save the images in the original format under the specified directory
 
-        Parameters:
+        Parameters
         ----------
         path : string
             Specifies the directory on the server to save the images
@@ -195,9 +223,9 @@ class ImageTable(CASTable):
 
     def to_sashdat(self, path=None, name=None, **kwargs):
         '''
-        Save the ImageTable to a sashdat file.
+        Save the ImageTable to a sashdat file
 
-        Parameters:
+        Parameters
         ----------
         path : string
             Specifies the directory on the server to save the images
@@ -214,7 +242,7 @@ class ImageTable(CASTable):
 
     def copy_table(self, casout=None):
         '''
-        Create a copy of the ImageTable.
+        Create a copy of the ImageTable
 
         Parameters
         ----------
@@ -238,9 +266,9 @@ class ImageTable(CASTable):
 
     def show(self, nimages=5, ncol=8, randomize=False, figsize=None):
         '''
-        Display a grid of images.
+        Display a grid of images
 
-        Parameters:
+        Parameters
         ----------
         nimages : int, optional
             Specifies the number of images to be displayed.
@@ -287,7 +315,7 @@ class ImageTable(CASTable):
 
     def crop(self, x=0, y=0, width=None, height=None, inplace=True):
         '''
-        Crop the images in the ImageTable.
+        Crop the images in the ImageTable
 
         Parameters
         ----------
@@ -305,9 +333,9 @@ class ImageTable(CASTable):
 
         Returns
         -------
-        ImageTable
+        :class:`ImageTable`
             If `inplace=False`
-        None
+        `None`
             If `inplace=True`
 
         '''
@@ -337,7 +365,7 @@ class ImageTable(CASTable):
 
     def resize(self, width=None, height=None, inplace=True):
         '''
-        Resize the images in the ImageTable.
+        Resize the images in the ImageTable
 
         Parameters
         ----------
@@ -352,9 +380,9 @@ class ImageTable(CASTable):
 
         Returns
         -------
-        ImageTable
+        :class:`ImageTable`
             If `inplace=False`
-        None
+        `None`
             If `inplace=True`
 
         '''
@@ -387,33 +415,43 @@ class ImageTable(CASTable):
     def as_patches(self, x=0, y=0, width=None, height=None, step_size=None,
                    output_width=None, output_height=None, inplace=True):
         '''
-        Generate patches from the images in the ImageTable, by creating crops with fixed window size and moving the
-        window along the images.
+        Generate patches from the images in the ImageTable
 
         Parameters
         ----------
         x : int, optional
-            Specify the x location of the top-left corner of the first patches.
+            Specify the x location of the top-left corner of the
+            first patches.
         y : int, optional
-            Specify the y location of the top-left corner of the first patches.
+            Specify the y location of the top-left corner of the
+            first patches.
         width : int, optional
             Specify the width of the patches.
         height : int, optional
             Specify the width of the patches.
             If not specified, height will be set to be equal to width.
         step_size : int, optional
-            Specify the step size of the moving windows for extracting the patches.
+            Specify the step size of the moving windows for extracting
+            the patches.
             Default : None, meaning step_size=width.
         output_width : int, optional
             Specify the output width of the patches.
-            If not equal to width, the patches will be resize to the output width.
+            If not equal to width, the patches will be resize to the
+            output width.
             Default : None, meaning output_width=width.
         output_height : int, optional
             Specify the output height of the patches.
-            If not equal to height, the patches will be resize to the output height.
+            If not equal to height, the patches will be resize to the
+            output height.
             Default : None, meaning output_height=height.
         inplace: boolean, optional
-            Specifies whether to update the original table, or create a new one.
+            Specifies whether to update the original table, or create a
+            new one.
+
+        Notes
+        -----
+        By creating crops with fixed window size and moving the window
+        along the images.
 
         Returns
         -------
@@ -481,8 +519,7 @@ class ImageTable(CASTable):
                           step_size=None, output_width=None, output_height=None,
                           inplace=True):
         '''
-        Generate random patches from the images in the ImageTable, by randomly selecting the patches generated.
-
+        Generate random patches from the images in the ImageTable
 
         Parameters
         ----------
@@ -511,9 +548,9 @@ class ImageTable(CASTable):
 
         Returns
         -------
-        ImageTable
+        :class:`ImageTable`
             If `inplace=True`
-        None
+        `None`
             If `inplace=False`
 
         '''
@@ -581,7 +618,12 @@ class ImageTable(CASTable):
     @property
     def image_summary(self):
         '''
-        Summarize the images in the ImageTable.
+        Summarize the images in the ImageTable
+
+        Returns
+        -------
+        :class:`pd.Series`
+
         '''
         out = self._retrieve('image.summarizeimages')['Summary']
         out = out.T.drop(['Column'])[0]
@@ -591,7 +633,12 @@ class ImageTable(CASTable):
     @property
     def label_freq(self):
         '''
-        Summarize the distribution of different classes (labels) in the ImageTable.
+        Summarize the distribution of different classes (labels) in the ImageTable
+
+        Returns
+        -------
+        :class:`pd.Series`
+
         '''
         out = self._retrieve('simple.freq', table=self, inputs=['_label_'])['Frequency']
         out = out[['FmtVar', 'Level', 'Frequency']]
@@ -605,12 +652,18 @@ class ImageTable(CASTable):
     def channel_means(self):
         '''
         A list of the means of the image intensities in each color channel.
+
+        Returns
+        -------
+        ( first-channel-mean, second-channel-mean, third-channel-mean )
+
         '''
         return self.image_summary[['mean1stChannel', 'mean2ndChannel',
                                    'mean3rdChannel']].tolist()
 
     @property
     def uid(self):
+        # TODO: Needs docstring
         file_name = '_filename_{}'.format(self.patch_level)
         uid = self[['_label_', file_name]].to_frame()
         # uid = uid.rename(columns={file_name: '_uid_'})

@@ -23,9 +23,9 @@ from .utils import random_name
 
 def two_way_split(tbl, test_rate=20, stratify_by='_label_', image_col='_image_', **kwargs):
     '''
-    Function to split image data into training and testing sets
+    Split image data into training and testing sets
 
-    Parameters:
+    Parameters
     ----------
     tbl : CASTable
         The CAS table to split
@@ -37,13 +37,11 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', image_col='_image_',
     **kwargs : keyword arguments, optional
         Additional keyword arguments to the `sample.stratified` action
 
-
     Returns
     -------
     ( training CASTable, testing CASTable )
 
     '''
-
     train_tbl_name = random_name()
     test_tbl_name = random_name()
     temp_tbl_name = random_name('Temp')
@@ -77,7 +75,7 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', image_col='_image_',
 
 def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **kwargs):
     '''
-    Function to split image data into training and testing sets.
+    Split image data into training and testing sets
 
     Parameters
     ----------
@@ -100,7 +98,6 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **k
     ( train CASTable, valid CASTable, test CASTable )
 
     '''
-
     train_tbl_name = random_name()
     valid_tbl_name = random_name()
     test_tbl_name = random_name()

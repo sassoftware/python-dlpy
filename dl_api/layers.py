@@ -16,13 +16,15 @@
 #  limitations under the License.
 #
 
-'''
-Define some common layers for the deep learning models
-'''
+''' Define some common layers for the deep learning models '''
+
 from .utils import prod_without_none
 
 
 class Layer:
+
+    # TODO: Needs docstring
+
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
         self.config = config
@@ -44,9 +46,13 @@ class Layer:
         self.num_bias = None
 
     def summary(self):
+        # TODO: Needs docstring
+        # TODO: This should create a DataFrame rather than a string and just return it
         # Note: this will be moved to complie.
         if self.config['type'].lower() == 'input':
-            self.output_size = (int(self.config['width']), int(self.config['height']), int(self.config['nchannels']))
+            self.output_size = (int(self.config['width']),
+                                int(self.config['height']),
+                                int(self.config['nchannels']))
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
@@ -56,7 +62,9 @@ class Layer:
                                 int(self.src_layers[0].output_size[1] // self.config['stride']),
                                 int(self.config['nfilters']))
             self.kernel_size = (int(self.config['width']), int(self.config['height']))
-            self.num_weights = int(self.config['width'] * self.config['height'] * self.config['nfilters'] * \
+            self.num_weights = int(self.config['width'] *
+                                   self.config['height'] *
+                                   self.config['nfilters'] *
                                    self.src_layers[0].output_size[2])
             if 'includeBias' in self.config.keys():
                 if self.config['includeBias'] is False:
@@ -139,6 +147,7 @@ class Layer:
         self.summary_str = col1 + col2 + col3 + col4 + col5 + col6
 
     def to_model_params(self):
+        # TODO: Needs docstring
         if self.config['type'].lower() == 'input':
             return dict(name=self.name, layer=self.config)
         else:
@@ -147,11 +156,13 @@ class Layer:
 
 
 class InputLayer(Layer):
-    def __init__(self, n_channels=3, width=224, height=224, scale=1, dropout=0, offsets=None,
-                 name=None, src_layers=None, **kwargs):
+
+    # TODO: Needs docstring
+
+    def __init__(self, n_channels=3, width=224, height=224, scale=1,
+                 dropout=0, offsets=None, name=None, src_layers=None, **kwargs):
         if offsets is None:
             offsets = [0] * n_channels
-
         config = locals()
         config = _unpack_config(config)
         config['type'] = 'input'
@@ -161,8 +172,11 @@ class InputLayer(Layer):
 
 
 class Conv2d(Layer):
-    def __init__(self, n_filters, width=None, height=None, stride=1, act="relu", dropout=0,
-                 name=None, src_layers=None, **kwargs):
+
+    # TODO: Needs docstring
+
+    def __init__(self, n_filters, width=None, height=None, stride=1,
+                 act="relu", dropout=0, name=None, src_layers=None, **kwargs):
         if (width is None) and (height is None):
             width = 3
         if width is None:
@@ -178,8 +192,11 @@ class Conv2d(Layer):
 
 
 class Pooling(Layer):
-    def __init__(self, width=None, height=None, stride=None, pool='max', dropout=0,
-                 name=None, src_layers=None, **kwargs):
+
+    # TODO: Needs docstring
+
+    def __init__(self, width=None, height=None, stride=None,
+                 pool='max', dropout=0, name=None, src_layers=None, **kwargs):
         if (width is None) and (height is None):
             width = 2
         if width is None:
@@ -198,6 +215,9 @@ class Pooling(Layer):
 
 
 class Dense(Layer):
+
+    # TODO: Needs docstring
+
     def __init__(self, n, act='relu', dropout=0,
                  name=None, src_layers=None, **kwargs):
         config = locals()
@@ -209,8 +229,11 @@ class Dense(Layer):
 
 
 class Recurrent(Layer):
-    def __init__(self, n, act='AUTO', rnn_type='RNN', output_type='ENCODING', reversed_=False,
-                 name=None, src_layers=None, **kwargs):
+
+    # TODO: Needs docstring
+
+    def __init__(self, n, act='AUTO', rnn_type='RNN', output_type='ENCODING',
+                 reversed_=False, name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
         config['type'] = 'recurrent'
@@ -220,6 +243,9 @@ class Recurrent(Layer):
 
 
 class BN(Layer):
+
+    # TODO: Needs docstring
+
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
@@ -230,6 +256,9 @@ class BN(Layer):
 
 
 class Res(Layer):
+
+    # TODO: Needs docstring
+
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
@@ -240,6 +269,9 @@ class Res(Layer):
 
 
 class Proj(Layer):
+
+    # TODO: Needs docstring
+
     def __init__(self, name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
@@ -250,6 +282,9 @@ class Proj(Layer):
 
 
 class OutputLayer(Layer):
+
+    # TODO: Needs docstring
+
     def __init__(self, n=None, act='softmax', name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
@@ -262,6 +297,7 @@ class OutputLayer(Layer):
 
 
 def _unpack_config(config):
+    # TODO: Needs docstring
     kwargs = config['kwargs']
     del config['self'], config['name'], config['src_layers'], config['kwargs']
     out = {}

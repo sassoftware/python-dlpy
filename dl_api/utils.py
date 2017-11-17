@@ -17,44 +17,53 @@
 #
 
 import os
+import re
 import random
 import string
+import six
+from swat.cas.table import CASTable
 
 
 def random_name(name='ImageData', length=6):
     '''
-    Function to generate ramdom name.
-    '''
+    Generate ramdom name
 
+    Parameters
+    ----------
+    name : string, optional
+        Prefix of the generated name
+    length : int, optional
+        Length of the random characters in the name
+
+    Returns
+    -------
+    string
+
+    '''
     return name + '_' + ''.join(random.sample(
         string.ascii_uppercase + string.ascii_lowercase + string.digits, length))
 
 
 def input_table_check(input_table):
     '''
-    Function to unify the input_table format.
+    Unify the input_table format
 
-
-    Parameters:
-
+    Parameters
     ----------
+    input_table : CASTable or string or dict
+        Input table specification
 
-    input_table : A CAS table object, a string specifies the name of the CAS table,
-                a dictionary specifies the CAS table, or an Image object.
-
-    Return:
-
-    ----------
-    A dictionary specifies the CAS table
+    Returns
+    -------
+    dict
+        Input table parameters
 
     '''
-
-    type_indicator = input_table.__class__.__name__
-    if type_indicator == "str":
+    if isinstance(input_table, six.string_types):
         input_table = dict(name=input_table)
-    elif type_indicator == "dict":
+    elif isinstance(input_table, dict):
         input_table = input_table
-    elif type_indicator in ("ImageTable", "CASTable"):
+    elif isinstance(input_table, CASTable):
         input_table = input_table.to_table_params()
     else:
         raise TypeError('input_table must be one of the following:\n'
@@ -67,19 +76,17 @@ def input_table_check(input_table):
 
 def prod_without_none(array):
     '''
-    Function to compute the product of an iterable array with None as its element.
+    Compute the product of an iterable array with None as its element
 
-
-    Parameters:
-
+    Parameters
     ----------
+    array : iterable-of-numerics
+        The numbers to use as input
 
-    array : an iterable array, e.g. list, tuple, numpy array.
-
-    Return:
-
-    ----------
-    prod : the product of all the elements of the array.
+    Returns
+    -------
+    numeric
+        Product of all the elements of the array
 
     '''
     prod = 1
@@ -91,7 +98,17 @@ def prod_without_none(array):
 
 def get_max_size(start_path='.'):
     '''
-    Function to get the max size of files in a folder including sub-folders.
+    Get the max size of files in a folder including sub-folders
+
+    Parameters
+    ----------
+    start_path : string, optional
+        The directory to start the file search
+
+    Returns
+    -------
+    int
+
     '''
     max_size = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
@@ -105,34 +122,41 @@ def get_max_size(start_path='.'):
 
 def image_blocksize(width, height):
     '''
-    Function to determine blocksize according to imagesize in the table.
+    Determine blocksize according to imagesize in the table
+
+    Parameters
+    ----------
+    width : int
+        The width of the image
+    height : int
+        The height of the image
+
+    Returns
+    -------
+    int
+
     '''
     return width * height * 3 / 1024
 
 
 def predicted_prob_barplot(ax, labels, values):
     '''
-    Function to generate a horizontal barplot for the predict probability.
+    Generate a horizontal barplot for the predict probability
 
-    Parameters:
-
+    Parameters
     ----------
+    ax : matplotlib.axes.Axes
+        The axes to plot to
+    labels : list-of-strings
+        Class labels
+    values : list-of-numerics
+        Predicted probabilities
 
-    ax : a matplotlib.axes.Axes object.
-
-    labels: class labels.
-
-    values: predicted probabilities.
-
-    Return:
-
-    ----------
-
-    ax : a matplotlib.axes.Axes object including the barplot.
-
+    Returns
+    -------
+    :class:`matplotlib.axes.Axes`
 
     '''
-
     y_pos = (0.2 + np.arange(len(labels))) / (1 + len(labels))
     width = 0.8 / (1 + len(labels))
     colors = ['blue', 'green', 'yellow', 'orange', 'red']
@@ -145,11 +169,11 @@ def predicted_prob_barplot(ax, labels, values):
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1, 1.1])
     ax.set_xticklabels(["0%", '25%', '50%', '75%', "100%"])
     ax.set_title('Predicted Probability')
-
     return ax
 
 
 def plot_predict_res(image, label, labels, values):
+    # TODO: Needs docstring
     fig = plt.figure(figsize=(12, 5))
     ax1 = fig.add_subplot(1, 2, 1)
     ax1.set_title('{}'.format(label))
@@ -160,37 +184,28 @@ def plot_predict_res(image, label, labels, values):
 
 
 def camelcase_to_underscore(strings):
-    '''
-    Function to convert camelcase to underscore.
-    '''
-    import re
-
+    ''' Convert camelcase to underscore '''
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', strings)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 
 def add_caslib(conn, path):
     '''
-    Function to add caslib, if the path is not in the cas libraries in the conn session.
-    Otherwise, a new caslib will be created.
+    Add a new caslib, as needed
 
-
-    Parameters:
-
+    Parameters
     ----------
+    conn : CAS
+        The CAS connection object
+    path : string
+        Specifies the server-side path to check
 
-    conn : a cas connection.
+    Returns
+    -------
+    string
+        The name of the caslib pointing to the path
 
-    path : str
-        Specifies the path to check.
-
-    Return:
-
-    ----------
-
-    The name of the cas library pointing to the path.
     '''
-
     if path in conn.caslibinfo().CASLibInfo.Path.tolist():
         cas_lib_name = conn.caslibinfo().CASLibInfo[conn.caslibinfo().CASLibInfo.Path == path]['Name']
 
@@ -204,28 +219,19 @@ def add_caslib(conn, path):
 
 def upload_astore(conn, path, table_name=None):
     '''
-    Function to load the local astore file to server
+    Load the local astore file to server
 
-    Parameters:
-
+    Parameters
     ----------
-
-    conn : a cas connection.
-
-    path : str
-        Specifies the full path of the astore file.
-
-    table_name : str
-        Specifies the name of the cas table on server, to hold the astore object.
-
-
-    Return:
-
-    ----------
-
-    None
+    conn : CAS
+        The CAS connection object
+    path : string
+        Specifies the client-side path of the astore file
+    table_name : string
+        Specifies the name of the cas table on server to put the astore object
 
     '''
+    # TODO: Should this accept a CASTable or dict as the final argument?
     conn.loadactionset('astore')
 
     with open(path, 'br') as f:

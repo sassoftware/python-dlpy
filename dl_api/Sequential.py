@@ -16,14 +16,15 @@
 #  limitations under the License.
 #
 
-'''
-Sequential object for deep learning.
-'''
+''' Sequential object for deep learning '''
 
 from .model import Model
 
 
 class Sequential(Model):
+
+    # TODO: Needs docstring
+
     def __init__(self, conn, layers=None, model_name=None):
         Model.__init__(self, conn, model_name=model_name)
 
@@ -37,7 +38,7 @@ class Sequential(Model):
                 self.compile()
 
     def add(self, layer):
-
+        # TODO: Needs docstring
         if self.layers == [] and layer.config['type'].lower() != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         if len(self.layers) > 0 and layer.config['type'] is 'input':
@@ -67,14 +68,17 @@ class Sequential(Model):
             self.compile()
 
     def pop(self, loc=-1):
+        # TODO: Needs docstring
 
         if len(self.layers) > 0:
             self.layers.pop(loc)
 
     def switch(self, loc1, loc2):
+        # TODO: Needs docstring
         self.layers[loc1], self.layers[loc2] = self.layers[loc2], self.layers[loc1]
 
     def compile(self):
+        # TODO: Needs docstring
         if self.layers[0].config['type'] != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         if self.layers[-1].config['type'] != 'output':

@@ -16,17 +16,13 @@
 #  limitations under the License.
 #
 
-'''
-Residual Network object for deep learning.
-'''
+''' Residual Network object for deep learning.  '''
 
 from .layers import *
 
 
 class Block:
-    '''
-    This is a module of a block of layers that have special connectivity instead of sequential.
-    '''
+    ''' Block of layers that have special connectivity instead of sequential '''
 
     def __init__(self):
         self.layers = []
@@ -35,18 +31,24 @@ class Block:
 
 class ResBlock:
     '''
-    Residual block for Residual Network.
+    Residual block for Residual Network
+
+    Parameters
+    ----------
+    kernel_size : int, optional
+        Kernel size of the convolution filters
+    n_filters : iter-of-ints, optional
+        List of numbers of filter in each convolution layers
+    strides : iter-of-ints, optional
+        List of stride in each convolution layers
+
+    Returns
+    -------
+    :class:`ResBlock`
+
     '''
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None):
-        '''
-
-        :param kernel_size: kernel_size of the convolution filters.
-        :param n_filters: list of numbers of filter in each convolution layers.
-        :param strides: list of stride in each convolution layers.
-        :return: ResBlock object
-        '''
-
         if strides is None:
             strides = [1] * len(n_filters)
         elif len(strides) == 1:
@@ -74,6 +76,7 @@ class ResBlock:
         self.layers.append(Res(act='identity'))
 
     def compile(self, src_layer, block_num):
+        # TODO: Needs docstring
         options = []
         conv_num = 1
         input_layer = src_layer
@@ -92,12 +95,10 @@ class ResBlock:
 
 
 class ResBlockBN:
-    '''
-    Residual block for Residual Network.
-    '''
+
+    # TODO: Needs docstring
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None, batch_norm_first=True):
-
         if strides is None:
             strides = [1] * len(n_filters)
 
@@ -138,6 +139,7 @@ class ResBlockBN:
         self.layers.append(Res(act='identity'))
 
     def compile(self, src_layer, block_num):
+        # TODO: Needs docstring
         options = []
         conv_num = 1
         bn_num = 1
@@ -160,13 +162,11 @@ class ResBlockBN:
 
 
 class ResBlock_Caffe:
-    '''
-    Residual block for Residual Network.
-    '''
 
-    def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None, batch_norm_first=False,
-                 conv_short_cut=False):
+    # TODO: Needs docstring
 
+    def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None,
+                 batch_norm_first=False, conv_short_cut=False):
         if strides is None:
             strides = [1] * len(n_filters)
 
@@ -228,6 +228,7 @@ class ResBlock_Caffe:
             self.layers.append(Res(act='relu'))
 
     def compile(self, src_layer, block_num):
+        # TODO: Needs docstring
         options = []
         conv_num = 1
         bn_num = 1
