@@ -16,6 +16,10 @@
 #  limitations under the License.
 #
 
+'''
+Functions to support different splitting schemes.
+'''
+
 from swat.cas.table import CASTable
 from .images import ImageTable
 from .utils import random_name
