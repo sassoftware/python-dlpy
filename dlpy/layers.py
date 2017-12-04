@@ -22,8 +22,9 @@ from .utils import prod_without_none
 
 
 class Layer:
-
-    # TODO: Needs docstring
+    '''
+    A base class for all layers.
+    '''
 
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
@@ -48,7 +49,6 @@ class Layer:
     def summary(self):
         # TODO: Needs docstring
         # TODO: This should create a DataFrame rather than a string and just return it
-        # Note: this will be moved to complie.
         if self.config['type'].lower() == 'input':
             self.output_size = (int(self.config['width']),
                                 int(self.config['height']),
@@ -95,7 +95,7 @@ class Layer:
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
-        
+
         elif self.config['type'].lower() == 'concat':
             self.output_size = (int(self.src_layers[0].output_size[0]),
                                 int(self.src_layers[0].output_size[1]),
@@ -155,7 +155,11 @@ class Layer:
         self.summary_str = col1 + col2 + col3 + col4 + col5 + col6
 
     def to_model_params(self):
-        # TODO: Needs docstring
+        '''
+        Convert the model configuration to SAS Viya parameters.
+        Return:
+            A dictionary of SAS Viya parameters.
+        '''
         if self.config['type'].lower() == 'input':
             return dict(name=self.name, layer=self.config)
         else:
@@ -164,8 +168,7 @@ class Layer:
 
 
 class InputLayer(Layer):
-
-    # TODO: Needs docstring
+    '''Input layer.'''
 
     def __init__(self, n_channels=3, width=224, height=224, scale=1,
                  dropout=0, offsets=None, name=None, src_layers=None, **kwargs):
@@ -180,8 +183,7 @@ class InputLayer(Layer):
 
 
 class Conv2d(Layer):
-
-    # TODO: Needs docstring
+    '''2D convolutional layer.'''
 
     def __init__(self, n_filters, width=None, height=None, stride=1,
                  act="relu", dropout=0, name=None, src_layers=None, **kwargs):
@@ -200,8 +202,7 @@ class Conv2d(Layer):
 
 
 class Pooling(Layer):
-
-    # TODO: Needs docstring
+    '''Pooling layer'''
 
     def __init__(self, width=None, height=None, stride=None,
                  pool='max', dropout=0, name=None, src_layers=None, **kwargs):
@@ -223,8 +224,7 @@ class Pooling(Layer):
 
 
 class Dense(Layer):
-
-    # TODO: Needs docstring
+    '''Fully connected layer.'''
 
     def __init__(self, n, act='relu', dropout=0,
                  name=None, src_layers=None, **kwargs):
@@ -237,8 +237,7 @@ class Dense(Layer):
 
 
 class Recurrent(Layer):
-
-    # TODO: Needs docstring
+    '''Recurrent layer.'''
 
     def __init__(self, n, act='AUTO', rnn_type='RNN', output_type='ENCODING',
                  reversed_=False, name=None, src_layers=None, **kwargs):
@@ -251,8 +250,7 @@ class Recurrent(Layer):
 
 
 class BN(Layer):
-
-    # TODO: Needs docstring
+    '''Batch Normalization layer.'''
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -264,8 +262,7 @@ class BN(Layer):
 
 
 class Res(Layer):
-
-    # TODO: Needs docstring
+    '''Residual layer.'''
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -275,7 +272,10 @@ class Res(Layer):
         self.color_code = '#FF0000'
         self.type_name = 'Resid.'
 
+
 class Concat(Layer):
+    '''Concatenation layer.'''
+
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
         config = _unpack_config(config)
@@ -286,8 +286,7 @@ class Concat(Layer):
 
 
 class Proj(Layer):
-
-    # TODO: Needs docstring
+    '''Projection layer.'''
 
     def __init__(self, name=None, src_layers=None, **kwargs):
         config = locals()
@@ -299,8 +298,7 @@ class Proj(Layer):
 
 
 class OutputLayer(Layer):
-
-    # TODO: Needs docstring
+    '''Output layer.'''
 
     def __init__(self, n=None, act='softmax', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -314,7 +312,8 @@ class OutputLayer(Layer):
 
 
 def _unpack_config(config):
-    # TODO: Needs docstring
+    '''Function to unpack the configuration from the key-word-argument-only input.'''
+
     kwargs = config['kwargs']
     del config['self'], config['name'], config['src_layers'], config['kwargs']
     out = {}
