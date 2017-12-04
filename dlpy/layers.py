@@ -95,6 +95,14 @@ class Layer:
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
+        
+        elif self.config['type'].lower() == 'concat':
+            self.output_size = (int(self.src_layers[0].output_size[0]),
+                                int(self.src_layers[0].output_size[1]),
+                                int(sum([item.output_size[2] for item in self.src_layers])))
+            self.kernel_size = None
+            self.num_weights = 0
+            self.num_bias = 0
 
         elif self.config['type'].lower() in ('fc', 'fullconnect'):
             if isinstance(self.src_layers[0].output_size, int):
@@ -266,6 +274,15 @@ class Res(Layer):
         Layer.__init__(self, name, config, src_layers)
         self.color_code = '#FF0000'
         self.type_name = 'Resid.'
+
+class Concat(Layer):
+    def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
+        config = locals()
+        config = _unpack_config(config)
+        config['type'] = 'concat'
+        Layer.__init__(self, name, config, src_layers)
+        self.color_code = '#DD5022'
+        self.type_name = 'Concat.'
 
 
 class Proj(Layer):
