@@ -76,7 +76,18 @@ class ResBlock:
         self.layers.append(Res(act='identity'))
 
     def compile(self, src_layer, block_num):
-        # TODO: Needs docstring
+        '''
+        Parameters
+        ----------
+        src_layer : Layer object.
+            The source layer for the whole block.
+        block_num : int
+            The label of the block. (used to name the layers)
+    
+        Returns
+        -------
+            A dictionary of key-word-arguments.
+        '''
         options = []
         conv_num = 1
         input_layer = src_layer
@@ -95,8 +106,9 @@ class ResBlock:
 
 
 class ResBlockBN:
-
-    # TODO: Needs docstring
+    '''
+    Residual block for Residual Network with batch normalization.
+    '''
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None, batch_norm_first=True):
         if strides is None:
@@ -139,7 +151,18 @@ class ResBlockBN:
         self.layers.append(Res(act='identity'))
 
     def compile(self, src_layer, block_num):
-        # TODO: Needs docstring
+        '''
+        Parameters
+        ----------
+        src_layer : Layer object.
+            The source layer for the whole block.
+        block_num : int
+            The label of the block. (used to name the layers)
+
+        Returns
+        -------
+            A dictionary of key-word-arguments.
+        '''
         options = []
         conv_num = 1
         bn_num = 1
@@ -162,8 +185,9 @@ class ResBlockBN:
 
 
 class ResBlock_Caffe:
-
-    # TODO: Needs docstring
+    '''
+    Residual block for Residual Network with batch normalization.
+    '''
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None,
                  batch_norm_first=False, conv_short_cut=False):
@@ -228,7 +252,18 @@ class ResBlock_Caffe:
             self.layers.append(Res(act='relu'))
 
     def compile(self, src_layer, block_num):
-        # TODO: Needs docstring
+        '''
+        Parameters
+        ----------
+        src_layer : Layer object.
+            The source layer for the whole block.
+        block_num : int
+            The label of the block. (used to name the layers)
+
+        Returns
+        -------
+            A dictionary of key-word-arguments.
+        '''
         options = []
         conv_num = 1
         bn_num = 1
@@ -278,26 +313,39 @@ class ResBlock_Caffe:
                 options.append(layer.to_model_params())
         return options
 
+
 class DenseNetBlock:
     '''
     DenseNet block
     '''
 
-    def __init__(self, n_cells = 4, kernel_size=3, n_filter=12, stride=1):
+    def __init__(self, n_cells=4, kernel_size=3, n_filter=12, stride=1):
         self.config = dict()
         self.config['type'] = 'block'
         self.layers = []
         for _ in range(n_cells):
             self.layers.append(BN(act='relu'))
             self.layers.append(
-		            Conv2d(n_filters=n_filter,
-		                   width=kernel_size,
-		                   act='relu',
-		                   stride=stride,
-		                   includeBias=False))
+                Conv2d(n_filters=n_filter,
+                       width=kernel_size,
+                       act='relu',
+                       stride=stride,
+                       includeBias=False))
             self.layers.append(Concat(act='identity'))
 
     def compile(self, src_layer, block_num):
+        '''
+        Parameters
+        ----------
+        src_layer : Layer object.
+            The source layer for the whole block.
+        block_num : int
+            The label of the block. (used to name the layers)
+
+        Returns
+        -------
+            A dictionary of key-word-arguments.
+        '''
         options = []
         conv_num = 1
         bn_num = 1
@@ -319,4 +367,4 @@ class DenseNetBlock:
                 src_layer = layer
             input_layer = layer
             options.append(layer.to_model_params())
-        return options        
+        return options
