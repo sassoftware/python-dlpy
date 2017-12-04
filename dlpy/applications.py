@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-from .ResNet import ResBlockBN, ResBlock_Caffe
+from .ResNet import *
 from .Sequential import Sequential
 from .caffe_models import model_lenet, model_vgg19, model_resnet50, model_resnet101, model_resnet152
 from .layers import *
