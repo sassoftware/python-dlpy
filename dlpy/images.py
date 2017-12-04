@@ -16,10 +16,12 @@
 #  limitations under the License.
 #
 
-# TODO: Needs docstring
-
+'''
+ImageTable is a sub class of CASTable, which support special functionality for imaging data.
+'''
 import matplotlib.pyplot as plt
 from swat.cas.table import CASTable
+
 from .utils import random_name, image_blocksize
 
 
@@ -37,20 +39,18 @@ class ImageTable(CASTable):
     Attributes
     ----------
     image_summary : pandas.Series
-        ???
+        The summary of the images contained in the image table.
     label_freq : pandas.Series
-        ???
-    channel_means : tuple
-        ???
-    uid : string
-        ???
+        The count of images in different categories.
+    channel_means : tuple of double
+        The mean of the image intensities in each channels.
+
 
     Returns
     -------
     :class:`ImageTable`
 
     '''
-    # TODO: Fill in missing information in docstring above
 
     def __init__(self, name, **table_params):
         CASTable.__init__(self, name, **table_params)
@@ -661,10 +661,10 @@ class ImageTable(CASTable):
         return self.image_summary[['mean1stChannel', 'mean2ndChannel',
                                    'mean3rdChannel']].tolist()
 
-    @property
-    def uid(self):
-        # TODO: Needs docstring
-        file_name = '_filename_{}'.format(self.patch_level)
-        uid = self[['_label_', file_name]].to_frame()
-        # uid = uid.rename(columns={file_name: '_uid_'})
-        return uid
+    # @property
+    # def uid(self):
+    #
+    #     file_name = '_filename_{}'.format(self.patch_level)
+    #     uid = self[['_label_', file_name]].to_frame()
+    #     # uid = uid.rename(columns={file_name: '_uid_'})
+    #     return uid
