@@ -16,17 +16,24 @@
 #  limitations under the License.
 #
 
+'''
+Some supportive functions for the DLPy package.
+'''
+
 import os
 import re
 import random
 import string
 import six
+import matplotlib.pyplot as plt
+import numpy as np
+import swat as sw
 from swat.cas.table import CASTable
 
 
 def random_name(name='ImageData', length=6):
     '''
-    Generate ramdom name
+    Generate random name
 
     Parameters
     ----------
@@ -80,7 +87,7 @@ def prod_without_none(array):
 
     Parameters
     ----------
-    array : iterable-of-numerics
+    array : iterable-of-numeric
         The numbers to use as input
 
     Returns
@@ -148,8 +155,8 @@ def predicted_prob_barplot(ax, labels, values):
     ax : matplotlib.axes.Axes
         The axes to plot to
     labels : list-of-strings
-        Class labels
-    values : list-of-numerics
+        Predicted class labels
+    values : list-of-numeric
         Predicted probabilities
 
     Returns
@@ -173,7 +180,25 @@ def predicted_prob_barplot(ax, labels, values):
 
 
 def plot_predict_res(image, label, labels, values):
-    # TODO: Needs docstring
+    '''
+    Generate a side by side plot of the predicted result.
+
+    Parameters
+    ----------
+    image :
+        Specifies the orginal image to be classified.
+    label : string
+        Specifies the class name of the image.
+    labels : list-of-strings
+        Predicted class labels
+    values : list-of-numeric
+        Predicted probabilities
+
+    Returns
+    -------
+    :class:`matplotlib.axes.Axes`
+
+    '''
     fig = plt.figure(figsize=(12, 5))
     ax1 = fig.add_subplot(1, 2, 1)
     ax1.set_title('{}'.format(label))
@@ -227,7 +252,7 @@ def upload_astore(conn, path, table_name=None):
         The CAS connection object
     path : string
         Specifies the client-side path of the astore file
-    table_name : string
+    table_name : string,
         Specifies the name of the cas table on server to put the astore object
 
     '''
