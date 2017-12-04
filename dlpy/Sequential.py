@@ -22,8 +22,9 @@ from .model import Model
 
 
 class Sequential(Model):
-
-    # TODO: Needs docstring
+    '''
+    A sub module of model. Support sequentially building of deep learning models.
+    '''
 
     def __init__(self, conn, layers=None, model_name=None):
         Model.__init__(self, conn, model_name=model_name)
@@ -38,7 +39,14 @@ class Sequential(Model):
                 self.compile()
 
     def add(self, layer):
-        # TODO: Needs docstring
+        '''
+        Function to add layer(s) to model.
+
+        Parameter:
+        ----------
+            layer: Layer object or list of Layer
+                Specifies the layer to be added.
+        '''
         if self.layers == [] and layer.config['type'].lower() != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         if len(self.layers) > 0 and layer.config['type'] is 'input':
@@ -68,17 +76,34 @@ class Sequential(Model):
             self.compile()
 
     def pop(self, loc=-1):
-        # TODO: Needs docstring
+        '''
+        Delete layer(s) from model.
+        Parameter:
+        ----------
+            loc: int
+                Specifies the index of the layer in the model.
+        '''
 
         if len(self.layers) > 0:
             self.layers.pop(loc)
 
     def switch(self, loc1, loc2):
-        # TODO: Needs docstring
+        '''
+        Switch the oder of two layers in the model.
+
+        Parameters:
+        -----------
+            loc1 : int
+                Specifies the index of the first layer.
+            loc2 : int
+                Specifies the index of the second layer.
+        '''
         self.layers[loc1], self.layers[loc2] = self.layers[loc2], self.layers[loc1]
 
     def compile(self):
-        # TODO: Needs docstring
+        '''
+        Function to convert the layer objects into Viya options.
+        '''
         if self.layers[0].config['type'] != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         if self.layers[-1].config['type'] != 'output':
