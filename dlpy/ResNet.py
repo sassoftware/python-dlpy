@@ -277,3 +277,46 @@ class ResBlock_Caffe:
                 input_layer = layer
                 options.append(layer.to_model_params())
         return options
+
+class DenseNetBlock:
+    '''
+    DenseNet block
+    '''
+
+    def __init__(self, n_cells = 4, kernel_size=3, n_filter=12, stride=1):
+        self.config = dict()
+        self.config['type'] = 'block'
+        self.layers = []
+        for _ in range(n_cells):
+            self.layers.append(BN(act='relu'))
+            self.layers.append(
+		            Conv2d(n_filters=n_filter,
+		                   width=kernel_size,
+		                   act='relu',
+		                   stride=stride,
+		                   includeBias=False))
+            self.layers.append(Concat(act='identity'))
+
+    def compile(self, src_layer, block_num):
+        options = []
+        conv_num = 1
+        bn_num = 1
+        concat_num = 1
+        input_layer = src_layer
+        for layer in self.layers:
+            if layer.config['type'].lower() in ('convo', 'convolution'):
+                layer.name = 'D{}C{}'.format(block_num, conv_num)
+                conv_num += 1
+                layer.src_layers = [input_layer]
+            elif layer.config['type'].lower() == 'batchnorm':
+                layer.name = 'D{}B{}'.format(block_num, bn_num)
+                bn_num += 1
+                layer.src_layers = [input_layer]
+            elif layer.config['type'].lower() == 'concat':
+                layer.name = 'D{}Concat{}'.format(block_num, concat_num)
+                concat_num += 1
+                layer.src_layers = [input_layer, src_layer]
+                src_layer = layer
+            input_layer = layer
+            options.append(layer.to_model_params())
+        return options        
