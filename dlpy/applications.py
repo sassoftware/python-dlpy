@@ -2246,3 +2246,91 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
     model.add(OutputLayer(act='softmax', n=n_classes))
 
     return model
+
+def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel = 16, growth_rate = 12,
+             n_blocks = 4, n_cells = 4, n_channels=3, width=32, height=32, scale=1,
+             random_flip='H', random_crop='UNIQUE', offsets=(85, 111, 139)):
+    '''
+      Function to generate a deep learning model with DenseNet architecture.
+
+      Parameters:
+
+      ----------
+      conn :
+          Specifies the connection of the CAS connection.
+      model_name : string
+          Specifies the name of CAS table to store the model.      
+      n_classes : int, optional.
+          Specifies the number of classes. If None is assigned, the model will automatically detect the number of
+          classes based on the training set.
+          Default: None
+      conv_channel: int, optional.
+      		Specifies the number of filters of first convolutional layer.
+      		Default : 16
+      growth_rate: int, optional.
+      		Specifies growth rate of convolutional layer.
+      		Default : 12
+      n_blocks : int, optional.
+      		Specifies the number of DenseNetBlocks.
+      		Default : 4
+      n_cells : int, optional.
+      		Specifies the number of densely connection in each DenseNetBlock
+      		Default : 4
+      n_channels : double, optional.
+          Specifies the number of the channels of the input layer.
+          Default : 3.
+      width : double, optional.
+          Specifies the width of the input layer.
+          Default : 224.
+      height : double, optional.
+          Specifies the height of the input layer.
+          Default : 224.
+      scale : double, optional.
+          Specifies a scaling factor to apply to each image..
+          Default : 1.
+      random_flip : string, "H" | "HV" | "NONE" | "V"
+          Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data
+          is subject to flipping.
+          Default	: "HV"
+      random_crop : string, "NONE" or "UNIQUE"
+          Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that
+           are specified in the width and height parameters. Only the images with one or both dimensions that are larger
+           than those sizes are cropped.
+          Default	: "UNIQUE"
+      offsets=(double-1 <, double-2, ...>), optional
+          Specifies an offset for each channel in the input data. The final input data is set after applying scaling and
+          subtracting the specified offsets.
+      Default : (85, 111, 139)
+
+      Returns
+      -------
+      A model object using DenseNet_Cifar architecture.
+
+      '''
+		
+    channel_in = conv_channel # number of channel of transition conv layer
+		
+    model = Sequential(conn=conn, model_name=model_name)
+
+    model.add(InputLayer(n_channels=n_channels, width=width, height=height,
+                         scale=scale, offsets=offsets, random_flip=random_flip,
+                         random_crop=random_crop))
+    # Top layers
+    model.add(Conv2d(conv_channel, width=3, act='identity', includeBias=False, stride=1))
+
+    for i in range(n_blocks):
+        model.add(DenseNetBlock(n_cells = n_cells, kernel_size=3, n_filter=growth_rate, stride=1))
+        # transition block
+        channel_in += (growth_rate * n_cells)
+        model.add(BN(act='relu'))
+        if i != (n_blocks - 1):
+            model.add(Conv2d(channel_in, width = 3, act='identity', includeBias=False, stride=1))
+            model.add(Pooling(width=2, height=2, pool='mean'))
+
+    # Bottom Layers
+    pooling_size = (width // (2 ** n_blocks // 2), height // (2 ** n_blocks // 2))
+    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+
+    model.add(OutputLayer(act='softmax', n=n_classes))
+
+    return model
