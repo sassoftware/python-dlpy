@@ -16,15 +16,16 @@
 #  limitations under the License.
 #
 
-from .ResNet import *
+'''
+This module includes all the prebuild models.
+'''
 from .Sequential import Sequential
+from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock
 from .caffe_models import model_lenet, model_vgg19, model_resnet50, model_resnet101, model_resnet152
 from .layers import *
 from .model import Model
 from .utils import random_name
 
-
-# TODO: Needs docstring
 
 def LeNet5(conn, model_name='LENET5',
            n_classes=10, n_channels=1, width=28, height=28, scale=1.0 / 255,
@@ -2247,9 +2248,10 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
 
     return model
 
-def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel = 16, growth_rate = 12,
-             n_blocks = 4, n_cells = 4, n_channels=3, width=32, height=32, scale=1,
-             random_flip='H', random_crop='UNIQUE', offsets=(85, 111, 139)):
+
+def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growth_rate=12,
+                   n_blocks=4, n_cells=4, n_channels=3, width=32, height=32, scale=1,
+                   random_flip='H', random_crop='UNIQUE', offsets=(85, 111, 139)):
     '''
     Function to generate a deep learning model with DenseNet architecture.
 
@@ -2259,21 +2261,21 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel = 16, gro
     conn :
         Specifies the connection of the CAS connection.
     model_name : string
-        Specifies the name of CAS table to store the model.      
+        Specifies the name of CAS table to store the model.
     n_classes : int, optional.
         Specifies the number of classes. If None is assigned, the model will automatically detect the number of classes based on the training set.
         Default: None
     conv_channel: int, optional.
         Specifies the number of filters of first convolutional layer.
-  		Default : 16
+        Default : 16
     growth_rate: int, optional.
-    	Specifies growth rate of convolutional layer.
-  		Default : 12
-  	n_blocks : int, optional.
-  		Specifies the number of DenseNetBlocks.
-  		Default : 4
-  	n_cells : int, optional.
-    	Specifies the number of densely connection in each DenseNetBlock
+        Specifies growth rate of convolutional layer.
+        Default : 12
+    n_blocks : int, optional.
+        Specifies the number of DenseNetBlocks.
+        Default : 4
+    n_cells : int, optional.
+        Specifies the number of densely connection in each DenseNetBlock
         Default : 4
     n_channels : double, optional.
         Specifies the number of the channels of the input layer.
@@ -2303,9 +2305,9 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel = 16, gro
         A model object using DenseNet_Cifar architecture.
 
     '''
-		
-    channel_in = conv_channel # number of channel of transition conv layer
-		
+
+    channel_in = conv_channel  # number of channel of transition conv layer
+
     model = Sequential(conn=conn, model_name=model_name)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
@@ -2315,12 +2317,12 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel = 16, gro
     model.add(Conv2d(conv_channel, width=3, act='identity', includeBias=False, stride=1))
 
     for i in range(n_blocks):
-        model.add(DenseNetBlock(n_cells = n_cells, kernel_size=3, n_filter=growth_rate, stride=1))
+        model.add(DenseNetBlock(n_cells=n_cells, kernel_size=3, n_filter=growth_rate, stride=1))
         # transition block
         channel_in += (growth_rate * n_cells)
         model.add(BN(act='relu'))
         if i != (n_blocks - 1):
-            model.add(Conv2d(channel_in, width = 3, act='identity', includeBias=False, stride=1))
+            model.add(Conv2d(channel_in, width=3, act='identity', includeBias=False, stride=1))
             model.add(Pooling(width=2, height=2, pool='mean'))
 
     # Bottom Layers
