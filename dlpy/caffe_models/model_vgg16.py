@@ -17,29 +17,29 @@
 #
 
 
-def VGG16_Model(s, inputCropType=None, inputChannelOffset=None):
+def VGG16_Model(s, model_name='VGG19', n_channels=3, width=224, height=224,
+                random_crop=None, offsets=None, include_top=True):
     '''
     VGG16 model definition
 
     '''
     # TODO: Document parameters
-    # TODO: Use underscore-delimited parameter names
-    # quick error-checking and default setting
-    if inputCropType is None:
-        inputCropType = "NONE"
-    elif inputCropType.upper() not in ["NONE", "UNIQUE"]:
-        raise ValueEror('inputCropType can only be NONE or UNIQUE')
+    # TODO: quick error-checking and default setting
+    if random_crop is None:
+        random_crop = "none"
+    elif random_crop.upper() not in ["none", "UNIQUE"]:
+        raise ValueError('random_crop can only be none or UNIQUE')
 
-    if (inputChannelOffset == None):
-        inputChannelOffset = [103.939, 116.779, 123.68]
+    if (offsets == None):
+        offsets = [103.939, 116.779, 123.68]
 
     # instantiate model
     s.buildModel(model=dict(name='VGG16', replace=True), type='CNN')
 
     # input layer
-    s.addLayer(model='VGG16', name='data',
-               layer=dict(type='input', nchannels=3, width=224, height=224,
-                          randomcrop=inputCropType, offsets=inputChannelOffset))
+    s.addLayer(model=model_name, name='data',
+               layer=dict(type='input', n_channels=n_channels, width=width, height=height,
+                          randomcrop=random_crop, offsets=offsets))
 
     # conv1_1 layer: 64*3*3
     s.addLayer(model='VGG16', name='conv1_1',
@@ -143,18 +143,18 @@ def VGG16_Model(s, inputCropType=None, inputChannelOffset=None):
     s.addLayer(model='VGG16', name='pool5',
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv5_3'])
+    if include_top:
+        # fc6 layer: 4096 neurons
+        s.addLayer(model='VGG16', name='fc6',
+                   layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+                   srcLayers=['pool5'])
 
-    # fc6 layer: 4096 neurons
-    s.addLayer(model='VGG16', name='fc6',
-               layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
-               srcLayers=['pool5'])
+        # fc7 layer: 4096 neurons
+        s.addLayer(model='VGG16', name='fc7',
+                   layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+                   srcLayers=['fc6'])
 
-    # fc7 layer: 4096 neurons
-    s.addLayer(model='VGG16', name='fc7',
-               layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
-               srcLayers=['fc6'])
-
-    # fc output layer: 1000 neurons
-    s.addLayer(model='VGG16', name='fc8',
-               layer=dict(type='output', n=1000, act='softmax'),
-               srcLayers=['fc7'])
+        # fc output layer: 1000 neurons
+        s.addLayer(model='VGG16', name='fc8',
+                   layer=dict(type='output', n=1000, act='softmax'),
+                   srcLayers=['fc7'])
