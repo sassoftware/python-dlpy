@@ -21,15 +21,18 @@ This module includes all the prebuild models.
 '''
 from .Sequential import Sequential
 from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock
-from .caffe_models import model_lenet, model_vgg19, model_resnet50, model_resnet101, model_resnet152
+from .caffe_models import *
 from .layers import *
 from .model import Model
 from .utils import random_name
 
 
+# TODO: Create download link for all internal paths
+
+
 def LeNet5(conn, model_name='LENET5',
            n_classes=10, n_channels=1, width=28, height=28, scale=1.0 / 255,
-           random_flip='NONE', random_crop='NONE', offsets=0):
+           random_flip='none', random_crop='none', offsets=0):
     '''
     Generate a deep learning model with LeNet5 architecture
 
@@ -59,15 +62,15 @@ def LeNet5(conn, model_name='LENET5',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data
         is used. Images are cropped to the values that are specified in the
         width and height parameters. Only the images with one or both
         dimensions that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -102,7 +105,7 @@ def LeNet5(conn, model_name='LENET5',
 
 def LeNet5_bn(conn, model_name='LENET_BN',
               n_channels=1, width=28, height=28, n_classes=10, scale=1.0 / 255,
-              random_flip='NONE', random_crop='NONE', offsets=0,
+              random_flip='none', random_crop='none', offsets=0,
               pre_train_weight=False, include_top=False):
     '''
     Generate a LeNet Model with Batch normalization
@@ -132,15 +135,15 @@ def LeNet5_bn(conn, model_name='LENET_BN',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -190,11 +193,17 @@ def LeNet5_bn(conn, model_name='LENET_BN',
             return model
         else:
             model = Model.from_table(conn.CASTable(model_name))
-            model.load_weights(path='/dept/cas/docair/imported_models/lenet.caffemodel.h5')
-            model.retrieve(_name_='addlayer',
-                           model=model_name, name='output',
-                           layer=dict(type='output', n=n_classes, act='softmax'),
-                           srcLayers=['ip1'])
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/lenet.caffemodel.h5')
+            # fully connected layer
+            model._retrieve_(_name_='addlayer', model=model_name, name='ip1',
+                             layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
+                             srcLayers=['pool2'])
+            # output layer
+
+            model._retrieve_(_name_='addlayer',
+                             model=model_name, name='ip2',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['ip1'])
 
             model = Model.from_table(conn.CASTable(model_name))
             return model
@@ -202,7 +211,7 @@ def LeNet5_bn(conn, model_name='LENET_BN',
 
 def VGG11(conn, model_name='VGG11',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with VGG11 architecture
 
@@ -231,15 +240,15 @@ def VGG11(conn, model_name='VGG11',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -288,7 +297,7 @@ def VGG11(conn, model_name='VGG11',
 
 def VGG11_bn(conn, model_name='VGG11',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-             random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+             random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate deep learning model with VGG11 architecture with batch normalization layers
 
@@ -319,15 +328,15 @@ def VGG11_bn(conn, model_name='VGG11',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data
         is used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data
         is used. Images are cropped to the values that are specified in the
         width and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -384,7 +393,7 @@ def VGG11_bn(conn, model_name='VGG11',
 
 def VGG13(conn, model_name='VGG13',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with VGG13 architecture
 
@@ -413,14 +422,14 @@ def VGG13(conn, model_name='VGG13',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default	: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -483,7 +492,7 @@ def VGG13(conn, model_name='VGG13',
 
 def VGG13_bn(conn, model_name='VGG13',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-             random_flip='NONE', random_crop='NONE', offsets=None):
+             random_flip='none', random_crop='none', offsets=None):
     '''
     Generate deep learning model with VGG13 architecture with batch normalization layers
 
@@ -512,15 +521,15 @@ def VGG13_bn(conn, model_name='VGG13',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of--doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -572,7 +581,7 @@ def VGG13_bn(conn, model_name='VGG13',
 
 def VGG16(conn, model_name='VGG16',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
+          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
           pre_train_weight=False, include_top=False):
     '''
     Generate a deep learning model with VGG16 architecture
@@ -602,14 +611,14 @@ def VGG16(conn, model_name='VGG16',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -631,71 +640,79 @@ def VGG16(conn, model_name='VGG16',
     '''
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    if include_top:
-        n_classes = 1000
+    if not pre_train_weight:
+        model = Sequential(conn=conn, model_name=model_name)
 
-    model = Sequential(conn=conn, model_name=model_name)
+        model.add(InputLayer(n_channels=n_channels, width=width, height=height,
+                             scale=scale, offsets=offsets, random_flip=random_flip,
+                             random_crop=random_crop))
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height,
-                         scale=scale, offsets=offsets, random_flip=random_flip,
-                         random_crop=random_crop))
+        model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
+        model.add(Pooling(width=2, height=2, stride=2, pool='max'))
 
-    model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
-    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+        model.add(Conv2d(n_filters=128, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=128, width=3, height=3, stride=1))
+        model.add(Pooling(width=2, height=2, stride=2, pool='max'))
 
-    model.add(Conv2d(n_filters=128, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=128, width=3, height=3, stride=1))
-    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+        model.add(Conv2d(n_filters=256, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=256, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=256, width=3, height=3, stride=1))
+        model.add(Pooling(width=2, height=2, stride=2, pool='max'))
 
-    model.add(Conv2d(n_filters=256, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=256, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=256, width=3, height=3, stride=1))
-    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+        model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
+        model.add(Pooling(width=2, height=2, stride=2, pool='max'))
 
-    model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
-    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+        model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
+        model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
+        model.add(Pooling(width=2, height=2, stride=2, pool='max'))
 
-    model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
-    model.add(Conv2d(n_filters=512, width=3, height=3, stride=1))
-    model.add(Pooling(width=2, height=2, stride=2, pool='max'))
+        model.add(Dense(n=4096, dropout=0.5))
+        model.add(Dense(n=4096, dropout=0.5))
+        model.add(OutputLayer(n=n_classes))
 
-    model.add(Dense(n=4096, dropout=0.5))
-    model.add(Dense(n=4096, dropout=0.5))
-    model.add(OutputLayer(n=n_classes))
-
-    if pre_train_weight:
-        from .utils import random_name
-        CAS_lib_name = random_name('CASLIB')
-        conn.retrieve('addcaslib', _messagelevel='error',
-                      activeonadd=False,
-                      name=CAS_lib_name,
-                      path='/dept/cas/leliuz/DL_MODELS',
-                      dataSource=dict(srcType="DNFS"))
-
-        conn.retrieve('table.loadtable', _messagelevel='error',
-                      casout=dict(replace=True, name='{}_weights'.format(model_name)),
-                      caslib=CAS_lib_name, path='VGG16_WEIGHTS.sashdat')
+        return model
+    else:
+        # TODO: Remove internal SAS paths
+        model_vgg16.VGG16_Model(
+            s=conn, model_name=model_name, n_channels=n_channels, width=width, height=height,
+            random_crop=random_crop, offsets=offsets, include_top=include_top)
         if include_top:
-            model.set_weights('{}_weights'.format(model_name))
-            conn.retrieve('table.loadtable', _messagelevel='error',
-                          casout=dict(replace=True, name='{}_weights_attr'.format(model_name)),
-                          caslib=CAS_lib_name, path='VGG16_WEIGHTS_ATTR.sashdat')
-            model.set_weights_attr('{}_weights_attr'.format(model_name))
-        else:
-            model.set_weights(weight_tbl=dict(name='{}_weights'.format(model_name), where='_layerid_<18'))
+            if n_classes != 1000:
+                print('WARNING : IF include_top = True, n_classes WILL BE SET TO 1000.')
+            model = Model.from_table(conn.CASTable(model_name))
+            label_table = random_name('label')
+            conn.upload(
+                casout=dict(replace=True, name=label_table),
+                data='\\\\sashq\\root\\dept\\cas\\leliuz\\DLPy\\imported_models\\newlabel.sas7bdat')
 
-        conn.retrieve('dropcaslib', _messagelevel='error',
-                      caslib=CAS_lib_name)
-    return model
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/VGG_ILSVRC_16_layers.caffemodel.h5',
+                               labeltable=dict(name=label_table, varS=['levid', 'levname']))
+            model._retrieve_(_name_='table.droptable',
+                             table=label_table)
+            return model
+        else:
+            model = Model.from_table(conn.CASTable(model_name))
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/VGG_ILSVRC_16_layers.caffemodel.h5')
+            model._retrieve_(_name_='addlayer', model=model_name, name='fc6',
+                             layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+                             srcLayers=['pool5'])
+            model._retrieve_(_name_='addlayer', model=model_name, name='fc7',
+                             layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+                             srcLayers=['fc6'])
+            model._retrieve_(_name_='addlayer', model=model_name, name='fc8',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['fc7'])
+            model = Model.from_table(conn.CASTable(model_name))
+            return model
 
 
 def VGG16_bn(conn, model_name='VGG16',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-             random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+             random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate deep learning model with VGG16 architecture with batch normalization layers
 
@@ -724,15 +741,15 @@ def VGG16_bn(conn, model_name='VGG16',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -796,7 +813,7 @@ def VGG16_bn(conn, model_name='VGG16',
 
 def VGG19(conn, model_name='VGG19',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
+          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
           pre_train_weight=False, include_top=False):
     '''
     Generate a deep learning model with VGG19 architecture
@@ -826,14 +843,14 @@ def VGG19(conn, model_name='VGG19',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -897,8 +914,8 @@ def VGG19(conn, model_name='VGG19',
         return model
     else:
         # TODO: Remove internal SAS paths
-        model_vgg19.VGG19_Model(s=conn, model_name=model_name, inputCropType=random_crop,
-                                inputChannelOffset=offsets, include_top=include_top)
+        model_vgg19.VGG19_Model(s=conn, model_name=model_name, random_crop=random_crop,
+                                offsets=offsets, include_top=include_top)
         if include_top:
             if n_classes != 1000:
                 print('WARNING : IF include_top = True, n_classes WILL BE SET TO 1000.')
@@ -906,27 +923,35 @@ def VGG19(conn, model_name='VGG19',
             label_table = random_name('label')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
-                data='\\\\sashq\\root\\dept\\cas\\docair\\imported_models\\newlabel.sas7bdat')
+                data='\\\\sashq\\root\\dept\\cas\\leliuz\\DLPy\\imported_models\\newlabel.sas7bdat')
 
-            model.load_weights(path='/dept/cas/docair/imported_models/VGG_ILSVRC_19_layers.caffemodel.h5',
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/VGG_ILSVRC_19_layers.caffemodel.h5',
                                labeltable=dict(name=label_table, varS=['levid', 'levname']))
-            model.retrieve(_name_='table.droptable',
-                           table=label_table)
+            model._retrieve_(_name_='table.droptable',
+                             table=label_table)
             return model
         else:
             model = Model.from_table(conn.CASTable(model_name))
-            model.load_weights(path='/dept/cas/docair/imported_models/VGG_ILSVRC_19_layers.caffemodel.h5')
-            model.retrieve(_name_='addlayer',
-                           model=model_name, name='output',
-                           layer=dict(type='output', n=n_classes, act='softmax'),
-                           srcLayers=['fc7'])
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/VGG_ILSVRC_19_layers.caffemodel.h5')
+            model._retrieve_(_name_='addlayer', model=model_name, name='fc6',
+                             layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+                             srcLayers=['pool5'])
+
+            # fc7 layer: 4096 neurons
+            model._retrieve_(_name_='addlayer', model=model_name, name='fc7',
+                             layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+                             srcLayers=['fc6'])
+            # fc output layer: 1000 neurons
+            model._retrieve_(_name_='addlayer', model=model_name, name='fc8',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_name))
             return model
 
 
 def VGG19_bn(conn, model_name='VGG19',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-             random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+             random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate deep learning model with VGG19 architecture with batch normalization layers
 
@@ -955,14 +980,14 @@ def VGG19_bn(conn, model_name='VGG19',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default	: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1034,7 +1059,7 @@ def VGG19_bn(conn, model_name='VGG19',
 
 def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                 random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+                 random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with ResNet18 architecture
 
@@ -1071,15 +1096,15 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default	: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default	: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -1133,7 +1158,7 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
 
 def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                   random_flip='NONE', random_crop='NONE', offsets=None):
+                   random_flip='none', random_crop='none', offsets=None):
     '''
     Generate a deep learning model with ResNet18 architecture with convolution shortcut
 
@@ -1169,14 +1194,14 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -1232,7 +1257,7 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
 
 def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                 random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+                 random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with ResNet34 architecture
 
@@ -1268,14 +1293,14 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -1330,7 +1355,7 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
 
 def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                   random_flip='NONE', random_crop='NONE', offsets=None):
+                   random_flip='none', random_crop='none', offsets=None):
     '''
     Generate deep learning model with ResNet34 architecture with convolution shortcut
 
@@ -1366,14 +1391,14 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1389,7 +1414,7 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
 
     # conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
     # model_resnet18.ResNet18_Model(s=conn, model_name=model_name, n_classes=n_classes, random_crop=random_crop,
-    #                                    random_flip=random_flip, inputChannelOffset=offsets)
+    #                                    random_flip=random_flip, offsets=offsets)
     # model = Model.from_table(conn.CASTable(model_name))
     # return model
     conn.retrieve(_name_='loadactionset', _messagelevel='error', actionset='deeplearn')
@@ -1436,7 +1461,7 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
 
 def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                 random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+                 random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with ResNet50 architecture
     
@@ -1472,14 +1497,14 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or list-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -1534,7 +1559,7 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
 
 def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                   random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
+                   random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
                    pre_train_weight=False, include_top=False):
     '''
     Generate deep learning model with ResNet50 architecture with convolution shortcut
@@ -1571,15 +1596,15 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -1642,8 +1667,9 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
 
         return model
     else:
-        model_resnet50.ResNet50_Model(s=conn, model_name=model_name, inputCropType=random_crop,
-                                      inputChannelOffset=offsets, include_top=include_top)
+        model_resnet50.ResNet50_Model(
+            s=conn, model_name=model_name, n_channels=n_channels, width=width, height=height,
+            random_crop=random_crop, offsets=offsets, include_top=include_top)
         if include_top:
             if n_classes != 1000:
                 print('WARNING : IF include_top = True, n_classes WILL BE SET TO 1000.')
@@ -1651,27 +1677,27 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             label_table = random_name('label')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
-                data='\\\\sashq\\root\\dept\\cas\\docair\\imported_models\\newlabel.sas7bdat')
+                data='\\\\sashq\\root\\dept\\cas\\leliuz\\DLPy\\imported_models\\newlabel.sas7bdat')
 
-            model.load_weights(path='/dept/cas/docair/imported_models/ResNet-50-model.caffemodel.h5',
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/ResNet-50-model.caffemodel.h5',
                                labeltable=dict(name=label_table, varS=['levid', 'levname']))
-            model.retrieve(_name_='table.droptable',
-                           table=label_table)
+            model._retrieve_(_name_='table.droptable',
+                             table=label_table)
             return model
         else:
             model = Model.from_table(conn.CASTable(model_name))
-            model.load_weights(path='/dept/cas/docair/imported_models/ResNet-50-model.caffemodel.h5')
-            model.retrieve(_name_='addlayer',
-                           model=model_name, name='output',
-                           layer=dict(type='output', n=n_classes, act='softmax'),
-                           srcLayers=['pool5'])
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/ResNet-50-model.caffemodel.h5')
+            model._retrieve_(_name_='addlayer',
+                             model=model_name, name='output',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['pool5'])
             model = Model.from_table(conn.CASTable(model_name))
             return model
 
 
 def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
                   n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                  random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+                  random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with ResNet101 architecture
     
@@ -1707,14 +1733,14 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data
         is used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default	: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1769,7 +1795,7 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
 
 def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
                     n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                    random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
+                    random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
                     pre_train_weight=False, include_top=False):
     '''
     Generate deep learning model with ResNet101 architecture with convolution shortcut
@@ -1806,15 +1832,15 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -1878,8 +1904,9 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
 
         return model
     else:
-        model_resnet101.ResNet101_Model(s=conn, model_name=model_name, inputCropType=random_crop,
-                                        inputChannelOffset=offsets, include_top=include_top)
+        model_resnet101.ResNet101_Model(
+            s=conn, model_name=model_name, n_channels=n_channels, width=width, height=height,
+            random_crop=random_crop, offsets=offsets, include_top=include_top)
         if include_top:
             if n_classes != 1000:
                 print('WARNING : IF include_top = True, n_classes WILL BE SET TO 1000.')
@@ -1887,27 +1914,26 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             label_table = random_name('label')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
-                data='\\\\sashq\\root\\dept\\cas\\docair\\imported_models\\newlabel.sas7bdat')
-
-            model.load_weights(path='/dept/cas/docair/imported_models/ResNet-101-model.caffemodel.h5',
+                data='\\\\sashq\\root\\dept\\cas\\leliuz\\DLPy\\imported_models\\newlabel.sas7bdat')
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/ResNet-101-model.caffemodel.h5',
                                labeltable=dict(name=label_table, varS=['levid', 'levname']))
-            model.retrieve(_name_='table.droptable',
-                           table=label_table)
+            model._retrieve_(_name_='table.droptable',
+                             table=label_table)
             return model
         else:
             model = Model.from_table(conn.CASTable(model_name))
-            model.load_weights(path='/dept/cas/docair/imported_models/ResNet-101-model.caffemodel.h5')
-            model.retrieve(_name_='addlayer',
-                           model=model_name, name='output',
-                           layer=dict(type='output', n=n_classes, act='softmax'),
-                           srcLayers=['pool5'])
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/ResNet-101-model.caffemodel.h5')
+            model._retrieve_(_name_='addlayer',
+                             model=model_name, name='output',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['pool5'])
             model = Model.from_table(conn.CASTable(model_name))
             return model
 
 
 def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
                   n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                  random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68)):
+                  random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
     Generate a deep learning model with ResNet152 architecture
 
@@ -1943,14 +1969,14 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -2006,7 +2032,7 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
 
 def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
                     n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                    random_flip='NONE', random_crop='NONE', offsets=(103.939, 116.779, 123.68),
+                    random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
                     pre_train_weight=False, include_top=False):
     '''
     Generate deep learning model with ResNet152 architecture with convolution shortcut
@@ -2043,15 +2069,15 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
-        Default: 'NONE'
+        Valid Values: 'H', 'HV', 'none', 'V'
+        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
-        Default: 'NONE'
+        Valid Values: 'none' or 'UNIQUE'
+        Default: 'none'
     offsets : double, or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -2115,8 +2141,9 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
 
         return model
     else:
-        model_resnet152.ResNet152_Model(s=conn, model_name=model_name, inputCropType=random_crop,
-                                        inputChannelOffset=offsets, include_top=include_top)
+        model_resnet152.ResNet152_Model(
+            s=conn, model_name=model_name, n_channels=n_channels, width=width, height=height,
+            random_crop=random_crop, offsets=offsets, include_top=include_top)
         if include_top:
             if n_classes != 1000:
                 print('WARNING : IF include_top = True, n_classes WILL BE SET TO 1000.')
@@ -2124,27 +2151,27 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             label_table = random_name('label')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
-                data='\\\\sashq\\root\\dept\\cas\\docair\\imported_models\\newlabel.sas7bdat')
+                data='\\\\sashq\\root\\dept\\cas\\leliuz\\DLPy\\imported_models\\newlabel.sas7bdat')
 
-            model.load_weights(path='/dept/cas/docair/imported_models/ResNet-152-model.caffemodel.h5',
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/ResNet-152-model.caffemodel.h5',
                                labeltable=dict(name=label_table, varS=['levid', 'levname']))
-            model.retrieve(_name_='table.droptable',
-                           table=label_table)
+            model._retrieve_(_name_='table.droptable',
+                             table=label_table)
             return model
         else:
             model = Model.from_table(conn.CASTable(model_name))
-            model.load_weights(path='/dept/cas/docair/imported_models/ResNet-152-model.caffemodel.h5')
-            model.retrieve(_name_='addlayer',
-                           model=model_name, name='output',
-                           layer=dict(type='output', n=n_classes, act='softmax'),
-                           srcLayers=['pool5'])
+            model.load_weights(path='/dept/cas/leliuz/DLPy/imported_models/ResNet-152-model.caffemodel.h5')
+            model._retrieve_(_name_='addlayer',
+                             model=model_name, name='output',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['pool5'])
             model = Model.from_table(conn.CASTable(model_name))
             return model
 
 
 def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
                 k=4, n_classes=None, n_channels=3, width=32, height=32, scale=1,
-                random_flip='H', random_crop='NONE', offsets=(114, 122, 125)):
+                random_flip='H', random_crop='none', offsets=(114, 122, 125)):
     '''
     Generate a deep learning model with ResNet152 architecture
 
@@ -2186,14 +2213,14 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'NONE', 'V'
+        Valid Values: 'H', 'HV', 'none', 'V'
         Default: 'HV'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'NONE' or 'UNIQUE'
+        Valid Values: 'none' or 'UNIQUE'
         Default: 'UNIQUE'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -2266,10 +2293,10 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
         Specifies the number of classes. If None is assigned, the model will automatically detect the number of classes based on the training set.
         Default: None
     conv_channel: int, optional.
-        Specifies the number of filters of first convolutional layer.
+        Specifies the number of filters of first convolution layer.
         Default : 16
     growth_rate: int, optional.
-        Specifies growth rate of convolutional layer.
+        Specifies growth rate of convolution layer.
         Default : 12
     n_blocks : int, optional.
         Specifies the number of DenseNetBlocks.
@@ -2289,10 +2316,10 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
     scale : double, optional.
         Specifies a scaling factor to apply to each image..
         Default : 1.
-    random_flip : string, "H" | "HV" | "NONE" | "V"
+    random_flip : string, "H" | "HV" | "none" | "V"
         Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data is subject to flipping.
         Default	: "HV"
-    random_crop : string, "NONE" or "UNIQUE"
+    random_crop : string, "none" or "UNIQUE"
         Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that are specified in the width and height parameters. Only the images with one or both dimensions that are larger than those sizes are cropped.
         Default	: "UNIQUE"
     offsets=(double-1 <, double-2, ...>), optional
