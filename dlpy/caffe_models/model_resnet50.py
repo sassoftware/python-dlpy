@@ -17,7 +17,8 @@
 #
 
 
-def ResNet50_Model(s, model_name='RESNET50', inputCropType=None, inputChannelOffset=None, include_top=True):
+def ResNet50_Model(s, model_name='RESNET50', n_channels=3, width=224, height=224,
+                   random_crop=None, offsets=None, include_top=True):
     '''
     ResNet50 model definition
 
@@ -25,21 +26,21 @@ def ResNet50_Model(s, model_name='RESNET50', inputCropType=None, inputChannelOff
     # TODO: Document parameters
     # TODO: Use underscore-delimited parameter names
     # quick error-checking and default setting
-    if (inputCropType == None):
-        inputCropType = "NONE"
-    elif inputCropType.upper() not in ["NONE", "UNIQUE"]:
-        raise ValueError('inputCropType can only be NONE or UNIQUE')
+    if (random_crop == None):
+        random_crop = "none"
+    elif random_crop.upper() not in ["none", "UNIQUE"]:
+        raise ValueError('random_crop can only be none or UNIQUE')
 
-    if (inputChannelOffset == None):
-        inputChannelOffset = [103.939, 116.779, 123.68]
+    if (offsets == None):
+        offsets = [103.939, 116.779, 123.68]
 
     # instantiate model
     s.buildModel(model=dict(name=model_name, replace=True), type='CNN')
 
     # input layer
     s.addLayer(model=model_name, name='data',
-               layer=dict(type='input', nchannels=3, width=224, height=224,
-                          randomcrop=inputCropType, offsets=inputChannelOffset))
+               layer=dict(type='input', n_channels=n_channels, width=width, height=height,
+                          randomcrop=random_crop, offsets=offsets))
 
     # -------------------- Layer 1 ----------------------
 
@@ -745,8 +746,12 @@ def ResNet50_Model(s, model_name='RESNET50', inputCropType=None, inputChannelOff
     # ------------------- final layers ----------------------
 
     # pool5 layer: 2048 channels, 7x7 pooling, output = 1 x 1
+    kernel_width = width // 2 // 2 // 2 // 2 // 2
+    kernel_height = height // 2 // 2 // 2 // 2 // 2
+    stride = kernel_width
+
     s.addLayer(model=model_name, name='pool5',
-               layer=dict(type='pooling', width=7, height=7, stride=7, pool='mean'),
+               layer=dict(type='pooling', width=kernel_width, height=kernel_height, stride=stride, pool='mean'),
                srcLayers=['res5c'])
     if include_top:
         # fc1000 output layer: 1000 neurons */
