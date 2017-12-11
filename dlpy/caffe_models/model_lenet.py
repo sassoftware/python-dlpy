@@ -30,7 +30,7 @@ def LeNet_Model(s, model_name='LeNet', include_top=True):
 
     # input layer
     s.addLayer(model=model_name, name='mnist',
-               layer=dict(type='input', nchannels=1, width=28, height=28,
+               layer=dict(type='input', n_channels=1, width=28, height=28,
                           scale=0.00392156862745098039))
 
     # conv1: 5*5*20
@@ -63,11 +63,11 @@ def LeNet_Model(s, model_name='LeNet', include_top=True):
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv2_bn'])
 
-    # fully connected layer
-    s.addLayer(model=model_name, name='ip1',
-               layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
-               srcLayers=['pool2'])
     if include_top:
+        # fully connected layer
+        s.addLayer(model=model_name, name='ip1',
+                   layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
+                   srcLayers=['pool2'])
         # output layer
         s.addLayer(model=model_name, name='ip2',
                    layer=dict(type='output', n=10, init='xavier', act='softmax'),
