@@ -62,14 +62,14 @@ def LeNet5(conn, model_name='LENET5',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data
         is used. Images are cropped to the values that are specified in the
         width and height parameters. Only the images with one or both
         dimensions that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -135,14 +135,14 @@ def LeNet5_bn(conn, model_name='LENET_BN',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -240,14 +240,14 @@ def VGG11(conn, model_name='VGG11',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -328,14 +328,14 @@ def VGG11_bn(conn, model_name='VGG11',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data
         is used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data
         is used. Images are cropped to the values that are specified in the
         width and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -422,15 +422,15 @@ def VGG13(conn, model_name='VGG13',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default	: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default	: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -521,14 +521,14 @@ def VGG13_bn(conn, model_name='VGG13',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of--doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -611,15 +611,15 @@ def VGG16(conn, model_name='VGG16',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -741,14 +741,14 @@ def VGG16_bn(conn, model_name='VGG16',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -843,15 +843,15 @@ def VGG19(conn, model_name='VGG19',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -980,15 +980,15 @@ def VGG19_bn(conn, model_name='VGG19',
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default	: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default	: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the
@@ -1096,14 +1096,14 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default	: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -1194,15 +1194,15 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -1293,15 +1293,15 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -1391,15 +1391,15 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the
@@ -1497,15 +1497,15 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or list-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -1596,14 +1596,14 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -1733,15 +1733,15 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data
         is used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default	: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default	: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the
@@ -1832,14 +1832,14 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -1969,15 +1969,15 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -2069,14 +2069,14 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
+        Valid Values: 'h', 'hv', 'none', 'v'
         Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
+        Valid Values: 'none' or 'unique'
         Default: 'none'
     offsets : double, or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -2171,7 +2171,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
 
 def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
                 k=4, n_classes=None, n_channels=3, width=32, height=32, scale=1,
-                random_flip='H', random_crop='none', offsets=(114, 122, 125)):
+                random_flip='h', random_crop='none', offsets=(114, 122, 125)):
     '''
     Generate a deep learning model with ResNet152 architecture
 
@@ -2213,15 +2213,15 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
-        Valid Values: 'H', 'HV', 'none', 'V'
-        Default: 'HV'
+        Valid Values: 'h', 'hv', 'none', 'v'
+        Default: 'hv'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -2278,7 +2278,7 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
 
 def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growth_rate=12,
                    n_blocks=4, n_cells=4, n_channels=3, width=32, height=32, scale=1,
-                   random_flip='H', random_crop='UNIQUE', offsets=(85, 111, 139)):
+                   random_flip='h', random_crop='unique', offsets=(85, 111, 139)):
     '''
     Function to generate a deep learning model with DenseNet architecture.
 
