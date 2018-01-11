@@ -23,7 +23,7 @@ from .model import Model
 
 class Sequential(Model):
     '''
-    A sub module of model. Support sequentially building of deep learning models.
+    A sub module of Model. Support sequentially building of deep learning models.
     '''
 
     def __init__(self, conn, layers=None, model_name=None):
@@ -106,10 +106,9 @@ class Sequential(Model):
         '''
         if self.layers[0].config['type'] != 'input':
             raise ValueError('The first layer of the model must be an input layer')
-        if self.layers[-1].config['type'] != 'output':
-            raise ValueError('The last layer of the model must be an output layer')
-        conn = self.conn
-        conn.retrieve('buildmodel', model=dict(name=self.model_name, replace=True), type='CNN')
+        # if self.layers[-1].config['type'] != 'output':
+        #     raise ValueError('The last layer of the model must be an output layer')
+        self._retrieve_('buildmodel', model=dict(name=self.model_name, replace=True), type='CNN')
 
         conv_num = 1
         fc_num = 1
@@ -126,7 +125,7 @@ class Sequential(Model):
                     compiled_layers.append(item)
                 output_layer = layer.layers[-1]
                 for option in options:
-                    conn.retrieve('addlayer', model=self.model_name, **option)
+                    self._retrieve_('addlayer', model=self.model_name, **option)
             else:
                 # Name each layer of the model.
                 if layer.config['type'] == 'input':
@@ -161,7 +160,7 @@ class Sequential(Model):
                 compiled_layers.append(layer)
                 output_layer = layer
 
-                conn.retrieve('addlayer', model=self.model_name, **option)
+                self._retrieve_('addlayer', model=self.model_name, **option)
 
         print('NOTE: Model compiled successfully.')
         self.layers = compiled_layers
