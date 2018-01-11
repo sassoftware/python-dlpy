@@ -23,8 +23,20 @@ def LeNet_Model(s, model_name='LeNet', include_top=True):
     '''
     LeNet model definition (batch normalization version)
 
+    Parameters
+    ----------
+    s : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    include_top : boolean, optional
+        Specifies whether to include the top layers of the model.
+
+    Returns
+    -------
+    a CAS table defining the model is created.
     '''
-    # TODO: Document parameters
+
     # instantiate model
     s.buildModel(model=dict(name=model_name, replace=True), type='CNN')
 
