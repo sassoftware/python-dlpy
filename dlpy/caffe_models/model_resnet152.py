@@ -43,8 +43,8 @@ def ResNet152_Model(s, model_name='RESNET152', n_channels=3, width=224, height=2
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'UNIQUE'
-        Default	: 'UNIQUE'
+        Valid Values: 'none' or 'unique'
+        Default	: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -58,9 +58,9 @@ def ResNet152_Model(s, model_name='RESNET152', n_channels=3, width=224, height=2
 
     # quick error-checking and default setting
     if (random_crop == None):
-        random_crop = "NONE"
-    elif random_crop.upper() not in ["NONE", "UNIQUE"]:
-        raise ValueError('random_crop can only be "NONE" or "UNIQUE"')
+        random_crop = "none"
+    elif random_crop.lower() not in ["none", "unique"]:
+        raise ValueError('random_crop can only be "none" or "unique"')
 
     if (offsets == None):
         offsets = [103.939, 116.779, 123.68]
