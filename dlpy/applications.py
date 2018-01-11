@@ -2316,12 +2316,12 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
     scale : double, optional.
         Specifies a scaling factor to apply to each image..
         Default : 1.
-    random_flip : string, "H" | "HV" | "none" | "V"
+    random_flip : string, "h" | "hv" | "none" | "v"
         Specifies how to flip the data in the input layer when image data is used. Approximately half of the input data is subject to flipping.
-        Default	: "HV"
-    random_crop : string, "none" or "UNIQUE"
+        Default	: "hv"
+    random_crop : string, "none" or "unique"
         Specifies how to crop the data in the input layer when image data is used. Images are cropped to the values that are specified in the width and height parameters. Only the images with one or both dimensions that are larger than those sizes are cropped.
-        Default	: "UNIQUE"
+        Default	: "unique"
     offsets=(double-1 <, double-2, ...>), optional
         Specifies an offset for each channel in the input data. The final input data is set after applying scaling and subtracting the specified offsets.
         Default : (85, 111, 139)
