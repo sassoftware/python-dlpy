@@ -17,18 +17,50 @@
 #
 
 
-def ResNet152_Model(s, model_name='RESNET152',  n_channels=3, width=224, height=224,
+def ResNet152_Model(s, model_name='RESNET152', n_channels=3, width=224, height=224,
                     random_crop=None, offsets=None, include_top=True):
     '''
     ResNet152 model definition
 
+
+    Parameters
+    ----------
+    s : CAS
+        Specifies the CAS connection object
+    model_name : string, optional
+        Specifies the name of CAS table to store the model
+    n_channels : int, optional
+        Specifies the number of the channels of the input layer
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer
+        Default: 224
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none' or 'UNIQUE'
+        Default	: 'UNIQUE'
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final
+        input data is set after applying scaling and subtracting the
+        specified offsets.
+        Default: (103.939, 116.779, 123.68)
+
+    Returns
+    -------
+    a CAS table defining the model is created.
     '''
-    # TODO: Document parameters
+
     # quick error-checking and default setting
     if (random_crop == None):
-        random_crop = "none"
-    elif random_crop.upper() not in ["none", "UNIQUE"]:
-        raise ValueError('random_crop can only be none or UNIQUE')
+        random_crop = "NONE"
+    elif random_crop.upper() not in ["NONE", "UNIQUE"]:
+        raise ValueError('random_crop can only be "NONE" or "UNIQUE"')
 
     if (offsets == None):
         offsets = [103.939, 116.779, 123.68]
@@ -38,7 +70,7 @@ def ResNet152_Model(s, model_name='RESNET152',  n_channels=3, width=224, height=
 
     # input layer
     s.addLayer(model=model_name, name='data',
-               layer=dict(type='input', n_channels=n_channels, width=width, height=height,
+               layer=dict(type='input', nchannels=n_channels, width=width, height=height,
                           randomcrop=random_crop, offsets=offsets))
 
     # -------------------- Layer 1 ----------------------
@@ -2105,8 +2137,8 @@ def ResNet152_Model(s, model_name='RESNET152',  n_channels=3, width=224, height=
     # ------------------- final layers ----------------------
 
     # pool5 layer: 2048 channels, 7x7 pooling, output = 1 x 1
-    kernel_width = width//2//2//2//2//2
-    kernel_height = height//2//2//2//2//2
+    kernel_width = width // 2 // 2 // 2 // 2 // 2
+    kernel_height = height // 2 // 2 // 2 // 2 // 2
     stride = kernel_width
 
     s.addLayer(model=model_name, name='pool5',
