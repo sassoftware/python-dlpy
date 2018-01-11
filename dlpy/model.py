@@ -23,11 +23,10 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 from .layers import *
-from .utils import image_blocksize
-from .utils import input_table_check
-from .utils import random_name
+from .utils import image_blocksize, unify_keys, input_table_check, random_name
 
 
 class Model:
@@ -53,7 +52,7 @@ class Model:
 
     def __init__(self, conn, model_name=None, model_weights=None):
         if not conn.queryactionset('deepLearn')['deepLearn']:
-            conn.loadactionset(actionSet='deepLearn', _messagelevel='error')
+            conn.loadactionset(actionSet='deeplearn', _messagelevel='error')
 
             # self.table = conn.CASTable(model_name)
         self.conn = conn
@@ -175,7 +174,8 @@ class Model:
         # TODO: This may need to detect the server host type, or possibly
         #       use a regular expression to support UNIX and Windows-style
         #       paths.
-        dir_name, file_name = path.rsplit('/', 1)
+        # DONE: use path.split instead.
+        dir_name, file_name = os.path.split(path)
 
         cas_lib_name = random_name('Caslib', 6)
         self._retrieve_(_name_='addcaslib',
@@ -299,7 +299,8 @@ class Model:
 
         '''
         # TODO: Must support UNIX and Windows-style paths
-        dir_name, file_name = path.rsplit('/', 1)
+        # DONE
+        dir_name, file_name = os.path.split(path)
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         if file_name.lower().endswith('.h5'):
@@ -331,7 +332,7 @@ class Model:
             contains the weight table.
 
         '''
-        dir_name, file_name = path.rsplit('/', 1)
+        dir_name, file_name = os.path.split(path)
 
         cas_lib_name = random_name('Caslib', 6)
         self._retrieve_(_name_='addcaslib',
@@ -399,13 +400,12 @@ class Model:
             contains the weight attribute table.
 
         '''
-        # TODO: This needs to support UNIX and Windows-style paths
-        dir_name, file_name = path.rsplit('/', 1)
+        dir_name, file_name = os.path.split(path)
 
         cas_lib_name = random_name('Caslib', 6)
         self._retrieve_(_name_='addcaslib',
                         name=cas_lib_name, path=dir_name,
-                        activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+                        activeOnAdd=False, dataSource=dict(srcType='DNFS'))
 
         self._retrieve_(_name_='table.loadtable',
                         caslib=cas_lib_name,
@@ -506,8 +506,13 @@ class Model:
                              target=target,
                              modelWeights=dict(replace=True,
                                                **self.model_weights.to_table_params()),
-                             optimizer=optimizer,
-                             **kwargs)
+                             optimizer=optimizer)
+        train_options = unify_keys(train_options)
+        try:
+            kwargs = unify_keys(kwargs)
+            train_options.update(kwargs)
+        except:
+            pass
 
         if self.model_weights.to_table_params()['name'].upper() in \
                 list(self._retrieve_(_name_='tableinfo').TableInfo.Name):
@@ -537,8 +542,29 @@ class Model:
         return r
 
     def tune(self, data, inputs='_image_', target='_label_', **kwargs):
-        # TODO: Needs docstring
-        # TODO: Needs more information about the support for dltune.
+        '''
+        Tunes hyper parameters for the deep learning model.
+
+        Parameters
+        ----------
+        data : CASTable or string or dict
+            Specifies the CAS table containing the training data for the model
+        inputs : string, optional
+            Specifies the variable name of in the input_tbl, that is the
+            input of the deep learning model.
+            Default : '_image_'
+        target : string, optional
+            Specifies the variable name of in the input_tbl, that is the
+            response of the deep learning model.
+            Default : '_label_'
+        **kwargs : keyword arguments, optional
+            Specifies the optional arguments for the dltune action.
+
+        Returns
+        ----------
+        :class:`CASResults`
+
+        '''
         r = self._retrieve_(_name_='dltune',
                             message_level='note', model=self.model_name,
                             table=data,
@@ -598,13 +624,18 @@ class Model:
         copy_vars = input_tbl.columns.tolist()
 
         valid_res_tbl = random_name('Valid_Res')
-        dlscore_options = dict(model=self.model_name, initWeights=self.model_weights,
+        dlscore_options = dict(model=self.model_name, initweights=self.model_weights,
                                table=input_tbl,
-                               copyVars=copy_vars,
-                               randomFlip='NONE',
-                               randomCrop='NONE',
+                               copyvars=copy_vars,
+                               randomflip='none',
+                               randomcrop='none',
                                casout=dict(replace=True, name=valid_res_tbl),
-                               encodeName=True)
+                               encodename=True)
+        try:
+            kwargs = unify_keys(kwargs)
+        except:
+            pass
+
         dlscore_options.update(kwargs)
 
         res = self._retrieve_(_name_='dlscore', **dlscore_options)
@@ -709,8 +740,8 @@ class Model:
         score_options = dict(model=self.model_name, initWeights=self.model_weights,
                              table=dict(where='{}="{}"'.format(uid_name, uid_value), **input_tbl),
                              layerOut=dict(name=feature_maps_tbl),
-                             randomFlip='NONE',
-                             randomCrop='NONE',
+                             randomFlip='none',
+                             randomCrop='none',
                              layerImageType='jpg',
                              encodeName=True,
                              **kwargs)
@@ -756,8 +787,8 @@ class Model:
                              layerOut=dict(name=feature_tbl),
                              layerList=dense_layer,
                              layerImageType='wide',
-                             randomFlip='NONE',
-                             randomCrop='NONE',
+                             randomFlip='none',
+                             randomCrop='none',
                              encodeName=True,
                              **kwargs)
         self._retrieve_(_name_='dlscore', **score_options)
@@ -766,7 +797,7 @@ class Model:
         return x, y
 
     def heat_map_analysis(self, data, mask_width=None, mask_height=None,
-                          step_size=None, **kwargs):
+                          step_size=None, display=True, **kwargs):
         '''
         Conduct a heat map analysis on the image
 
@@ -781,6 +812,8 @@ class Model:
             Specifies the height of the mask which cover the region of the image.
         step_size : int
             Specifies the stepsize of the movement of the the mask.
+        display : boolean
+            Specifies whether to display the results. By default, only the first five images will be displayed.
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
 
@@ -799,14 +832,18 @@ class Model:
 
         if (data.image_summary.maxWidth != output_width) or \
                 (data.image_summary.maxHeight != output_height):
-            raise ValueError('Input images must have save sizes.')
+            raise ValueError('Input images must have same size.')
 
+        if (mask_width is None) and (mask_height is None):
+            mask_width = max(int(output_width / 4), 1)
+            mask_height = max(int(output_height / 4), 1)
         if mask_width is None:
-            mask_width = int(output_width / 10)
+            mask_width = mask_height
         if mask_height is None:
-            mask_height = int(output_height / 10)
+            mask_height = mask_width
+
         if step_size is None:
-            step_size = int(mask_width / 2)
+            step_size = max(int(mask_width / 4), 1)
 
         copy_vars = data.columns.tolist()
         masked_image_table = random_name('MASKED_IMG')
@@ -829,23 +866,29 @@ class Model:
         dlscore_options = dict(model=self.model_name, initWeights=self.model_weights,
                                table=masked_image_table,
                                copyVars=copy_vars,
-                               randomFlip='NONE',
-                               randomCrop='NONE',
+                               randomFlip='none',
+                               randomCrop='none',
                                casout=dict(replace=True, name=valid_res_tbl),
                                encodeName=True)
         dlscore_options.update(kwargs)
         self._retrieve_(_name_='dlscore', **dlscore_options)
 
-        col_list = self.conn.CASTable(valid_res_tbl).columns.tolist()
-        temp_table = self.conn.CASTable(valid_res_tbl)[col_list].to_frame()
-        image_name_list = temp_table['_filename_0'].unique().tolist()
+        valid_res_tbl = self.conn.CASTable(valid_res_tbl)
+        key_map = dict()
+        columninfo = valid_res_tbl.columninfo().ColumnInfo
+        for label in valid_res_tbl._label_.unique():
+            key_map[label] = columninfo.Column[columninfo.Label.tolist().index(
+                'Predicted: _label_={}'.format(label))]
 
-        prob_tensor = np.empty((output_width, output_height,
-                                int(int((output_width - mask_width) / step_size + 1)
-                                    * int((output_width - mask_height) / step_size + 1))))
+        temp_table = valid_res_tbl.to_frame()
+        image_name_list = temp_table['_filename_0'].unique().tolist()
+        n_masks = temp_table.groupby(by='_filename_0').size()[0]
+
+        prob_tensor = np.empty((output_width, output_height, n_masks))
         prob_tensor[:] = np.nan
         model_explain_table = dict()
         count_for_subject = dict()
+
         for name in image_name_list:
             model_explain_table.update({'{}'.format(name): prob_tensor.copy()})
             count_for_subject.update({'{}'.format(name): 0})
@@ -860,10 +903,11 @@ class Model:
             true_class = row['_label_'].replace(' ', '_')
             true_pred_prob_col = 'P__label_' + true_class
             prob = row[true_pred_prob_col]
-            model_explain_table[name][y:y + y_step, x:x + x_step, count_for_subject[name]] = prob
+            model_explain_table[name][y:min(y + y_step, output_height),
+            x:min(x + x_step, output_width), count_for_subject[name]] = prob
             count_for_subject[name] += 1
 
-        original_image_table = data.fetchimages(fetchVars=data.columns.tolist()).Images
+        original_image_table = data.fetchimages(fetchVars=data.columns.tolist(), TO=data.numrows().numrows).Images
 
         output_table = []
         for name in model_explain_table.keys():
@@ -881,6 +925,45 @@ class Model:
         output_table = pd.DataFrame(output_table)
         self.model_explain_table = output_table
 
+        if display:
+            n_images = output_table.shape[0]
+            if n_images > 5:
+                print('NOTE : Only the results from the first five images are displayed.')
+                n_images = 5
+            fig, axs = plt.subplots(ncols=3, nrows=n_images, figsize=(12, 4 * n_images))
+            if n_images == 1:
+                axs = [axs]
+            for image_id in range(n_images):
+                label = output_table['_label_'][image_id]
+                img = output_table['_image_'][image_id]
+                heat_map = output_table['heat_map'][image_id]
+                img_size = heat_map.shape
+                extent = [0, img_size[0], 0, img_size[1]]
+
+                vmin = heat_map.min()
+                vmax = heat_map.max()
+
+                axs[image_id][0].imshow(img, extent=extent)
+                axs[image_id][0].axis('off')
+                axs[image_id][0].set_title('Original Image: {}'.format(label))
+
+                color_bar = axs[image_id][2].imshow(heat_map, vmax=vmax, vmin=vmin,
+                                                    interpolation='none', extent=extent, cmap='jet_r')
+                axs[image_id][2].axis('off')
+                axs[image_id][2].set_title('Heat Map')
+
+                axs[image_id][1].imshow(img, extent=extent)
+                axs[image_id][1].imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none',
+                                        alpha=0.5, extent=extent, cmap='jet_r')
+                axs[image_id][1].axis('off')
+                axs[image_id][1].set_title('Overlayed Image')
+
+                box = axs[image_id][2].get_position()
+                ax3 = fig.add_axes([box.x1 * 1.02, box.y0 + box.height * 0.06,
+                                    box.width * 0.05, box.height * 0.88])
+                plt.colorbar(color_bar, cax=ax3)
+
+            plt.show()
         return output_table
 
     def plot_heat_map(self, image_id=0, alpha=.2):
@@ -941,7 +1024,8 @@ class Model:
         Parameters
         ----------
         path: string
-            Specifies the client-side path to store the model astore
+            Specifies the client-side path to store the model astore.
+            The path format should be consistent with the system of the client.
 
         '''
         if not self.conn.queryactionset('astore')['astore']:
@@ -970,12 +1054,12 @@ class Model:
 
     def save_to_table(self, path):
         '''
-        Function to save the model as SAS dataset
+        Function to save the model as SAS dataset.
 
         Parameters
         ----------
         path : string
-            Specifies the server-side path to store the model tables
+            Specifies the server-side path to store the model tables.
 
         '''
 
@@ -1060,6 +1144,7 @@ class Model:
         ''' Display a table that summarizes the model architecture '''
         # TODO: I think this should just create a DataFrame and return it
         #       instead of displaying it.
+        # ANS: This is consistent with Keras.
         bar_line = '*' + '=' * 18 + '*' + '=' * 15 + '*' + '=' * 8 + '*' + \
                    '=' * 12 + '*' + '=' * 17 + '*' + '=' * 22 + '*\n'
         h_line = '*' + '-' * 18 + '*' + '-' * 15 + '*' + '-' * 8 + '*' + \
@@ -1086,15 +1171,17 @@ class Model:
         '''
         Display a graph that summarizes the model architecture.
 
+        Returns
+        -------
+        :class:`graphviz.dot.Digraph`
+
         '''
         # TODO: Don't change PATH variables.  You won't know where the executables
         #       are or even if it's on Windows.
-        # TODO: Just return the graph and let the client handle it.  Don't
-        #       use display.
-        from IPython.display import display
+
         import os
         os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
-        display(model_to_graph(self))
+        return model_to_graph(self)
 
 
 class FeatureMaps:
@@ -1112,13 +1199,13 @@ class FeatureMaps:
         Parameters
         ----------
         layer_id : int
-            Specifies the id of the layer to be displayed
+            Specifies the id of the layer to be displayed.
+        filter_id : list of int
+            Specifies the filters to be displayed.
+            Default = None
 
         '''
-        # TODO: Document filter_id parameter
-        # TODO: Why does this use two different ways of displaying output?
-        from PIL import Image
-        from IPython.display import display
+
 
         if filter_id is None:
             n_images = self.structure[layer_id]
@@ -1145,7 +1232,7 @@ class FeatureMaps:
                 image.append(np.asarray(temp))
             image = np.dstack((image[2], image[1], image[0]))
             image = Image.fromarray(image, 'RGB')
-            display(image)
+            image.show()
         else:
             for i in range(n_images):
                 filter_num = filter_id[i]
@@ -1176,7 +1263,7 @@ def get_num_configs(keys, layer_type_prefix, layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1206,7 +1293,7 @@ def get_str_configs(keys, layer_type_prefix, layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition.
 
     '''
@@ -1232,7 +1319,7 @@ def extract_input_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1263,14 +1350,14 @@ def extract_input_layer(layer_table):
     except IndexError:
         pass
     if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] == 'inputopts.crop'].tolist()[0] == 'No cropping':
-        input_layer_config['random_crop'] = 'NONE'
+        input_layer_config['random_crop'] = 'none'
     else:
-        input_layer_config['random_crop'] = 'UNIQUE'
+        input_layer_config['random_crop'] = 'unique'
 
     if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] == 'inputopts.flip'].tolist()[0] == 'No flipping':
-        input_layer_config['random_flip'] = 'NONE'
+        input_layer_config['random_flip'] = 'none'
     # else:
-    #     input_layer_config['random_flip']='HV'
+    #     input_layer_config['random_flip']='hv'
 
     layer = InputLayer(**input_layer_config)
     return layer
@@ -1288,7 +1375,7 @@ def extract_conv_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1322,7 +1409,7 @@ def extract_pooling_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1353,7 +1440,7 @@ def extract_batchnorm_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1377,7 +1464,7 @@ def extract_residual_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1403,7 +1490,7 @@ def extract_fc_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1436,7 +1523,7 @@ def extract_output_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1468,7 +1555,7 @@ def layer_to_node(layer):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to graph configuration.
 
     '''
@@ -1516,7 +1603,7 @@ def layer_to_edge(layer):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to graph configuration.
     '''
     gv_params = []
@@ -1537,12 +1624,12 @@ def model_to_graph(model):
 
     Returns
     -------
-        A model graph object.
+    :class:`graphviz.dot.Digraph`
     '''
     try:
         import graphviz as gv
     except:
-        raise ImportError('Please follow the following to install graphviz properly:\n'
+        raise ImportError('Please follow the following steps to install graphviz properly:\n'
                           '1. Download graphviz from http://www.graphviz.org/\n'
                           '2. Install graphviz in python, e.g. "pip install --upgrade graphviz"\n'
                           '3. Add the installation path to sys.path')
