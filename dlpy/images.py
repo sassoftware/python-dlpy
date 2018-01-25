@@ -20,6 +20,7 @@
 ImageTable is a sub class of CASTable, which support special functionality for imaging data.
 '''
 import matplotlib.pyplot as plt
+import numpy as np
 from swat.cas.table import CASTable
 
 from .utils import random_name, image_blocksize
@@ -310,7 +311,10 @@ class ImageTable(CASTable):
             label = temp_tbl['Images']['Label'][i]
             ax = fig.add_subplot(nrow, ncol, i + 1)
             ax.set_title('{}'.format(label))
-            plt.imshow(image)
+            if len(image.size) == 2:
+                plt.imshow(np.array(image), cmap='Grays_r')
+            else:
+                plt.imshow(image)
             plt.xticks([]), plt.yticks([])
 
     def crop(self, x=0, y=0, width=None, height=None, inplace=True):
