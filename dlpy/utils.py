@@ -21,12 +21,13 @@ Some supportive functions for the DLPy package.
 '''
 
 import os
-import re
 import random
+import re
 import string
-import six
+
 import matplotlib.pyplot as plt
 import numpy as np
+import six
 import swat as sw
 from swat.cas.table import CASTable
 
@@ -237,7 +238,7 @@ def add_caslib(conn, path):
         return cas_lib_name.tolist()[0]
     else:
         cas_lib_name = random_name('Caslib', 6)
-        conn.retrieve(_name_='addcaslib', message_level='error',
+        conn.retrieve('addcaslib', message_level='error',
                       name=cas_lib_name, path=path, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
         return cas_lib_name
 
@@ -267,3 +268,25 @@ def upload_astore(conn, path, table_name=None):
     if table_name is None:
         table_name = random_name('ASTORE')
     conn.astore.upload(rstore=table_name, store=store_)
+
+
+def unify_keys(dic):
+    '''
+    Change all the key names in a dictionary to lower case, remove "_" in the key names.
+
+    Parameters
+    ----------
+    dic : a dictionary
+
+    Returns
+    -------
+    dictionary with updated key names.
+
+    '''
+
+    old_names = list(dic.keys())
+    new_names = [item.lower().replace('_','') for item in old_names]
+    for new_name, old_name in zip(new_names, old_names):
+        dic[new_name] = dic.pop(old_name)
+
+    return dic
