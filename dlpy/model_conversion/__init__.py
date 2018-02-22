@@ -15,6 +15,5 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-
-from .sas_caffe_parse import caffe_to_sas
 from .sas_keras_parse import keras_to_sas
+# from .sas_caffe_parse import caffe_to_sas

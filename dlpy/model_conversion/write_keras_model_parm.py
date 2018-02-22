@@ -16,6 +16,8 @@
 #  limitations under the License.
 #
 
+'''Supporting functions for keras model conversion.'''
+
 import os
 import sys
 
@@ -29,33 +31,28 @@ from keras.engine.topology import preprocess_weights_for_loading
 # NOTE: modified version of Keras function load_weights_from_hdf5_group()
 def write_keras_hdf5(model, hdf5_in, hdf5_out):
     '''
-    Function to generate an HDF5 file with trained model parameters
-    given a Keras definition
+    Generate an HDF5 file with trained model parameters given a Keras definition
 
-    Parameters:
-
+    Parameters
     ----------
-    model : [Keras model object]
+    model : Keras model
        Keras deep learning model
-    hdf5_in : [string]
+    hdf5_in : string
        Fully qualified file name of Keras HDF5 file
-    hdf5_out : [string]
+    hdf5_out : string
        Fully qualified file name of SAS-compatible HDF5 file
-
-    Returns
-    -------
 
     '''
     # open input/output files
     try:
-        f_in = h5py.File(hdf5_in, "r")
+        f_in = h5py.File(hdf5_in, 'r')
     except IOError:
-        sys.exit("File " + hdf5_in + " does not exist")
+        sys.exit('File ' + hdf5_in + ' does not exist')
 
     try:
-        f_out = h5py.File(hdf5_out, "w")
+        f_out = h5py.File(hdf5_out, 'w')
     except IOError:
-        sys.exit("File " + hdf5_out + " could not be created")
+        sys.exit('File ' + hdf5_out + ' could not be created')
 
     if 'keras_version' in f_in.attrs:
         original_keras_version = f_in.attrs['keras_version'].decode('utf8')
@@ -96,7 +93,7 @@ def write_keras_hdf5(model, hdf5_in, hdf5_out):
         flatten_layer_index = -1
         index = 0
         for layer in model.layers:
-            if (layer.__class__.__name__.lower() == "flatten"):
+            if (layer.__class__.__name__.lower() == 'flatten'):
                 flatten_layer_index = index
                 break
             index = index + 1
@@ -104,7 +101,7 @@ def write_keras_hdf5(model, hdf5_in, hdf5_out):
         if (flatten_layer_index != -1):
             layer = model.layers[flatten_layer_index]
             permute_layer_name = model.layers[flatten_layer_index + 1].name
-            if (image_data_format == "channels_first"):
+            if (image_data_format == 'channels_first'):
                 C, H, W = (layer.input_shape)[1:]
             else:
                 H, W, C = (layer.input_shape)[1:]
@@ -112,14 +109,14 @@ def write_keras_hdf5(model, hdf5_in, hdf5_out):
             perm_index = [0] * N
             if (image_data_format == 'channels_last'):
                 ii = 0
-                for cc in xrange(C):
-                    for hh in xrange(H):
-                        for ww in xrange(W):
+                for cc in range(C):
+                    for hh in range(H):
+                        for ww in range(W):
                             perm_index[ii] = hh * W * C + ww * C + cc
                             ii = ii + 1
             else:
-                for nn in xrange(N):
-                    perm_index[nn] = nn;
+                for nn in range(N):
+                    perm_index[nn] = nn
         else:
             perm_index = []
 
@@ -150,29 +147,34 @@ def write_keras_hdf5(model, hdf5_in, hdf5_out):
                                  ' elements.')
 
             # read/write weights
-            for ii in xrange(len(weight_names)):
-                tensor_in = np.zeros(weight_values[ii].shape, dtype=weight_values[ii].dtype)
+            for ii in range(len(weight_names)):
+                tensor_in = np.zeros(weight_values[ii].shape,
+                                     dtype=weight_values[ii].dtype)
                 weight_values[ii].read_direct(tensor_in)
 
-                # permute axes as needed to conform to SAS deep learning "channels first" format
-                if ((image_data_format == "channels_first") or (not perm_index)):
-                    if (len(tensor_in.shape) == 4):  # format: (C,fdim1, fdim2, fdim3) ==> (C,fdim3,fdim1,fdim2)
+                # permute axes as needed to conform to SAS deep
+                # learning "channels first" format
+                if ((image_data_format == 'channels_first') or (not perm_index)):
+                    # format: (C,fdim1, fdim2, fdim3) ==> (C,fdim3,fdim1,fdim2)
+                    if (len(tensor_in.shape) == 4):
                         tensor_out = np.transpose(tensor_in, (0, 3, 1, 2))
                     else:
                         tensor_out = tensor_in.copy()
                 else:
                     # "channels last" format
-                    if (len(tensor_in.shape) == 1):  # this is a vector - nothing to permute
+                    # this is a vector - nothing to permute
+                    if (len(tensor_in.shape) == 1):
                         tensor_out = tensor_in.copy()
                     else:
                         # permute Conv2D tensor to "channels_first" format
                         if (layer.__class__.__name__ == 'Conv2D'):
                             tensor_out = np.transpose(tensor_in, (3, 2, 0, 1))
-                        # have to account for neuron ordering in first dense layer following flattening operation
-                        elif (layer.__class__.__name__ == "Dense"):
+                        # have to account for neuron ordering in first dense
+                        # layer following flattening operation
+                        elif (layer.__class__.__name__ == 'Dense'):
                             if (layer.name == permute_layer_name):
                                 tensor_out = np.zeros(tensor_in.shape)
-                                for jj in xrange(tensor_out.shape[0]):
+                                for jj in range(tensor_out.shape[0]):
                                     tensor_out[jj, :] = tensor_in[perm_index[jj], :]
                             else:  # not following flattening, just copy
                                 tensor_out = tensor_in.copy()
@@ -183,6 +185,7 @@ def write_keras_hdf5(model, hdf5_in, hdf5_out):
                             # save weight in format amenable to SAS
                 dset_name = generate_dataset_name(layer, ii)
                 new_weight_names.append(dset_name)
+                # TODO: Variable is never used
                 dset = g_out.create_dataset(dset_name, data=tensor_out)
 
             # update weight names
@@ -201,34 +204,32 @@ def write_keras_hdf5(model, hdf5_in, hdf5_out):
 
 def generate_dataset_name(layer, index):
     '''
-    Function to generate data set names consistent
-    with names generated by natively-trained Keras
-    models
+    Generate data set names consistent with names generated by Keras models
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer
        Current layer definition
-    index : [integer]
+    index : int
        Data set index
 
     Returns
     -------
     UTF-8 encoded data set name
+
     '''
     layer_class_name = layer.__class__.__name__.lower()
-    if (layer_class_name in ["conv2d", "dense"]):
-        template_names = ["kernel:0", "bias:0"]
-    elif (layer_class_name == "batchnormalization"):
-        template_names = ["gamma:0", "beta:0", "moving_mean:0", "moving_variance:0"]
+    if (layer_class_name in ['conv2d', 'dense']):
+        template_names = ['kernel:0', 'bias:0']
+    elif (layer_class_name == 'batchnormalization'):
+        template_names = ['gamma:0', 'beta:0', 'moving_mean:0', 'moving_variance:0']
     else:
-        sys.exit("Unable to translate layer weight name for layer = " + layer.name)
+        sys.exit('Unable to translate layer weight name for layer = ' + layer.name)
 
-    dataset_name = layer.name + "/" + template_names[index]
+    dataset_name = layer.name + '/' + template_names[index]
     return dataset_name.encode('utf8')
 
 
 #########################################################################################
-if __name__ == "__main__":
-    sys.exit("ERROR: this module cannot be invoked from the command line")
+if __name__ == '__main__':
+    sys.exit('ERROR: this module cannot be invoked from the command line')

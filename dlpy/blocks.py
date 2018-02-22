@@ -16,12 +16,13 @@
 #  limitations under the License.
 #
 
-''' Residual Network object for deep learning.  '''
+''' Residual Network object for deep learning '''
 
-from .layers import *
+from .layers import (Layer, InputLayer, Conv2d, Pooling, Dense, Recurrent,
+                     BN, Res, Concat, Proj, OutputLayer)
 
 
-class Block:
+class Block(object):
     ''' Block of layers that have special connectivity instead of sequential '''
 
     def __init__(self):
@@ -29,7 +30,7 @@ class Block:
         self.connectivity = {}
 
 
-class ResBlock:
+class ResBlock(object):
     '''
     Residual block for Residual Network
 
@@ -83,11 +84,12 @@ class ResBlock:
             The source layer for the whole block.
         block_num : int
             The label of the block. (used to name the layers)
-    
+
         Returns
         -------
             A dictionary of key-word-arguments.
         '''
+        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         input_layer = src_layer
@@ -105,12 +107,15 @@ class ResBlock:
         return options
 
 
-class ResBlockBN:
+class ResBlockBN(object):
     '''
     Residual block for Residual Network with batch normalization.
-    '''
 
-    def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None, batch_norm_first=True):
+    '''
+    # TODO: Parameter definitions
+
+    def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None,
+                 batch_norm_first=True):
         if strides is None:
             strides = [1] * len(n_filters)
 
@@ -161,8 +166,10 @@ class ResBlockBN:
 
         Returns
         -------
-            A dictionary of key-word-arguments.
+        A dictionary of key-word-arguments
+
         '''
+        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         bn_num = 1
@@ -184,10 +191,12 @@ class ResBlockBN:
         return options
 
 
-class ResBlock_Caffe:
+class ResBlock_Caffe(object):
     '''
     Residual block for Residual Network with batch normalization.
+
     '''
+    # TODO: Parameter definitions
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None,
                  batch_norm_first=False, conv_short_cut=False):
@@ -239,7 +248,9 @@ class ResBlock_Caffe:
                            includeBias=False))
                 self.layers.append(BN(act='identity'))
 
-            for n_filter, kernel_size, stride, act in zip(n_filters, kernel_sizes, strides,
+            for n_filter, kernel_size, stride, act in zip(n_filters,
+                                                          kernel_sizes,
+                                                          strides,
                                                           ['relu', 'relu', 'identity']):
                 self.layers.append(
                     Conv2d(n_filters=n_filter,
@@ -262,8 +273,10 @@ class ResBlock_Caffe:
 
         Returns
         -------
-            A dictionary of key-word-arguments.
+        A dictionary of keyword-arguments
+
         '''
+        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         bn_num = 1
@@ -314,10 +327,12 @@ class ResBlock_Caffe:
         return options
 
 
-class DenseNetBlock:
+class DenseNetBlock(object):
     '''
     DenseNet block
+
     '''
+    # TODO: Parameter descriptions
 
     def __init__(self, n_cells=4, kernel_size=3, n_filter=12, stride=1):
         self.config = dict()
@@ -335,6 +350,7 @@ class DenseNetBlock:
 
     def compile(self, src_layer, block_num):
         '''
+
         Parameters
         ----------
         src_layer : Layer object.
@@ -344,8 +360,10 @@ class DenseNetBlock:
 
         Returns
         -------
-            A dictionary of key-word-arguments.
+        A dictionary of keyword-arguments
+
         '''
+        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         bn_num = 1

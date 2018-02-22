@@ -16,42 +16,40 @@
 #  limitations under the License.
 #
 
-import sys
+'''Supporting functions for caffe model conversion.'''
 
+import sys
 import h5py
 
 
 class HDF5WriteError(IOError):
     '''
     Used to indicate an error in writing HDF5 file
+
     '''
 
 
 # write Caffe model parameters in HDF5 format
 def write_caffe_hdf5(net, layer_list, file_name):
     '''
-    Function to generate a SAS deep learning model from Caffe definition
+    Generate a SAS deep learning model from Caffe definition
 
-    Parameters:
-
+    Parameters
     ----------
-    net : [Net object]
+    net : Net
        Caffe network object - used for obtaining parameters (weights/biases/etc.)
-    layer_list : [list of CompositeLayer objects]
+    layer_list : list-of-CompositeLayer
        List of layers.  Parameter for these layers must be written in HDF5 format
-    file_name : [string]
+    file_name : string
        Fully qualified file name of SAS-compatible HDF5 file (*.caffemodel.h5)
-
-    Returns
-    -------
 
     '''
 
     # open output file
     try:
-        fout = h5py.File(file_name, "w")
+        fout = h5py.File(file_name, 'w')
     except IOError:
-        sys.exit("File " + file_name + " could not be created")
+        sys.exit('File ' + file_name + ' could not be created')
 
     # create base group
     g = fout.create_group('data')
@@ -105,5 +103,5 @@ def write_caffe_hdf5(net, layer_list, file_name):
 
 
 #########################################################################################
-if __name__ == "__main__":
-    sys.exit("ERROR: this module cannot be invoked from the command line")
+if __name__ == '__main__':
+    sys.exit('ERROR: this module cannot be invoked from the command line')

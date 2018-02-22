@@ -16,15 +16,17 @@
 #  limitations under the License.
 #
 
-''' Define some common layers for the deep learning models '''
+''' Common layers for the deep learning models '''
 
 from .utils import prod_without_none
 
 
-class Layer:
+class Layer(object):
     '''
-    A base class for all layers.
+    Base class for all layers
+
     '''
+    # TODO: Describe parameters
 
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
@@ -58,8 +60,10 @@ class Layer:
             self.num_bias = 0
 
         elif self.config['type'].lower() in ('convo', 'convolution'):
-            self.output_size = (int(self.src_layers[0].output_size[0] // self.config['stride']),
-                                int(self.src_layers[0].output_size[1] // self.config['stride']),
+            self.output_size = (int(self.src_layers[0].output_size[0] //
+                                    self.config['stride']),
+                                int(self.src_layers[0].output_size[1] //
+                                    self.config['stride']),
                                 int(self.config['nfilters']))
             self.kernel_size = (int(self.config['width']), int(self.config['height']))
             self.num_weights = int(self.config['width'] *
@@ -75,8 +79,10 @@ class Layer:
                 self.num_bias = int(self.config['nfilters'])
 
         elif self.config['type'].lower() in ('pool', 'pooling'):
-            self.output_size = (int(self.src_layers[0].output_size[0] // self.config['stride']),
-                                int(self.src_layers[0].output_size[1] // self.config['stride']),
+            self.output_size = (int(self.src_layers[0].output_size[0] //
+                                    self.config['stride']),
+                                int(self.src_layers[0].output_size[1] //
+                                    self.config['stride']),
                                 int(self.src_layers[0].output_size[2]))
             self.kernel_size = (int(self.config['width']), int(self.config['height']))
             self.num_weights = 0
@@ -89,9 +95,12 @@ class Layer:
             self.num_bias = int(2 * self.src_layers[0].output_size[2])
 
         elif self.config['type'].lower() == 'residual':
-            self.output_size = (int(min([item.output_size[0] for item in self.src_layers])),
-                                int(min([item.output_size[1] for item in self.src_layers])),
-                                int(max([item.output_size[2] for item in self.src_layers])))
+            self.output_size = (int(min([item.output_size[0]
+                                         for item in self.src_layers])),
+                                int(min([item.output_size[1]
+                                         for item in self.src_layers])),
+                                int(max([item.output_size[2]
+                                         for item in self.src_layers])))
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
@@ -99,7 +108,8 @@ class Layer:
         elif self.config['type'].lower() == 'concat':
             self.output_size = (int(self.src_layers[0].output_size[0]),
                                 int(self.src_layers[0].output_size[1]),
-                                int(sum([item.output_size[2] for item in self.src_layers])))
+                                int(sum([item.output_size[2]
+                                         for item in self.src_layers])))
             self.kernel_size = None
             self.num_weights = 0
             self.num_bias = 0
@@ -168,7 +178,12 @@ class Layer:
 
 
 class InputLayer(Layer):
-    '''Input layer.'''
+    '''
+    Input layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n_channels=3, width=224, height=224, scale=1,
                  dropout=0, offsets=None, name=None, src_layers=None, **kwargs):
@@ -183,10 +198,15 @@ class InputLayer(Layer):
 
 
 class Conv2d(Layer):
-    '''2D convolutional layer.'''
+    '''
+    2D convolutional layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n_filters, width=None, height=None, stride=1,
-                 act="relu", dropout=0, name=None, src_layers=None, **kwargs):
+                 act='relu', dropout=0, name=None, src_layers=None, **kwargs):
         if (width is None) and (height is None):
             width = 3
         if width is None:
@@ -202,7 +222,12 @@ class Conv2d(Layer):
 
 
 class Pooling(Layer):
-    '''Pooling layer'''
+    '''
+    Pooling layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, width=None, height=None, stride=None,
                  pool='max', dropout=0, name=None, src_layers=None, **kwargs):
@@ -224,7 +249,12 @@ class Pooling(Layer):
 
 
 class Dense(Layer):
-    '''Fully connected layer.'''
+    '''
+    Fully connected layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n, act='relu', dropout=0,
                  name=None, src_layers=None, **kwargs):
@@ -237,7 +267,12 @@ class Dense(Layer):
 
 
 class Recurrent(Layer):
-    '''Recurrent layer.'''
+    '''
+    Recurrent layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n, act='AUTO', rnn_type='RNN', output_type='ENCODING',
                  reversed_=False, name=None, src_layers=None, **kwargs):
@@ -250,7 +285,12 @@ class Recurrent(Layer):
 
 
 class BN(Layer):
-    '''Batch Normalization layer.'''
+    '''
+    Batch Normalization layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -262,7 +302,12 @@ class BN(Layer):
 
 
 class Res(Layer):
-    '''Residual layer.'''
+    '''
+    Residual layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -274,7 +319,12 @@ class Res(Layer):
 
 
 class Concat(Layer):
-    '''Concatenation layer.'''
+    '''
+    Concatenation layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -286,7 +336,12 @@ class Concat(Layer):
 
 
 class Proj(Layer):
-    '''Projection layer.'''
+    '''
+    Projection layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, name=None, src_layers=None, **kwargs):
         config = locals()
@@ -298,7 +353,12 @@ class Proj(Layer):
 
 
 class OutputLayer(Layer):
-    '''Output layer.'''
+    '''
+    Output layer
+
+    '''
+    # TODO: Describe parameters
+    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n=None, act='softmax', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -312,8 +372,7 @@ class OutputLayer(Layer):
 
 
 def _unpack_config(config):
-    '''Function to unpack the configuration from the key-word-argument-only input.'''
-
+    ''' Unpack the configuration from the keyword-argument-only input '''
     kwargs = config['kwargs']
     del config['self'], config['name'], config['src_layers'], config['kwargs']
     out = {}

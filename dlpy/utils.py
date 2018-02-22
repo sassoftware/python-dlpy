@@ -16,9 +16,7 @@
 #  limitations under the License.
 #
 
-'''
-Some supportive functions for the DLPy package.
-'''
+''' Utility functions for the DLPy package '''
 
 import os
 import random
@@ -169,20 +167,21 @@ def predicted_prob_barplot(ax, labels, values):
     width = 0.8 / (1 + len(labels))
     colors = ['blue', 'green', 'yellow', 'orange', 'red']
     for i in range(len(labels)):
-        ax.barh(y_pos[i], values[i], width, align='center', color=colors[i], ecolor='black')
+        ax.barh(y_pos[i], values[i], width, align='center',
+                color=colors[i], ecolor='black')
         ax.text(values[i] + 0.01, y_pos[i], '{:.2%}'.format(values[i]))
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, rotation=45)
     ax.set_xlabel('Probability')
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1, 1.1])
-    ax.set_xticklabels(["0%", '25%', '50%', '75%', "100%"])
+    ax.set_xticklabels(['0%', '25%', '50%', '75%', '100%'])
     ax.set_title('Predicted Probability')
     return ax
 
 
 def plot_predict_res(image, label, labels, values):
     '''
-    Generate a side by side plot of the predicted result.
+    Generate a side by side plot of the predicted result
 
     Parameters
     ----------
@@ -233,13 +232,15 @@ def add_caslib(conn, path):
 
     '''
     if path in conn.caslibinfo().CASLibInfo.Path.tolist():
-        cas_lib_name = conn.caslibinfo().CASLibInfo[conn.caslibinfo().CASLibInfo.Path == path]['Name']
+        cas_lib_name = conn.caslibinfo().CASLibInfo[
+            conn.caslibinfo().CASLibInfo.Path == path]['Name']
 
         return cas_lib_name.tolist()[0]
     else:
         cas_lib_name = random_name('Caslib', 6)
         conn.retrieve('addcaslib', message_level='error',
-                      name=cas_lib_name, path=path, activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+                      name=cas_lib_name, path=path, activeOnAdd=False,
+                      dataSource=dict(srcType='DNFS'))
         return cas_lib_name
 
 
@@ -290,3 +291,35 @@ def unify_keys(dic):
         dic[new_name] = dic.pop(old_name)
 
     return dic
+
+
+def check_caslib(conn, path):
+    '''
+    Check whether the specified path is in the caslibs of the current session.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object
+
+    path : str
+        Specifies the name of the path.
+
+    Returns
+    -------
+    flag : bool
+        Specifies if path exist in session.
+    caslib_name : str (if exist)
+        Specifies the name of the caslib that contain the path.
+
+    '''
+    paths = conn.caslibinfo().CASLibInfo.Path.tolist()
+    caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
+
+
+    if path in paths:
+        caslibname = caslibs[paths.index(path)]
+        return True, caslibname
+    else:
+        return False
+

@@ -16,32 +16,33 @@
 #  limitations under the License.
 #
 
+'''Convert keras model to sas models.'''
+
 import os
 import sys
 
-import h5py
-import numpy as np
-try:
-    from keras import backend as K
-    from keras.engine.topology import preprocess_weights_for_loading
-except:
-    raise ImportError('the following required module(s) is(are) not found: keras')
+from keras import backend as K
 
-from .write_keras_model_parm import *
-from .write_sas_code import *
+from .write_keras_model_parm import write_keras_hdf5
+from .write_sas_code import (write_input_layer, write_convolution_layer,
+                             write_batch_norm_layer, write_pooling_layer,
+                             write_residual_layer, write_full_connect_layer,
+                             write_main_entry)
 
-computation_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d', 'dense', 'batchnormalization', 'add']
+computation_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d',
+                             'dense', 'batchnormalization', 'add']
 dropout_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d', 'dense']
 
 
 class KerasParseError(ValueError):
     '''
     Used to indicate an error in parsing Keras model definition
+
     '''
 
 
 # def keras_to_sas(module_name, model_name, model_args, sas_file_name, input_shape=None):
-def keras_to_sas(module_name, model_name, model_args, sas_file_name):
+def keras_module_to_sas(module_name, model_name, model_args, sas_file_name):
     '''
     Function to generate a SAS deep learning model from Keras definition
 
@@ -66,13 +67,13 @@ def keras_to_sas(module_name, model_name, model_args, sas_file_name):
 
     # open output file
     try:
-        fout = open(sas_file_name, "w")
+        fout = open(sas_file_name, 'w')
     except IOError:
-        sys.exit("Unable to create file " + sas_file_name)
+        sys.exit('Unable to create file ' + sas_file_name)
 
     # instantiate the model
-    exec("from " + module_name + " import *")
-    model = eval(model_name + "(" + model_args + ")")
+    exec('from ' + module_name + ' import *')
+    model = eval(model_name + '(' + model_args + ')')
 
     try:
 
@@ -83,14 +84,14 @@ def keras_to_sas(module_name, model_name, model_args, sas_file_name):
             # pass
             # else:  # revisit model with custome input shape
             # if (len(input_shape) != 3):
-            # raise KerasParseError("ERROR: input shape specified incorrectly")
+            # raise KerasParseError('ERROR: input shape specified incorrectly')
             # else:
             # decim_factor = 1.0
             # for layer in model.layers:
             # class_name = layer.__class__.__name__.lower()
-            # if (class_name == "inputlayer"):
+            # if (class_name == 'inputlayer'):
             # print(layer.batch_input_shape)
-            # elif (class_name == "averagepooling2d"):
+            # elif (class_name == 'averagepooling2d'):
             # print(layer.get_config())
             # print(layer.get_input_shape_at(0))
 
@@ -104,11 +105,13 @@ def keras_to_sas(module_name, model_name, model_args, sas_file_name):
             for layer in model.layers:
                 class_name = layer.__class__.__name__.lower()
                 if (class_name in computation_layer_classes):
-                    comp_layer_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
+                    comp_layer_name = find_previous_computation_layer(
+                        model, layer.name, computation_layer_classes)
                     source_str = make_source_str(comp_layer_name)
                     src_layer.update({layer.name: source_str})
                 elif (class_name == 'activation'):
-                    tmp_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
+                    tmp_name = find_previous_computation_layer(
+                        model, layer.name, computation_layer_classes)
                     tmp_act = extract_activation(layer)
                     layer_activation.update({tmp_name[0]: tmp_act})
                 elif (class_name == 'dropout'):
@@ -119,13 +122,13 @@ def keras_to_sas(module_name, model_name, model_args, sas_file_name):
             # if first layer is not an input layer, generate the correct
             # input layer code for a SAS deep learning model
             layer = model.layers[0]
-            if (layer.__class__.__name__.lower() != "inputlayer"):
+            if (layer.__class__.__name__.lower() != 'inputlayer'):
                 sas_code = keras_input_layer(layer, model_name, False)
                 # write SAS code for input layer
                 if sas_code:
-                    fout.write(sas_code + "\n\n")
+                    fout.write(sas_code + '\n\n')
                 else:
-                    raise KerasParseError("ERROR: unable to generate an input layer")
+                    raise KerasParseError('ERROR: unable to generate an input layer')
 
             # extract layers and apply activation functions as needed
             for layer in model.layers:
@@ -142,31 +145,44 @@ def keras_to_sas(module_name, model_name, model_args, sas_file_name):
                 else:
                     act_func = None
 
-                if (class_name in ['averagepooling2d', 'maxpooling2d']):  # average/max pooling
-                    sas_code = keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
-                elif (class_name == 'conv2d'):  # 2D convolution
-                    sas_code = keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropout)
-                elif (class_name == 'batchnormalization'):  # batch normalization
-                    sas_code = keras_batchnormalization_layer(layer, model_name, act_func, src_layer)
-                elif (class_name == 'inputlayer'):  # input layer
+                # average/max pooling
+                if (class_name in ['averagepooling2d', 'maxpooling2d']):
+                    sas_code = keras_pooling_layer(layer, model_name, class_name,
+                                                   src_layer, layer_dropout)
+                # 2D convolution
+                elif (class_name == 'conv2d'):
+                    sas_code = keras_convolution_layer(layer, model_name, act_func,
+                                                       src_layer, layer_dropout)
+                # batch normalization
+                elif (class_name == 'batchnormalization'):
+                    sas_code = keras_batchnormalization_layer(layer, model_name,
+                                                              act_func, src_layer)
+                # input layer
+                elif (class_name == 'inputlayer'):
                     sas_code = keras_input_layer(layer, model_name, True)
-                elif (class_name == 'add'):  # add
-                    sas_code = keras_residual_layer(layer, model_name, act_func, src_layer)
+                # add
+                elif (class_name == 'add'):
+                    sas_code = keras_residual_layer(layer, model_name,
+                                                    act_func, src_layer)
                 elif (class_name in ['activation', 'flatten', 'dropout']):
                     pass
-                elif (class_name == 'dense'):  # fully connected
-                    sas_code = keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropout)
+                # fully connected
+                elif (class_name == 'dense'):
+                    sas_code = keras_full_connect_layer(layer, model_name, act_func,
+                                                        src_layer, layer_dropout)
                 else:
-                    print("WARNING: " + class_name + " is an unsupported layer type - your SAS model may be incomplete")
+                    print('WARNING: ' + class_name + ' is an unsupported layer '
+                                                     'type - your SAS model may be incomplete')
 
                 # write SAS code associated with Keras layer
                 if sas_code:
-                    fout.write(sas_code + "\n\n")
+                    fout.write(sas_code + '\n\n')
                 elif (class_name not in ['activation', 'flatten', 'dropout']):
-                    print("WARNING: unable to generate SAS definition for layer " + class_name)
+                    print('WARNING: unable to generate SAS definition '
+                          'for layer ' + class_name)
 
         else:
-            raise KerasParseError("ERROR: Unable to instantiate Keras model")
+            raise KerasParseError('ERROR: Unable to instantiate Keras model')
 
     except KerasParseError as err_msg:
         print(err_msg)
@@ -174,10 +190,96 @@ def keras_to_sas(module_name, model_name, model_args, sas_file_name):
         print(err_msg)
     finally:
         sas_code = write_main_entry(model_name)
-        fout.write(sas_code + "\n")
+        fout.write(sas_code + '\n')
         fout.close()
         if model:
             return model
+
+
+def keras_to_sas(model, model_name):
+    output_code = ''
+    layer_activation = {}
+    src_layer = {}
+    layer_dropout = {}
+    for layer in model.layers:
+        class_name = layer.__class__.__name__.lower()
+        if (class_name in computation_layer_classes):
+            comp_layer_name = find_previous_computation_layer(
+                model, layer.name, computation_layer_classes)
+            source_str = make_source_str(comp_layer_name)
+            src_layer.update({layer.name: source_str})
+        elif (class_name == 'activation'):
+            tmp_name = find_previous_computation_layer(
+                model, layer.name, computation_layer_classes)
+            tmp_act = extract_activation(layer)
+            layer_activation.update({tmp_name[0]: tmp_act})
+        elif (class_name == 'dropout'):
+            tmp = find_next_computation_layer(model, layer, dropout_layer_classes)
+            dconfig = layer.get_config()
+            layer_dropout.update({tmp: dconfig['rate']})
+
+    # if first layer is not an input layer, generate the correct
+    # input layer code for a SAS deep learning model
+    layer = model.layers[0]
+    if (layer.__class__.__name__.lower() != 'inputlayer'):
+        sas_code = keras_input_layer(layer, model_name, False)
+        # write SAS code for input layer
+        if sas_code:
+            output_code = output_code + sas_code + '\n\n'
+        else:
+            raise KerasParseError('ERROR: unable to generate an input layer')
+
+    # extract layers and apply activation functions as needed
+    for layer in model.layers:
+        class_name = layer.__class__.__name__.lower()
+
+        sas_code = None
+
+        # determine activation function
+        if (class_name in ['conv2d', 'batchnormalization', 'add', 'dense']):
+            if (layer.name in layer_activation.keys()):
+                act_func = layer_activation[layer.name]
+            else:
+                act_func = None
+        else:
+            act_func = None
+
+        # average/max pooling
+        if (class_name in ['averagepooling2d', 'maxpooling2d']):
+            sas_code = keras_pooling_layer(layer, model_name, class_name,
+                                           src_layer, layer_dropout)
+        # 2D convolution
+        elif (class_name == 'conv2d'):
+            sas_code = keras_convolution_layer(layer, model_name, act_func,
+                                               src_layer, layer_dropout)
+        # batch normalization
+        elif (class_name == 'batchnormalization'):
+            sas_code = keras_batchnormalization_layer(layer, model_name,
+                                                      act_func, src_layer)
+        # input layer
+        elif (class_name == 'inputlayer'):
+            sas_code = keras_input_layer(layer, model_name, True)
+        # add
+        elif (class_name == 'add'):
+            sas_code = keras_residual_layer(layer, model_name,
+                                            act_func, src_layer)
+        elif (class_name in ['activation', 'flatten', 'dropout']):
+            pass
+        # fully connected
+        elif (class_name == 'dense'):
+            sas_code = keras_full_connect_layer(layer, model_name, act_func,
+                                                src_layer, layer_dropout)
+        else:
+            print('WARNING: ' + class_name + ' is an unsupported layer '
+                                             'type - your SAS model may be incomplete')
+
+        # write SAS code associated with Keras layer
+        if sas_code:
+            output_code = output_code + sas_code + '\n\n'
+        elif (class_name not in ['activation', 'flatten', 'dropout']):
+            print('WARNING: unable to generate SAS definition '
+                  'for layer ' + class_name)
+    return output_code
 
 
 # create SAS pooling layer
@@ -206,7 +308,7 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
     String value with SAS deep learning pooling layer definition
     '''
     config = layer.get_config()
-    strides = config['strides'];
+    strides = config['strides']
     pool_size = config['pool_size']
 
     # pooling size
@@ -216,7 +318,8 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
     if (strides[0] == strides[1]):
         step = strides[0]
     else:
-        raise KerasParseError('ERROR: unequal strides in vertical/horizontal directions for pooling layer')
+        raise KerasParseError('ERROR: unequal strides in vertical/horizontal '
+                              'directions for pooling layer')
 
     # pooling type
     if (class_name == 'averagepooling2d'):
@@ -224,13 +327,15 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
     elif (class_name == 'maxpooling2d'):
         type = 'max'
     else:
-        raise KerasParseError('ERROR: Pooling type ' + class_name + ' is not supported yet')
+        raise KerasParseError('ERROR: Pooling type ' + class_name +
+                              ' is not supported yet')
 
     # extract source layer(s)
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError("ERROR: unable to determine source layer for pooling layer = " + layer.name)
+        raise KerasParseError('ERROR: unable to determine source layer for '
+                              'pooling layer = ' + layer.name)
 
     # set dropout
     if (layer.name in layer_dropout.keys()):
@@ -270,7 +375,7 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
     '''
     config = layer.get_config()
 
-    strides = config['strides'];
+    strides = config['strides']
     kernel_size = config['kernel_size']
 
     # activation
@@ -288,13 +393,14 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
     if (strides[0] == strides[1]):
         step = strides[0]
     else:
-        raise KerasParseError("ERROR: unequal strides in vertical/horizontal directions for convolution layer")
+        raise KerasParseError('ERROR: unequal strides in vertical/horizontal '
+                              'directions for convolution layer')
 
     # bias term
     if (config['use_bias']):
-        bias_str = "False"
+        bias_str = 'False'
     else:
-        bias_str = "True"
+        bias_str = 'True'
 
     # number of filters
     nrof_filters = config['filters']
@@ -303,7 +409,8 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError("ERROR: unable to determine source layer for convolution layer = " + layer.name)
+        raise KerasParseError('ERROR: unable to determine source layer for '
+                              'convolution layer = ' + layer.name)
 
     # set dropout
     if (layer.name in layer_dropout.keys()):
@@ -312,8 +419,9 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
         dropout = 0.0
 
     return write_convolution_layer(model_name=model_name, layer_name=layer.name,
-                                   nfilters=str(nrof_filters), width=str(width), height=str(height),
-                                   stride=str(step), nobias=bias_str, activation=layer_act_func,
+                                   nfilters=str(nrof_filters), width=str(width),
+                                   height=str(height), stride=str(step),
+                                   nobias=bias_str, activation=layer_act_func,
                                    dropout=str(dropout), src_layer=source_str)
 
 
@@ -346,7 +454,8 @@ def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError("ERROR: unable to determine source layer for batch normalization layer = " + layer.name)
+        raise KerasParseError('ERROR: unable to determine source layer for '
+                              'batch normalization layer = ' + layer.name)
 
     # activation
     if (act_func):
@@ -388,6 +497,7 @@ def keras_input_layer(layer, model_name, input_layer):
         dummy, H, W, C = config['batch_input_shape']
 
     # generate name based on whether layer is actually an input layer
+    # TODO: input_name is never used
     if (input_layer):
         input_name = config['name']
     else:
@@ -430,7 +540,8 @@ def keras_residual_layer(layer, model_name, act_func, src_layer):
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError("ERROR: unable to determine source layers for residual layer = " + layer.name)
+        raise KerasParseError('ERROR: unable to determine source layers for '
+                              'residual layer = ' + layer.name)
 
     # activation
     if (act_func):
@@ -490,9 +601,9 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
 
     # bias term
     if (config['use_bias']):
-        bias_str = "False"
+        bias_str = 'False'
     else:
-        bias_str = "True"
+        bias_str = 'True'
 
         # set dropout
     if (layer.name in layer_dropout.keys()):
@@ -504,7 +615,8 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError("ERROR: unable to determine source layer for fully connected layer = " + layer.name)
+        raise KerasParseError('ERROR: unable to determine source layer for '
+                              'fully connected layer = ' + layer.name)
 
     return write_full_connect_layer(model_name=model_name, layer_name=layer.name,
                                     nrof_neurons=str(nrof_neurons), nobias=bias_str,
@@ -532,25 +644,30 @@ def map_keras_activation(layer, act_func):
     class_name = layer.__class__.__name__.lower()
     # convolution layer
     if (class_name in ['conv2d', 'batchnormalization']):
-        map_dict = {"softmax": None, "elu": "elu", "selu": None, "softplus": "softplus", "softsign": None,
-                    "relu": "relu",
-                    "tanh": "tanh", "sigmoid": "sigmoid", "hard_sigmoid": None, "linear": "identity"}
+        map_dict = {'softmax': None, 'elu': 'elu', 'selu': None,
+                    'softplus': 'softplus', 'softsign': None,
+                    'relu': 'relu', 'tanh': 'tanh', 'sigmoid': 'sigmoid',
+                    'hard_sigmoid': None, 'linear': 'identity'}
     elif (class_name == 'dense'):
-        map_dict = {"softmax": "softmax", "elu": "elu", "selu": None, "softplus": "softplus", "softsign": None,
-                    "relu": "relu",
-                    "tanh": "tanh", "sigmoid": "sigmoid", "hard_sigmoid": None, "linear": "identity"}
+        map_dict = {'softmax': 'softmax', 'elu': 'elu', 'selu': None,
+                    'softplus': 'softplus', 'softsign': None,
+                    'relu': 'relu', 'tanh': 'tanh', 'sigmoid': 'sigmoid',
+                    'hard_sigmoid': None, 'linear': 'identity'}
     elif (class_name == 'add'):
-        map_dict = {"softmax": None, "elu": None, "selu": None, "softplus": None, "softsign": None, "relu": "relu",
-                    "tanh": None, "sigmoid": None, "hard_sigmoid": None, "linear": "identity"}
+        map_dict = {'softmax': None, 'elu': None, 'selu': None,
+                    'softplus': None, 'softsign': None, 'relu': 'relu',
+                    'tanh': None, 'sigmoid': None, 'hard_sigmoid': None,
+                    'linear': 'identity'}
     else:
-        raise KerasParseError("SAS does not support activation functions for layer " + layer.name)
+        raise KerasParseError('SAS does not support activation functions '
+                              'for layer ' + layer.name)
 
     if (act_func.lower() in map_dict.keys()):
         sas_act_func = map_dict[act_func.lower()]
         if not sas_act_func:
-            raise KerasParseError("Activation function " + act_func + " not supported")
+            raise KerasParseError('Activation function ' + act_func + ' not supported')
     else:
-        raise KerasParseError("Unknown Keras activation function = " + act_func)
+        raise KerasParseError('Unknown Keras activation function = ' + act_func)
 
     return sas_act_func
 
@@ -597,14 +714,16 @@ def find_next_computation_layer(model, layer, computation_layer_list):
     '''
 
     if (len(layer.outbound_nodes) > 1):
-        raise KerasParseError("Unable to determine next computation layer for layer = " + layer.name)
+        raise KerasParseError('Unable to determine next computation layer '
+                              'for layer = ' + layer.name)
     else:
         node_config = layer.outbound_nodes[0].get_config()
         layer_name = node_config['outbound_layer']
         tmp_layer = model.get_layer(name=layer_name)
         while (tmp_layer.__class__.__name__.lower() not in computation_layer_list):
             if (len(tmp_layer.outbound_nodes) > 1):
-                raise KerasParseError("Unable to determine next computation layer for layer = " + layer.name)
+                raise KerasParseError('Unable to determine next computation layer '
+                                      'for layer = ' + layer.name)
                 break
             else:
                 node_config = tmp_layer.outbound_nodes[0].get_config()
@@ -636,7 +755,8 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
 
     layer = model.get_layer(name=layer_name)
     if (len(layer.inbound_nodes) > 1):
-        raise KerasParseError("Unable to determine previous computation layer(s) for layer = " + layer_name)
+        raise KerasParseError('Unable to determine previous computation '
+                              'layer(s) for layer = ' + layer_name)
         return None
     else:
         src_layer_name = []
@@ -648,7 +768,8 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
                 # check for root node
                 node_config = tmp_layer.inbound_nodes[0].get_config()
                 if (len(node_config['inbound_layers']) > 1):
-                    raise KerasParseError("Unable to determine previous computation layer(s) for layer = " + layer_name)
+                    raise KerasParseError('Unable to determine previous computation '
+                                          'layer(s) for layer = ' + layer_name)
                     return None
                 elif (len(node_config['inbound_layers']) == 1):
                     tmp_name = node_config['inbound_layers'][0]
@@ -677,59 +798,62 @@ def make_source_str(layer_name):
     Returns
     -------
     String representation of list of Python layer names
+
     '''
-
-    source_str = "["
+    source_str = []
     for ii in range(len(layer_name)):
-        source_str = source_str + "'" + layer_name[ii] + "', "
-    source_str = source_str[:-2] + "]"
-
-    return source_str
+        source_str.append(layer_name[ii])
+    return repr(source_str)
 
 
 #########################################################################################
-if __name__ == "__main__":
+if __name__ == '__main__':
     # check that environment variables set
     if ('KERAS_HDF5_PATH' not in os.environ.keys()):
-        err_msg = ("Environment variable KERAS_HDF5_PATH not set.  Please set this variable to \n"
-                   "point to the directory where HDF5 files are or will be stored \n")
+        err_msg = ('Environment variable KERAS_HDF5_PATH not set.  '
+                   'Please set this variable to \n'
+                   'point to the directory where HDF5 files are or will be stored \n')
         sys.exit(err_msg)
 
     if ('KERAS_APPLICATION_PATH' in os.environ.keys()):
         sys.path.append(os.environ['KERAS_APPLICATION_PATH'])
     else:
-        err_msg = ("Environment variable KERAS_APPLICATION_PATH not set.  Please set this \n"
-                   "variable to point to the directory where model definition files are or \n"
-                   "will be stored \n")
+        err_msg = ('Environment variable KERAS_APPLICATION_PATH not set.  '
+                   'Please set this \nvariable to point to the directory where '
+                   'model definition files are or \nwill be stored \n')
         sys.exit(err_msg)
 
-    model_name = "VGG19"
-    if (model_name == "ResNet50"):
+    model_name = 'VGG19'
+    if (model_name == 'ResNet50'):
         # ResNet-50
-        module_name = "resnet50"
-        model_args = "weights=None"
-        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'], "resnet50_weights_tf_dim_ordering_tf_kernels.h5")
-    elif (model_name == "LeNet"):
+        module_name = 'resnet50'
+        model_args = 'weights=None'
+        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'],
+                               'resnet50_weights_tf_dim_ordering_tf_kernels.h5')
+    elif (model_name == 'LeNet'):
         # LeNet
-        module_name = "lenet"
-        model_args = ""
-        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'], "lenet.h5")
-    elif (model_name == "VGG16"):
+        module_name = 'lenet'
+        model_args = ''
+        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'], 'lenet.h5')
+    elif (model_name == 'VGG16'):
         # VGG-16
-        module_name = "vgg16"
-        model_args = "weights=None"
-        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'], "vgg16_weights_tf_dim_ordering_tf_kernels.h5")
-    elif (model_name == "VGG19"):
+        module_name = 'vgg16'
+        model_args = 'weights=None'
+        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'],
+                               'vgg16_weights_tf_dim_ordering_tf_kernels.h5')
+    elif (model_name == 'VGG19'):
         # VGG-19
-        module_name = "vgg19"
-        model_args = "weights=None"
-        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'], "vgg19_weights_tf_dim_ordering_tf_kernels.h5")
+        module_name = 'vgg19'
+        model_args = 'weights=None'
+        hdf5_in = os.path.join(os.environ['KERAS_HDF5_PATH'],
+                               'vgg19_weights_tf_dim_ordering_tf_kernels.h5')
     else:
-        sys.exit("ERROR: Unknown model specified")
+        sys.exit('ERROR: Unknown model specified')
 
     sas_python = os.path.join(os.environ['KERAS_APPLICATION_PATH'], 'sas_model.py')
-    sas_hdf5 = os.path.join(os.environ['KERAS_HDF5_PATH'], "sas_model.h5")
+    sas_hdf5 = os.path.join(os.environ['KERAS_HDF5_PATH'], 'sas_model.h5')
 
-    # model = keras_to_sas(module_name,model_name,model_args,sas_python,input_shape=(3,256,256))
+    # model = keras_to_sas(module_name,model_name,model_args,
+    #                      sas_python,input_shape=(3,256,256))
     model = keras_to_sas(module_name, model_name, model_args, sas_python)
     write_keras_hdf5(model, hdf5_in, sas_hdf5)
