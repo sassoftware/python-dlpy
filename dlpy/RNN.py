@@ -88,7 +88,8 @@ class RNN(Model):
         if self.layers[-1][0].config['type'] != 'output':
             raise ValueError('The last layer of the model must be an output layer')
         conn = self.conn
-        conn.retrieve('buildmodel', model=dict(name=self.model_name, replace=True), type='RNN')
+        conn.retrieve('buildmodel', model=dict(name=self.model_name,
+                                               replace=True), type='RNN')
 
         layer_num = 1
         block_num = 0
@@ -110,8 +111,10 @@ class RNN(Model):
                         layer_name = 'Output'
 
                     else:
-                        raise ValueError('{} is not a supported layer type'.format(layer['type']))
+                        raise ValueError(
+                            '{} is not a supported layer type'.format(layer['type']))
 
+                    # TODO: src_layer is not defined
                     src_layer_names = [src_layer.name for src_layer in src_layers]
 
                     conn.retrieve('addlayer', model=self.model_name, name=layer_name,
@@ -188,7 +191,7 @@ class RNN(Model):
         # TODO: This should return the graph and let the client display it.
         from IPython.display import display
         import os
-        os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+        os.environ['PATH'] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
 
         display(model_to_graph(self))
 
@@ -209,7 +212,8 @@ def layer_to_node(layer):
     else:
         cell32 = '{}'.format(layer.config['n'])
 
-    label = cell1 + '|{' + cell21 + '|' + cell22 + '}|' + '{' + cell31 + '|' + cell32 + '}'
+    label = (cell1 + '|{' + cell21 + '|' + cell22 + '}|' + '{' +
+             cell31 + '|' + cell32 + '}')
     label = r'{}'.format(label)
     return dict(name=layer.name, label=label, fillcolor=layer.color_code)
 

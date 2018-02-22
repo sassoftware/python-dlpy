@@ -16,9 +16,9 @@
 #  limitations under the License.
 #
 
-from .model_lenet import *
-from .model_vgg16 import *
-from .model_vgg19 import *
-from .model_resnet50 import *
-from .model_resnet101 import *
-from .model_resnet152 import *
+from .model_lenet import LeNet_Model
+from .model_vgg16 import VGG16_Model
+from .model_vgg19 import VGG19_Model
+from .model_resnet50 import ResNet50_Model
+from .model_resnet101 import ResNet101_Model
+from .model_resnet152 import ResNet152_Model

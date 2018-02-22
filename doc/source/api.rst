@@ -1,7 +1,7 @@
 
 .. Copyright SAS Institute
 
-.. currentmodule:: dl_api
+.. currentmodule:: dlpy
 .. _api:
 
 *************
@@ -14,7 +14,7 @@ API Reference
 Applications
 ------------
 
-.. currentmodule:: dl_api.applications
+.. currentmodule:: dlpy.applications
 
 .. autosummary::
    :toctree: generated/
@@ -48,7 +48,7 @@ ImageTable
 The :class:`ImageTable` class is a specialized version of :class:`swat.CASTable`
 that includes extra methods for working with images.
 
-.. currentmodule:: dl_api.images
+.. currentmodule:: dlpy.images
 
 Constructors
 ~~~~~~~~~~~~
@@ -96,7 +96,7 @@ Image Processing
 Layers
 ------
 
-.. currentmodule:: dl_api.layers
+.. currentmodule:: dlpy.layers
 
 .. autosummary::
    :toctree: generated/
@@ -118,7 +118,7 @@ Layers
 Models
 ------
 
-.. currentmodule:: dl_api.model
+.. currentmodule:: dlpy.model
 
 .. autosummary::
    :toctree: generated/
@@ -154,7 +154,7 @@ Models
 Feature Maps
 ------------
 
-.. currentmodule:: dl_api.model
+.. currentmodule:: dlpy.model
 
 .. autosummary::
    :toctree: generated/
@@ -166,7 +166,7 @@ Feature Maps
 Functions
 ---------
 
-.. currentmodule:: dl_api.model
+.. currentmodule:: dlpy.model
 
 .. autosummary::
    :toctree: generated/
@@ -188,7 +188,7 @@ Functions
 Residual Networks
 -----------------
 
-.. currentmodule:: dl_api.ResNet
+.. currentmodule:: dlpy.ResNet
 
 .. autosummary::
    :toctree: generated/
@@ -217,7 +217,7 @@ Residual Networks
 RNN Model
 ---------
 
-.. currentmodule:: dl_api.RNN
+.. currentmodule:: dlpy.RNN
 
 .. autosummary::
    :toctree: generated/
@@ -241,7 +241,7 @@ RNN Model
 Sequential Model
 ----------------
 
-.. currentmodule:: dl_api.Sequential
+.. currentmodule:: dlpy.Sequential
 
 .. autosummary::
    :toctree: generated/
@@ -256,7 +256,7 @@ Sequential Model
 Splitting Utilities
 -------------------
 
-.. currentmodule:: dl_api.splitting
+.. currentmodule:: dlpy.splitting
 
 .. autosummary::
    :toctree: generated/

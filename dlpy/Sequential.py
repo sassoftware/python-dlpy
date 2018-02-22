@@ -23,8 +23,11 @@ from .model import Model
 
 class Sequential(Model):
     '''
-    A sub module of Model. Support sequentially building of deep learning models.
+    Model for sequentially building of deep learning models
+
     '''
+
+    # TODO: Describe parameters
 
     def __init__(self, conn, layers=None, model_name=None):
         Model.__init__(self, conn, model_name=model_name)
@@ -40,17 +43,19 @@ class Sequential(Model):
 
     def add(self, layer):
         '''
-        Function to add layer(s) to model.
+        Add layer(s) to model
 
-        Parameter:
+        Parameters
         ----------
-            layer: Layer object or list of Layer
-                Specifies the layer to be added.
+        layer : Layer or list-of-Layer
+            Specifies the layer to be added
+
         '''
         if self.layers == [] and layer.config['type'].lower() != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         if len(self.layers) > 0 and layer.config['type'] is 'input':
-            raise ValueError('Only the first layer of the Sequential model can be an input layer')
+            raise ValueError('Only the first layer of the Sequential model '
+                             'can be an input layer')
         self.layers.append(layer)
 
         if layer.config['type'].lower() == 'input':
@@ -77,38 +82,42 @@ class Sequential(Model):
 
     def pop(self, loc=-1):
         '''
-        Delete layer(s) from model.
-        Parameter:
-        ----------
-            loc: int
-                Specifies the index of the layer in the model.
-        '''
+        Delete layer(s) from model and return it
 
+        Parameters
+        ----------
+        loc : int
+            Specifies the index of the layer in the model
+
+        '''
         if len(self.layers) > 0:
-            self.layers.pop(loc)
+            return self.layers.pop(loc)
 
     def switch(self, loc1, loc2):
         '''
         Switch the oder of two layers in the model.
 
-        Parameters:
-        -----------
-            loc1 : int
-                Specifies the index of the first layer.
-            loc2 : int
-                Specifies the index of the second layer.
+        Parameters
+        ----------
+        loc1 : int
+            Specifies the index of the first layer
+        loc2 : int
+            Specifies the index of the second layer
+
         '''
         self.layers[loc1], self.layers[loc2] = self.layers[loc2], self.layers[loc1]
 
     def compile(self):
         '''
-        Function to convert the layer objects into Viya options.
+        Convert the layer objects into Viya options
+
         '''
         if self.layers[0].config['type'] != 'input':
             raise ValueError('The first layer of the model must be an input layer')
         # if self.layers[-1].config['type'] != 'output':
         #     raise ValueError('The last layer of the model must be an output layer')
-        self._retrieve_('buildmodel', model=dict(name=self.model_name, replace=True), type='CNN')
+        self._retrieve_('buildmodel', model=dict(
+            name=self.model_name, replace=True), type='CNN')
 
         conv_num = 1
         fc_num = 1
@@ -119,6 +128,7 @@ class Sequential(Model):
 
         for layer in self.layers:
             if layer.config['type'] == 'block':
+                # TODO: output_layer is undefined here
                 options = layer.compile(src_layer=output_layer, block_num=block_num)
                 block_num += 1
                 for item in layer.layers:
@@ -154,7 +164,8 @@ class Sequential(Model):
                         if layer.name is None:
                             layer.name = 'Output'
                     else:
-                        raise ValueError('{} is not a supported layer type'.format(layer.config['type']))
+                        raise ValueError('{} is not a supported layer type'.format(
+                            layer.config['type']))
 
                 option = layer.to_model_params()
                 compiled_layers.append(layer)

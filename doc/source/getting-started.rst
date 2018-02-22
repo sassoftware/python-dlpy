@@ -21,4 +21,4 @@ These are passed to the :class:`ESP` constructor.
 
 .. ipython:: python
 
-   import dl_api
+   import dlpy

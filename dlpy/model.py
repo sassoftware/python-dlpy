@@ -16,20 +16,20 @@
 #  limitations under the License.
 #
 
-''' Base Model object for deep learning models. '''
+''' Base Model object for deep learning models '''
 
+import importlib
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from PIL import Image
 
-from .layers import *
-from .utils import image_blocksize, unify_keys, input_table_check, random_name
+from .layers import InputLayer, Conv2d, Pooling, BN, Res, Dense, OutputLayer
+from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib
 
 
-class Model:
+class Model(object):
     '''
     Model
 
@@ -64,14 +64,16 @@ class Model:
             raise TypeError('model_name has to be a string.')
         else:
             self.model_name = model_name
+
         self.model_table = dict(name=self.model_name)
         if caslib is not None:
             self.model_table.update(dict(caslib=caslib))
-
+        # self.model_table = conn.CASTable(**self.model_table)
         if model_weights is None:
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
         else:
             self.set_weights(model_weights)
+
         self.layers = []
         self.valid_res = None
         self.feature_maps = None
@@ -99,17 +101,21 @@ class Model:
         model = cls(conn=model_table.get_connection())
         model_name = model._retrieve_('table.fetch',
                                       table=dict(where='_DLKey1_= "modeltype"',
-                                                 **model_table.to_table_params())).Fetch['_DLKey0_'][0]
+                                                 **model_table.to_table_params()))
+        model_name = model_name.Fetch['_DLKey0_'][0]
 
-        print('NOTE: Model table is attached successfully!\n'
-              'NOTE: Model is named to "{}" according to the model name in the table.'.format(model_name))
+        print(('NOTE: Model table is attached successfully!\n'
+               'NOTE: Model is named to "{}" according to the '
+               'model name in the table.').format(model_name))
         model.model_name = model_name
+        model.model_table.update(**model_table.to_table_params())
         model.model_weights = model.conn.CASTable('{}_weights'.format(model_name))
 
         model_table = model_table.to_frame()
         for layer_id in range(int(model_table['_DLLayerID_'].max()) + 1):
             layer_table = model_table[model_table['_DLLayerID_'] == layer_id]
-            layertype = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'layertype'].tolist()[0]
+            layertype = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                                  'layertype'].tolist()[0]
             if layertype == 1:
                 model.layers.append(extract_input_layer(layer_table=layer_table))
             elif layertype == 2:
@@ -145,14 +151,15 @@ class Model:
     @classmethod
     def from_sashdat(cls, conn, path, caslib=None):
         '''
-        Function to generate a model object using the model information in the sashdat file
+        Generate a model object using the model information in the sashdat file
 
         Parameters
         ----------
         conn : CAS
             The CAS connection object.
         path : string
-            The path of the sashdat file, the path has to be accessible from the current CAS session.
+            The path of the sashdat file, the path has to be accessible
+            from the current CAS session.
         caslib : string, optional
             Specifies the name of the cas library that store the model table.
 
@@ -166,10 +173,10 @@ class Model:
         return model
 
     @classmethod
-    def from_caffe_model(cls, conn, caffe_model_file, model_weights_file=None, sas_hdf5_file=None,
-                         model_name=None):
+    def from_caffe_model(cls, conn, caffe_model_file, model_weights_file=None,
+                         sas_hdf5_file=None, model_name=None):
         '''
-        Function to generate a model object from a Caffe model proto file (e.g. *.prototxt).
+        Generate a model object from a Caffe model proto file (e.g. *.prototxt)
 
         Parameters
         ----------
@@ -187,34 +194,40 @@ class Model:
         model_name : string, optional
             Specifies the name of the cas table that stores the deep learning model.
             Default : None
-        caslib : string, optional
-            Specifies the name of the cas library that store the model table.
-
         Returns
         -------
         :class:`Model`
 
         '''
-
+        print(1)
         from .model_conversion.sas_caffe_parse import caffe_to_sas
+        print(1)
+
         if model_name is None:
             model_name = random_name('Caffe_model_')
 
         if model_weights_file is not None:
             if sas_hdf5_file is None:
-                raise ValueError('A sas_hdf5_file must be specified to store the model weights.')
+                raise ValueError('A sas_hdf5_file must be specified to store '
+                                 'the model weights.')
 
-        sas_file = random_name('temp_file_') + '.py'
+        # TODO: I'm not exactly sure what's going on here, but I'm thinking
+        #       there must be a better way about it.  Using 'exec' is generally
+        #       not necessary.
+        sas_file = 'temp_file_for_model_definition.py'
         temp_code_file = os.path.join(os.getcwd(), sas_file)
-        caffe_to_sas(caffe_model_file, temp_code_file, 'sas_caffe', network_param=model_weights_file,
-                     sas_hdf5=sas_hdf5_file)
+        print(1)
 
-        module_name = sas_file[:-3]
-        exec("from " + module_name + " import sas_caffe_model")
-
-        sas_caffe_model(conn)
+        caffe_to_sas(caffe_model_file, temp_code_file, 'sas_caffe',
+                     network_param=model_weights_file, sas_hdf5=sas_hdf5_file)
+        temp_module = importlib.import_module('temp_file_for_model_definition')
+        print(1)
+        temp_module.sas_caffe_model(conn)
+        print(1)
 
         model = Model.from_table(conn.CASTable(model_name))
+        print(1)
+
         if model_weights_file is not None and sas_hdf5_file is not None:
             model.load_weights(path=sas_hdf5_file)
         os.remove(temp_code_file)
@@ -223,7 +236,7 @@ class Model:
     # @classmethod
     # def from_keras_model(cls, conn, path, model_name=None, caslib=None):
     #     '''
-    #     Function to generate a model object from a Caffe model proto file (e.g. *.prototxt).
+    #     Generate a model object from a Caffe model proto file (e.g. *.prototxt)
     #
     #     Parameters
     #     ----------
@@ -257,12 +270,14 @@ class Model:
     #
     #     if model_weights_file is not None:
     #         if sas_hdf5_file is None:
-    #             raise ValueError('A sas_hdf5_file must be specified to store the model weights.')
+    #             raise ValueError('A sas_hdf5_file must be specified to '
+    #                              'store the model weights.')
     #
     #     model = Model(conn, model_name=model_name, caslib=caslib)
     #     sas_file = random_name('temp_file_') + '.py'
     #     temp_code_file = os.path.join(os.getcwd(), sas_file)
-    #     keras_to_sas(caffe_model_file, temp_code_file, 'sas_caffe', network_param=model_weights_file,
+    #     keras_to_sas(caffe_model_file, temp_code_file, 'sas_caffe',
+    #                  network_param=model_weights_file,
     #                  sas_hdf5=sas_hdf5_file)
     #     code = "from {} import sas_caffe_model\n".format(sas_file[:-3])
     #     eval(code)
@@ -273,8 +288,8 @@ class Model:
     #     os.remove(temp_code_file)
     #     return model
 
-    def _retrieve_(self, message_level='error', **kwargs):
-        return self.conn.retrieve(_messagelevel=message_level, **kwargs)
+    def _retrieve_(self, _name_, message_level='error', **kwargs):
+        return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)
 
     def load(self, path):
         '''
@@ -286,17 +301,17 @@ class Model:
             Specifies the absolute server-side path of the table file
 
         '''
-        # TODO: This may need to detect the server host type, or possibly
-        #       use a regular expression to support UNIX and Windows-style
-        #       paths.
-        # DONE: use path.split instead.
+
         dir_name, file_name = os.path.split(path)
 
-        cas_lib_name = random_name('Caslib', 6)
-        self._retrieve_('addcaslib',
-                        name=cas_lib_name, path=dir_name,
-                        activeOnAdd=False, dataSource=dict(srcType="DNFS"))
-
+        try:
+            flag, cas_lib_name = check_caslib(self.conn, dir_name)
+        except:
+            flag = False
+            cas_lib_name = random_name('Caslib', 6)
+            self._retrieve_('addcaslib',
+                            name=cas_lib_name, path=dir_name,
+                            activeOnAdd=False, dataSource=dict(srcType='DNFS'))
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
                         path=file_name,
@@ -307,15 +322,15 @@ class Model:
                                                 **self.model_table)).Fetch['_DLKey0_'][0]
 
         if model_name.lower() != self.model_name.lower():
-            self._retrieve_('table.partition', casout=dict(replace=True, name=model_name,
-                                                           caslib=self.model_table['caslib']),
-                            table=self.model_table)
+            self._retrieve_('table.partition',
+                            casout=dict(replace=True, name=model_name),
+                            table=self.model_name)
 
-            self._retrieve_('table.droptable',
-                            table=self.model_table)
+            self._retrieve_('table.droptable', **self.model_table)
 
-            print('NOTE: Model table is loaded successfully!\n'
-                  'NOTE: Model is renamed to "{}" according to the model name in the table.'.format(model_name))
+            print(('NOTE: Model table is loaded successfully!\n'
+                   'NOTE: Model is renamed to "{}" according to the '
+                   'model name in the table.').format(model_name))
             self.model_name = model_name
             self.model_table['name'] = model_name
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
@@ -323,7 +338,8 @@ class Model:
         model_table = self.conn.CASTable(self.model_name).to_frame()
         for layer_id in range(int(model_table['_DLLayerID_'].max()) + 1):
             layer_table = model_table[model_table['_DLLayerID_'] == layer_id]
-            layertype = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'layertype'].tolist()[0]
+            layertype = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                                  'layertype'].tolist()[0]
             if layertype == 1:
                 self.layers.append(extract_input_layer(layer_table=layer_table))
             elif layertype == 2:
@@ -338,6 +354,7 @@ class Model:
                 self.layers.append(extract_batchnorm_layer(layer_table=layer_table))
             elif layertype == 9:
                 self.layers.append(extract_residual_layer(layer_table=layer_table))
+
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
         layer_id_list = conn_mat['_DLLayerID_'].tolist()
@@ -361,7 +378,8 @@ class Model:
                                                 includeDirectories=False).FileInfo.Name)
 
         if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
-            print('NOTE: ' + _file_name_ + '_weights' + _extension_ + ' is used as model weigths.')
+            print('NOTE: ' + _file_name_ + '_weights' + _extension_ +
+                  ' is used as model weigths.')
 
             self._retrieve_('table.loadtable',
                             caslib=cas_lib_name,
@@ -370,14 +388,16 @@ class Model:
             self.set_weights(self.model_name + '_weights')
 
             if (_file_name_ + '_weights_attr' + _extension_) in _file_name_list_:
-                print('NOTE: ' + _file_name_ + '_weights_attr' + _extension_ + ' is used as weigths attribute.')
+                print('NOTE: ' + _file_name_ + '_weights_attr' + _extension_ +
+                      ' is used as weigths attribute.')
                 self._retrieve_('table.loadtable',
                                 caslib=cas_lib_name,
                                 path=_file_name_ + '_weights_attr' + _extension_,
-                                casout=dict(replace=True, name=self.model_name + '_weights_attr'))
+                                casout=dict(replace=True,
+                                            name=self.model_name + '_weights_attr'))
                 self.set_weights_attr(self.model_name + '_weights_attr')
-
-        self._retrieve_('dropcaslib', caslib=cas_lib_name)
+        if not flag:
+            self._retrieve_('dropcaslib', caslib=cas_lib_name)
 
     def set_weights(self, weight_tbl):
         '''
@@ -415,8 +435,7 @@ class Model:
         Currently support HDF5 and sashdat files.
 
         '''
-        # TODO: Must support UNIX and Windows-style paths
-        # DONE
+
         dir_name, file_name = os.path.split(path)
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
@@ -435,8 +454,9 @@ class Model:
 
         '''
         self._retrieve_('dlimportmodelweights', model=self.model_table,
-                        modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                        formatType="CAFFE", weightFilePath=path, **kwargs)
+                        modelWeights=dict(replace=True,
+                                          name=self.model_name + '_weights'),
+                        formatType='CAFFE', weightFilePath=path, **kwargs)
 
     def load_weights_from_table(self, path):
         '''
@@ -450,11 +470,14 @@ class Model:
 
         '''
         dir_name, file_name = os.path.split(path)
-
-        cas_lib_name = random_name('Caslib', 6)
-        self._retrieve_('addcaslib',
-                        name=cas_lib_name, path=dir_name,
-                        activeOnAdd=False, dataSource=dict(srcType="DNFS"))
+        try:
+            flag, cas_lib_name = check_caslib(self.conn, dir_name)
+        except:
+            flag = False
+            cas_lib_name = random_name('Caslib', 6)
+            self._retrieve_('addcaslib',
+                            name=cas_lib_name, path=dir_name,
+                            activeOnAdd=False, dataSource=dict(srcType='DNFS'))
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -470,17 +493,20 @@ class Model:
                             includeDirectories=False).FileInfo.Name)
 
         if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
-            print('NOTE: ' + _file_name_ + '_attr' + _extension_ + ' is used as weigths attribute.')
+            print('NOTE: ' + _file_name_ + '_attr' + _extension_ +
+                  ' is used as weigths attribute.')
             self._retrieve_('table.loadtable',
                             caslib=cas_lib_name,
                             path=_file_name_ + '_attr' + _extension_,
-                            casout=dict(replace=True, name=self.model_name + '_weights_attr'))
+                            casout=dict(replace=True,
+                                        name=self.model_name + '_weights_attr'))
 
             self.set_weights_attr(self.model_name + '_weights_attr')
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
 
-        self._retrieve_('dropcaslib', caslib=cas_lib_name)
+        if not flag:
+            self._retrieve_('dropcaslib', caslib=cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
         '''
@@ -517,20 +543,25 @@ class Model:
 
         '''
         dir_name, file_name = os.path.split(path)
-
-        cas_lib_name = random_name('Caslib', 6)
-        self._retrieve_('addcaslib',
-                        name=cas_lib_name, path=dir_name,
-                        activeOnAdd=False, dataSource=dict(srcType='DNFS'))
+        try:
+            flag, cas_lib_name = check_caslib(self.conn, dir_name)
+        except:
+            flag = False
+            cas_lib_name = random_name('Caslib', 6)
+            self._retrieve_('addcaslib',
+                            name=cas_lib_name, path=dir_name,
+                            activeOnAdd=False, dataSource=dict(srcType='DNFS'))
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
                         path=file_name,
-                        casout=dict(replace=True, name=self.model_name + '_weights_attr'))
+                        casout=dict(replace=True,
+                                    name=self.model_name + '_weights_attr'))
 
         self.set_weights_attr(self.model_name + '_weights_attr')
 
-        self._retrieve_('dropcaslib', caslib=cas_lib_name)
+        if not flag:
+            self._retrieve_('dropcaslib', caslib=cas_lib_name)
 
     def get_model_info(self):
         '''
@@ -604,7 +635,8 @@ class Model:
             if 'loglevel' not in opt_keys:
                 optimizer['loglevel'] = log_level
             if 'algorithm' in opt_keys:
-                algorithm = dict((k.lower(), v) for k, v in optimizer['algorithm'].items())
+                algorithm = dict((k.lower(), v)
+                                 for k, v in optimizer['algorithm'].items())
                 alg_keys = algorithm.keys()
                 if 'learningrate' not in alg_keys:
                     algorithm['learningrate'] = lr
@@ -763,7 +795,8 @@ class Model:
         temp_tbl = self.conn.CASTable(valid_res_tbl)
         temp_columns = temp_tbl.columninfo().ColumnInfo.Column
 
-        columns = [item for item in temp_columns if item[0:9] == 'P_' + target or item == 'I_' + target]
+        columns = [item for item in temp_columns
+                   if item[0:9] == 'P_' + target or item == 'I_' + target]
         img_table = self._retrieve_('fetchimages', fetchimagesvars=columns,
                                     imagetable=temp_tbl, to=1000)
         img_table = img_table.Images
@@ -804,7 +837,8 @@ class Model:
                              'M: for misclassified images\n')
         img_table.index = range(len(img_table.index))
 
-        columns_for_pred = [item for item in img_table.columns if item[0:9] == 'P__label_']
+        columns_for_pred = [item for item in img_table.columns
+                            if item[0:9] == 'P__label_']
 
         image = img_table['Image'][image_id]
         label = img_table['Label'][image_id]
@@ -814,8 +848,8 @@ class Model:
         values, labels = zip(*sorted(zip(values, labels)))
         values = values[-5:]
         labels = labels[-5:]
-        labels = [item[:(item.find('__') > 0) * item.find('__') + (item.find('__') < 0) * len(item)]
-                  for item in labels]
+        labels = [item[:(item.find('__') > 0) * item.find('__') +
+                        (item.find('__') < 0) * len(item)] for item in labels]
         labels = [item.replace('_', '\n') for item in labels]
 
         plot_predict_res(image, label, labels, values)
@@ -854,7 +888,8 @@ class Model:
 
         feature_maps_tbl = random_name('Feature_Maps') + '_{}'.format(image_id)
         score_options = dict(model=self.model_table, initWeights=self.model_weights,
-                             table=dict(where='{}="{}"'.format(uid_name, uid_value), **input_tbl),
+                             table=dict(where='{}="{}"'.format(uid_name,
+                                                               uid_value), **input_tbl),
                              layerOut=dict(name=feature_maps_tbl),
                              randomflip='none',
                              randomcrop='none',
@@ -866,9 +901,11 @@ class Model:
         feature_maps_names = [i for i in layer_out_jpg.columninfo().ColumnInfo.Column]
         feature_maps_structure = dict()
         for feature_map_name in feature_maps_names:
-            feature_maps_structure[int(feature_map_name.split('_')[2])] = int(feature_map_name.split('_')[4]) + 1
+            feature_maps_structure[int(feature_map_name.split('_')[2])] = \
+                int(feature_map_name.split('_')[4]) + 1
 
-        self.feature_maps = FeatureMaps(self.conn, feature_maps_tbl, structure=feature_maps_structure)
+        self.feature_maps = FeatureMaps(self.conn, feature_maps_tbl,
+                                        structure=feature_maps_structure)
 
     def get_features(self, data, dense_layer, target='_label_', **kwargs):
         '''
@@ -884,7 +921,8 @@ class Model:
             Specifies the name of the column including the response variable
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
-            see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
+            see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/
+                ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
             for detail.
 
         Returns
@@ -929,7 +967,8 @@ class Model:
         step_size : int
             Specifies the stepsize of the movement of the the mask.
         display : boolean
-            Specifies whether to display the results. By default, only the first five images will be displayed.
+            Specifies whether to display the results. By default, only the first
+            five images will be displayed.
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
 
@@ -964,15 +1003,24 @@ class Model:
         copy_vars = data.columns.tolist()
         masked_image_table = random_name('MASKED_IMG')
         blocksize = image_blocksize(output_width, output_height)
-
+        if data.numrows().numrows > 5:
+            print('NOTE : The number of images in the table is too large,'
+                  ' only 5 randomly selected images are used in analysis.')
+            te_rate = 5 / data.numrows().numrows * 100
+            from .splitting import two_way_split
+            _, data2 = two_way_split(data, test_rate=te_rate)
+            data = data2
         # Prepare masked images for analysis.
         self._retrieve_('image.augmentImages',
                         table=data.to_table_params(),
                         copyvars=copy_vars,
-                        casout=dict(replace=True, name=masked_image_table, blocksize=blocksize),
+                        casout=dict(replace=True, name=masked_image_table,
+                                    blocksize=blocksize),
                         cropList=[dict(sweepImage=True, x=0, y=0,
-                                       width=mask_width, height=mask_height, stepsize=step_size,
-                                       outputwidth=output_width, outputheight=output_height,
+                                       width=mask_width, height=mask_height,
+                                       stepsize=step_size,
+                                       outputwidth=output_width,
+                                       outputheight=output_height,
                                        mask=True)])
 
         masked_image_table = self.conn.CASTable(masked_image_table)
@@ -1020,19 +1068,23 @@ class Model:
             true_pred_prob_col = 'P__label_' + true_class
             prob = row[true_pred_prob_col]
             model_explain_table[name][y:min(y + y_step, output_height),
-            x:min(x + x_step, output_width), count_for_subject[name]] = prob
+            x:min(x + x_step, output_width),
+            count_for_subject[name]] = prob
             count_for_subject[name] += 1
 
-        original_image_table = data.fetchimages(fetchVars=data.columns.tolist(), TO=data.numrows().numrows).Images
+        original_image_table = data.fetchimages(fetchVars=data.columns.tolist(),
+                                                to=data.numrows().numrows).Images
 
         output_table = []
         for name in model_explain_table.keys():
             temp_dict = dict()
             temp_dict.update({'_filename_0': name})
             index = original_image_table['_filename_0'] == name
-            temp_dict.update({'_image_': original_image_table['Image'][index].tolist()[0]})
-            temp_dict.update({'_label_': original_image_table['Label'][index].tolist()[0]})
-            temp_dict.update({'heat_map': np.nanmean(model_explain_table[name], axis=2)})
+            temp_dict.update({
+                '_image_': original_image_table['Image'][index].tolist()[0],
+                '_label_': original_image_table['Label'][index].tolist()[0],
+                'heat_map': np.nanmean(model_explain_table[name], axis=2)
+            })
             output_table.append(temp_dict)
 
         self._retrieve_('droptable', name=masked_image_table)
@@ -1064,13 +1116,15 @@ class Model:
                 axs[image_id][0].set_title('Original Image: {}'.format(label))
 
                 color_bar = axs[image_id][2].imshow(heat_map, vmax=vmax, vmin=vmin,
-                                                    interpolation='none', extent=extent, cmap='jet_r')
+                                                    interpolation='none',
+                                                    extent=extent, cmap='jet_r')
                 axs[image_id][2].axis('off')
                 axs[image_id][2].set_title('Heat Map')
 
                 axs[image_id][1].imshow(img, extent=extent)
-                axs[image_id][1].imshow(heat_map, vmax=vmax, vmin=vmin, interpolation='none',
-                                        alpha=0.5, extent=extent, cmap='jet_r')
+                axs[image_id][1].imshow(heat_map, vmax=vmax, vmin=vmin,
+                                        interpolation='none', alpha=0.5,
+                                        extent=extent, cmap='jet_r')
                 axs[image_id][1].axis('off')
                 axs[image_id][1].set_title('Overlayed Image')
 
@@ -1152,7 +1206,10 @@ class Model:
         self._retrieve_('dlexportmodel',
                         casout=dict(replace=True, name=CAS_tbl_name),
                         initWeights=self.model_weights,
-                        modelTable=self.model_table)
+                        modelTable=self.model_table,
+                        randomCrop='none',
+                        randomFlip='none',
+                        randomMutation='none')
 
         model_astore = self._retrieve_('download',
                                        rstore=CAS_tbl_name)
@@ -1163,6 +1220,7 @@ class Model:
 
         if not os.path.isdir(path):
             os.makedirs(path)
+
         file_name = os.path.join(path, file_name)
         with open(file_name, 'wb') as file:
             file.write(model_astore['blob'])
@@ -1178,11 +1236,14 @@ class Model:
             Specifies the server-side path to store the model tables.
 
         '''
-
-        cas_lib_name = random_name('CASLIB')
-        self._retrieve_('addcaslib',
-                        activeonadd=False, datasource=dict(srcType="DNFS"),
-                        name=cas_lib_name, path=path)
+        try:
+            flag, cas_lib_name = check_caslib(self.conn, dir_name)
+        except:
+            flag = False
+            cas_lib_name = random_name('CASLIB')
+            self._retrieve_('addcaslib',
+                            activeonadd=False, datasource=dict(srcType='DNFS'),
+                            name=cas_lib_name, path=path)
 
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.sashdat'
@@ -1200,18 +1261,17 @@ class Model:
                         replace=True, caslib=cas_lib_name)
         CAS_tbl_name = random_name('Attr_Tbl')
         self._retrieve_('table.attribute',
-                        task='CONVERT', attrtable=CAS_tbl_name,
+                        task='convert', attrtable=CAS_tbl_name,
                         **self.model_weights.to_table_params())
         self._retrieve_('table.save',
                         table=CAS_tbl_name,
                         name=attr_tbl_file,
                         replace=True, caslib=cas_lib_name)
-
-        self._retrieve_('dropcaslib',
-                        caslib=cas_lib_name)
+        if not flag:
+            self._retrieve_('dropcaslib', caslib=cas_lib_name)
         print('NOTE: Model table saved successfully.')
 
-    def deploy(self, path, output_format='ASTORE'):
+    def deploy(self, path, output_format='astore'):
         '''
         Deploy the deep learning model to a data file
 
@@ -1219,10 +1279,10 @@ class Model:
         ----------
         path : string
             Specifies the server-side path to store the model tables or astore
-        format : string, optional
+        output_format : string, optional
             Specifies the format of the deployed model
-            Supported format: ASTORE or CASTABLE
-            Default : ASTORE
+            Supported format: astore or castable
+            Default : astore
 
         Notes
         -----
@@ -1296,12 +1356,17 @@ class Model:
         #       are or even if it's on Windows.
 
         import os
-        os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
+        os.environ['PATH'] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
         return model_to_graph(self)
 
 
-class FeatureMaps:
-    '''A module for feature maps'''
+class FeatureMaps(object):
+    '''
+    Feature maps
+
+    '''
+
+    # TODO: Parameter descriptions
 
     def __init__(self, conn, feature_maps_tbl, structure=None):
         self.conn = conn
@@ -1310,7 +1375,7 @@ class FeatureMaps:
 
     def display(self, layer_id, filter_id=None):
         '''
-        Function to display the feature maps
+        Display the feature maps
 
         Parameters
         ----------
@@ -1342,18 +1407,20 @@ class FeatureMaps:
             image = []
             for i in range(3):
                 col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, i)
-                temp = self.conn._retrieve_('fetchimages', _messagelevel='error',
-                                            table=self.tbl, image=col_name).Images.Image[0]
+                temp = self.conn.retrieve('fetchimages', _messagelevel='error',
+                                          table=self.tbl,
+                                          image=col_name).Images.Image[0]
                 image.append(np.asarray(temp))
             image = np.dstack((image[2], image[1], image[0]))
-            image = Image.fromarray(image, 'RGB')
-            image.show()
+            plt.imshow(image)
+            plt.xticks([]), plt.yticks([])
         else:
             for i in range(n_images):
                 filter_num = filter_id[i]
                 col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, filter_num)
-                image = self.conn._retrieve_('fetchimages', _messagelevel='error',
-                                             table=self.tbl, image=col_name).Images.Image[0]
+                image = self.conn.retrieve('fetchimages', _messagelevel='error',
+                                           table=self.tbl,
+                                           image=col_name).Images.Image[0]
                 image = np.asarray(image)
                 fig.add_subplot(n_row, n_col, i + 1)
                 plt.imshow(image, cmap='gray')
@@ -1386,7 +1453,8 @@ def get_num_configs(keys, layer_type_prefix, layer_table):
     for key in keys:
         try:
             layer_config[key] = layer_table['_DLNumVal_'][
-                layer_table['_DLKey1_'] == layer_type_prefix + '.' + key.lower().replace('_', '')].tolist()[0]
+                layer_table['_DLKey1_'] == layer_type_prefix + '.' +
+                key.lower().replace('_', '')].tolist()[0]
         except IndexError:
             pass
     return layer_config
@@ -1416,7 +1484,8 @@ def get_str_configs(keys, layer_type_prefix, layer_table):
     for key in keys:
         try:
             layer_config[key] = layer_table['_DLChrVal_'][
-                layer_table['_DLKey1_'] == layer_type_prefix + '.' + key.lower().replace('_', '')].tolist()[0]
+                layer_table['_DLKey1_'] == layer_type_prefix + '.' +
+                key.lower().replace('_', '')].tolist()[0]
         except IndexError:
             pass
     return layer_config
@@ -1424,7 +1493,7 @@ def get_str_configs(keys, layer_type_prefix, layer_table):
 
 def extract_input_layer(layer_table):
     '''
-    Function to extract layer configuration from an input layer table.
+    Extract layer configuration from an input layer table
 
     Parameters
     ----------
@@ -1446,30 +1515,37 @@ def extract_input_layer(layer_table):
     input_layer_config['offsets'] = []
     try:
         input_layer_config['offsets'].append(
-            int(layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'inputopts.offsets'].tolist()[0]))
+            int(layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                          'inputopts.offsets'].tolist()[0]))
     except IndexError:
         pass
     try:
         input_layer_config['offsets'].append(
-            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'inputopts.offsets.0'].tolist()[0])
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.offsets.0'].tolist()[0])
     except IndexError:
         pass
     try:
         input_layer_config['offsets'].append(
-            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'inputopts.offsets.1'].tolist()[0])
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.offsets.1'].tolist()[0])
     except IndexError:
         pass
     try:
         input_layer_config['offsets'].append(
-            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'inputopts.offsets.2'].tolist()[0])
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.offsets.2'].tolist()[0])
     except IndexError:
         pass
-    if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] == 'inputopts.crop'].tolist()[0] == 'No cropping':
+
+    if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] ==
+                                 'inputopts.crop'].tolist()[0] == 'No cropping':
         input_layer_config['random_crop'] = 'none'
     else:
         input_layer_config['random_crop'] = 'unique'
 
-    if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] == 'inputopts.flip'].tolist()[0] == 'No flipping':
+    if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] ==
+                                 'inputopts.flip'].tolist()[0] == 'No flipping':
         input_layer_config['random_flip'] = 'none'
     # else:
     #     input_layer_config['random_flip']='hv'
@@ -1480,7 +1556,7 @@ def extract_input_layer(layer_table):
 
 def extract_conv_layer(layer_table):
     '''
-    Function to extract layer configuration from a convolution layer table.
+    Extract layer configuration from a convolution layer table
 
     Parameters
     ----------
@@ -1514,7 +1590,7 @@ def extract_conv_layer(layer_table):
 
 def extract_pooling_layer(layer_table):
     '''
-    Function to extract layer configuration from a pooling layer table.
+    Extract layer configuration from a pooling layer table
 
     Parameters
     ----------
@@ -1545,7 +1621,7 @@ def extract_pooling_layer(layer_table):
 
 def extract_batchnorm_layer(layer_table):
     '''
-    Function to extract layer configuration from a batch normalization layer table.
+    Extract layer configuration from a batch normalization layer table
 
     Parameters
     ----------
@@ -1569,7 +1645,7 @@ def extract_batchnorm_layer(layer_table):
 
 def extract_residual_layer(layer_table):
     '''
-    Function to extract layer configuration from a residual layer table.
+    Extract layer configuration from a residual layer table
 
     Parameters
     ----------
@@ -1595,7 +1671,7 @@ def extract_residual_layer(layer_table):
 
 def extract_fc_layer(layer_table):
     '''
-    Function to extract layer configuration from a fully connected layer table.
+    Extract layer configuration from a fully connected layer table
 
     Parameters
     ----------
@@ -1628,7 +1704,8 @@ def extract_fc_layer(layer_table):
 
 
 def extract_output_layer(layer_table):
-    '''Function to extract layer configuration from an output layer table.
+    '''
+    Extract layer configuration from an output layer table
 
     Parameters
     ----------
@@ -1661,7 +1738,8 @@ def extract_output_layer(layer_table):
 
 
 def layer_to_node(layer):
-    '''Function to convert layer configuration to a node in the model graph.
+    '''
+    Convert layer configuration to a node in the model graph
 
     Parameters
     ----------
@@ -1709,7 +1787,7 @@ def layer_to_node(layer):
 
 def layer_to_edge(layer):
     '''
-    Function to convert layer to layer connection to an edge in the model graph.
+    Convert layer to layer connection to an edge in the model graph
 
     Parameters
     ----------
@@ -1720,6 +1798,7 @@ def layer_to_edge(layer):
     -------
     :class:`dict`
         Options that can be passed to graph configuration.
+
     '''
     gv_params = []
     for item in layer.src_layers:
@@ -1730,7 +1809,8 @@ def layer_to_edge(layer):
 
 
 def model_to_graph(model):
-    '''Function to convert model configuration to a graph.
+    '''
+    Convert model configuration to a graph
 
     Parameters
     ----------
@@ -1740,14 +1820,9 @@ def model_to_graph(model):
     Returns
     -------
     :class:`graphviz.dot.Digraph`
+
     '''
-    try:
-        import graphviz as gv
-    except:
-        raise ImportError('Please follow the following steps to install graphviz properly:\n'
-                          '1. Download graphviz from http://www.graphviz.org/\n'
-                          '2. Install graphviz in python, e.g. "pip install --upgrade graphviz"\n'
-                          '3. Add the installation path to sys.path')
+    import graphviz as gv
 
     model_graph = gv.Digraph(name=model.model_name,
                              node_attr=dict(shape='record', style='filled,rounded'))

@@ -16,16 +16,15 @@
 #  limitations under the License.
 #
 
-'''
-Functions to support different splitting schemes.
-'''
+''' Functions to support different splitting schemes '''
 
 from swat.cas.table import CASTable
 from .images import ImageTable
 from .utils import random_name
 
 
-def two_way_split(tbl, test_rate=20, stratify_by='_label_', image_col='_image_', **kwargs):
+def two_way_split(tbl, test_rate=20, stratify_by='_label_',
+                  image_col='_image_', **kwargs):
     '''
     Split image data into training and testing sets
 
@@ -55,26 +54,28 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_', image_col='_image_',
     partindname = random_name(name='PartInd_', length=2)
 
     tbl._retrieve('sampling.stratified',
-                  output=dict(casout=temp_tbl_name, copyvars='all', partindname=partindname),
-                  samppct=test_rate, samppct2=100 - test_rate,
-                  partind=True,
+                  output=dict(casout=temp_tbl_name, copyvars='all',
+                              partindname=partindname),
+                  samppct=test_rate, samppct2=100 - test_rate, partind=True,
                   table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
 
     train = tbl._retrieve('table.partition',
                           table=dict(where='{}=2'.format(partindname),
                                      name=temp_tbl_name),
-                          casout=dict(name=train_tbl_name, replace=True, blocksize=128))['casTable']
+                          casout=dict(name=train_tbl_name, replace=True,
+                                      blocksize=128))['casTable']
 
     test = tbl._retrieve('table.partition',
                          table=dict(where='{}=1'.format(partindname),
                                     name=temp_tbl_name),
-                         casout=dict(name=test_tbl_name, replace=True, blocksize=128))['casTable']
+                         casout=dict(name=test_tbl_name, replace=True,
+                                     blocksize=128))['casTable']
 
     tbl._retrieve('table.dropTable',
                   name=temp_tbl_name)
 
-    return ImageTable.from_table(train, label_col=stratify_by, image_col=image_col),\
-           ImageTable.from_table(test, label_col=stratify_by, image_col=image_col)
+    return (ImageTable.from_table(train, label_col=stratify_by, image_col=image_col),
+            ImageTable.from_table(test, label_col=stratify_by, image_col=image_col))
 
 
 def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **kwargs):
@@ -112,7 +113,8 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **k
     partindname = random_name(name='PartInd_', length=2)
 
     tbl._retrieve('sampling.stratified',
-                  output=dict(casout=temp_tbl_name, copyvars='all', partindname=partindname),
+                  output=dict(casout=temp_tbl_name, copyvars='all',
+                              partindname=partindname),
                   samppct=valid_rate, samppct2=test_rate,
                   partind=True,
                   table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
@@ -135,4 +137,6 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **k
     tbl._retrieve('table.dropTable',
                   name=temp_tbl_name)
 
-    return ImageTable.from_table(train), ImageTable.from_table(valid), ImageTable.from_table(test)
+    return (ImageTable.from_table(train),
+            ImageTable.from_table(valid),
+            ImageTable.from_table(test))

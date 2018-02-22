@@ -16,9 +16,8 @@
 #  limitations under the License.
 #
 
-'''
-ImageTable is a sub class of CASTable, which support special functionality for imaging data.
-'''
+''' Special functionality for CAS tables containing image data '''
+
 import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
@@ -58,8 +57,8 @@ class ImageTable(CASTable):
         self.patch_level = 0
 
     @classmethod
-    def from_table(cls, tbl, image_col='_image_', label_col='_label_', path_col=None, casout=None):
-
+    def from_table(cls, tbl, image_col='_image_', label_col='_label_',
+                   path_col=None, casout=None):
         '''
         Create an ImageTable from a CASTable
 
@@ -97,24 +96,28 @@ class ImageTable(CASTable):
 
         if '_filename_0' in tbl.columninfo().ColumnInfo.Column.tolist():
             computedvars = []
-            code = ''
+            code = []
         else:
             computedvars = ['_filename_0']
-            code = "length _filename_0 varchar(*); "
+            code = ['length _filename_0 varchar(*);']
             if path_col is not None:
-                code = code + "_loc1 = LENGTH({0}) - INDEX(REVERSE({0}),'/')+2; ".format(path_col) + \
-                       "_filename_0 = SUBSTR({},_loc1);".format(path_col)
+                code.append(('_loc1 = LENGTH({0}) - '
+                             'INDEX(REVERSE({0}),\'/\')+2;').format(path_col))
+                code.append('_filename_0 = SUBSTR({},_loc1);'.format(path_col))
             else:
-                code = code + 'call streaminit(-1);shuffle_id=rand(\"UNIFORM\")*10**10;' + \
-                       '_filename_0=cats({},"_",put(put(shuffle_id,z10.),$char10.),".jpg");'.format(label_col)
+                code.append('call streaminit(-1);shuffle_id=rand("UNIFORM")*10**10;')
+                code.append(('_filename_0=cats({},"_",put(put(shuffle_id,z10.)'
+                             ',$char10.),".jpg");').format(label_col))
 
         if image_col != '_image_':
             computedvars.append('_image_')
-            code = code + '_image_ = {};'.format(image_col)
+            code.append('_image_ = {};'.format(image_col))
 
         if label_col != '_label_':
             computedvars.append('_label_')
-            code = code + '_label_ = {};'.format(label_col)
+            code.append('_label_ = {};'.format(label_col))
+
+        code = '\n'.join(code)
 
         if computedvars:
             table_opts = dict(computedvars=computedvars,
@@ -173,9 +176,11 @@ class ImageTable(CASTable):
                       recurse=True, labellevels=-1,
                       path=path, **kwargs)
 
-        code = "length _filename_0 varchar(*); " + \
-               "_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),'/')+2; " + \
-               "_filename_0 = SUBSTR(_path_,_loc1);"
+        code = []
+        code.append('length _filename_0 varchar(*);')
+        code.append('_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),\'/\')+2;')
+        code.append('_filename_0 = SUBSTR(_path_,_loc1);')
+        code = '\n'.join(code)
 
         conn.retrieve('table.partition', _messagelevel='error',
                       table=dict(Vars=['_image_', '_label_'],
@@ -234,11 +239,12 @@ class ImageTable(CASTable):
         '''
         caslib = random_name('Caslib', 6)
         self._retrieve('addcaslib', name=caslib, path=path, activeonadd=False,
-                       datasource=dict(srcType="DNFS"))
+                       datasource=dict(srcType='DNFS'))
         if name is None:
             name = self.to_params()['name'] + '.sashdat'
 
-        self._retrieve('table.save', caslib=caslib, name=name, table=self.to_params(), **kwargs)
+        self._retrieve('table.save', caslib=caslib, name=name,
+                       table=self.to_params(), **kwargs)
         self._retrieve('dropcaslib', caslib=caslib)
 
     def copy_table(self, casout=None):
@@ -290,8 +296,9 @@ class ImageTable(CASTable):
             temp_tbl = self.retrieve('image.fetchimages', _messagelevel='error',
                                      table=dict(
                                          computedvars=['random_index'],
-                                         computedvarsprogram='call streaminit(-1);\
-                                                              random_index=rand("UNIFORM");',
+                                         computedvarsprogram='call streaminit(-1);'
+                                                             'random_index='
+                                                             'rand("UNIFORM");',
                                          **self.to_table_params()),
                                      sortby='random_index', to=nimages)
         else:
@@ -312,7 +319,7 @@ class ImageTable(CASTable):
             ax = fig.add_subplot(nrow, ncol, i + 1)
             ax.set_title('{}'.format(label))
             if len(image.size) == 2:
-                plt.imshow(np.array(image), cmap='Grays_r')
+                plt.imshow(np.array(image), cmap='Greys_r')
             else:
                 plt.imshow(image)
             plt.xticks([]), plt.yticks([])
@@ -358,9 +365,10 @@ class ImageTable(CASTable):
                            copyvars=column_names,
                            casout=dict(replace=True, blocksize=blocksize,
                                        **self.to_outtable_params()),
-                           imagefunctions=[dict(functionoptions=
-                                                dict(functiontype='GET_PATCH', x=x, y=y,
-                                                     w=width, h=height))])
+                           imagefunctions=[
+                               dict(functionoptions=dict(functiontype='GET_PATCH',
+                                                         x=x, y=y,
+                                                         w=width, h=height))])
 
         else:
             out = self.copy_table()
@@ -404,9 +412,9 @@ class ImageTable(CASTable):
                            copyvars=column_names,
                            casout=dict(replace=True, blocksize=blocksize,
                                        **self.to_outtable_params()),
-                           imagefunctions=[dict(functionoptions=
-                                                dict(functiontype='RESIZE',
-                                                     w=width, h=height))])
+                           imagefunctions=[
+                               dict(functionoptions=dict(functiontype='RESIZE',
+                                                         w=width, h=height))])
             # self._retrieve('table.partition',
             #                casout=dict(replace=True, blocksize=blocksize,
             #                           **self.to_outtable_params())
@@ -499,10 +507,13 @@ class ImageTable(CASTable):
             # The following code generate the latest file name according
             # to the number of patches operations.
             computedvars = '_filename_{}'.format(self.patch_level + 1)
-            code = "length _filename_{1} varchar(*); " + \
-                   "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; " + \
-                   "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1) || " + \
-                   "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); "
+            code = []
+            code.append('length _filename_{1} varchar(*);')
+            code.append('dot_loc = LENGTH(_filename_{0}) - '
+                        'INDEX(REVERSE(_filename_{0}), \'.\')+1;')
+            code.append('_filename_{1} = SUBSTR(_filename_{0}, 1, dot_loc-1) || '
+                        'compress(\'_\'||x||\'_\'||y||SUBSTR(_filename_{0},dot_loc));')
+            code = '\n'.join(code)
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.shuffle',
@@ -594,10 +605,13 @@ class ImageTable(CASTable):
             # The following code generate the latest file name according
             # to the number of patches operations.
             computedvars = '_filename_{}'.format(self.patch_level + 1)
-            code = "length _filename_{1} varchar(*); " + \
-                   "dot_loc = LENGTH(_filename_{0}) - INDEX(REVERSE(_filename_{0}),'.')+1; " + \
-                   "_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1) || " + \
-                   "compress('_'||x||'_'||y||SUBSTR(_filename_{0},dot_loc)); "
+            code = []
+            code.append('length _filename_{1} varchar(*);')
+            code.append('dot_loc = LENGTH(_filename_{0}) - '
+                        'INDEX(REVERSE(_filename_{0}),\'.\')+1;')
+            code.append('_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1) || '
+                        'compress(\'_\'||x||\'_\'||y||SUBSTR(_filename_{0},dot_loc));')
+            code = '\n'.join(code)
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.shuffle',
@@ -665,10 +679,17 @@ class ImageTable(CASTable):
         return self.image_summary[['mean1stChannel', 'mean2ndChannel',
                                    'mean3rdChannel']].tolist()
 
-    # @property
-    # def uid(self):
-    #
-    #     file_name = '_filename_{}'.format(self.patch_level)
-    #     uid = self[['_label_', file_name]].to_frame()
-    #     # uid = uid.rename(columns={file_name: '_uid_'})
-    #     return uid
+    @property
+    def uid(self):
+        '''
+        A unique ID for each image.
+
+        Returns
+        -------
+
+
+        '''
+        file_name = '_filename_{}'.format(self.patch_level)
+        uid = self[['_label_', file_name]].to_frame()
+        # uid = uid.rename(columns={file_name: '_uid_'})
+        return uid
