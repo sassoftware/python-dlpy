@@ -79,8 +79,9 @@ author = 'SAS'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
+path = os.path.abspath("../..")
 
-sys.path.append('C:/Users/leliuz/Desktop/dlpy-master-27197b2f0c8d3df6632b6e8f58a9bfef8d8bc174')
+sys.path.append(path)
 import dlpy
 
 # The short X.Y version.

@@ -50,8 +50,12 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
     out = [
         'import sys',
         '',
-        'def ' + model_name.lower() + '_model(s, input_crop_type=None, input_channel_offset=None, input_image_size=None):',
-        '',
+        'def sas_model_gen(s, input_crop_type=None, input_channel_offset=None, input_image_size=None):',
+        '   # quick check for deeplearn actionset',
+        '   actionset_list = s.actionsetinfo().setinfo.actionset.tolist()',
+        '   actionset_list = [item.lower() for item in actionset_list]',
+        '   if "deeplearn" not in actionset_list:s.loadactionset("deeplearn")',
+        '   ',
         '   # quick error-checking and default setting',
         '   if (input_crop_type is None):',
         '       input_crop_type="NONE"',
@@ -121,7 +125,8 @@ def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
     out = [
         '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
         '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
-        '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(activation) + ', dropout=' + dropout + '), \n',
+        '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
+            activation) + ', dropout=' + dropout + '), \n',
         '              srcLayers=' + src_layer + ')'
     ]
     return '\n'.join(out)
@@ -221,7 +226,7 @@ def write_residual_layer(model_name='sas', layer_name='residual',
     '''
     out = [
         '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
-        '              layer=dict( type="residual", act='' + activation + ''),',
+        '              layer=dict( type="residual", act="' + activation + '"),',
         '              srcLayers=' + src_layer + ')'
     ]
     return '\n'.join(out)

@@ -196,11 +196,13 @@ def keras_module_to_sas(module_name, model_name, model_args, sas_file_name):
             return model
 
 
-def keras_to_sas(model, model_name):
+def keras_to_sas(model, model_name=None):
     output_code = ''
     layer_activation = {}
     src_layer = {}
     layer_dropout = {}
+    if model_name is None:
+        model_name = model.name
     for layer in model.layers:
         class_name = layer.__class__.__name__.lower()
         if (class_name in computation_layer_classes):
@@ -279,6 +281,7 @@ def keras_to_sas(model, model_name):
         elif (class_name not in ['activation', 'flatten', 'dropout']):
             print('WARNING: unable to generate SAS definition '
                   'for layer ' + class_name)
+
     return output_code
 
 
@@ -713,20 +716,20 @@ def find_next_computation_layer(model, layer, computation_layer_list):
     String value with name of next computation layer
     '''
 
-    if (len(layer.outbound_nodes) > 1):
+    if (len(layer._outbound_nodes) > 1):
         raise KerasParseError('Unable to determine next computation layer '
                               'for layer = ' + layer.name)
     else:
-        node_config = layer.outbound_nodes[0].get_config()
+        node_config = layer._outbound_nodes[0].get_config()
         layer_name = node_config['outbound_layer']
         tmp_layer = model.get_layer(name=layer_name)
         while (tmp_layer.__class__.__name__.lower() not in computation_layer_list):
-            if (len(tmp_layer.outbound_nodes) > 1):
+            if (len(tmp_layer._outbound_nodes) > 1):
                 raise KerasParseError('Unable to determine next computation layer '
                                       'for layer = ' + layer.name)
                 break
             else:
-                node_config = tmp_layer.outbound_nodes[0].get_config()
+                node_config = tmp_layer._outbound_nodes[0].get_config()
                 layer_name = node_config['outbound_layer']
                 tmp_layer = model.get_layer(name=layer_name)
 
@@ -754,19 +757,19 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
     '''
 
     layer = model.get_layer(name=layer_name)
-    if (len(layer.inbound_nodes) > 1):
+    if (len(layer._inbound_nodes) > 1):
         raise KerasParseError('Unable to determine previous computation '
                               'layer(s) for layer = ' + layer_name)
         return None
     else:
         src_layer_name = []
-        node_config = layer.inbound_nodes[0].get_config()
+        node_config = layer._inbound_nodes[0].get_config()
         for lname in node_config['inbound_layers']:
             tmp_layer = model.get_layer(name=lname)
             prev_layer = tmp_layer
             while (tmp_layer.__class__.__name__.lower() not in computation_layer_list):
                 # check for root node
-                node_config = tmp_layer.inbound_nodes[0].get_config()
+                node_config = tmp_layer._inbound_nodes[0].get_config()
                 if (len(node_config['inbound_layers']) > 1):
                     raise KerasParseError('Unable to determine previous computation '
                                           'layer(s) for layer = ' + layer_name)
