@@ -168,13 +168,12 @@ class Model(object):
         :class:`Model`
 
         '''
-        model = Model(conn, caslib=caslib)
+        model = cls(conn, caslib=caslib)
         model.load(path=path)
         return model
 
     @classmethod
-    def from_caffe_model(cls, conn, caffe_model_file, model_weights_file=None,
-                         sas_hdf5_file=None, model_name=None):
+    def from_caffe_model(cls, conn, network_file, model_name=None, **kwargs):
         '''
         Generate a model object from a Caffe model proto file (e.g. *.prototxt)
 
@@ -199,94 +198,52 @@ class Model(object):
         :class:`Model`
 
         '''
-        print(1)
         from .model_conversion.sas_caffe_parse import caffe_to_sas
-        print(1)
-
         if model_name is None:
-            model_name = random_name('Caffe_model_')
-
-        if model_weights_file is not None:
-            if sas_hdf5_file is None:
-                raise ValueError('A sas_hdf5_file must be specified to store '
-                                 'the model weights.')
-
-        # TODO: I'm not exactly sure what's going on here, but I'm thinking
-        #       there must be a better way about it.  Using 'exec' is generally
-        #       not necessary.
-        sas_file = 'temp_file_for_model_definition.py'
-        temp_code_file = os.path.join(os.getcwd(), sas_file)
-        print(1)
-
-        caffe_to_sas(caffe_model_file, temp_code_file, 'sas_caffe',
-                     network_param=model_weights_file, sas_hdf5=sas_hdf5_file)
-        temp_module = importlib.import_module('temp_file_for_model_definition')
-        print(1)
-        temp_module.sas_caffe_model(conn)
-        print(1)
-
-        model = Model.from_table(conn.CASTable(model_name))
-        print(1)
-
-        if model_weights_file is not None and sas_hdf5_file is not None:
-            model.load_weights(path=sas_hdf5_file)
-        os.remove(temp_code_file)
+            model_name = random_name('caffe_model')
+        output_code = caffe_to_sas(network_file, model_name, **kwargs)
+        exec(output_code)
+        temp_name = conn
+        exec('sas_model_gen(temp_name)')
+        model_table = conn.CASTable(model_name)
+        model = cls.from_table(model_table=model_table)
         return model
 
-    # @classmethod
-    # def from_keras_model(cls, conn, path, model_name=None, caslib=None):
-    #     '''
-    #     Generate a model object from a Caffe model proto file (e.g. *.prototxt)
-    #
-    #     Parameters
-    #     ----------
-    #     conn : CAS
-    #         The CAS connection object.
-    #     caffe_model_file : string
-    #         Fully qualified file name of network definition file (*.prototxt).
-    #     model_weights_file : string, optional
-    #         Fully qualified file name of model weights file (*.caffemodel)
-    #         Default : None
-    #     sas_hdf5_file : string, optional
-    #         Specifies the SAS-compatible file that stores the model weights.
-    #         Must be a fully qualified file name of SAS-compatible file (*.caffemodel.h5)
-    #         Default : None
-    #     model_name : string, optional
-    #         Specifies the name of the cas table that stores the deep learning model.
-    #         Default : None
-    #     caslib : string, optional
-    #         Specifies the name of the cas library that store the model table.
-    #
-    #     Returns
-    #     -------
-    #     :class:`Model`
-    #
-    #     '''
-    #
-    #     from .model_conversion.sas_keras_parse import keras_to_sas
-    #
-    #     if model_name is None:
-    #         model_name = random_name('Caffe_model_')
-    #
-    #     if model_weights_file is not None:
-    #         if sas_hdf5_file is None:
-    #             raise ValueError('A sas_hdf5_file must be specified to '
-    #                              'store the model weights.')
-    #
-    #     model = Model(conn, model_name=model_name, caslib=caslib)
-    #     sas_file = random_name('temp_file_') + '.py'
-    #     temp_code_file = os.path.join(os.getcwd(), sas_file)
-    #     keras_to_sas(caffe_model_file, temp_code_file, 'sas_caffe',
-    #                  network_param=model_weights_file,
-    #                  sas_hdf5=sas_hdf5_file)
-    #     code = "from {} import sas_caffe_model\n".format(sas_file[:-3])
-    #     eval(code)
-    #     sas_caffe_model(conn)
-    #     model = Model.from_table(conn.CASTable(model_name))
-    #     if model_weights_file is not None and sas_hdf5_file is not None:
-    #         model.load_weights(path=sas_hdf5_file)
-    #     os.remove(temp_code_file)
-    #     return model
+
+    @classmethod
+    def from_keras_model(cls, conn, keras_model, model_name=None, caslib=None):
+        '''
+        Generate a model object from a Caffe model proto file (e.g. *.prototxt)
+
+        Parameters
+        ----------
+        conn : CAS
+            The CAS connection object.
+        keras_model : keras_model object.
+            Specifies the keras model to be converted.
+        model_name : string, optional
+            Specifies the name of the cas table that stores the deep learning model.
+            Default : None
+        caslib : string, optional
+            Specifies the name of the cas library that store the model table.
+
+        Returns
+        -------
+        :class:`Model`
+
+        '''
+
+        from .model_conversion.sas_keras_parse import keras_to_sas
+        if model_name is None:
+            model_name = keras_model.name
+        output_code = keras_to_sas(model=keras_model, model_name=model_name)
+        exec(output_code)
+        temp_name = conn
+        exec('sas_model_gen(temp_name)')
+        model_table = conn.CASTable(model_name)
+        model = cls.from_table(model_table=model_table)
+        return model
+
 
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)

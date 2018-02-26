@@ -52,7 +52,7 @@ class CaffeParseError(ValueError):
     '''
 
 
-def caffe_to_sas(network_file, sas_file, model_name, network_param=None,
+def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
                  sas_hdf5=None, phase=caffe.TEST, verbose=False):
     '''
     Generate a SAS deep learning model from Caffe definition
@@ -232,6 +232,180 @@ def caffe_to_sas(network_file, sas_file, model_name, network_param=None,
     # convert from BINARYPROTO to HDF5
     if (sas_hdf5 is not None):
         write_caffe_hdf5(model, layer_list, sas_hdf5)
+
+
+
+
+def caffe_to_sas(network_file, model_name, network_param=None,
+                 phase=caffe.TEST, verbose=False):
+    '''
+    Generate a SAS deep learning model from Caffe definition
+
+    Parameters
+    ----------
+    network_file : string
+       Fully qualified file name of network definition file (*.prototxt)
+    sas_file : string
+       Fully qualified file name of SAS deep learning Python model definition
+    model_name : string
+       Name for deep learning model
+    network_param : string, optional
+       Fully qualified file name of network parameter file (*.caffemodel)
+    sas_hdf5 : string, optional
+       Fully qualified file name of SAS-compatible network parameter
+       file (*.caffemodel.h5)
+    phase : int, optional
+       One of {caffe.TRAIN, caffe.TEST, None}.
+    verbose : bool, optional
+       To view all Caffe information messages, set to True.
+
+    '''
+
+    # open output file
+
+    try:
+        output_code = ''
+        # initialize Caffe logging facility
+        caffe.init_log(0, verbose)
+
+        # instantiate a model and read network parameters
+        if (network_param is None):
+            model = caffe.Net(network_file, phase)
+        else:
+            model = caffe.Net(network_file, phase, weights=network_param)
+        net = caffe_pb2.NetParameter()
+        text_format.Merge(open(network_file + '.tmp').read(), net)
+
+        # remove temporary file created
+        if os.path.isfile(network_file + '.tmp'):
+            os.remove(network_file + '.tmp')
+
+        # identify common Caffe/SAS computation layers
+        layer_list = []
+        for layer in net.layer:
+            include_layer = False
+            if (len(layer.include) == 0):
+                include_layer = True
+            else:
+                for layer_phase in layer.include:
+                    if (caffe.TEST == layer_phase.phase):
+                        include_layer = True
+
+            # exclude layers not implemented (or implemented in a different fashion)
+            if (layer.type.lower() not in common_layers):
+                include_layer = False
+
+            if include_layer:
+                layer_list.append(make_composite_layer(layer))
+
+        # associate activations with computation layers
+        for layer in net.layer:
+            layer_type = layer.type.lower()
+            if (layer_type in ['relu', 'prelu', 'elu', 'sigmoid', 'tanh']):
+                layer_index = None
+                for ii in range(len(layer_list)):
+                    if (layer.top[0] == layer_list[ii].layer_parm.top[0]):
+                        layer_index = ii
+
+                if layer_index is not None:
+                    layer_list[layer_index].related_layers.append(layer)
+                else:
+                    raise CaffeParseError(
+                        'ERROR: activation layer ' + layer.name +
+                        ' is not associated with any computation layer.')
+
+        # associate dropout with computation layers
+        for layer in net.layer:
+            layer_type = layer.type.lower()
+            if (layer_type == 'dropout'):
+                layer_index = None
+                for ii in range(len(layer_list)):
+                    if (layer.top[0] == layer_list[ii].layer_parm.top[0]):
+                        layer_index = ii
+
+                if layer_index is not None:
+                    layer_list[layer_index].related_layers.append(layer)
+                else:
+                    raise CaffeParseError(
+                        'ERROR: dropout layer ' + layer.name +
+                        ' is not associated with any computation layer.')
+
+        # associate softmax with a fully-connected layer
+        for layer in net.layer:
+            layer_type = layer.type.lower()
+            if (layer_type in ['softmax', 'softmaxwithloss']):
+                layer_index = None
+                for ii in range(len(layer_list)):
+                    for jj in range(len(layer.bottom)):
+                        if (layer.bottom[jj] == layer_list[ii].layer_parm.top[0]):
+                            layer_index = ii
+
+                if layer_index is not None:
+                    layer_list[layer_index].related_layers.append(layer)
+                else:
+                    raise CaffeParseError(
+                        'ERROR: softmax layer ' + layer.name +
+                        ' is not associated with any fully-connected layer.')
+
+        # determine source layer(s) for computation layers
+        for ii in range(len(layer_list)):
+            for kk in range(len(layer_list[ii].layer_parm.bottom)):
+                name = None
+                for jj in range(ii):
+                    if (layer_list[ii].layer_parm.bottom[kk] ==
+                            layer_list[jj].layer_parm.top[0]):
+                        name = layer_list[jj].layer_parm.name
+
+                if name:
+                    layer_list[ii].source_layer.append(name)
+
+        # associate scale layer with batchnorm layer
+        for layer in net.layer:
+            if (layer.type.lower() == 'scale'):
+                bn_found = False
+                for ii in range(len(layer_list)):
+                    if ((layer_list[ii].layer_parm.type.lower() == 'batchnorm') and
+                            (layer_list[ii].layer_parm.top[0] == layer.top[0])):
+                        layer_list[ii].related_layers.append(layer)
+                        bn_found = True
+                        break
+
+                if not bn_found:
+                    raise CaffeParseError(
+                        'ERROR: scale layer ' + layer.name +
+                        ' is not associated with a batch normalization layer')
+
+        # loop over included layers
+        for clayer in layer_list:
+            layer_type = clayer.layer_parm.type.lower()
+            if (layer_type == 'pooling'):  # average/max pooling
+                sas_code = caffe_pooling_layer(clayer, model_name)
+            elif (layer_type == 'convolution'):  # 2D convolution
+                sas_code = caffe_convolution_layer(clayer, model_name)
+            elif (layer_type == 'batchnorm'):  # batch normalization
+                sas_code = caffe_batch_normalization_layer(clayer, model_name)
+            elif (layer_type in ['data', 'memorydata']):  # input layer
+                sas_code = caffe_input_layer(clayer, model_name)
+            elif (layer_type == 'eltwise'):  # residual
+                sas_code = caffe_residual_layer(clayer, model_name)
+            elif (layer_type == 'innerproduct'):  # fully connected
+                sas_code = caffe_full_connect_layer(clayer, model_name)
+            else:
+                raise CaffeParseError('ERROR: ' + layer_type +
+                                      ' is an unsupported layer type')
+
+            # write SAS code associated with Caffe layer
+            if sas_code:
+                output_code = output_code + sas_code + '\n\n'
+
+            else:
+                raise CaffeParseError(
+                    'ERROR: unable to generate SAS definition for layer ' +
+                    clayer.layer_parm.name)
+        return output_code
+
+    except CaffeParseError as err_msg:
+        print(err_msg)
 
 
 # parse parameters for pooling layer and generate equivalent SAS code
