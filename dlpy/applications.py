@@ -714,16 +714,14 @@ def VGG16(conn, model_name='VGG16',
         model_vgg16.VGG16_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
-            offsets=offsets, include_top=include_top)
+            offsets=offsets)
 
         if pre_train_weight_file is None:
             pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
                                     'VGG_ILSVRC_16_layers.caffemodel.h5'
-
         if include_top:
             if n_classes != 1000:
                 print('WARNING : IF include_top = True, n_classes will be set to 1000.')
-
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
@@ -741,18 +739,17 @@ def VGG16(conn, model_name='VGG16',
         else:
             model = Model.from_table(conn.CASTable(model_name))
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('addlayer', model=model_name, name='fc6',
-                             layer=dict(type='fullconnect', n=4096,
-                                        act='relu', dropout=0.5),
-                             srcLayers=['pool5'])
-            model._retrieve_('addlayer', model=model_name, name='fc7',
-                             layer=dict(type='fullconnect', n=4096,
-                                        act='relu', dropout=0.5),
-                             srcLayers=['fc6'])
+
+            weight_table_options = model.model_weights.to_table_params()
+            weight_table_options.update(dict(where='_LayerID_<19'))
+            model._retrieve_('table.partition', table=weight_table_options,
+                             casout=dict(replace=True, **model.model_weights.to_table_params()))
+            model._retrieve_('removelayer', model=model_name, name='fc8')
             model._retrieve_('addlayer', model=model_name, name='fc8',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_name))
+
             return model
 
 
@@ -976,8 +973,10 @@ def VGG19(conn, model_name='VGG19',
         return model
 
     else:
-        model_vgg19.VGG19_Model(s=conn, model_name=model_name, random_crop=random_crop,
-                                offsets=offsets, include_top=include_top)
+        model_vgg19.VGG19_Model(
+            s=conn, model_name=model_name, n_channels=n_channels,
+            width=width, height=height, random_crop=random_crop,
+            offsets=offsets)
 
         if pre_train_weight_file is None:
             pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
@@ -1001,24 +1000,20 @@ def VGG19(conn, model_name='VGG19',
             return model
 
         else:
+
             model = Model.from_table(conn.CASTable(model_name))
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('addlayer', model=model_name, name='fc6',
-                             layer=dict(type='fullconnect', n=4096,
-                                        act='relu', dropout=0.5),
-                             srcLayers=['pool5'])
 
-            # fc7 layer: 4096 neurons
-            model._retrieve_('addlayer', model=model_name, name='fc7',
-                             layer=dict(type='fullconnect', n=4096,
-                                        act='relu', dropout=0.5),
-                             srcLayers=['fc6'])
-            # fc output layer: 1000 neurons
+            weight_table_options = model.model_weights.to_table_params()
+            weight_table_options.update(dict(where='_LayerID_<22'))
+            model._retrieve_('table.partition', table=weight_table_options,
+                             casout=dict(replace=True, **model.model_weights.to_table_params()))
+            model._retrieve_('removelayer', model=model_name, name='fc8')
             model._retrieve_('addlayer', model=model_name, name='fc8',
-                             layer=dict(type='output', n=n_classes,
-                                        act='softmax'),
+                             layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_name))
+
             return model
 
 
@@ -1775,7 +1770,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
         model_resnet50.ResNet50_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
-            offsets=offsets, include_top=include_top)
+            offsets=offsets)
 
         if pre_train_weight_file is None:
             pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
@@ -1802,10 +1797,15 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
         else:
             model = Model.from_table(conn.CASTable(model_name))
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('addlayer',
-                             model=model_name, name='output',
-                             layer=dict(type='output', n=n_classes, act='softmax'),
+            model._retrieve_('removelayer', model=model_name, name='fc1000')
+            model._retrieve_('addlayer', model=model_name, name='fc1000',
+                             layer=dict(type='output', n=1000, act='softmax'),
                              srcLayers=['pool5'])
+
+            weight_table_options = model.model_weights.to_table_params()
+            weight_table_options.update(dict(where='_LayerID_<125'))
+            model._retrieve_('table.partition', table=weight_table_options,
+                             casout=dict(replace=True, **model.model_weights.to_table_params()))
             model = Model.from_table(conn.CASTable(model_name))
             return model
 
@@ -2030,7 +2030,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
         model_resnet101.ResNet101_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
-            offsets=offsets, include_top=include_top)
+            offsets=offsets)
 
         if pre_train_weight_file is None:
             pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
@@ -2057,10 +2057,15 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
         else:
             model = Model.from_table(conn.CASTable(model_name))
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('addlayer',
-                             model=model_name, name='output',
-                             layer=dict(type='output', n=n_classes, act='softmax'),
+            model._retrieve_('removelayer', model=model_name, name='fc1000')
+            model._retrieve_('addlayer', model=model_name, name='fc1000',
+                             layer=dict(type='output', n=1000, act='softmax'),
                              srcLayers=['pool5'])
+
+            weight_table_options = model.model_weights.to_table_params()
+            weight_table_options.update(dict(where='_LayerID_<244'))
+            model._retrieve_('table.partition', table=weight_table_options,
+                             casout=dict(replace=True, **model.model_weights.to_table_params()))
             model = Model.from_table(conn.CASTable(model_name))
             return model
 
@@ -2286,10 +2291,10 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
         model_resnet152.ResNet152_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
-            offsets=offsets, include_top=include_top)
+            offsets=offsets)
 
         if pre_train_weight_file is None:
-            pre_train_weight_file = '/data/DeepLearn/leliuz/DLPy/imported_models/' \
+            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
                                     'ResNet-152-model.caffemodel.h5'
 
         if include_top:
@@ -2313,12 +2318,18 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
         else:
             model = Model.from_table(conn.CASTable(model_name))
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('addlayer',
-                             model=model_name, name='output',
-                             layer=dict(type='output', n=n_classes, act='softmax'),
+            model._retrieve_('removelayer', model=model_name, name='fc1000')
+            model._retrieve_('addlayer', model=model_name, name='fc1000',
+                             layer=dict(type='output', n=1000, act='softmax'),
                              srcLayers=['pool5'])
+
+            weight_table_options = model.model_weights.to_table_params()
+            weight_table_options.update(dict(where='_LayerID_<363'))
+            model._retrieve_('table.partition', table=weight_table_options,
+                             casout=dict(replace=True, **model.model_weights.to_table_params()))
             model = Model.from_table(conn.CASTable(model_name))
             return model
+
 
 
 def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,

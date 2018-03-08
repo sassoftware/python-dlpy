@@ -20,14 +20,13 @@
 
 import os
 import sys
-import types
 
 import caffe
 import caffe.draw
 from caffe.proto import caffe_pb2
 from caffe.pycaffe import *
-
 from google.protobuf import text_format
+
 from .write_caffe_model_parm import write_caffe_hdf5
 from .write_sas_code import (write_input_layer, write_convolution_layer,
                              write_batch_norm_layer, write_pooling_layer,
@@ -38,6 +37,7 @@ caffe_activation_types = ['relu', 'prelu', 'elu', 'sigmoid', 'tanh',
                           'softmax', 'softmaxwithloss']
 common_layers = ['data', 'memorydata', 'convolution', 'batchnorm',
                  'pooling', 'innerproduct', 'eltwise']
+
 
 # TODO: The following variables are used one or more times in this file
 #       without being defined first.
@@ -53,7 +53,7 @@ class CaffeParseError(ValueError):
 
 
 def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
-                 sas_hdf5=None, phase=caffe.TEST, verbose=False):
+                      sas_hdf5=None, phase=caffe.TEST, verbose=False):
     '''
     Generate a SAS deep learning model from Caffe definition
 
@@ -234,8 +234,6 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
         write_caffe_hdf5(model, layer_list, sas_hdf5)
 
 
-
-
 def caffe_to_sas(network_file, model_name, network_param=None,
                  phase=caffe.TEST, verbose=False):
     '''
@@ -251,9 +249,6 @@ def caffe_to_sas(network_file, model_name, network_param=None,
        Name for deep learning model
     network_param : string, optional
        Fully qualified file name of network parameter file (*.caffemodel)
-    sas_hdf5 : string, optional
-       Fully qualified file name of SAS-compatible network parameter
-       file (*.caffemodel.h5)
     phase : int, optional
        One of {caffe.TRAIN, caffe.TEST, None}.
     verbose : bool, optional
@@ -402,10 +397,17 @@ def caffe_to_sas(network_file, model_name, network_param=None,
                 raise CaffeParseError(
                     'ERROR: unable to generate SAS definition for layer ' +
                     clayer.layer_parm.name)
+
+            # convert from BINARYPROTO to HDF5
+            if network_param is not None:
+                sas_hdf5 = os.path.join(os.getcwd(), '{}_weights.h5'.format(model_name))
+                write_caffe_hdf5(model, layer_list, sas_hdf5)
+
         return output_code
 
     except CaffeParseError as err_msg:
         print(err_msg)
+
 
 
 # parse parameters for pooling layer and generate equivalent SAS code
@@ -907,6 +909,7 @@ class CompositeLayer(object):
     blob as the computation layer.
 
     '''
+
     # TODO: Parameter definitions
 
     def __init__(self, layer_parm):

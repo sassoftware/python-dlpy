@@ -18,7 +18,7 @@
 
 
 def ResNet50_Model(s, model_name='RESNET50', n_channels=3, width=224, height=224,
-                   random_crop=None, offsets=None, include_top=True):
+                   random_crop=None, offsets=None):
     '''
     ResNet50 model definition
 
@@ -787,8 +787,8 @@ def ResNet50_Model(s, model_name='RESNET50', n_channels=3, width=224, height=224
                           height=kernel_height, stride=stride, pool='mean'),
                srcLayers=['res5c'])
 
-    if include_top:
-        # fc1000 output layer: 1000 neurons */
-        s.deepLearn.addLayer(model=model_name, name='fc1000',
-                   layer=dict(type='output', n=1000, act='softmax'),
-                   srcLayers=['pool5'])
+
+    # fc1000 output layer: 1000 neurons */
+    s.deepLearn.addLayer(model=model_name, name='fc1000',
+               layer=dict(type='output', n=1000, act='softmax'),
+               srcLayers=['pool5'])

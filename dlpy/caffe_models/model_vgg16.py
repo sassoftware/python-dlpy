@@ -18,7 +18,7 @@
 
 
 def VGG16_Model(s, model_name='VGG16', n_channels=3, width=224, height=224,
-                random_crop=None, offsets=None, include_top=True):
+                random_crop=None, offsets=None):
     '''
     VGG16 model definition
 
@@ -71,7 +71,7 @@ def VGG16_Model(s, model_name='VGG16', n_channels=3, width=224, height=224,
         offsets = [103.939, 116.779, 123.68]
 
     # instantiate model
-    s.deepLearn.buildModel(model=dict(name='VGG16', replace=True), type='CNN')
+    s.deepLearn.buildModel(model=dict(name=model_name, replace=True), type='CNN')
 
     # input layer
     s.deepLearn.addLayer(model=model_name, name='data',
@@ -79,120 +79,120 @@ def VGG16_Model(s, model_name='VGG16', n_channels=3, width=224, height=224,
                           randomcrop=random_crop, offsets=offsets))
 
     # conv1_1 layer: 64*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv1_1',
+    s.deepLearn.addLayer(model=model_name, name='conv1_1',
                layer=dict(type='convolution', nFilters=64, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['data'])
 
     # conv1_2 layer: 64*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv1_2',
+    s.deepLearn.addLayer(model=model_name, name='conv1_2',
                layer=dict(type='convolution', nFilters=64, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv1_1'])
 
     # pool1 layer: 2*2
-    s.deepLearn.addLayer(model='VGG16', name='pool1',
+    s.deepLearn.addLayer(model=model_name, name='pool1',
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv1_2'])
 
     # conv2_1 layer: 128*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv2_1',
+    s.deepLearn.addLayer(model=model_name, name='conv2_1',
                layer=dict(type='convolution', nFilters=128, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['pool1'])
 
     # conv2_2 layer: 128*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv2_2',
+    s.deepLearn.addLayer(model=model_name, name='conv2_2',
                layer=dict(type='convolution', nFilters=128, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv2_1'])
 
     # pool2 layer: 2*2
-    s.deepLearn.addLayer(model='VGG16', name='pool2',
+    s.deepLearn.addLayer(model=model_name, name='pool2',
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv2_2'])
 
     # conv3_1 layer: 256*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv3_1',
+    s.deepLearn.addLayer(model=model_name, name='conv3_1',
                layer=dict(type='convolution', nFilters=256, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['pool2'])
 
     # conv3_2 layer: 256*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv3_2',
+    s.deepLearn.addLayer(model=model_name, name='conv3_2',
                layer=dict(type='convolution', nFilters=256, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv3_1'])
 
     # conv3_3 layer: 256*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv3_3',
+    s.deepLearn.addLayer(model=model_name, name='conv3_3',
                layer=dict(type='convolution', nFilters=256, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv3_2'])
 
     # pool3 layer: 2*2
-    s.deepLearn.addLayer(model='VGG16', name='pool3',
+    s.deepLearn.addLayer(model=model_name, name='pool3',
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv3_3'])
 
     # conv4_1 layer: 512*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv4_1',
+    s.deepLearn.addLayer(model=model_name, name='conv4_1',
                layer=dict(type='convolution', nFilters=512, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['pool3'])
 
     # conv4_2 layer: 512*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv4_2',
+    s.deepLearn.addLayer(model=model_name, name='conv4_2',
                layer=dict(type='convolution', nFilters=512, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv4_1'])
 
     # conv4_3 layer: 512*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv4_3',
+    s.deepLearn.addLayer(model=model_name, name='conv4_3',
                layer=dict(type='convolution', nFilters=512, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv4_2'])
 
     # pool4 layer: 2*2
-    s.deepLearn.addLayer(model='VGG16', name='pool4',
+    s.deepLearn.addLayer(model=model_name, name='pool4',
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv4_3'])
 
     # conv5_1 layer: 512*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv5_1',
+    s.deepLearn.addLayer(model=model_name, name='conv5_1',
                layer=dict(type='convolution', nFilters=512, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['pool4'])
 
     # conv5_2 layer: 512*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv5_2',
+    s.deepLearn.addLayer(model=model_name, name='conv5_2',
                layer=dict(type='convolution', nFilters=512, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv5_1'])
 
     # conv5_3 layer: 512*3*3
-    s.deepLearn.addLayer(model='VGG16', name='conv5_3',
+    s.deepLearn.addLayer(model=model_name, name='conv5_3',
                layer=dict(type='convolution', nFilters=512, width=3, height=3,
                           stride=1, act='relu'),
                srcLayers=['conv5_2'])
 
     # pool5 layer: 2*2
-    s.deepLearn.addLayer(model='VGG16', name='pool5',
+    s.deepLearn.addLayer(model=model_name, name='pool5',
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv5_3'])
 
-    if include_top:
-        # fc6 layer: 4096 neurons
-        s.deepLearn.addLayer(model='VGG16', name='fc6',
-                   layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
-                   srcLayers=['pool5'])
 
-        # fc7 layer: 4096 neurons
-        s.deepLearn.addLayer(model='VGG16', name='fc7',
-                   layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
-                   srcLayers=['fc6'])
+    # fc6 layer: 4096 neurons
+    s.deepLearn.addLayer(model=model_name, name='fc6',
+               layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+               srcLayers=['pool5'])
 
-        # fc output layer: 1000 neurons
-        s.deepLearn.addLayer(model='VGG16', name='fc8',
-                   layer=dict(type='output', n=1000, act='softmax'),
-                   srcLayers=['fc7'])
+    # fc7 layer: 4096 neurons
+    s.deepLearn.addLayer(model=model_name, name='fc7',
+               layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+               srcLayers=['fc6'])
+
+    # fc output layer: 1000 neurons
+    s.deepLearn.addLayer(model=model_name, name='fc8',
+               layer=dict(type='output', n=1000, act='softmax'),
+               srcLayers=['fc7'])

@@ -18,7 +18,7 @@
 
 
 def VGG19_Model(s, model_name='VGG19', n_channels=3, width=224, height=224,
-                random_crop=None, offsets=None, include_top=True):
+                random_crop=None, offsets=None):
     '''
     VGG16 model definition
 
@@ -163,17 +163,17 @@ def VGG19_Model(s, model_name='VGG19', n_channels=3, width=224, height=224,
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv5_4'])
 
-    if include_top:
-        # fc6 layer: 4096 neurons
-        s.deepLearn.addLayer(model=model_name, name='fc6',
-                   layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
-                   srcLayers=['pool5'])
 
-        # fc7 layer: 4096 neurons
-        s.deepLearn.addLayer(model=model_name, name='fc7',
-                   layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
-                   srcLayers=['fc6'])
-        # fc output layer: 1000 neurons
-        s.deepLearn.addLayer(model=model_name, name='fc8',
-                   layer=dict(type='output', n=1000, act='softmax'),
-                   srcLayers=['fc7'])
+    # fc6 layer: 4096 neurons
+    s.deepLearn.addLayer(model=model_name, name='fc6',
+               layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+               srcLayers=['pool5'])
+
+    # fc7 layer: 4096 neurons
+    s.deepLearn.addLayer(model=model_name, name='fc7',
+               layer=dict(type='fullconnect', n=4096, act='relu', dropout=0.5),
+               srcLayers=['fc6'])
+    # fc output layer: 1000 neurons
+    s.deepLearn.addLayer(model=model_name, name='fc8',
+               layer=dict(type='output', n=1000, act='softmax'),
+               srcLayers=['fc7'])
