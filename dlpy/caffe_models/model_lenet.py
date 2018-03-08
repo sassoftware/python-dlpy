@@ -19,7 +19,7 @@
 ''' LeNet with batch normalization model definition '''
 
 
-def LeNet_Model(s, model_name='LeNet', include_top=True):
+def LeNet_Model(s, model_name='LeNet'):
     '''
     LeNet model definition (batch normalization version)
 
@@ -75,12 +75,11 @@ def LeNet_Model(s, model_name='LeNet', include_top=True):
                layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
                srcLayers=['conv2_bn'])
 
-    if include_top:
-        # fully connected layer
-        s.deepLearn.addLayer(model=model_name, name='ip1',
-                   layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
-                   srcLayers=['pool2'])
-        # output layer
-        s.deepLearn.addLayer(model=model_name, name='ip2',
-                   layer=dict(type='output', n=10, init='xavier', act='softmax'),
-                   srcLayers=['ip1'])
+    # fully connected layer
+    s.deepLearn.addLayer(model=model_name, name='ip1',
+               layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
+               srcLayers=['pool2'])
+    # output layer
+    s.deepLearn.addLayer(model=model_name, name='ip2',
+               layer=dict(type='output', n=10, init='xavier', act='softmax'),
+               srcLayers=['ip1'])

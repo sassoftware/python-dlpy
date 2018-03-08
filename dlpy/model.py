@@ -18,14 +18,13 @@
 
 ''' Base Model object for deep learning models '''
 
-import importlib
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .layers import InputLayer, Conv2d, Pooling, BN, Res, Dense, OutputLayer
+from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib
 
 
@@ -173,9 +172,10 @@ class Model(object):
         return model
 
     @classmethod
-    def from_caffe_model(cls, conn, network_file, model_name=None, **kwargs):
+    def from_caffe_model(cls, conn, network_file, model_name=None, model_weights_file=None, **kwargs):
         '''
-        Generate a model object from a Caffe model proto file (e.g. *.prototxt)
+        Generate a model object from a Caffe model proto file (e.g. *.prototxt), and
+        convert the weights (e.g. *.caffemodel) to a SAS capable file (e.g. *.caffemodel.h5).
 
         Parameters
         ----------
@@ -185,10 +185,6 @@ class Model(object):
             Fully qualified file name of network definition file (*.prototxt).
         model_weights_file : string, optional
             Fully qualified file name of model weights file (*.caffemodel)
-            Default : None
-        sas_hdf5_file : string, optional
-            Specifies the SAS-compatible file that stores the model weights.
-            Must be a fully qualified file name of SAS-compatible file (*.caffemodel.h5)
             Default : None
         model_name : string, optional
             Specifies the name of the cas table that stores the deep learning model.
@@ -209,11 +205,10 @@ class Model(object):
         model = cls.from_table(model_table=model_table)
         return model
 
-
     @classmethod
-    def from_keras_model(cls, conn, keras_model, model_name=None, caslib=None):
+    def from_keras_model(cls, conn, keras_model, model_name=None, include_weights=True, weights_file=None):
         '''
-        Generate a model object from a Caffe model proto file (e.g. *.prototxt)
+        Generate a model object from a Keras model object.
 
         Parameters
         ----------
@@ -224,8 +219,14 @@ class Model(object):
         model_name : string, optional
             Specifies the name of the cas table that stores the deep learning model.
             Default : None
-        caslib : string, optional
-            Specifies the name of the cas library that store the model table.
+        include_weights : boolean, optional
+            Specifies whether to load the weights of the keras model.
+            Default : True
+        weights_file : string, optional
+            A fully specified client side path to the HDF5 file that stores the model weights.
+            Only effective when include_weights=True.
+            If None is given, the current weights in the keras model will be used.
+            Default : None
 
         Returns
         -------
@@ -242,8 +243,17 @@ class Model(object):
         exec('sas_model_gen(temp_name)')
         model_table = conn.CASTable(model_name)
         model = cls.from_table(model_table=model_table)
-        return model
 
+        if include_weights:
+            from .model_conversion.write_keras_model_parm import write_keras_hdf5, write_keras_hdf5_from_file
+            temp_HDF5 = os.path.join(os.getcwd(),'{}_weights.h5'.format(model_name))
+            if weights_file is None:
+                write_keras_hdf5(keras_model,temp_HDF5)
+            else:
+                write_keras_hdf5_from_file(keras_model, weights_file, temp_HDF5)
+            print('NOTE : the model weights has been stored in the following file:\n'
+                  '{}'.format(temp_HDF5))
+        return model
 
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)
@@ -1193,6 +1203,8 @@ class Model(object):
             Specifies the server-side path to store the model tables.
 
         '''
+        dir_name, file_name = os.path.split(path)
+
         try:
             flag, cas_lib_name = check_caslib(self.conn, dir_name)
         except:
@@ -1623,6 +1635,32 @@ def extract_residual_layer(layer_table):
     res_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
     layer = Res(**res_layer_config)
+    return layer
+
+
+def extract_concatenate_layer(layer_table):
+    '''
+    Extract layer configuration from a concatenate layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+
+    concat_layer_config = dict()
+
+    concat_layer_config.update(get_str_configs(['act'], 'residualopts', layer_table))
+    concat_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = Concat(**concat_layer_config)
     return layer
 
 
