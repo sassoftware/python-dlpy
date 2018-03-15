@@ -58,7 +58,7 @@ class ImageTable(CASTable):
 
     @classmethod
     def from_table(cls, tbl, image_col='_image_', label_col='_label_',
-                   path_col=None, casout=None):
+                   path_col=None, columns=None, casout=None):
         '''
         Create an ImageTable from a CASTable
 
@@ -75,6 +75,14 @@ class ImageTable(CASTable):
         path_col : str, optional
             Specifies the column name that stores the path for each image.
             Default = None, and the unique image ID will be generated from the labels.
+        columns : list of str, optional
+            Specifies the extra columns in the image table.
+            Default = None
+        casout : dict
+            Specifies the output CASTable parameters.
+            Default = None.
+            Note : the options of replace=True, blocksize=32 will be automatically
+            added to the casout option.
 
         Returns
         -------
@@ -126,12 +134,20 @@ class ImageTable(CASTable):
         else:
             table_opts = dict(**tbl.params)
 
+        # This will generate the '_image_' and '_label_' columns.
         conn.retrieve('table.shuffle', _messagelevel='error',
                       table=table_opts,
                       casout=dict(replace=True, blocksize=32, **casout))
 
+        column_names = ['_image_', '_label_', '_filename_0']
+        if columns is not None:
+            if not isinstance(columns, list):
+                columns = list(columns)
+            column_names += columns
+
+        # Remove the unwanted columns.
         conn.retrieve('table.partition', _messagelevel='error',
-                      table=dict(Vars=['_image_', '_label_', '_filename_0'], **casout),
+                      table=dict(Vars=column_names, **casout),
                       casout=dict(replace=True, blocksize=32, **casout))
 
         out = cls(**casout)
@@ -140,7 +156,7 @@ class ImageTable(CASTable):
         return out
 
     @classmethod
-    def load_files(cls, conn, path, casout=None, **kwargs):
+    def load_files(cls, conn, path, casout=None, columns=None, **kwargs):
         '''
         Create ImageTable from files in `path`
 
@@ -152,6 +168,8 @@ class ImageTable(CASTable):
             The path to the image directory on the server
         casout : dict, optional
             The output table specifications
+        columns : list of str, optional
+            Specifies the extra columns in the image table.
         **kwargs : keyword arguments, optional
             Additional keyword arguments to the `image.loadimages` action
 
@@ -181,17 +199,15 @@ class ImageTable(CASTable):
         code.append('_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),\'/\')+2;')
         code.append('_filename_0 = SUBSTR(_path_,_loc1);')
         code = '\n'.join(code)
-
+        column_names = ['_image_', '_label_']
+        if columns is not None:
+            column_names += columns
         conn.retrieve('table.partition', _messagelevel='error',
-                      table=dict(Vars=['_image_', '_label_'],
+                      table=dict(Vars=column_names,
                                  computedvars=['_filename_0'],
                                  computedvarsprogram=code,
                                  **casout),
                       casout=dict(replace=True, blocksize=32, **casout))
-
-        # conn.retrieve('table.partition', _messagelevel='error',
-        #               table=dict(Vars=['_image_', '_label_', '_filename_0'], **casout),
-        #               casout=dict(replace=True, blocksize=32, **casout))
 
         out = cls(**casout)
         out.set_connection(conn)
@@ -526,8 +542,8 @@ class ImageTable(CASTable):
 
         else:
             out = self.copy_table()
-            out.get_patches(x=x, y=y, width=width, height=height, step_size=step_size,
-                            output_width=output_width, output_height=output_height)
+            out.as_patches(x=x, y=y, width=width, height=height, step_size=step_size,
+                           output_width=output_width, output_height=output_height)
             return out
 
     def as_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
@@ -625,12 +641,12 @@ class ImageTable(CASTable):
 
         else:
             out = self.copy_table()
-            out.get_random_patches(random_ratio=random_ratio,
-                                   x=x, y=y,
-                                   width=width, height=height,
-                                   step_size=step_size,
-                                   output_width=output_width,
-                                   output_height=output_height)
+            out.as_random_patches(random_ratio=random_ratio,
+                                  x=x, y=y,
+                                  width=width, height=height,
+                                  step_size=step_size,
+                                  output_width=output_width,
+                                  output_height=output_height)
             return out
 
     @property

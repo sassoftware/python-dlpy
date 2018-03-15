@@ -83,7 +83,7 @@ class Model(object):
         self.model_explain_table = None
 
     @classmethod
-    def from_table(cls, model_table):
+    def from_table(cls, model_table, display_note=True):
         '''
         Create a Model object from CAS table that defines a deep learning model
 
@@ -102,10 +102,10 @@ class Model(object):
                                       table=dict(where='_DLKey1_= "modeltype"',
                                                  **model_table.to_table_params()))
         model_name = model_name.Fetch['_DLKey0_'][0]
-
-        print(('NOTE: Model table is attached successfully!\n'
-               'NOTE: Model is named to "{}" according to the '
-               'model name in the table.').format(model_name))
+        if display_note:
+            print(('NOTE: Model table is attached successfully!\n'
+                   'NOTE: Model is named to "{}" according to the '
+                   'model name in the table.').format(model_name))
         model.model_name = model_name
         model.model_table.update(**model_table.to_table_params())
         model.model_weights = model.conn.CASTable('{}_weights'.format(model_name))
@@ -197,7 +197,7 @@ class Model(object):
         from .model_conversion.sas_caffe_parse import caffe_to_sas
         if model_name is None:
             model_name = random_name('caffe_model')
-        output_code = caffe_to_sas(network_file, model_name, **kwargs)
+        output_code = caffe_to_sas(network_file, model_name, network_param=model_weights_file, **kwargs)
         exec(output_code)
         temp_name = conn
         exec('sas_model_gen(temp_name)')
@@ -246,9 +246,9 @@ class Model(object):
 
         if include_weights:
             from .model_conversion.write_keras_model_parm import write_keras_hdf5, write_keras_hdf5_from_file
-            temp_HDF5 = os.path.join(os.getcwd(),'{}_weights.h5'.format(model_name))
+            temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.h5'.format(model_name))
             if weights_file is None:
-                write_keras_hdf5(keras_model,temp_HDF5)
+                write_keras_hdf5(keras_model, temp_HDF5)
             else:
                 write_keras_hdf5_from_file(keras_model, weights_file, temp_HDF5)
             print('NOTE : the model weights has been stored in the following file:\n'
@@ -258,7 +258,7 @@ class Model(object):
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)
 
-    def load(self, path):
+    def load(self, path, display_note=True):
         '''
         Load the deep learning model architecture from existing table
 
@@ -294,10 +294,10 @@ class Model(object):
                             table=self.model_name)
 
             self._retrieve_('table.droptable', **self.model_table)
-
-            print(('NOTE: Model table is loaded successfully!\n'
-                   'NOTE: Model is renamed to "{}" according to the '
-                   'model name in the table.').format(model_name))
+            if display_note:
+                print(('NOTE: Model table is loaded successfully!\n'
+                       'NOTE: Model is renamed to "{}" according to the '
+                       'model name in the table.').format(model_name))
             self.model_name = model_name
             self.model_table['name'] = model_name
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
@@ -585,7 +585,13 @@ class Model(object):
         :class:`CASResults`
 
         '''
-        input_tbl = input_table_check(data)
+        input_tbl_opts = input_table_check(data)
+        input_table = self.conn.CASTable(**input_tbl_opts)
+        if target not in input_table.columninfo().ColumnInfo.Column.tolist():
+            raise ValueError('Column name "{}" not found in the data table.'.format(target))
+
+        if inputs not in input_table.columninfo().ColumnInfo.Column.tolist():
+            raise ValueError('Column name "{}" not found in the data table.'.format(inputs))
 
         if optimizer is None:
             optimizer = dict(algorithm=dict(learningrate=lr),
@@ -616,7 +622,7 @@ class Model(object):
         max_epochs = optimizer['maxepochs']
 
         train_options = dict(model=self.model_table,
-                             table=input_tbl,
+                             table=input_tbl_opts,
                              inputs=inputs,
                              target=target,
                              modelWeights=dict(replace=True,
@@ -734,13 +740,20 @@ class Model(object):
         :class:`CASResults`
 
         '''
-        input_tbl = input_table_check(data)
-        input_tbl = self.conn.CASTable(**input_tbl)
-        copy_vars = input_tbl.columns.tolist()
+        input_tbl_opts = input_table_check(data)
+        input_table = self.conn.CASTable(**input_tbl_opts)
+        if target not in input_table.columninfo().ColumnInfo.Column.tolist():
+            raise ValueError('Column name "{}" not found in the data table.'.format(target))
+
+        if inputs not in input_table.columninfo().ColumnInfo.Column.tolist():
+            raise ValueError('Column name "{}" not found in the data table.'.format(inputs))
+
+        input_table = self.conn.CASTable(**input_tbl_opts)
+        copy_vars = input_table.columns.tolist()
 
         valid_res_tbl = random_name('Valid_Res')
         dlscore_options = dict(model=self.model_table, initweights=self.model_weights,
-                               table=input_tbl,
+                               table=input_table,
                                copyvars=copy_vars,
                                randomflip='none',
                                randomcrop='none',
@@ -840,7 +853,10 @@ class Model(object):
 
 
         '''
-        uid = data.uid
+        try:
+            uid = data.uid
+        except:
+            raise TypeError("The input data should be an ImageTable.")
         if label is None:
             label = uid.iloc[0, 0]
         uid = uid.loc[uid['_label_'] == label]
@@ -901,10 +917,15 @@ class Model(object):
             size n and contains the response variable of the original data.
 
         '''
-        input_tbl = input_table_check(data)
+
+        input_tbl_opts = input_table_check(data)
+        input_table = self.conn.CASTable(**input_tbl_opts)
+        if target not in input_table.columninfo().ColumnInfo.Column.tolist():
+            raise ValueError('Column name "{}" not found in the data table.'.format(target))
+
         feature_tbl = random_name('Features')
         score_options = dict(model=self.model_table, initWeights=self.model_weights,
-                             table=dict(**input_tbl),
+                             table=dict(**input_tbl_opts),
                              layerOut=dict(name=feature_tbl),
                              layerList=dense_layer,
                              layerImageType='wide',
@@ -914,7 +935,7 @@ class Model(object):
                              **kwargs)
         self._retrieve_('dlscore', **score_options)
         x = self.conn.CASTable(feature_tbl).as_matrix()
-        y = self.conn.CASTable(**input_tbl)[target].as_matrix().ravel()
+        y = self.conn.CASTable(**input_tbl_opts)[target].as_matrix().ravel()
         return x, y
 
     def heat_map_analysis(self, data, mask_width=None, mask_height=None,
@@ -1285,11 +1306,8 @@ class Model(object):
             count += num_weights + num_bias
         return int(count)
 
-    def summary(self):
+    def print_summary(self):
         ''' Display a table that summarizes the model architecture '''
-        # TODO: I think this should just create a DataFrame and return it
-        #       instead of displaying it.
-        # ANS: This is consistent with Keras.
         bar_line = '*' + '=' * 18 + '*' + '=' * 15 + '*' + '=' * 8 + '*' + \
                    '=' * 12 + '*' + '=' * 17 + '*' + '=' * 22 + '*\n'
         h_line = '*' + '-' * 18 + '*' + '-' * 15 + '*' + '-' * 8 + '*' + \
@@ -1331,13 +1349,21 @@ class Model(object):
 
 class FeatureMaps(object):
     '''
-    Feature maps
+    Feature Maps object.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object
+    feature_maps_tbl : CAS table.
+        Specifies the CAS table to store the feature maps.
+    structure : dict
+        Specifies the structure of the feature maps.
 
     '''
 
-    # TODO: Parameter descriptions
-
     def __init__(self, conn, feature_maps_tbl, structure=None):
+
         self.conn = conn
         self.tbl = feature_maps_tbl
         self.structure = structure
