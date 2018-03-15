@@ -191,32 +191,21 @@ def LeNet5_bn(conn, model_name='LENET_BN',
         return model
 
     else:
-        model_lenet.LeNet_Model(s=conn, model_name=model_name, include_top=include_top)
-
-        if include_top:
-            model = Model.from_table(conn.CASTable(model_name))
-            return model
-        else:
-            model = Model.from_table(conn.CASTable(model_name))
-
+        model_lenet.LeNet_Model(s=conn, model_name=model_name)
+        model = Model.from_table(conn.CASTable(model_name))
         if pre_train_weight_file is None:
             pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
                                     'lenet.caffemodel.h5'
         model.load_weights(path=pre_train_weight_file)
-
-        # fully connected layer
-        model._retrieve_('addlayer', model=model_name, name='ip1',
-                         layer=dict(type='fullconnect', n=500,
-                                    init='xavier', act='relu'),
-                         srcLayers=['pool2'])
-        # output layer
-
-        model._retrieve_('addlayer',
-                         model=model_name, name='ip2',
-                         layer=dict(type='output', n=n_classes, act='softmax'),
-                         srcLayers=['ip1'])
-
-        model = Model.from_table(conn.CASTable(model_name))
+        if include_top:
+            return model
+        else:
+            model._retrieve_('removelayer', model=model_name, name='ip2')
+            model._retrieve_('addlayer',
+                             model=model_name, name='ip2',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
+                             srcLayers=['ip1'])
+            model = Model.from_table(conn.CASTable(model_name),display_note=False)
 
         return model
 
@@ -737,7 +726,7 @@ def VGG16(conn, model_name='VGG16',
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_name),display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
@@ -1001,7 +990,7 @@ def VGG19(conn, model_name='VGG19',
 
         else:
 
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_name),display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
@@ -1795,7 +1784,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_name),display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('removelayer', model=model_name, name='fc1000')
             model._retrieve_('addlayer', model=model_name, name='fc1000',
@@ -2055,7 +2044,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_name),display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('removelayer', model=model_name, name='fc1000')
             model._retrieve_('addlayer', model=model_name, name='fc1000',
@@ -2316,7 +2305,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('removelayer', model=model_name, name='fc1000')
             model._retrieve_('addlayer', model=model_name, name='fc1000',

@@ -34,7 +34,7 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_',
         The CAS table to split
     test_rate : double, optional
         Specifies the proportion of the testing data set,
-        e.g. 20 mean 20% of the images will be in the testing set.
+        e.g. 20 mean 20% of the data will be in the testing set.
     stratify_by : string, optional
         The variable to stratify by
     **kwargs : keyword arguments, optional

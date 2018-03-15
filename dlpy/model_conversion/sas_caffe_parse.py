@@ -409,7 +409,6 @@ def caffe_to_sas(network_file, model_name, network_param=None,
         print(err_msg)
 
 
-
 # parse parameters for pooling layer and generate equivalent SAS code
 def caffe_pooling_layer(clayer, model_name):
     '''
@@ -1195,5 +1194,5 @@ if __name__ == '__main__':
     sas_hdf5 = os.path.join(os.environ['CAFFE_APPLICATION_PATH'],
                             'sas_model.caffemodel.h5')
 
-    caffe_to_sas(network_file, sas_python, model_name, network_param,
-                 sas_hdf5, caffe.TEST, False)
+    caffe_to_sas_file(network_file, sas_python, model_name, network_param,
+                      sas_hdf5, caffe.TEST, False)
