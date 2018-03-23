@@ -39,12 +39,6 @@ common_layers = ['data', 'memorydata', 'convolution', 'batchnorm',
                  'pooling', 'innerproduct', 'eltwise']
 
 
-# TODO: The following variables are used one or more times in this file
-#       without being defined first.
-#       pool, stride_h, stride, stride_w, kernel_size, kernel_w, kernel_h,
-#       num_output, operation, bias_term, axis, transpose, dropout_ratio
-
-
 class CaffeParseError(ValueError):
     '''
     Used to indicate an error in parsing Caffe model definition
@@ -907,9 +901,13 @@ class CompositeLayer(object):
     computation layers along with Caffe layers that share the same top
     blob as the computation layer.
 
-    '''
 
-    # TODO: Parameter definitions
+    Parameters
+    ----------
+    layer_parm :
+        LayerParameter object (mirrors Google protobuf definition).
+
+    '''
 
     def __init__(self, layer_parm):
         self.source_layer = []
@@ -1025,6 +1023,7 @@ def extract_dropout(clayer):
 
     '''
     dropout = None
+    dropout_ratio = 0.0
     if (len(clayer.related_layers) > 0):
         for ii in range(len(clayer.related_layers)):
             layer_type = clayer.related_layers[ii].type.lower()
@@ -1036,7 +1035,6 @@ def extract_dropout(clayer):
                                             'dropout_param', None)
                     if (dropout_param is not None):
                         # dropout ratio
-                        # TODO: This variable is never used
                         dropout_ratio = getattr(dropout_param, 'dropout_ratio', 0.0)
                     else:
                         raise CaffeParseError('ERROR: no dropout parameters given')
@@ -1044,7 +1042,7 @@ def extract_dropout(clayer):
                     raise CaffeParseError(
                         'ERROR: More than one dropout layer associated with layer = ' +
                         clayer.related_layers[ii].layer_parm.name)
-    return dropout
+    return dropout_ratio
 
 
 # determine source layer(s) for a given computation layer

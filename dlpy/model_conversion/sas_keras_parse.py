@@ -281,7 +281,6 @@ def keras_to_sas(model, model_name=None):
         elif (class_name not in ['activation', 'flatten', 'dropout']):
             print('WARNING: unable to generate SAS definition '
                   'for layer ' + class_name)
-
     return output_code
 
 
@@ -500,16 +499,15 @@ def keras_input_layer(layer, model_name, input_layer):
         dummy, H, W, C = config['batch_input_shape']
 
     # generate name based on whether layer is actually an input layer
-    # TODO: input_name is never used
     if (input_layer):
         input_name = config['name']
     else:
-        input_name = 'data'
+        input_name = config['name'] + '_input'
 
     # TBD: fix scale, now default value for scale
     scale = 1.0
 
-    return write_input_layer(model_name=model_name, layer_name=layer.name,
+    return write_input_layer(model_name=model_name, layer_name=input_name,
                              channels=str(C), width=str(W),
                              height=str(H), scale=str(scale))
 

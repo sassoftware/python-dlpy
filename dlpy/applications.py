@@ -205,7 +205,7 @@ def LeNet5_bn(conn, model_name='LENET_BN',
                              model=model_name, name='ip2',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['ip1'])
-            model = Model.from_table(conn.CASTable(model_name),display_note=False)
+            model = Model.from_table(conn.CASTable(model_name), display_note=False)
 
         return model
 
@@ -726,7 +726,7 @@ def VGG16(conn, model_name='VGG16',
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name),display_note=False)
+            model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
@@ -990,7 +990,7 @@ def VGG19(conn, model_name='VGG19',
 
         else:
 
-            model = Model.from_table(conn.CASTable(model_name),display_note=False)
+            model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
@@ -1784,11 +1784,11 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name),display_note=False)
+            model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('removelayer', model=model_name, name='fc1000')
-            model._retrieve_('addlayer', model=model_name, name='fc1000',
-                             layer=dict(type='output', n=1000, act='softmax'),
+            model._retrieve_('addlayer', model=model_name, name='output',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
             weight_table_options = model.model_weights.to_table_params()
@@ -2044,11 +2044,11 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name),display_note=False)
+            model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('removelayer', model=model_name, name='fc1000')
-            model._retrieve_('addlayer', model=model_name, name='fc1000',
-                             layer=dict(type='output', n=1000, act='softmax'),
+            model._retrieve_('addlayer', model=model_name, name='output',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
             weight_table_options = model.model_weights.to_table_params()
@@ -2308,8 +2308,8 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('removelayer', model=model_name, name='fc1000')
-            model._retrieve_('addlayer', model=model_name, name='fc1000',
-                             layer=dict(type='output', n=1000, act='softmax'),
+            model._retrieve_('addlayer', model=model_name, name='output',
+                             layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
             weight_table_options = model.model_weights.to_table_params()
@@ -2320,10 +2320,9 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             return model
 
 
-
 def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
                 k=4, n_classes=None, n_channels=3, width=32, height=32, scale=1,
-                random_flip='h', random_crop='none', offsets=(114, 122, 125)):
+                random_flip='none', random_crop='none', offsets=(114, 122, 125)):
     '''
     Generate a deep learning model with ResNet152 architecture
 
@@ -2430,7 +2429,7 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
 
 def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growth_rate=12,
                    n_blocks=4, n_cells=4, n_channels=3, width=32, height=32, scale=1,
-                   random_flip='h', random_crop='unique', offsets=(85, 111, 139)):
+                   random_flip='none', random_crop='none', offsets=(85, 111, 139)):
     '''
     Function to generate a deep learning model with DenseNet architecture.
 

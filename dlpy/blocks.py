@@ -18,8 +18,7 @@
 
 ''' Residual Network object for deep learning '''
 
-from .layers import (Layer, InputLayer, Conv2d, Pooling, Dense, Recurrent,
-                     BN, Res, Concat, Proj, OutputLayer)
+from .layers import (Conv2d, BN, Res, Concat)
 
 
 class Block(object):
@@ -78,6 +77,8 @@ class ResBlock(object):
 
     def compile(self, src_layer, block_num):
         '''
+        Convert the options into DLPy layer definition.
+
         Parameters
         ----------
         src_layer : Layer object.
@@ -89,7 +90,6 @@ class ResBlock(object):
         -------
             A dictionary of key-word-arguments.
         '''
-        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         input_layer = src_layer
@@ -111,8 +111,22 @@ class ResBlockBN(object):
     '''
     Residual block for Residual Network with batch normalization.
 
+    Parameters
+    ----------
+    kernel_sizes : iter-of-ints, optional
+        Kernel size of the convolution filters
+    n_filters : iter-of-ints, optional
+        List of numbers of filter in each convolution layers
+    strides : iter-of-ints, optional
+        List of stride in each convolution layers
+    batch_norm_first : bool, optional
+        Specify whether to add batch normal layer before conv layer.
+
+    Returns
+    -------
+    :class:`ResBlockBN`
+
     '''
-    # TODO: Parameter definitions
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None,
                  batch_norm_first=True):
@@ -157,6 +171,8 @@ class ResBlockBN(object):
 
     def compile(self, src_layer, block_num):
         '''
+        Convert the options into DLPy layer definition.
+
         Parameters
         ----------
         src_layer : Layer object.
@@ -169,7 +185,6 @@ class ResBlockBN(object):
         A dictionary of key-word-arguments
 
         '''
-        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         bn_num = 1
@@ -196,7 +211,6 @@ class ResBlock_Caffe(object):
     Residual block for Residual Network with batch normalization.
 
     '''
-    # TODO: Parameter definitions
 
     def __init__(self, kernel_sizes=3, n_filters=(16, 16), strides=None,
                  batch_norm_first=False, conv_short_cut=False):
@@ -276,7 +290,6 @@ class ResBlock_Caffe(object):
         A dictionary of keyword-arguments
 
         '''
-        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         bn_num = 1
@@ -331,8 +344,20 @@ class DenseNetBlock(object):
     '''
     DenseNet block
 
+    Parameters:
+    n_cells, int
+        Specifies the number of cells.
+
+    kernel_size, int
+        Specifies the size of the kernel.
+
+    n_filter, int
+        Specifies the number of filters.
+
+    stride, int
+        Specifies the size of the stride.
+
     '''
-    # TODO: Parameter descriptions
 
     def __init__(self, n_cells=4, kernel_size=3, n_filter=12, stride=1):
         self.config = dict()
@@ -350,6 +375,7 @@ class DenseNetBlock(object):
 
     def compile(self, src_layer, block_num):
         '''
+        Convert the options into DLPy layer definition.
 
         Parameters
         ----------
@@ -363,7 +389,6 @@ class DenseNetBlock(object):
         A dictionary of keyword-arguments
 
         '''
-        # TODO: Need one-line description of method at top of docstring
         options = []
         conv_num = 1
         bn_num = 1

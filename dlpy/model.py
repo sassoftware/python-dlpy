@@ -91,6 +91,8 @@ class Model(object):
         ----------
         model_table : a CAS table object.
             Specifies the CAS table that defines the deep learning model.
+        display_note : bool
+            Specifies whether to print the note when generating the model table.
 
         Returns
         -------
@@ -206,7 +208,7 @@ class Model(object):
         return model
 
     @classmethod
-    def from_keras_model(cls, conn, keras_model, model_name=None, include_weights=True, weights_file=None):
+    def from_keras_model(cls, conn, keras_model, model_name=None, include_weights=False, weights_file=None):
         '''
         Generate a model object from a Keras model object.
 
@@ -1339,8 +1341,6 @@ class Model(object):
         :class:`graphviz.dot.Digraph`
 
         '''
-        # TODO: Don't change PATH variables.  You won't know where the executables
-        #       are or even if it's on Windows.
 
         import os
         os.environ['PATH'] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
