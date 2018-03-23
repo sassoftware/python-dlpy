@@ -18,11 +18,10 @@
 
 ''' SAS Deep Learning '''
 
+__version__ = '0.1.0'
+
 from .model import Model
 from .images import ImageTable
-from .RNN import RNN
 from .Sequential import Sequential
 from .layers import (Layer, InputLayer, Conv2d, Pooling, Dense, Recurrent,
                      BN, Res, Concat, Proj, OutputLayer)
-
-__version__ = '0.1.0'
