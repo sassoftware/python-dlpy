@@ -511,7 +511,11 @@ class OutputLayer(Layer):
 def _unpack_config(config):
     ''' Unpack the configuration from the keyword-argument-only input '''
     kwargs = config['kwargs']
-    del config['self'], config['name'], config['src_layers'], config['kwargs']
+    del config['self'], config['name'], config['kwargs']
+    try:
+        del config['src_layers']
+    except:
+        pass
     out = {}
     out.update(config)
     out.update(kwargs)
