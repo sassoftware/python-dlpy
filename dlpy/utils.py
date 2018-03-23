@@ -254,11 +254,10 @@ def upload_astore(conn, path, table_name=None):
         The CAS connection object
     path : string
         Specifies the client-side path of the astore file
-    table_name : string,
+    table_name : string, or casout options
         Specifies the name of the cas table on server to put the astore object
 
     '''
-    # TODO: Should this accept a CASTable or dict as the final argument?
     conn.loadactionset('astore')
 
     with open(path, 'br') as f:
@@ -286,7 +285,7 @@ def unify_keys(dic):
     '''
 
     old_names = list(dic.keys())
-    new_names = [item.lower().replace('_','') for item in old_names]
+    new_names = [item.lower().replace('_', '') for item in old_names]
     for new_name, old_name in zip(new_names, old_names):
         dic[new_name] = dic.pop(old_name)
 
@@ -316,10 +315,8 @@ def check_caslib(conn, path):
     paths = conn.caslibinfo().CASLibInfo.Path.tolist()
     caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
 
-
     if path in paths:
         caslibname = caslibs[paths.index(path)]
         return True, caslibname
     else:
         return False
-

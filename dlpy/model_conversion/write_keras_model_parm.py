@@ -184,8 +184,7 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
                             # save weight in format amenable to SAS
                 dset_name = generate_dataset_name(layer, ii)
                 new_weight_names.append(dset_name)
-                # TODO: Variable is never used
-                dset = g_out.create_dataset(dset_name, data=tensor_out)
+                g_out.create_dataset(dset_name, data=tensor_out)
 
             # update weight names
             g_out.attrs['weight_names'] = new_weight_names
@@ -277,7 +276,6 @@ def write_keras_hdf5(model, hdf5_out):
             # layer modification from here:
             new_weight_names = []
 
-
             if len(weight_values) != len(symbolic_weights):
                 raise ValueError('Layer #' + str(k) +
                                  ' (named "' + layer.name +
@@ -327,8 +325,7 @@ def write_keras_hdf5(model, hdf5_out):
                 dset_name = generate_dataset_name(layer, ii)
                 new_weight_names.append(dset_name)
 
-                # TODO: Variable is never used
-                dset = g_out.create_dataset(dset_name, data=tensor_out)
+                g_out.create_dataset(dset_name, data=tensor_out)
 
             # update weight names
             g_out.attrs['weight_names'] = new_weight_names

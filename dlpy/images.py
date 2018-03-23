@@ -199,7 +199,7 @@ class ImageTable(CASTable):
         code.append('_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),\'/\')+2;')
         code.append('_filename_0 = SUBSTR(_path_,_loc1);')
         code = '\n'.join(code)
-        column_names = ['_image_', '_label_']
+        column_names = ['_image_', '_label_', '_filename_0']
         if columns is not None:
             column_names += columns
         conn.retrieve('table.partition', _messagelevel='error',

@@ -19,6 +19,7 @@
 '''Supporting functions for caffe model conversion.'''
 
 import sys
+
 import h5py
 
 

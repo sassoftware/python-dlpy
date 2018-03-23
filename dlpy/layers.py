@@ -25,8 +25,19 @@ class Layer(object):
     '''
     Base class for all layers
 
+    Parameters:
+    ----------
+
+
+    name : str
+        Specifies the name of the layer.
+    config : dict
+        Specifies the configuration of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
 
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
@@ -49,8 +60,7 @@ class Layer(object):
         self.num_bias = None
 
     def summary(self):
-        # TODO: Needs docstring
-        # TODO: This should create a DataFrame rather than a string and just return it
+        ''' a function to summarize the configuration of the layer.'''
         if self.config['type'].lower() == 'input':
             self.output_size = (int(self.config['width']),
                                 int(self.config['height']),
@@ -180,19 +190,38 @@ class Layer(object):
 class InputLayer(Layer):
     '''
     Input layer
+    
+    Parameters:
+    ----------
+
+    n_channels : int
+        Specifies the number of channels of the input images.
+    width : int
+        Specifies the width of the input images.
+    height : int
+        Specifies the height of the input images.
+    scale : double, between 0 and 1.
+        Specifies the scaling parameter of the image.
+    dropout : double, between 0 and 1
+        Specifies the dropout rate.
+    offsets : iter-of-doubles
+        Specifies the offset values.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
 
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n_channels=3, width=224, height=224, scale=1,
-                 dropout=0, offsets=None, name=None, src_layers=None, **kwargs):
+                 dropout=0, offsets=None, name=None, **kwargs):
         if offsets is None:
             offsets = [0] * n_channels
         config = locals()
         config = _unpack_config(config)
         config['type'] = 'input'
-        Layer.__init__(self, name, config, src_layers)
+        Layer.__init__(self, name, config)
         self.color_code = '#F0FF00'
         self.type_name = 'Input'
 
@@ -201,9 +230,28 @@ class Conv2d(Layer):
     '''
     2D convolutional layer
 
+    Parameters:
+    ----------
+
+    n_filters : int
+        Specifies the number of filters.
+    width : int
+        Specifies the width of pooling window.
+    height : int
+        Specifies the height of pooling window.
+    stride : int
+        Specifies the step size of the moving window.
+    act : str
+        Specifies the activation types.
+    dropout : double, between 0 and 1
+        Specifies the dropout rate.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n_filters, width=None, height=None, stride=1,
                  act='relu', dropout=0, name=None, src_layers=None, **kwargs):
@@ -225,9 +273,25 @@ class Pooling(Layer):
     '''
     Pooling layer
 
+    Parameters:
+    ----------
+    width : int
+        Specifies the width of pooling window.
+    height : int
+        Specifies the height of pooling window.
+    stride : int
+        Specifies the step size of the moving window.
+    act : str
+        Specifies the activation types.
+    dropout : double, between 0 and 1
+        Specifies the dropout rate.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, width=None, height=None, stride=None,
                  pool='max', dropout=0, name=None, src_layers=None, **kwargs):
@@ -252,9 +316,22 @@ class Dense(Layer):
     '''
     Fully connected layer
 
+
+    Parameters:
+    ----------
+    n : int
+        Specifies the number of neurons.
+    act : str
+        Specifies the activation types.
+    dropout : double, between 0 and 1
+        Specifies the dropout rate.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n, act='relu', dropout=0,
                  name=None, src_layers=None, **kwargs):
@@ -270,9 +347,26 @@ class Recurrent(Layer):
     '''
     Recurrent layer
 
+
+    Parameters:
+    ----------
+    n : int
+        Specifies the number of neurons.
+    act : str
+        Specifies the activation types.
+    rnn_type : str
+        Specifies the type of RNN gate.
+    output_type : str
+        Specifies the type of output neurons.
+    reversed_ : bool
+        Specifies whether to reverse the sequence.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n, act='AUTO', rnn_type='RNN', output_type='ENCODING',
                  reversed_=False, name=None, src_layers=None, **kwargs):
@@ -288,9 +382,18 @@ class BN(Layer):
     '''
     Batch Normalization layer
 
+
+    Parameters:
+    ----------
+    act : str
+        Specifies the activation types.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -305,9 +408,17 @@ class Res(Layer):
     '''
     Residual layer
 
+    Parameters:
+    ----------
+    act : str
+        Specifies the activation types.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -321,10 +432,18 @@ class Res(Layer):
 class Concat(Layer):
     '''
     Concatenation layer
+    Parameters:
+    ----------
+
+    act : str
+        Specifies the activation types.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
 
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, act='AUTO', name=None, src_layers=None, **kwargs):
         config = locals()
@@ -339,9 +458,16 @@ class Proj(Layer):
     '''
     Projection layer
 
+    Parameters:
+    ----------
+
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, name=None, src_layers=None, **kwargs):
         config = locals()
@@ -356,9 +482,20 @@ class OutputLayer(Layer):
     '''
     Output layer
 
+    Parameters:
+    ----------
+
+    n : int
+        Specifies the number of output neurons.
+    act : str
+        Specifies the activation types.
+    name : str
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the source layer(s).
+
+
     '''
-    # TODO: Describe parameters
-    # TODO: What is **kwargs for?  It doesn't get used.
 
     def __init__(self, n=None, act='softmax', name=None, src_layers=None, **kwargs):
         config = locals()

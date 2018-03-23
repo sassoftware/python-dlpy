@@ -34,7 +34,7 @@ def LeNet_Model(s, model_name='LeNet'):
 
     Returns
     -------
-    a CAS table defining the model is created.
+        None. A CAS table defining the model is created
     '''
 
     # instantiate model
@@ -42,44 +42,44 @@ def LeNet_Model(s, model_name='LeNet'):
 
     # input layer
     s.deepLearn.addLayer(model=model_name, name='mnist',
-               layer=dict(type='input', n_channels=1, width=28, height=28,
-                          scale=0.00392156862745098039))
+                         layer=dict(type='input', n_channels=1, width=28, height=28,
+                                    scale=0.00392156862745098039))
 
     # conv1: 5*5*20
     s.deepLearn.addLayer(model=model_name, name='conv1',
-               layer=dict(type='convolution', nFilters=20, width=5, height=5,
-                          stride=1, act='identity', noBias=True, init='xavier'),
-               srcLayers=['mnist'])
+                         layer=dict(type='convolution', nFilters=20, width=5, height=5,
+                                    stride=1, act='identity', noBias=True, init='xavier'),
+                         srcLayers=['mnist'])
 
     # conv1 batch normalization
     s.deepLearn.addLayer(model=model_name, name='conv1_bn',
-               layer=dict(type='batchnorm', act='relu'), srcLayers=['conv1'])
+                         layer=dict(type='batchnorm', act='relu'), srcLayers=['conv1'])
 
     # pool1 2*2*2
     s.deepLearn.addLayer(model=model_name, name='pool1',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv1_bn'])
+                         layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                         srcLayers=['conv1_bn'])
 
     # conv2: 5*5*50
     s.deepLearn.addLayer(model=model_name, name='conv2',
-               layer=dict(type='convolution', nFilters=50, width=5, height=5,
-                          stride=1, act='identity', noBias=True, init='xavier'),
-               srcLayers=['pool1'])
+                         layer=dict(type='convolution', nFilters=50, width=5, height=5,
+                                    stride=1, act='identity', noBias=True, init='xavier'),
+                         srcLayers=['pool1'])
 
     # conv2 batch normalization
     s.deepLearn.addLayer(model=model_name, name='conv2_bn',
-               layer=dict(type='batchnorm', act='relu'), srcLayers=['conv2'])
+                         layer=dict(type='batchnorm', act='relu'), srcLayers=['conv2'])
 
     # pool2 2*2*2
     s.deepLearn.addLayer(model=model_name, name='pool2',
-               layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
-               srcLayers=['conv2_bn'])
+                         layer=dict(type='pooling', width=2, height=2, stride=2, pool='max'),
+                         srcLayers=['conv2_bn'])
 
     # fully connected layer
     s.deepLearn.addLayer(model=model_name, name='ip1',
-               layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
-               srcLayers=['pool2'])
+                         layer=dict(type='fullconnect', n=500, init='xavier', act='relu'),
+                         srcLayers=['pool2'])
     # output layer
     s.deepLearn.addLayer(model=model_name, name='ip2',
-               layer=dict(type='output', n=10, init='xavier', act='softmax'),
-               srcLayers=['ip1'])
+                         layer=dict(type='output', n=10, init='xavier', act='softmax'),
+                         srcLayers=['ip1'])

@@ -128,7 +128,6 @@ class Sequential(Model):
 
         for layer in self.layers:
             if layer.config['type'] == 'block':
-                # TODO: output_layer is undefined here
                 options = layer.compile(src_layer=output_layer, block_num=block_num)
                 block_num += 1
                 for item in layer.layers:
@@ -173,7 +172,7 @@ class Sequential(Model):
 
                 self._retrieve_('addlayer', model=self.model_name, **option)
 
-        print('NOTE: Model compiled successfully.')
+        print('NOTE : Model compiled successfully.')
         self.layers = compiled_layers
         for layer in self.layers:
             layer.summary()
