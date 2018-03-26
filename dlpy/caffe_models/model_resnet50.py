@@ -52,7 +52,8 @@ def ResNet50_Model(s, model_name='RESNET50', n_channels=3, width=224, height=224
 
     Returns
     -------
-    CAS table defining the model is created
+    None
+        CAS table defining the model is created
 
     '''
 

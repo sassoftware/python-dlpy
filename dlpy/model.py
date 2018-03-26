@@ -210,7 +210,7 @@ class Model(object):
     @classmethod
     def from_keras_model(cls, conn, keras_model, model_name=None, include_weights=False, weights_file=None):
         '''
-        Generate a model object from a Keras model object.
+        Generate a model object from a Keras model object
 
         Parameters
         ----------
@@ -1218,7 +1218,7 @@ class Model(object):
 
     def save_to_table(self, path):
         '''
-        Function to save the model as SAS dataset.
+        Save the model as SAS dataset
 
         Parameters
         ----------
@@ -1286,12 +1286,10 @@ class Model(object):
         elif output_format.lower() in ('castable', 'table'):
             self.save_to_table(path=path)
         else:
-            raise TypeError('output_format must be "astore", "castable" or "table"')
+            raise ValueError('output_format must be "astore", "castable" or "table"')
 
     def count_params(self):
-        '''
-        Function to count the total number of parameters in the model.
-        '''
+        ''' Count the total number of parameters in the model '''
         count = 0
         for layer in self.layers:
 
@@ -1349,7 +1347,7 @@ class Model(object):
 
 class FeatureMaps(object):
     '''
-    Feature Maps object.
+    Feature Maps object
 
     Parameters
     ----------
@@ -1360,10 +1358,13 @@ class FeatureMaps(object):
     structure : dict
         Specifies the structure of the feature maps.
 
+    Returns
+    -------
+    :class:`FeatureMaps`
+
     '''
 
     def __init__(self, conn, feature_maps_tbl, structure=None):
-
         self.conn = conn
         self.tbl = feature_maps_tbl
         self.structure = structure

@@ -52,7 +52,8 @@ def VGG19_Model(s, model_name='VGG19', n_channels=3, width=224, height=224,
 
     Returns
     -------
-        None. A CAS table defining the model is created
+    None
+        A CAS table defining the model is created
 
     '''
 

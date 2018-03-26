@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-'''Convert keras model to sas models.'''
+''' Convert keras model to sas models '''
 
 import os
 import sys
@@ -44,25 +44,26 @@ class KerasParseError(ValueError):
 # def keras_to_sas(module_name, model_name, model_args, sas_file_name, input_shape=None):
 def keras_module_to_sas(module_name, model_name, model_args, sas_file_name):
     '''
-    Function to generate a SAS deep learning model from Keras definition
+    Generate a SAS deep learning model from Keras definition
 
-    Parameters:
-
+    Parameters
     ----------
-    module_name : [string]
+    module_name : string
        Name of module containing function definition of deep learning model
-    model_name : [string]
+    model_name : string
        Name of function defining deep learning model
-    model_args : [string]
+    model_args : string
        Arguments to pass to Keras model instantiation
-    sas_file_name : [string]
+    sas_file_name : string
        Fully qualified file name of SAS deep learning Python model definition
-    input_shape : [tuple, optional --> not supported yet]
+    input_shape : tuple, optional
        User-defined input shape in channels first format (e.g. (C, H, W))
+       NOTE: Not supported yet.
 
     Returns
     -------
     Keras model object
+
     '''
 
     # open output file
@@ -84,7 +85,7 @@ def keras_module_to_sas(module_name, model_name, model_args, sas_file_name):
             # pass
             # else:  # revisit model with custome input shape
             # if (len(input_shape) != 3):
-            # raise KerasParseError('ERROR: input shape specified incorrectly')
+            # raise KerasParseError('Input shape specified incorrectly')
             # else:
             # decim_factor = 1.0
             # for layer in model.layers:
@@ -128,7 +129,7 @@ def keras_module_to_sas(module_name, model_name, model_args, sas_file_name):
                 if sas_code:
                     fout.write(sas_code + '\n\n')
                 else:
-                    raise KerasParseError('ERROR: unable to generate an input layer')
+                    raise KerasParseError('Unable to generate an input layer')
 
             # extract layers and apply activation functions as needed
             for layer in model.layers:
@@ -182,7 +183,7 @@ def keras_module_to_sas(module_name, model_name, model_args, sas_file_name):
                           'for layer ' + class_name)
 
         else:
-            raise KerasParseError('ERROR: Unable to instantiate Keras model')
+            raise KerasParseError('Unable to instantiate Keras model')
 
     except KerasParseError as err_msg:
         print(err_msg)
@@ -229,7 +230,7 @@ def keras_to_sas(model, model_name=None):
         if sas_code:
             output_code = output_code + sas_code + '\n\n'
         else:
-            raise KerasParseError('ERROR: unable to generate an input layer')
+            raise KerasParseError('Unable to generate an input layer')
 
     # extract layers and apply activation functions as needed
     for layer in model.layers:
@@ -287,27 +288,27 @@ def keras_to_sas(model, model_name=None):
 # create SAS pooling layer
 def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout):
     '''
-    Function to extract pooling layer parameters from layer
-    definition object
+    Extract pooling layer parameters from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Pooling layer
-    model_name : [string]
+    model_name : string
        Deep learning model name
-    class_name : [string]
+    class_name : string
        Layer class
-    src_layer : [list of Layer objects]
+    src_layer : list-of-Layer objects
        Layer objects corresponding to source layer(s) for
        pooling layer
-    layer_dropout : [dictionary]
+    layer_dropout : dict
        Dictionary containing dropout layer names (keys) and dropout rates (values)
 
     Returns
     -------
-    String value with SAS deep learning pooling layer definition
+    string
+        String value with SAS deep learning pooling layer definition
+
     '''
     config = layer.get_config()
     strides = config['strides']
@@ -320,7 +321,7 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
     if (strides[0] == strides[1]):
         step = strides[0]
     else:
-        raise KerasParseError('ERROR: unequal strides in vertical/horizontal '
+        raise KerasParseError('Unequal strides in vertical/horizontal '
                               'directions for pooling layer')
 
     # pooling type
@@ -329,14 +330,14 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
     elif (class_name == 'maxpooling2d'):
         type = 'max'
     else:
-        raise KerasParseError('ERROR: Pooling type ' + class_name +
+        raise KerasParseError('Pooling type ' + class_name +
                               ' is not supported yet')
 
     # extract source layer(s)
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError('ERROR: unable to determine source layer for '
+        raise KerasParseError('Unable to determine source layer for '
                               'pooling layer = ' + layer.name)
 
     # set dropout
@@ -353,27 +354,27 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
 # create SAS 2D convolution layer
 def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropout):
     '''
-    Function to extract convolution layer parameters from layer
-    definition object
+    Extract convolution layer parameters from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Convolution layer
-    model_name : [string]
+    model_name : string
        Deep learning model name
-    act_func : [string]
+    act_func : string
        Keras activation function
-    src_layer : [list of Layer objects]
+    src_layer : list-of-Layer objects
        Layer objects corresponding to source layer(s) for
        convolution layer
-    layer_dropout : [dictionary]
+    layer_dropout : dict
        Dictionary containing dropout layer names (keys) and dropout rates (values)
 
     Returns
     -------
-    String value with SAS deep learning convolution layer definition
+    string
+        String value with SAS deep learning convolution layer definition
+
     '''
     config = layer.get_config()
 
@@ -395,7 +396,7 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
     if (strides[0] == strides[1]):
         step = strides[0]
     else:
-        raise KerasParseError('ERROR: unequal strides in vertical/horizontal '
+        raise KerasParseError('Unequal strides in vertical/horizontal '
                               'directions for convolution layer')
 
     # bias term
@@ -411,7 +412,7 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError('ERROR: unable to determine source layer for '
+        raise KerasParseError('Unable to determine source layer for '
                               'convolution layer = ' + layer.name)
 
     # set dropout
@@ -430,25 +431,25 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
 # create SAS batch normalization layer
 def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
     '''
-    Function to extract batch normalization layer parameters from layer
-    definition object
+    Extract batch normalization layer parameters from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Batch nornalization layer
-    model_name : [string]
+    model_name : string
        Deep learning model name
-    act_func : [string]
+    act_func : string
        Keras activation function
-    src_layer : [list of Layer objects]
+    src_layer : list-of-Layer objects
        Layer objects corresponding to source layer(s) for
        batch normalization layer
 
     Returns
     -------
-    String value with SAS deep learning batch normalization layer definition
+    string
+        String value with SAS deep learning batch normalization layer definition
+
     '''
     config = layer.get_config()
 
@@ -456,7 +457,7 @@ def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError('ERROR: unable to determine source layer for '
+        raise KerasParseError('Unable to determine source layer for '
                               'batch normalization layer = ' + layer.name)
 
     # activation
@@ -474,22 +475,22 @@ def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
 # create SAS input layer
 def keras_input_layer(layer, model_name, input_layer):
     '''
-    Function to extract input layer parameters from layer
-    definition object
+    Extract input layer parameters from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Input layer
-    model_name : [string]
+    model_name : string
        Deep learning model name
-    input_layer : [Boolean]
+    input_layer : boolean
        Indicate whether layer name given (True) or not (False)
 
     Returns
     -------
-    String value with SAS deep learning input layer definition
+    string
+        String value with SAS deep learning input layer definition
+
     '''
     config = layer.get_config()
 
@@ -515,25 +516,25 @@ def keras_input_layer(layer, model_name, input_layer):
 # create SAS residual layer
 def keras_residual_layer(layer, model_name, act_func, src_layer):
     '''
-    Function to extract residual layer parameters from layer
-    definition object
+    Extract residual layer parameters from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Add layer
-    model_name : [string]
+    model_name : string
        Deep learning model name
-    act_func : [string]
+    act_func : string
        Keras activation function
-    src_layer : [list of Layer objects]
+    src_layer : list-of-Layer objects
        Layer objects corresponding to source layer(s) for
        residual layer
 
     Returns
     -------
-    String value with SAS deep learning residual layer definition
+    string
+        String value with SAS deep learning residual layer definition
+
     '''
     config = layer.get_config()
 
@@ -541,7 +542,7 @@ def keras_residual_layer(layer, model_name, act_func, src_layer):
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError('ERROR: unable to determine source layers for '
+        raise KerasParseError('Unable to determine source layers for '
                               'residual layer = ' + layer.name)
 
     # activation
@@ -559,27 +560,27 @@ def keras_residual_layer(layer, model_name, act_func, src_layer):
 # create SAS fully connected layer
 def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropout):
     '''
-    Function to extract fully connected layer parameters from layer
-    definition object
+    Extract fully connected layer parameters from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Fully connected layer
-    model_name : [string]
+    model_name : string
        Deep learning model name
-    act_func : [string]
+    act_func : string
        Keras activation function
-    src_layer : [list of Layer objects]
+    src_layer : list-of-Layer objects
        Layer objects corresponding to source layer(s) for
        fully connected layer
-    layer_dropout : [dictionary]
+    layer_dropout : dict
        Dictionary containing dropout layer names (keys) and dropout rates (values)
 
     Returns
     -------
-    String value with SAS deep learning fully connected layer definition
+    string
+        String value with SAS deep learning fully connected layer definition
+
     '''
     config = layer.get_config()
 
@@ -616,7 +617,7 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
     if (layer.name in src_layer.keys()):
         source_str = src_layer[layer.name]
     else:
-        raise KerasParseError('ERROR: unable to determine source layer for '
+        raise KerasParseError('Unable to determine source layer for '
                               'fully connected layer = ' + layer.name)
 
     return write_full_connect_layer(model_name=model_name, layer_name=layer.name,
@@ -627,20 +628,20 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
 
 def map_keras_activation(layer, act_func):
     '''
-    Function to map Keras activation function(s) to SAS
-    activation function(s)
+    Map Keras activation function(s) to SAS activation function(s)
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Current layer definition
-    act_func : [string]
+    act_func : string
        Keras activation function
 
     Returns
     -------
-    SAS activation type
+    string
+        SAS activation type
+
     '''
     class_name = layer.__class__.__name__.lower()
     # convolution layer
@@ -676,18 +677,18 @@ def map_keras_activation(layer, act_func):
 # extract parameters from activation layer
 def extract_activation(layer):
     '''
-    Function to extract activation from layer
-    definition object
+    Extract activation from layer definition object
 
-    Parameters:
-
+    Parameters
     ----------
-    layer : [Layer object]
+    layer : Layer object
        Activation layer
 
     Returns
     -------
-    String value with Keras activation function
+    string
+        String value with Keras activation function
+
     '''
     config = layer.get_config()
 
@@ -696,22 +697,22 @@ def extract_activation(layer):
 
 def find_next_computation_layer(model, layer, computation_layer_list):
     '''
-    Function to extract the name of the computation layer
-    following the current layer
+    Extract the name of the computation layer following the current layer
 
-    Parameters:
-
+    Parameters
     ----------
-    model : [Model object]
+    model : Model object
        Keras deep learning model
-    layer : [Layer object]
+    layer : Layer object
        Current layer object
-    computation_layer_list : [list]
+    computation_layer_list : list
        List of computation layers supported by SAS
 
     Returns
     -------
-    String value with name of next computation layer
+    string
+        String value with name of next computation layer
+
     '''
 
     if (len(layer._outbound_nodes) > 1):
@@ -736,22 +737,22 @@ def find_next_computation_layer(model, layer, computation_layer_list):
 
 def find_previous_computation_layer(model, layer_name, computation_layer_list):
     '''
-    Function to extract the name of the computation layer
-    prior to the current layer
+    Extract the name of the computation layer prior to the current layer
 
-    Parameters:
-
+    Parameters
     ----------
-    model : [Model object]
+    model : Model object
        Keras deep learning model
-    layer_name : [string]
+    layer_name : string
        Current layer name
-    computation_layer_list : [list]
+    computation_layer_list : list
        List of computation layers supported by SAS
 
     Returns
     -------
-    String value with name of previous computation layer
+    string
+        String value with name of previous computation layer
+
     '''
 
     layer = model.get_layer(name=layer_name)
@@ -787,18 +788,17 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
 
 def make_source_str(layer_name):
     '''
-    Function to create a string value representing a
-    Python list of source layers
+    Create a string value representing a Python list of source layers
 
-    Parameters:
-
+    Parameters
     ----------
-    layer_name : [string]
+    layer_name : string
        List of Python layer names
 
     Returns
     -------
-    String representation of list of Python layer names
+    string
+        String representation of list of Python layer names
 
     '''
     source_str = []

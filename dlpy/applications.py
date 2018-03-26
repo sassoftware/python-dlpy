@@ -17,6 +17,7 @@
 #
 
 ''' Pre-built deep learning models '''
+
 import os
 
 from .Sequential import Sequential
@@ -2431,10 +2432,9 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
                    n_blocks=4, n_cells=4, n_channels=3, width=32, height=32, scale=1,
                    random_flip='none', random_crop='none', offsets=(85, 111, 139)):
     '''
-    Function to generate a deep learning model with DenseNet architecture.
+    Generate a deep learning model with DenseNet architecture
 
-    Parameters:
-
+    Parameters
     ----------
     conn :
         Specifies the connection of the CAS connection.

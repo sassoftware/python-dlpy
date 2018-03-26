@@ -34,7 +34,9 @@ def LeNet_Model(s, model_name='LeNet'):
 
     Returns
     -------
-        None. A CAS table defining the model is created
+    None
+        A CAS table defining the model is created
+
     '''
 
     # instantiate model

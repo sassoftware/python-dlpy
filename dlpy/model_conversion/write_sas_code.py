@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-'''Write python codes for create sas model.'''
+''' Write python codes for create sas model '''
 
 import sys
 
@@ -44,7 +44,8 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
 
     Returns
     -------
-    String representing Python code defining a SAS deep learning input layer
+    string
+        String representing Python code defining a SAS deep learning input layer
 
     '''
     out = [

@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-'''Convert caffe model to sas models.'''
+''' Convert caffe model to sas models '''
 
 import os
 import sys
@@ -125,7 +125,7 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
                     layer_list[layer_index].related_layers.append(layer)
                 else:
                     raise CaffeParseError(
-                        'ERROR: activation layer ' + layer.name +
+                        'Activation layer ' + layer.name +
                         ' is not associated with any computation layer.')
 
         # associate dropout with computation layers
@@ -141,7 +141,7 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
                     layer_list[layer_index].related_layers.append(layer)
                 else:
                     raise CaffeParseError(
-                        'ERROR: dropout layer ' + layer.name +
+                        'Dropout layer ' + layer.name +
                         ' is not associated with any computation layer.')
 
         # associate softmax with a fully-connected layer
@@ -158,7 +158,7 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
                     layer_list[layer_index].related_layers.append(layer)
                 else:
                     raise CaffeParseError(
-                        'ERROR: softmax layer ' + layer.name +
+                        'Softmax layer ' + layer.name +
                         ' is not associated with any fully-connected layer.')
 
         # determine source layer(s) for computation layers
@@ -186,7 +186,7 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
 
                 if not bn_found:
                     raise CaffeParseError(
-                        'ERROR: scale layer ' + layer.name +
+                        'Scale layer ' + layer.name +
                         ' is not associated with a batch normalization layer')
 
         # loop over included layers
@@ -205,7 +205,7 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
             elif (layer_type == 'innerproduct'):  # fully connected
                 sas_code = caffe_full_connect_layer(clayer, model_name)
             else:
-                raise CaffeParseError('ERROR: ' + layer_type +
+                raise CaffeParseError(layer_type +
                                       ' is an unsupported layer type')
 
             # write SAS code associated with Caffe layer
@@ -213,7 +213,7 @@ def caffe_to_sas_file(network_file, sas_file, model_name, network_param=None,
                 fout.write(sas_code + '\n\n')
             else:
                 raise CaffeParseError(
-                    'ERROR: unable to generate SAS definition for layer ' +
+                    'Unable to generate SAS definition for layer ' +
                     clayer.layer_parm.name)
 
     except CaffeParseError as err_msg:
@@ -300,7 +300,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
                     layer_list[layer_index].related_layers.append(layer)
                 else:
                     raise CaffeParseError(
-                        'ERROR: activation layer ' + layer.name +
+                        'Activation layer ' + layer.name +
                         ' is not associated with any computation layer.')
 
         # associate dropout with computation layers
@@ -316,7 +316,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
                     layer_list[layer_index].related_layers.append(layer)
                 else:
                     raise CaffeParseError(
-                        'ERROR: dropout layer ' + layer.name +
+                        'Dropout layer ' + layer.name +
                         ' is not associated with any computation layer.')
 
         # associate softmax with a fully-connected layer
@@ -333,7 +333,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
                     layer_list[layer_index].related_layers.append(layer)
                 else:
                     raise CaffeParseError(
-                        'ERROR: softmax layer ' + layer.name +
+                        'Softmax layer ' + layer.name +
                         ' is not associated with any fully-connected layer.')
 
         # determine source layer(s) for computation layers
@@ -361,7 +361,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
 
                 if not bn_found:
                     raise CaffeParseError(
-                        'ERROR: scale layer ' + layer.name +
+                        'Scale layer ' + layer.name +
                         ' is not associated with a batch normalization layer')
 
         # loop over included layers
@@ -380,7 +380,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
             elif (layer_type == 'innerproduct'):  # fully connected
                 sas_code = caffe_full_connect_layer(clayer, model_name)
             else:
-                raise CaffeParseError('ERROR: ' + layer_type +
+                raise CaffeParseError(layer_type +
                                       ' is an unsupported layer type')
 
             # write SAS code associated with Caffe layer
@@ -389,7 +389,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
 
             else:
                 raise CaffeParseError(
-                    'ERROR: unable to generate SAS definition for layer ' +
+                    'Unable to generate SAS definition for layer ' +
                     clayer.layer_parm.name)
 
             # convert from BINARYPROTO to HDF5
@@ -450,7 +450,7 @@ def caffe_pooling_layer(clayer, model_name):
 
             exec(code_str)
     else:
-        raise CaffeParseError('ERROR: no pooling parameters given')
+        raise CaffeParseError('No pooling parameters given')
 
     # define parameters needed by SAS pooling layer
 
@@ -460,7 +460,7 @@ def caffe_pooling_layer(clayer, model_name):
     elif (pool == 1):
         pool_type = 'mean'
     else:
-        raise CaffeParseError('ERROR: invalid pooling type specified for layer = ' +
+        raise CaffeParseError('Invalid pooling type specified for layer = ' +
                               layer_parm.name)
 
     # stride (vertical)
@@ -483,7 +483,7 @@ def caffe_pooling_layer(clayer, model_name):
 
     # horizontal/vertical stride must agree
     if (tmp_stride_w != tmp_stride_h):
-        raise CaffeParseError('ERROR: horizontal/vertical strides do not agree '
+        raise CaffeParseError('Horizontal/vertical strides do not agree '
                               'for layer = ' + layer_parm.name)
     else:
         common_stride = tmp_stride_w
@@ -493,7 +493,7 @@ def caffe_pooling_layer(clayer, model_name):
         height = kernel_h
     else:
         if (kernel_size is None):
-            raise CaffeParseError('ERROR: unable to set kernel height for layer = ' +
+            raise CaffeParseError('Unable to set kernel height for layer = ' +
                                   layer_parm.name)
         else:
             height = kernel_size
@@ -503,7 +503,7 @@ def caffe_pooling_layer(clayer, model_name):
         width = kernel_w
     else:
         if (kernel_size is None):
-            raise CaffeParseError('ERROR: unable to set kernel width for layer = ' +
+            raise CaffeParseError('Unable to set kernel width for layer = ' +
                                   layer_parm.name)
         else:
             width = kernel_size
@@ -516,7 +516,7 @@ def caffe_pooling_layer(clayer, model_name):
     # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
     if (num_layers != 1):
-        raise CaffeParseError('ERROR: pooling layer requires one input layer, ' +
+        raise CaffeParseError('Pooling layer requires one input layer, ' +
                               str(num_layers) + ' provided')
 
     return write_pooling_layer(model_name=model_name, layer_name=clayer.layer_parm.name,
@@ -578,7 +578,7 @@ def caffe_convolution_layer(clayer, model_name):
 
             exec(code_str)
     else:
-        raise CaffeParseError('ERROR: no convolution parameters given')
+        raise CaffeParseError('No convolution parameters given')
 
     # define parameters needed by SAS convolution layer
     # bias
@@ -592,7 +592,7 @@ def caffe_convolution_layer(clayer, model_name):
 
     # number of output layers
     if (num_output is None):
-        raise CaffeParseError('ERROR: num_output not provided for layer = ' +
+        raise CaffeParseError('num_output not provided for layer = ' +
                               layer_parm.name)
 
     # stride (vertical)
@@ -615,7 +615,7 @@ def caffe_convolution_layer(clayer, model_name):
 
     # horizontal/vertical stride must agree
     if (tmp_stride_w != tmp_stride_h):
-        raise CaffeParseError('ERROR: horizontal/vertical strides do not '
+        raise CaffeParseError('Horizontal/vertical strides do not '
                               'agree for layer = ' + layer_parm.name)
     else:
         common_stride = tmp_stride_w
@@ -625,7 +625,7 @@ def caffe_convolution_layer(clayer, model_name):
         height = kernel_h
     else:
         if (kernel_size is None):
-            raise CaffeParseError('ERROR: unable to set kernel height for layer = ' +
+            raise CaffeParseError('Unable to set kernel height for layer = ' +
                                   layer_parm.name)
         else:
             height = kernel_size
@@ -635,7 +635,7 @@ def caffe_convolution_layer(clayer, model_name):
         width = kernel_w
     else:
         if (kernel_size is None):
-            raise CaffeParseError('ERROR: unable to set kernel width for layer = ' +
+            raise CaffeParseError('Unable to set kernel width for layer = ' +
                                   layer_parm.name)
         else:
             width = kernel_size
@@ -643,7 +643,7 @@ def caffe_convolution_layer(clayer, model_name):
     # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
     if (num_layers != 1):
-        raise CaffeParseError('ERROR: convolution layer requires one input layer, ' +
+        raise CaffeParseError('Convolution layer requires one input layer, ' +
                               str(num_layers) + ' provided')
 
     # determine activation
@@ -684,7 +684,7 @@ def caffe_batch_normalization_layer(clayer, model_name):
     source_layer, num_layers = extract_source_layers(clayer)
     if (num_layers != 1):
         raise CaffeParseError(
-            'ERROR: batch normalization layer requires one input layer, ' +
+            'Batch normalization layer requires one input layer, ' +
             str(num_layers) + ' provided')
 
     # determine activation
@@ -775,11 +775,11 @@ def caffe_residual_layer(clayer, model_name):
 
             exec(code_str)
     else:
-        raise CaffeParseError('ERROR: no eltwise parameters given')
+        raise CaffeParseError('No eltwise parameters given')
 
     # determine whether operation specified is valid
     if (operation != 1):
-        raise CaffeParseError('ERROR: element-wise operation not supported')
+        raise CaffeParseError('Element-wise operation not supported')
 
     # determine activation
     act = extract_activation(clayer, 'residual')
@@ -788,7 +788,7 @@ def caffe_residual_layer(clayer, model_name):
     source_layer, num_layers = extract_source_layers(clayer)
     if (num_layers < 2):
         raise CaffeParseError(
-            'ERROR: residual layer requires two or more input layers, ' +
+            'Residual layer requires two or more input layers, ' +
             str(num_layers) + ' provided')
 
     return write_residual_layer(model_name=model_name, layer_name=clayer.layer_parm.name,
@@ -836,7 +836,7 @@ def caffe_full_connect_layer(clayer, model_name):
 
             exec(code_str)
     else:
-        raise CaffeParseError('ERROR: no inner_product parameters given')
+        raise CaffeParseError('No inner_product parameters given')
 
     # define parameters needed by SAS fully-connected layer
 
@@ -853,16 +853,16 @@ def caffe_full_connect_layer(clayer, model_name):
     if (num_output is not None):
         num_neurons = num_output
     else:
-        raise CaffeParseError('ERROR: number of output neurons not specified '
+        raise CaffeParseError('Number of output neurons not specified '
                               'for layer = , ' + layer_parm.name)
 
     # check axis setting
     if (axis is not None) and (axis != 1):
-        raise CaffeParseError('ERROR: axis = , ' + str(axis) + ' is not supported')
+        raise CaffeParseError('axis = , ' + str(axis) + ' is not supported')
 
     # check transpose setting
     if (transpose is not None) and (transpose is not False):
-        raise CaffeParseError('ERROR: transpose = , ' + str(transpose) +
+        raise CaffeParseError('transpose = , ' + str(transpose) +
                               ' is not supported')
 
     # determine activation
@@ -882,7 +882,7 @@ def caffe_full_connect_layer(clayer, model_name):
         # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
     if (num_layers != 1):
-        raise CaffeParseError('ERROR: fully connected layer requires one input layer, ' +
+        raise CaffeParseError('Fully connected layer requires one input layer, ' +
                               str(num_layers) + ' provided')
 
     return write_full_connect_layer(model_name=model_name,
@@ -900,7 +900,6 @@ class CompositeLayer(object):
     A composite layer is one that consists of common SAS/Caffe
     computation layers along with Caffe layers that share the same top
     blob as the computation layer.
-
 
     Parameters
     ----------
@@ -1037,10 +1036,10 @@ def extract_dropout(clayer):
                         # dropout ratio
                         dropout_ratio = getattr(dropout_param, 'dropout_ratio', 0.0)
                     else:
-                        raise CaffeParseError('ERROR: no dropout parameters given')
+                        raise CaffeParseError('No dropout parameters given')
                 else:
                     raise CaffeParseError(
-                        'ERROR: More than one dropout layer associated with layer = ' +
+                        'More than one dropout layer associated with layer = ' +
                         clayer.related_layers[ii].layer_parm.name)
     return dropout_ratio
 
@@ -1057,7 +1056,8 @@ def extract_source_layers(clayer):
 
     Returns
     -------
-    String representation of Python list
+    string
+        String representation of Python list
 
     '''
     source_layer = []
@@ -1085,7 +1085,8 @@ def extract_repeated_attr(param, field):
 
     Returns
     -------
-    Field value or None if parameter or field doesn't exist
+    string or None
+        Field value or None if parameter or field doesn't exist
 
     '''
     tmpval = getattr(param, field, None)
@@ -1115,7 +1116,8 @@ def extract_attr(param, field):
 
     Returns
     -------
-    Field value or None if parameter or field doesn't exist
+    string or None
+        Field value or None if parameter or field doesn't exist
 
     '''
     tmpval = getattr(param, field, None)

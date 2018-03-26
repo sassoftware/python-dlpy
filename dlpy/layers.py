@@ -25,10 +25,8 @@ class Layer(object):
     '''
     Base class for all layers
 
-    Parameters:
+    Parameters
     ----------
-
-
     name : str
         Specifies the name of the layer.
     config : dict
@@ -36,6 +34,9 @@ class Layer(object):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Layer`
 
     '''
 
@@ -60,7 +61,7 @@ class Layer(object):
         self.num_bias = None
 
     def summary(self):
-        ''' a function to summarize the configuration of the layer.'''
+        ''' Summarize the configuration of the layer '''
         if self.config['type'].lower() == 'input':
             self.output_size = (int(self.config['width']),
                                 int(self.config['height']),
@@ -176,9 +177,12 @@ class Layer(object):
 
     def to_model_params(self):
         '''
-        Convert the model configuration to SAS Viya parameters.
-        Return:
-            A dictionary of SAS Viya parameters.
+        Convert the model configuration to SAS Viya parameters
+
+        Returns
+        -------
+        dict
+
         '''
         if self.config['type'].lower() == 'input':
             return dict(name=self.name, layer=self.config)
@@ -191,9 +195,8 @@ class InputLayer(Layer):
     '''
     Input layer
     
-    Parameters:
+    Parameters
     ----------
-
     n_channels : int
         Specifies the number of channels of the input images.
     width : int
@@ -211,6 +214,9 @@ class InputLayer(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`InputLayer`
 
     '''
 
@@ -230,9 +236,8 @@ class Conv2d(Layer):
     '''
     2D convolutional layer
 
-    Parameters:
+    Parameters
     ----------
-
     n_filters : int
         Specifies the number of filters.
     width : int
@@ -250,6 +255,9 @@ class Conv2d(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Conv2d`
 
     '''
 
@@ -273,7 +281,7 @@ class Pooling(Layer):
     '''
     Pooling layer
 
-    Parameters:
+    Parameters
     ----------
     width : int
         Specifies the width of pooling window.
@@ -290,6 +298,9 @@ class Pooling(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Pooling`
 
     '''
 
@@ -316,8 +327,7 @@ class Dense(Layer):
     '''
     Fully connected layer
 
-
-    Parameters:
+    Parameters
     ----------
     n : int
         Specifies the number of neurons.
@@ -330,6 +340,9 @@ class Dense(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Dense`
 
     '''
 
@@ -347,8 +360,7 @@ class Recurrent(Layer):
     '''
     Recurrent layer
 
-
-    Parameters:
+    Parameters
     ----------
     n : int
         Specifies the number of neurons.
@@ -365,6 +377,9 @@ class Recurrent(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Recurrent`
 
     '''
 
@@ -382,8 +397,7 @@ class BN(Layer):
     '''
     Batch Normalization layer
 
-
-    Parameters:
+    Parameters
     ----------
     act : str
         Specifies the activation types.
@@ -392,6 +406,9 @@ class BN(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`BN`
 
     '''
 
@@ -408,7 +425,7 @@ class Res(Layer):
     '''
     Residual layer
 
-    Parameters:
+    Parameters
     ----------
     act : str
         Specifies the activation types.
@@ -417,6 +434,9 @@ class Res(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Res`
 
     '''
 
@@ -432,9 +452,9 @@ class Res(Layer):
 class Concat(Layer):
     '''
     Concatenation layer
-    Parameters:
-    ----------
 
+    Parameters
+    ----------
     act : str
         Specifies the activation types.
     name : str
@@ -442,6 +462,9 @@ class Concat(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Concat`
 
     '''
 
@@ -458,14 +481,16 @@ class Proj(Layer):
     '''
     Projection layer
 
-    Parameters:
+    Parameters
     ----------
-
     name : str
         Specifies the name of the layer.
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
+    Returns
+    -------
+    :class:`Proj`
 
     '''
 
@@ -482,9 +507,8 @@ class OutputLayer(Layer):
     '''
     Output layer
 
-    Parameters:
+    Parameters
     ----------
-
     n : int
         Specifies the number of output neurons.
     act : str
@@ -494,7 +518,10 @@ class OutputLayer(Layer):
     src_layers : iter-of-Layers, optional
         Specifies the source layer(s).
 
-
+    Returns
+    -------
+    :class:`OutputLayer`
+ 
     '''
 
     def __init__(self, n=None, act='softmax', name=None, src_layers=None, **kwargs):
