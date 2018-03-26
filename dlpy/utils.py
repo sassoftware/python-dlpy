@@ -276,11 +276,12 @@ def unify_keys(dic):
 
     Parameters
     ----------
-    dic : a dictionary
+    dic : dict
 
     Returns
     -------
-    dictionary with updated key names.
+    dict
+        dictionary with updated key names
 
     '''
 

@@ -25,9 +25,17 @@ class Sequential(Model):
     '''
     Model for sequentially building of deep learning models
 
-    '''
+    Parameters
+    ----------
+    conn :
+    layers :
+    model_name :
 
-    # TODO: Describe parameters
+    Returns
+    -------
+    :class:`Sequential`
+
+    '''
 
     def __init__(self, conn, layers=None, model_name=None):
         Model.__init__(self, conn, model_name=model_name)

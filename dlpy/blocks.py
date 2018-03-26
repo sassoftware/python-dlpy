@@ -88,7 +88,9 @@ class ResBlock(object):
 
         Returns
         -------
-            A dictionary of key-word-arguments.
+        dict
+            A dictionary of keyword-arguments
+
         '''
         options = []
         conv_num = 1
@@ -182,7 +184,8 @@ class ResBlockBN(object):
 
         Returns
         -------
-        A dictionary of key-word-arguments
+        dict
+            A dictionary of keyword-arguments
 
         '''
         options = []
@@ -287,7 +290,8 @@ class ResBlock_Caffe(object):
 
         Returns
         -------
-        A dictionary of keyword-arguments
+        dict
+            A dictionary of keyword-arguments
 
         '''
         options = []
@@ -344,18 +348,20 @@ class DenseNetBlock(object):
     '''
     DenseNet block
 
-    Parameters:
-    n_cells, int
-        Specifies the number of cells.
+    Parameters
+    ----------
+    n_cells : int
+        Number of cells
+    kernel_size : int
+        Size of the kernel
+    n_filter : int
+        Number of filters
+    stride : int
+        Size of the stride
 
-    kernel_size, int
-        Specifies the size of the kernel.
-
-    n_filter, int
-        Specifies the number of filters.
-
-    stride, int
-        Specifies the size of the stride.
+    Returns
+    -------
+    :class:`DenseNetBlock`
 
     '''
 
@@ -386,7 +392,8 @@ class DenseNetBlock(object):
 
         Returns
         -------
-        A dictionary of keyword-arguments
+        dict
+            A dictionary of keyword-arguments
 
         '''
         options = []

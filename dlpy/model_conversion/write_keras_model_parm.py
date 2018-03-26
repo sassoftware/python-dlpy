@@ -16,10 +16,9 @@
 #  limitations under the License.
 #
 
-'''Supporting functions for keras model conversion.'''
+''' Supporting functions for keras model conversion '''
 
 import sys
-
 import h5py
 import numpy as np
 from keras import backend as K

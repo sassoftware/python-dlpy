@@ -16,10 +16,9 @@
 #  limitations under the License.
 #
 
-'''Supporting functions for caffe model conversion.'''
+''' Supporting functions for caffe model conversion '''
 
 import sys
-
 import h5py
 
 
