@@ -679,7 +679,7 @@ def VGG16(conn, model_table='VGG16',
                              '2. upload the *.h5 file to '
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
-        model_vgg16.VGG16_Model(
+        model_cas = model_vgg16.VGG16_Model(
             s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
@@ -687,7 +687,7 @@ def VGG16(conn, model_table='VGG16',
         if include_top:
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
-            model = Model.from_table(conn.CASTable(model_table))
+            model = Model.from_table(model_cas)
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -702,7 +702,7 @@ def VGG16(conn, model_table='VGG16',
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_table), display_note=False)
+            model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
@@ -946,7 +946,7 @@ def VGG19(conn, model_table='VGG19',
                              '2. upload the *.h5 file to '
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
-        model_vgg19.VGG19_Model(
+        model_cas = model_vgg19.VGG19_Model(
             s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
@@ -955,7 +955,7 @@ def VGG19(conn, model_table='VGG19',
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_table))
+            model = Model.from_table(model_cas)
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -971,7 +971,7 @@ def VGG19(conn, model_table='VGG19',
 
         else:
 
-            model = Model.from_table(conn.CASTable(model_table), display_note=False)
+            model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
@@ -1745,7 +1745,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', batch_norm_first=False,
                              '2. upload the *.h5 file to '
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
-        model_resnet50.ResNet50_Model(
+        model_cas = model_resnet50.ResNet50_Model(
             s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
@@ -1754,7 +1754,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', batch_norm_first=False,
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_table))
+            model = Model.from_table(model_cas)
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -1769,7 +1769,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_table), display_note=False)
+            model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_train_weight_file)
             model._retrieve_('deeplearn.removelayer', model=model_table, name='fc1000')
             model._retrieve_('deeplearn.addlayer', model=model_table, name='output',
@@ -2009,7 +2009,7 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', batch_norm_first=False,
                              '2. upload the *.h5 file to '
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
-        model_resnet101.ResNet101_Model(
+        model_cas = model_resnet101.ResNet101_Model(
             s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
@@ -2018,7 +2018,7 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', batch_norm_first=False,
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_table))
+            model = Model.from_table(model_cas)
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -2274,7 +2274,7 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE', batch_norm_first=False,
                              '2. upload the *.h5 file to '
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
-        model_resnet152.ResNet152_Model(
+        model_cas = model_resnet152.ResNet152_Model(
             s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
@@ -2283,7 +2283,7 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE', batch_norm_first=False,
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_table))
+            model = Model.from_table(model_cas)
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')

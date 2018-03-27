@@ -175,7 +175,8 @@ class Model(object):
         return model
 
     @classmethod
-    def from_caffe_model(cls, conn, input_network_file, output_model_table=None, model_weights_file=None, **kwargs):
+    def from_caffe_model(cls, conn, input_network_file, output_model_table=None,
+                         model_weights_file=None, **kwargs):
         '''
         Generate a model object from a Caffe model proto file (e.g. *.prototxt), and
         convert the weights (e.g. *.caffemodel) to a SAS capable file (e.g. *.caffemodel.h5).
