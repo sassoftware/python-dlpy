@@ -104,7 +104,7 @@ class Model(object):
                                       table=dict(where='_DLKey1_= "modeltype"',
                                                  **model_table.to_table_params()))
         model_name = model_name.Fetch['_DLKey0_'][0]
-        if display_note :
+        if display_note:
             print(('NOTE : Model table is attached successfully!\n'
                    'NOTE : Model is named to "{}" according to the '
                    'model name in the table.').format(model_name))
@@ -278,7 +278,7 @@ class Model(object):
         except:
             flag = False
             cas_lib_name = random_name('Caslib', 6)
-            self._retrieve_('addcaslib',
+            self._retrieve_('table.addcaslib',
                             name=cas_lib_name, path=dir_name,
                             activeOnAdd=False, dataSource=dict(srcType='DNFS'))
         self._retrieve_('table.loadtable',
@@ -296,7 +296,7 @@ class Model(object):
                             table=self.model_name)
 
             self._retrieve_('table.droptable', **self.model_table)
-            if display_note :
+            if display_note:
                 print(('NOTE : Model table is loaded successfully!\n'
                        'NOTE : Model is renamed to "{}" according to the '
                        'model name in the table.').format(model_name))
@@ -366,7 +366,7 @@ class Model(object):
                                             name=self.model_name + '_weights_attr'))
                 self.set_weights_attr(self.model_name + '_weights_attr')
         if not flag:
-            self._retrieve_('dropcaslib', caslib=cas_lib_name)
+            self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
 
     def set_weights(self, weight_tbl):
         '''
@@ -422,7 +422,7 @@ class Model(object):
             contains the weight table.
 
         '''
-        self._retrieve_('dlimportmodelweights', model=self.model_table,
+        self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                         modelWeights=dict(replace=True,
                                           name=self.model_name + '_weights'),
                         formatType='CAFFE', weightFilePath=path, **kwargs)
@@ -444,7 +444,7 @@ class Model(object):
         except:
             flag = False
             cas_lib_name = random_name('Caslib', 6)
-            self._retrieve_('addcaslib',
+            self._retrieve_('table.addcaslib',
                             name=cas_lib_name, path=dir_name,
                             activeOnAdd=False, dataSource=dict(srcType='DNFS'))
 
@@ -475,7 +475,7 @@ class Model(object):
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
 
         if not flag:
-            self._retrieve_('dropcaslib', caslib=cas_lib_name)
+            self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
         '''
@@ -517,7 +517,7 @@ class Model(object):
         except:
             flag = False
             cas_lib_name = random_name('Caslib', 6)
-            self._retrieve_('addcaslib',
+            self._retrieve_('table.addcaslib',
                             name=cas_lib_name, path=dir_name,
                             activeOnAdd=False, dataSource=dict(srcType='DNFS'))
 
@@ -530,7 +530,7 @@ class Model(object):
         self.set_weights_attr(self.model_name + '_weights_attr')
 
         if not flag:
-            self._retrieve_('dropcaslib', caslib=cas_lib_name)
+            self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
 
     def get_model_info(self):
         '''
@@ -541,7 +541,7 @@ class Model(object):
         :class:`CASResults`
 
         '''
-        return self._retrieve_('modelinfo', modelTable=self.model_table)
+        return self._retrieve_('deeplearn.modelinfo', modelTable=self.model_table)
 
     def fit(self, data, inputs='_image_', target='_label_',
             mini_batch_size=1, max_epochs=5, log_level=3, lr=0.01,
@@ -638,13 +638,13 @@ class Model(object):
             pass
 
         if self.model_weights.to_table_params()['name'].upper() in \
-                list(self._retrieve_('tableinfo').TableInfo.Name):
+                list(self._retrieve_('table.tableinfo').TableInfo.Name):
             print('NOTE : Training based on existing weights.')
             train_options['initWeights'] = self.model_weights
         else:
             print('NOTE : Training from scratch.')
 
-        r = self._retrieve_('dltrain', message_level='note', **train_options)
+        r = self._retrieve_('deeplearn.dltrain', message_level='note', **train_options)
 
         try:
             temp = r.OptIterHistory
@@ -688,7 +688,7 @@ class Model(object):
         :class:`CASResults`
 
         '''
-        r = self._retrieve_('dltune',
+        r = self._retrieve_('deeplearn.dltune',
                             message_level='note', model=self.model_table,
                             table=data,
                             inputs=inputs,
@@ -768,7 +768,7 @@ class Model(object):
 
         dlscore_options.update(kwargs)
 
-        res = self._retrieve_('dlscore', **dlscore_options)
+        res = self._retrieve_('deeplearn.dlscore', **dlscore_options)
 
         self.valid_score = res.ScoreInfo
         self.valid_conf_mat = self.conn.crosstab(
@@ -779,7 +779,7 @@ class Model(object):
 
         columns = [item for item in temp_columns
                    if item[0:9] == 'P_' + target or item == 'I_' + target]
-        img_table = self._retrieve_('fetchimages', fetchimagesvars=columns,
+        img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns,
                                     imagetable=temp_tbl, to=1000)
         img_table = img_table.Images
 
@@ -881,7 +881,7 @@ class Model(object):
                              layerImageType='jpg',
                              encodeName=True,
                              **kwargs)
-        self._retrieve_('dlscore', **score_options)
+        self._retrieve_('deeplearn.dlscore', **score_options)
         layer_out_jpg = self.conn.CASTable(feature_maps_tbl)
         feature_maps_names = [i for i in layer_out_jpg.columninfo().ColumnInfo.Column]
         feature_maps_structure = dict()
@@ -935,7 +935,7 @@ class Model(object):
                              randomcrop='none',
                              encodeName=True,
                              **kwargs)
-        self._retrieve_('dlscore', **score_options)
+        self._retrieve_('deeplearn.dlscore', **score_options)
         x = self.conn.CASTable(feature_tbl).as_matrix()
         y = self.conn.CASTable(**input_tbl_opts)[target].as_matrix().ravel()
         return x, y
@@ -1001,7 +1001,7 @@ class Model(object):
             _, data2 = two_way_split(data, test_rate=te_rate)
             data = data2
         # Prepare masked images for analysis.
-        self._retrieve_('image.augmentImages',
+        self._retrieve_('image.augmentimages',
                         table=data.to_table_params(),
                         copyvars=copy_vars,
                         casout=dict(replace=True, name=masked_image_table,
@@ -1025,7 +1025,7 @@ class Model(object):
                                casout=dict(replace=True, name=valid_res_tbl),
                                encodeName=True)
         dlscore_options.update(kwargs)
-        self._retrieve_('dlscore', **dlscore_options)
+        self._retrieve_('deeplearn.dlscore', **dlscore_options)
 
         valid_res_tbl = self.conn.CASTable(valid_res_tbl)
         key_map = dict()
@@ -1077,8 +1077,8 @@ class Model(object):
             })
             output_table.append(temp_dict)
 
-        self._retrieve_('droptable', name=masked_image_table)
-        self._retrieve_('droptable', name=valid_res_tbl)
+        self._retrieve_('table.droptable', name=masked_image_table)
+        self._retrieve_('table.droptable', name=valid_res_tbl)
 
         output_table = pd.DataFrame(output_table)
         self.model_explain_table = output_table
@@ -1193,7 +1193,7 @@ class Model(object):
 
         CAS_tbl_name = self.model_name + '_astore'
 
-        self._retrieve_('dlexportmodel',
+        self._retrieve_('deeplearn.dlexportmodel',
                         casout=dict(replace=True, name=CAS_tbl_name),
                         initWeights=self.model_weights,
                         modelTable=self.model_table,
@@ -1201,7 +1201,7 @@ class Model(object):
                         randomFlip='none',
                         randomMutation='none')
 
-        model_astore = self._retrieve_('download',
+        model_astore = self._retrieve_('astore.download',
                                        rstore=CAS_tbl_name)
 
         file_name = self.model_name + '.astore'
@@ -1233,7 +1233,7 @@ class Model(object):
         except:
             flag = False
             cas_lib_name = random_name('CASLIB')
-            self._retrieve_('addcaslib',
+            self._retrieve_('table.addcaslib',
                             activeonadd=False, datasource=dict(srcType='DNFS'),
                             name=cas_lib_name, path=path)
 
@@ -1260,7 +1260,7 @@ class Model(object):
                         name=attr_tbl_file,
                         replace=True, caslib=cas_lib_name)
         if not flag:
-            self._retrieve_('dropcaslib', caslib=cas_lib_name)
+            self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
         print('NOTE : Model table saved successfully.')
 
     def deploy(self, path, output_format='astore'):
@@ -1403,7 +1403,7 @@ class FeatureMaps(object):
             image = []
             for i in range(3):
                 col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, i)
-                temp = self.conn.retrieve('fetchimages', _messagelevel='error',
+                temp = self.conn.retrieve('image.fetchimages', _messagelevel='error',
                                           table=self.tbl,
                                           image=col_name).Images.Image[0]
                 image.append(np.asarray(temp))
@@ -1414,7 +1414,7 @@ class FeatureMaps(object):
             for i in range(n_images):
                 filter_num = filter_id[i]
                 col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, filter_num)
-                image = self.conn.retrieve('fetchimages', _messagelevel='error',
+                image = self.conn.retrieve('image.fetchimages', _messagelevel='error',
                                            table=self.tbl,
                                            image=col_name).Images.Image[0]
                 image = np.asarray(image)
