@@ -690,7 +690,7 @@ def VGG16(conn, model_name='VGG16',
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
-                                      'caffe_models', 'imagenet_label.sas7bdat')
+                                      'datasources', 'imagenet_label.sas7bdat')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
                 data=label_file)
@@ -958,7 +958,7 @@ def VGG19(conn, model_name='VGG19',
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
-                                      'caffe_models', 'imagenet_label.sas7bdat')
+                                      'datasources', 'imagenet_label.sas7bdat')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
                 data=label_file)
@@ -1757,7 +1757,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
-                                      'caffe_models', 'imagenet_label.sas7bdat')
+                                      'datasources', 'imagenet_label.sas7bdat')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
                 data=label_file)
@@ -2021,7 +2021,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
-                                      'caffe_models', 'imagenet_label.sas7bdat')
+                                      'datasources', 'imagenet_label.sas7bdat')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
                 data=label_file)
@@ -2286,7 +2286,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
-                                      'caffe_models', 'imagenet_label.sas7bdat')
+                                      'datasources', 'imagenet_label.sas7bdat')
             conn.upload(
                 casout=dict(replace=True, name=label_table),
                 data=label_file)
