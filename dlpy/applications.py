@@ -19,6 +19,7 @@
 ''' Pre-built deep learning models '''
 
 import os
+import warnings
 
 from .Sequential import Sequential
 from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock
@@ -201,8 +202,8 @@ def LeNet5_bn(conn, model_name='LENET_BN',
         if include_top:
             return model
         else:
-            model._retrieve_('removelayer', model=model_name, name='ip2')
-            model._retrieve_('addlayer',
+            model._retrieve_('deeplearn.removelayer', model=model_name, name='ip2')
+            model._retrieve_('deeplearn.addlayer',
                              model=model_name, name='ip2',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['ip1'])
@@ -255,7 +256,7 @@ def VGG11(conn, model_name='VGG11',
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.
-    Default: (103.939, 116.779, 123.68)
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
@@ -555,7 +556,7 @@ def VGG13_bn(conn, model_name='VGG13',
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.
-    Default: (103.939, 116.779, 123.68)
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
@@ -711,7 +712,7 @@ def VGG16(conn, model_name='VGG16',
                                     'VGG_ILSVRC_16_layers.caffemodel.h5'
         if include_top:
             if n_classes != 1000:
-                print('WARNING : IF include_top = True, n_classes will be set to 1000.')
+                warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
@@ -734,8 +735,8 @@ def VGG16(conn, model_name='VGG16',
             weight_table_options.update(dict(where='_LayerID_<19'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model._retrieve_('removelayer', model=model_name, name='fc8')
-            model._retrieve_('addlayer', model=model_name, name='fc8',
+            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc8')
+            model._retrieve_('deeplearn.addlayer', model=model_name, name='fc8',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_name))
@@ -786,7 +787,7 @@ def VGG16_bn(conn, model_name='VGG16',
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
-    Default: (103.939, 116.779, 123.68)
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
@@ -973,7 +974,7 @@ def VGG19(conn, model_name='VGG19',
                                     'VGG_ILSVRC_19_layers.caffemodel.h5'
         if include_top:
             if n_classes != 1000:
-                print('WARNING : IF include_top = True, n_classes will be set to 1000.')
+                warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
@@ -998,8 +999,8 @@ def VGG19(conn, model_name='VGG19',
             weight_table_options.update(dict(where='_LayerID_<22'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model._retrieve_('removelayer', model=model_name, name='fc8')
-            model._retrieve_('addlayer', model=model_name, name='fc8',
+            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc8')
+            model._retrieve_('deeplearn.addlayer', model=model_name, name='fc8',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_name))
@@ -1184,7 +1185,7 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.
-    Default: (103.939, 116.779, 123.68)
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
@@ -1384,7 +1385,7 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.
-    Default: (103.939, 116.779, 123.68)
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
@@ -1592,7 +1593,7 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.
-    Default: (103.939, 116.779, 123.68)
+        Default: (103.939, 116.779, 123.68)
 
     Returns
     -------
@@ -1768,7 +1769,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
 
         if include_top:
             if n_classes != 1000:
-                print('WARNING : IF include_top = True, n_classes will be set to 1000.')
+                warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
@@ -1787,8 +1788,8 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
         else:
             model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('removelayer', model=model_name, name='fc1000')
-            model._retrieve_('addlayer', model=model_name, name='output',
+            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc1000')
+            model._retrieve_('deeplearn.addlayer', model=model_name, name='output',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
@@ -2028,7 +2029,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
 
         if include_top:
             if n_classes != 1000:
-                print('WARNING : IF include_top = True, n_classes will be set to 1000.')
+                warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
@@ -2047,8 +2048,8 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
         else:
             model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('removelayer', model=model_name, name='fc1000')
-            model._retrieve_('addlayer', model=model_name, name='output',
+            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc1000')
+            model._retrieve_('deeplearn.addlayer', model=model_name, name='output',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
@@ -2289,7 +2290,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
 
         if include_top:
             if n_classes != 1000:
-                print('WARNING : IF include_top = True, n_classes will be set to 1000.')
+                warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
             model = Model.from_table(conn.CASTable(model_name))
             label_table = random_name('label')
@@ -2308,8 +2309,8 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
         else:
             model = Model.from_table(conn.CASTable(model_name), display_note=False)
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('removelayer', model=model_name, name='fc1000')
-            model._retrieve_('addlayer', model=model_name, name='output',
+            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc1000')
+            model._retrieve_('deeplearn.addlayer', model=model_name, name='output',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
@@ -2478,7 +2479,7 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
         and height parameters. Only the images with one or both dimensions that
         are larger than those sizes are cropped.
         Default	: "unique"
-    offsets=(double-1 <, double-2, ...>), optional
+    offsets : (double-1 <, double-2, ...>), optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default : (85, 111, 139)

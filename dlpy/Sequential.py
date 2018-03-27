@@ -124,7 +124,7 @@ class Sequential(Model):
             raise ValueError('The first layer of the model must be an input layer')
         # if self.layers[-1].config['type'] != 'output':
         #     raise ValueError('The last layer of the model must be an output layer')
-        self._retrieve_('buildmodel', model=dict(
+        self._retrieve_('deeplearn.buildmodel', model=dict(
             name=self.model_name, replace=True), type='CNN')
 
         conv_num = 1
@@ -142,7 +142,7 @@ class Sequential(Model):
                     compiled_layers.append(item)
                 output_layer = layer.layers[-1]
                 for option in options:
-                    self._retrieve_('addlayer', model=self.model_name, **option)
+                    self._retrieve_('deeplearn.addlayer', model=self.model_name, **option)
             else:
                 # Name each layer of the model.
                 if layer.config['type'] == 'input':
@@ -178,7 +178,7 @@ class Sequential(Model):
                 compiled_layers.append(layer)
                 output_layer = layer
 
-                self._retrieve_('addlayer', model=self.model_name, **option)
+                self._retrieve_('deeplearn.addlayer', model=self.model_name, **option)
 
         print('NOTE : Model compiled successfully.')
         self.layers = compiled_layers

@@ -238,7 +238,7 @@ def add_caslib(conn, path):
         return cas_lib_name.tolist()[0]
     else:
         cas_lib_name = random_name('Caslib', 6)
-        conn.retrieve('addcaslib', message_level='error',
+        conn.retrieve('table.addcaslib', message_level='error',
                       name=cas_lib_name, path=path, activeOnAdd=False,
                       dataSource=dict(srcType='DNFS'))
         return cas_lib_name
