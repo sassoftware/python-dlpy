@@ -1,4 +1,3 @@
-
 .. Copyright SAS Institute
 
 :tocdepth: 4
@@ -18,11 +17,11 @@ SAS Deep Learning Python Interface
 **Issues & Ideas:** `<https://github.com/sassoftware/dlpy/issues>`_
 
 .. toctree::
-   :maxdepth: 3
+:maxdepth: 3
 
-   install
-   getting-started
-   api
+       install
+       getting-started
+       api
 
 
 Index
