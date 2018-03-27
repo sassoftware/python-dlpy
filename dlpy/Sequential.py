@@ -31,15 +31,9 @@ class Sequential(Model):
         Specifies the CAS connection object
     layers : list of Layer objects.
         Specifies the layers of the sequential model.
-    model_name : string, optional
-        Specifies the name of the cas table that stores the deep learning model.
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
         Default : None
-    model_weights : CASTable or string or dict
-        Specifies the CASTable containing weights of the deep learning model.
-        If not specified, random initial will be used.
-        Default : None
-    caslib : string, optional
-        Specifies the name of the cas library that store the model table.
 
     Returns
     -------
@@ -47,8 +41,8 @@ class Sequential(Model):
 
     '''
 
-    def __init__(self, conn, layers=None, model_name=None, caslib=None):
-        Model.__init__(self, conn, model_name=model_name, caslib=caslib)
+    def __init__(self, conn, layers=None, model_table=None):
+        Model.__init__(self, conn, model_table=model_table)
 
         if layers is None:
             self.layers = []
