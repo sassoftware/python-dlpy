@@ -60,7 +60,23 @@ class Layer(object):
         self.num_weights = None
         self.num_bias = None
 
-    def summary_str_gen(self):
+    def to_model_params(self):
+        '''
+        Convert the model configuration to SAS Viya parameters
+
+        Returns
+        -------
+        dict
+
+        '''
+        if self.config['type'].lower() == 'input':
+            return dict(name=self.name, layer=self.config)
+        else:
+            return dict(name=self.name, layer=self.config,
+                        srclayers=[item.name for item in self.src_layers])
+
+    @property
+    def summary_str(self):
         '''
         Generate the summary string describing the configuration of the layer.
         '''
@@ -175,23 +191,7 @@ class Layer(object):
         num_paras = '{} / {}'.format(self.num_weights, self.num_bias)
         col6 = '|{:^22}|\n'.format(num_paras)
 
-        self.summary_str = col1 + col2 + col3 + col4 + col5 + col6
-
-    def to_model_params(self):
-        '''
-        Convert the model configuration to SAS Viya parameters
-
-        Returns
-        -------
-        dict
-
-        '''
-        if self.config['type'].lower() == 'input':
-            return dict(name=self.name, layer=self.config)
-        else:
-            return dict(name=self.name, layer=self.config,
-                        srclayers=[item.name for item in self.src_layers])
-
+        return col1 + col2 + col3 + col4 + col5 + col6
 
 class InputLayer(Layer):
     '''
