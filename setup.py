@@ -35,6 +35,10 @@ setup(
     url='http://github.com/sassoftware/dlpy/',
     license='Apache 2.0',
     packages=find_packages(),
+    package_data={
+        'dlpy': ['datasources/*', 'testing/datasources/*'],
+    },
+    include_package_data=True,
     install_requires=[
         'pandas >= 0.16.0',
         'six >= 1.9.0',
