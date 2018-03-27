@@ -23,7 +23,7 @@ import warnings
 
 from .Sequential import Sequential
 from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock
-from .caffe_models import (model_lenet, model_vgg16, model_vgg19, model_resnet50,
+from .caffe_models import (model_vgg16, model_vgg19, model_resnet50,
                            model_resnet101, model_resnet152)
 from .layers import (InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer)
 from .model import Model
@@ -105,8 +105,7 @@ def LeNet5(conn, model_name='LENET5',
 
 def LeNet5_bn(conn, model_name='LENET_BN',
               n_channels=1, width=28, height=28, n_classes=10, scale=1.0 / 255,
-              random_flip='none', random_crop='none', offsets=0,
-              pre_train_weight=False, pre_train_weight_file=None, include_top=False):
+              random_flip='none', random_crop='none', offsets=0):
     '''
     Generate a LeNet Model with Batch normalization
 
@@ -131,7 +130,7 @@ def LeNet5_bn(conn, model_name='LENET_BN',
         Default: 10
     scale : double, optional
         Specifies a scaling factor to apply to each image
-        Default: 1
+        Default: 1/255
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
@@ -149,16 +148,6 @@ def LeNet5_bn(conn, model_name='LENET_BN',
         input data is set after applying scaling and subtracting the
         specified offsets.
         Default: 0
-    pre_train_weight : boolean, optional
-        Specifies whether to use the pre-trained weights from MNIST data set
-        Default: False
-    pre_train_weight_file : string, required when pre_train_weight=True.
-        Specifies the file name for the pretained weights.
-        Must be a fully qualified file name of SAS-compatible file (*.caffemodel.h5)
-    include_top : boolean, optional
-        Specifies whether to include pre-trained weights of the top layers,
-        i.e. the FC layers.
-        Default: False
 
     Returns
     -------
@@ -170,46 +159,26 @@ def LeNet5_bn(conn, model_name='LENET_BN',
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    if not pre_train_weight:
-        model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_name=model_name)
 
-        model.add(InputLayer(n_channels=n_channels, width=width, height=height,
-                             scale=scale, offsets=offsets, random_flip=random_flip,
-                             random_crop=random_crop, name='mnist'))
+    model.add(InputLayer(n_channels=n_channels, width=width, height=height,
+                         scale=scale, offsets=offsets, random_flip=random_flip,
+                         random_crop=random_crop, name='mnist'))
 
-        model.add(Conv2d(n_filters=20, width=5, act='identity', stride=1,
-                         includeBias=False, name='conv1'))
-        model.add(BN(act='relu', name='conv1_bn'))
-        model.add(Pooling(width=2, height=2, stride=2, pool='max', name='pool1'))
+    model.add(Conv2d(n_filters=20, width=5, act='identity', stride=1,
+                     includeBias=False, name='conv1'))
+    model.add(BN(act='relu', name='conv1_bn'))
+    model.add(Pooling(width=2, height=2, stride=2, pool='max', name='pool1'))
 
-        model.add(Conv2d(n_filters=50, width=5, act='identity', stride=1,
-                         includeBias=False, name='conv2'))
-        model.add(BN(act='relu', name='conv2_bn'))
-        model.add(Pooling(width=2, height=2, stride=2, pool='max', name='pool2'))
+    model.add(Conv2d(n_filters=50, width=5, act='identity', stride=1,
+                     includeBias=False, name='conv2'))
+    model.add(BN(act='relu', name='conv2_bn'))
+    model.add(Pooling(width=2, height=2, stride=2, pool='max', name='pool2'))
 
-        model.add(Dense(n=500, name='ip1'))
-        model.add(OutputLayer(n=n_classes, name='ip2'))
+    model.add(Dense(n=500, name='ip1'))
+    model.add(OutputLayer(n=n_classes, name='ip2'))
 
-        return model
-
-    else:
-        model_lenet.LeNet_Model(s=conn, model_name=model_name)
-        model = Model.from_table(conn.CASTable(model_name))
-        if pre_train_weight_file is None:
-            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
-                                    'lenet.caffemodel.h5'
-        model.load_weights(path=pre_train_weight_file)
-        if include_top:
-            return model
-        else:
-            model._retrieve_('deeplearn.removelayer', model=model_name, name='ip2')
-            model._retrieve_('deeplearn.addlayer',
-                             model=model_name, name='ip2',
-                             layer=dict(type='output', n=n_classes, act='softmax'),
-                             srcLayers=['ip1'])
-            model = Model.from_table(conn.CASTable(model_name), display_note=False)
-
-        return model
+    return model
 
 
 def VGG11(conn, model_name='VGG11',
@@ -702,14 +671,19 @@ def VGG16(conn, model_name='VGG16',
         return model
 
     else:
+        if pre_train_weight_file is None:
+            raise ValueError('\nThe pre-trained weights file is not specified.\n'
+                             'Please follow the steps below to attach the pre-trained weights:\n'
+                             '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                             'and download the associated weight file.\n'
+                             '2. upload the *.h5 file to '
+                             'a server side directory which the CAS session has access to.\n'
+                             '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_vgg16.VGG16_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
-        if pre_train_weight_file is None:
-            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
-                                    'VGG_ILSVRC_16_layers.caffemodel.h5'
         if include_top:
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
@@ -964,14 +938,19 @@ def VGG19(conn, model_name='VGG19',
         return model
 
     else:
+        if pre_train_weight_file is None:
+            raise ValueError('\nThe pre-trained weights file is not specified.\n'
+                             'Please follow the steps below to attach the pre-trained weights:\n'
+                             '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                             'and download the associated weight file.\n'
+                             '2. upload the *.h5 file to '
+                             'a server side directory which the CAS session has access to.\n'
+                             '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_vgg19.VGG19_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
-        if pre_train_weight_file is None:
-            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
-                                    'VGG_ILSVRC_19_layers.caffemodel.h5'
         if include_top:
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
@@ -1758,14 +1737,18 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
         return model
 
     else:
+        if pre_train_weight_file is None:
+            raise ValueError('\nThe pre-trained weights file is not specified.\n'
+                             'Please follow the steps below to attach the pre-trained weights:\n'
+                             '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                             'and download the associated weight file.\n'
+                             '2. upload the *.h5 file to '
+                             'a server side directory which the CAS session has access to.\n'
+                             '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_resnet50.ResNet50_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
-
-        if pre_train_weight_file is None:
-            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
-                                    'ResNet-50-model.caffemodel.h5'
 
         if include_top:
             if n_classes != 1000:
@@ -2018,14 +2001,18 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
         return model
 
     else:
+        if pre_train_weight_file is None:
+            raise ValueError('\nThe pre-trained weights file is not specified.\n'
+                             'Please follow the steps below to attach the pre-trained weights:\n'
+                             '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                             'and download the associated weight file.\n'
+                             '2. upload the *.h5 file to '
+                             'a server side directory which the CAS session has access to.\n'
+                             '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_resnet101.ResNet101_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
-
-        if pre_train_weight_file is None:
-            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
-                                    'ResNet-101-model.caffemodel.h5'
 
         if include_top:
             if n_classes != 1000:
@@ -2279,14 +2266,18 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
 
         return model
     else:
+        if pre_train_weight_file is None:
+            raise ValueError('\nThe pre-trained weights file is not specified.\n'
+                             'Please follow the steps below to attach the pre-trained weights:\n'
+                             '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                             'and download the associated weight file.\n'
+                             '2. upload the *.h5 file to '
+                             'a server side directory which the CAS session has access to.\n'
+                             '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_resnet152.ResNet152_Model(
             s=conn, model_name=model_name, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
-
-        if pre_train_weight_file is None:
-            pre_train_weight_file = '/dept/cas/leliuz/DLPy/imported_models/' \
-                                    'ResNet-152-model.caffemodel.h5'
 
         if include_top:
             if n_classes != 1000:
