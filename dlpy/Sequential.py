@@ -183,4 +183,4 @@ class Sequential(Model):
         print('NOTE : Model compiled successfully.')
         self.layers = compiled_layers
         for layer in self.layers:
-            layer.summary()
+            layer.summary_str_gen()

@@ -144,7 +144,7 @@ class Model(object):
             else:
                 model.layers[layer_id].src_layers.append(model.layers[src_layer_id])
         for layer in model.layers:
-            layer.summary()
+            layer.summary_str_gen()
 
             # Check if weight table is in the same path
         return model
@@ -337,7 +337,7 @@ class Model(object):
             else:
                 self.layers[layer_id].src_layers.append(self.layers[src_layer_id])
         for layer in self.layers:
-            layer.summary()
+            layer.summary_str_gen()
 
         # Check if weight table is in the same path
         _file_name_, _extension_ = os.path.splitext(file_name)

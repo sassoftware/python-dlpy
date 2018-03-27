@@ -60,8 +60,10 @@ class Layer(object):
         self.num_weights = None
         self.num_bias = None
 
-    def summary(self):
-        ''' Summarize the configuration of the layer '''
+    def summary_str_gen(self):
+        '''
+        Generate the summary string describing the configuration of the layer.
+        '''
         if self.config['type'].lower() == 'input':
             self.output_size = (int(self.config['width']),
                                 int(self.config['height']),

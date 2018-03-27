@@ -1,4 +1,3 @@
-
 .. Copyright SAS Institute
 
 .. currentmodule:: dlpy
@@ -17,30 +16,30 @@ Applications
 .. currentmodule:: dlpy.applications
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   LeNet5
-   LeNet5_bn
-   VGG11
-   VGG11_bn
-   VGG13
-   VGG13_bn
-   VGG16
-   VGG16_bn
-   VGG19
-   VGG19_bn
-   ResNet18_SAS
-   ResNet18_Caffe
-   ResNet34_SAS
-   ResNet34_Caffe
-   ResNet50_SAS
-   ResNet50_Caffe
-   ResNet101_SAS
-   ResNet101_Caffe
-   ResNet152_SAS
-   ResNet152_Caffe
-   wide_resnet
-   
+       LeNet5
+       LeNet5_bn
+       VGG11
+       VGG11_bn
+       VGG13
+       VGG13_bn
+       VGG16
+       VGG16_bn
+       VGG19
+       VGG19_bn
+       ResNet18_SAS
+       ResNet18_Caffe
+       ResNet34_SAS
+       ResNet34_Caffe
+       ResNet50_SAS
+       ResNet50_Caffe
+       ResNet101_SAS
+       ResNet101_Caffe
+       ResNet152_SAS
+       ResNet152_Caffe
+       wide_resnet
+
 
 ImageTable
 ----------
@@ -54,43 +53,43 @@ Constructors
 ~~~~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   ImageTable
-   ImageTable.from_table
-   ImageTable.load_files
+       ImageTable
+       ImageTable.from_table
+       ImageTable.load_files
 
 
 Saving
 ~~~~~~
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   ImageTable.to_files
-   ImageTable.to_sashdat
+       ImageTable.to_files
+       ImageTable.to_sashdat
 
 
 Utilities
 ~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   ImageTable.copy_table
-   ImageTable.show
+       ImageTable.copy_table
+       ImageTable.show
 
 
 Image Processing
 ~~~~~~~~~~~~~~~~
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   ImageTable.crop
-   ImageTable.resize
-   ImageTable.as_patches
-   ImageTable.as_random_patches
+       ImageTable.crop
+       ImageTable.resize
+       ImageTable.as_patches
+       ImageTable.as_random_patches
 
 
 Layers
@@ -99,20 +98,20 @@ Layers
 .. currentmodule:: dlpy.layers
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   Layer
-   Layer.summary
-   Layer.to_model_params
-   InputLayer
-   Conv2d
-   Pooling
-   Dense
-   Recurrent
-   BN
-   Res
-   Proj
-   OutputLayer
+       Layer
+       Layer.summary
+       Layer.to_model_params
+       InputLayer
+       Conv2d
+       Pooling
+       Dense
+       Recurrent
+       BN
+       Res
+       Proj
+       OutputLayer
 
 
 Models
@@ -121,34 +120,34 @@ Models
 .. currentmodule:: dlpy.model
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   Model
-   Model.from_table
-   Model.from_sashdat
-   Model.load
-   Model.set_weights
-   Model.load_weights
-   Model.load_weights_from_CAFFE
-   Model.load_weights_from_table
-   Model.set_weights_attr
-   Model.load_weights_attr
-   Model.model_info
-   Model.fit
-   Model.tune
-   Model.plot_training_history
-   Model.predict
-   Model.plot_predict_res
-   Model.get_feature_maps
-   Model.get_features
-   Model.heat_map_analysis
-   Model.plot_heat_map
-   Model.save_to_astore
-   Model.save_to_table
-   Model.deploy
-   Model.count_params
-   Model.summary
-   Model.plot_network
+       Model
+       Model.from_table
+       Model.from_sashdat
+       Model.load
+       Model.set_weights
+       Model.load_weights
+       Model.load_weights_from_CAFFE
+       Model.load_weights_from_table
+       Model.set_weights_attr
+       Model.load_weights_attr
+       Model.model_info
+       Model.fit
+       Model.tune
+       Model.plot_training_history
+       Model.predict
+       Model.plot_predict_res
+       Model.get_feature_maps
+       Model.get_features
+       Model.heat_map_analysis
+       Model.plot_heat_map
+       Model.save_to_astore
+       Model.save_to_table
+       Model.deploy
+       Model.count_params
+       Model.summary
+       Model.plot_network
 
 
 Feature Maps
@@ -157,10 +156,10 @@ Feature Maps
 .. currentmodule:: dlpy.model
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   FeatureMaps
-   FeatureMaps.display
+       FeatureMaps
+       FeatureMaps.display
 
 
 Functions
@@ -169,20 +168,20 @@ Functions
 .. currentmodule:: dlpy.model
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   get_num_configs
-   get_str_configs
-   extract_input_layer
-   extract_conv_layer
-   extract_pooling_layer
-   extract_batchnorm_layer
-   extract_residual_layer
-   extract_fc_layer
-   extract_output_layer
-   layer_to_node
-   layer_to_edge
-   model_to_graph
+       get_num_configs
+       get_str_configs
+       extract_input_layer
+       extract_conv_layer
+       extract_pooling_layer
+       extract_batchnorm_layer
+       extract_residual_layer
+       extract_fc_layer
+       extract_output_layer
+       layer_to_node
+       layer_to_edge
+       model_to_graph
 
 
 Residual Networks
@@ -191,27 +190,27 @@ Residual Networks
 .. currentmodule:: dlpy.ResNet
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   Block
-
-.. autosummary::
-   :toctree: generated/
-
-   ResBlock
-   ResBlock.compile
+       Block
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   ResBlockBN
-   ResBlockBN.compile
+       ResBlock
+       ResBlock.compile
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   ResBlock_Caffe
-   ResBlock_Caffe.compile
+       ResBlockBN
+       ResBlockBN.compile
+
+.. autosummary::
+:toctree: generated/
+
+       ResBlock_Caffe
+       ResBlock_Caffe.compile
 
 
 RNN Model
@@ -220,22 +219,22 @@ RNN Model
 .. currentmodule:: dlpy.RNN
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   RNN
-   RNN.add
-   RNN.pop
-   RNN.switch
-   RNN.compile
-   RNN.summary
-   RNN.plot_network
+       RNN
+       RNN.add
+       RNN.pop
+       RNN.switch
+       RNN.compile
+       RNN.summary
+       RNN.plot_network
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   layer_to_node
-   layer_to_edge
-   model_to_graph
+       layer_to_node
+       layer_to_edge
+       model_to_graph
 
 
 Sequential Model
@@ -244,13 +243,13 @@ Sequential Model
 .. currentmodule:: dlpy.Sequential
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   Sequential
-   Sequential.add
-   Sequential.pop
-   Sequential.switch
-   Sequential.compile
+       Sequential
+       Sequential.add
+       Sequential.pop
+       Sequential.switch
+       Sequential.compile
 
 
 Splitting Utilities
@@ -259,8 +258,8 @@ Splitting Utilities
 .. currentmodule:: dlpy.splitting
 
 .. autosummary::
-   :toctree: generated/
+:toctree: generated/
 
-   two_way_split
-   three_way_split
-   
+       two_way_split
+       three_way_split
+
