@@ -23,6 +23,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import warnings
 
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib
@@ -36,15 +37,13 @@ class Model(object):
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of the cas table that stores the deep learning model.
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
         Default : None
     model_weights : CASTable or string or dict
         Specifies the CASTable containing weights of the deep learning model.
         If not specified, random initial will be used.
         Default : None
-    caslib : string, optional
-        Specifies the name of the cas library that store the model table.
 
     Returns
     -------
@@ -52,22 +51,23 @@ class Model(object):
 
     '''
 
-    def __init__(self, conn, model_name=None, model_weights=None, caslib=None):
+    def __init__(self, conn, model_table=None, model_weights=None):
         if not conn.queryactionset('deepLearn')['deepLearn']:
             conn.loadactionset(actionSet='deeplearn', _messagelevel='error')
 
         self.conn = conn
-        if model_name is None:
-            self.model_name = random_name('Model', 6)
-        elif type(model_name) is not str:
-            raise TypeError('model_name has to be a string.')
-        else:
-            self.model_name = model_name
 
-        self.model_table = dict(name=self.model_name)
-        if caslib is not None:
-            self.model_table.update(dict(caslib=caslib))
-        # self.model_table = conn.CASTable(**self.model_table)
+        if model_table is None:
+            model_table = dict(name=random_name('Model', 6))
+
+        model_table_opts = input_table_check(model_table)
+
+        if 'name' not in model_table_opts.keys():
+            model_table_opts.update(**dict(name=random_name('Model', 6)))
+
+        self.model_name = model_table_opts['name']
+        self.model_table = model_table_opts
+
         if model_weights is None:
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
         else:
@@ -83,36 +83,39 @@ class Model(object):
         self.model_explain_table = None
 
     @classmethod
-    def from_table(cls, model_table, display_note=True):
+    def from_table(cls, input_model_table, display_note=True, output_model_table=None):
         '''
         Create a Model object from CAS table that defines a deep learning model
 
         Parameters
         ----------
-        model_table : a CAS table object.
+        input_model_table : a CAS table object.
             Specifies the CAS table that defines the deep learning model.
         display_note : bool
             Specifies whether to print the note when generating the model table.
+        output_model_table : string, dict or CAS table, optional
+            Specifies the CAS table to store the deep learning model.
+            Default : None
 
         Returns
         -------
         :class:`Model`
 
         '''
-        model = cls(conn=model_table.get_connection())
+        model = cls(conn=input_model_table.get_connection(), model_table=output_model_table)
         model_name = model._retrieve_('table.fetch',
                                       table=dict(where='_DLKey1_= "modeltype"',
-                                                 **model_table.to_table_params()))
+                                                 **input_model_table.to_table_params()))
         model_name = model_name.Fetch['_DLKey0_'][0]
         if display_note:
             print(('NOTE : Model table is attached successfully!\n'
                    'NOTE : Model is named to "{}" according to the '
                    'model name in the table.').format(model_name))
         model.model_name = model_name
-        model.model_table.update(**model_table.to_table_params())
+        model.model_table.update(**input_model_table.to_table_params())
         model.model_weights = model.conn.CASTable('{}_weights'.format(model_name))
 
-        model_table = model_table.to_frame()
+        model_table = input_model_table.to_frame()
         for layer_id in range(int(model_table['_DLLayerID_'].max()) + 1):
             layer_table = model_table[model_table['_DLLayerID_'] == layer_id]
             layertype = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
@@ -147,7 +150,7 @@ class Model(object):
         return model
 
     @classmethod
-    def from_sashdat(cls, conn, path, caslib=None):
+    def from_sashdat(cls, conn, path, output_model_table=None):
         '''
         Generate a model object using the model information in the sashdat file
 
@@ -158,20 +161,21 @@ class Model(object):
         path : string
             The path of the sashdat file, the path has to be accessible
             from the current CAS session.
-        caslib : string, optional
-            Specifies the name of the cas library that store the model table.
+        output_model_table : string, dict or CAS table, optional
+            Specifies the CAS table to store the deep learning model.
+            Default : None
 
         Returns
         -------
         :class:`Model`
 
         '''
-        model = cls(conn, caslib=caslib)
+        model = cls(conn, model_table=output_model_table)
         model.load(path=path)
         return model
 
     @classmethod
-    def from_caffe_model(cls, conn, network_file, model_name=None, model_weights_file=None, **kwargs):
+    def from_caffe_model(cls, conn, input_network_file, output_model_table=None, model_weights_file=None, **kwargs):
         '''
         Generate a model object from a Caffe model proto file (e.g. *.prototxt), and
         convert the weights (e.g. *.caffemodel) to a SAS capable file (e.g. *.caffemodel.h5).
@@ -180,13 +184,13 @@ class Model(object):
         ----------
         conn : CAS
             The CAS connection object.
-        caffe_model_file : string
+        input_network_file : string
             Fully qualified file name of network definition file (*.prototxt).
         model_weights_file : string, optional
             Fully qualified file name of model weights file (*.caffemodel)
             Default : None
-        model_name : string, optional
-            Specifies the name of the cas table that stores the deep learning model.
+        output_model_table : string, dict or CAS table, optional
+            Specifies the CAS table to store the deep learning model.
             Default : None
         Returns
         -------
@@ -194,18 +198,28 @@ class Model(object):
 
         '''
         from .model_conversion.sas_caffe_parse import caffe_to_sas
-        if model_name is None:
-            model_name = random_name('caffe_model')
-        output_code = caffe_to_sas(network_file, model_name, network_param=model_weights_file, **kwargs)
+
+        if output_model_table is None:
+            output_model_table = dict(name=random_name('caffe_model', 6))
+
+        model_table_opts = input_table_check(output_model_table)
+
+        if 'name' not in model_table_opts.keys():
+            model_table_opts.update(**dict(name=random_name('caffe_model', 6)))
+
+        model_name = model_table_opts['name']
+
+        output_code = caffe_to_sas(input_network_file, model_name, network_param=model_weights_file, **kwargs)
         exec(output_code)
         temp_name = conn
         exec('sas_model_gen(temp_name)')
-        model_table = conn.CASTable(model_name)
-        model = cls.from_table(model_table=model_table)
+        input_model_table = conn.CASTable(**model_table_opts)
+        model = cls.from_table(input_model_table=input_model_table)
         return model
 
     @classmethod
-    def from_keras_model(cls, conn, keras_model, model_name=None, include_weights=False, weights_file=None):
+    def from_keras_model(cls, conn, keras_model, output_model_table=None,
+                         include_weights=False, input_weights_file=None):
         '''
         Generate a model object from a Keras model object
 
@@ -215,14 +229,14 @@ class Model(object):
             The CAS connection object.
         keras_model : keras_model object.
             Specifies the keras model to be converted.
-        model_name : string, optional
-            Specifies the name of the cas table that stores the deep learning model.
+        output_model_table : string, dict or CAS table, optional
+            Specifies the CAS table to store the deep learning model.
             Default : None
         include_weights : boolean, optional
             Specifies whether to load the weights of the keras model.
             Default : True
-        weights_file : string, optional
-            A fully specified client side path to the HDF5 file that stores the model weights.
+        input_weights_file : string, optional
+            A fully specified client side path to the HDF5 file that stores the keras model weights.
             Only effective when include_weights=True.
             If None is given, the current weights in the keras model will be used.
             Default : None
@@ -234,22 +248,30 @@ class Model(object):
         '''
 
         from .model_conversion.sas_keras_parse import keras_to_sas
-        if model_name is None:
-            model_name = keras_model.name
+        if output_model_table is None:
+            output_model_table = dict(name=random_name('caffe_model', 6))
+
+        model_table_opts = input_table_check(output_model_table)
+
+        if 'name' not in model_table_opts.keys():
+            model_table_opts.update(**dict(name=random_name('caffe_model', 6)))
+
+        model_name = model_table_opts['name']
+
         output_code = keras_to_sas(model=keras_model, model_name=model_name)
         exec(output_code)
         temp_name = conn
         exec('sas_model_gen(temp_name)')
-        model_table = conn.CASTable(model_name)
-        model = cls.from_table(model_table=model_table)
+        input_model_table = conn.CASTable(**model_table_opts)
+        model = cls.from_table(input_model_table=input_model_table)
 
         if include_weights:
             from .model_conversion.write_keras_model_parm import write_keras_hdf5, write_keras_hdf5_from_file
-            temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.h5'.format(model_name))
-            if weights_file is None:
+            temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.kerasmodel.h5'.format(model_name))
+            if input_weights_file is None:
                 write_keras_hdf5(keras_model, temp_HDF5)
             else:
-                write_keras_hdf5_from_file(keras_model, weights_file, temp_HDF5)
+                write_keras_hdf5_from_file(keras_model, input_weights_file, temp_HDF5)
             print('NOTE : the model weights has been stored in the following file:\n'
                   '{}'.format(temp_HDF5))
         return model
@@ -264,7 +286,9 @@ class Model(object):
         Parameters
         ----------
         path: string
-            Specifies the absolute server-side path of the table file
+            Specifies the absolute server-side path of the table file.
+        display_note : bool
+            Specifies whether to print the note when generating the model table.
 
         '''
 
@@ -403,8 +427,14 @@ class Model(object):
         dir_name, file_name = os.path.split(path)
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
-        if file_name.lower().endswith('.h5'):
+        elif file_name.lower().endswith('caffemodel.h5'):
             self.load_weights_from_Caffe(path, **kwargs)
+        elif file_name.lower().endswith('kerasmodel.h5'):
+            self.load_weights_from_keras(path, **kwargs)
+        else:
+            warnings.warn('Weights file must be one of the follow types:\n'
+                          'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
+                          'Weights load failed.', RuntimeWarning)
 
     def load_weights_from_Caffe(self, path, **kwargs):
         '''
@@ -421,6 +451,23 @@ class Model(object):
                         modelWeights=dict(replace=True,
                                           name=self.model_name + '_weights'),
                         formatType='CAFFE', weightFilePath=path, **kwargs)
+
+
+    def load_weights_from_keras(self, path, **kwargs):
+        '''
+        Load the model weights from a HDF5 file
+
+        Parameters
+        ----------
+        path : string
+            Specifies the server-side directory of the HDF5 file that
+            contains the weight table.
+
+        '''
+        self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                        modelWeights=dict(replace=True,
+                                          name=self.model_name + '_weights'),
+                        formatType='KERAS', weightFilePath=path, **kwargs)
 
     def load_weights_from_table(self, path):
         '''
@@ -784,7 +831,7 @@ class Model(object):
 
     def plot_predict_res(self, type='A', image_id=0):
         '''
-        Plot the classification results
+        Plot the classification results.
 
         Parameters
         ----------

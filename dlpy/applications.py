@@ -30,7 +30,7 @@ from .model import Model
 from .utils import random_name
 
 
-def LeNet5(conn, model_name='LENET5',
+def LeNet5(conn, model_table='LENET5',
            n_classes=10, n_channels=1, width=28, height=28, scale=1.0 / 255,
            random_flip='none', random_crop='none', offsets=0):
     '''
@@ -40,7 +40,7 @@ def LeNet5(conn, model_name='LENET5',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_channels : int, optional
         Specifies the number of the channels of the input layer
@@ -84,7 +84,7 @@ def LeNet5(conn, model_name='LENET5',
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -103,7 +103,7 @@ def LeNet5(conn, model_name='LENET5',
     return model
 
 
-def LeNet5_bn(conn, model_name='LENET_BN',
+def LeNet5_bn(conn, model_table='LENET_BN',
               n_channels=1, width=28, height=28, n_classes=10, scale=1.0 / 255,
               random_flip='none', random_crop='none', offsets=0):
     '''
@@ -113,7 +113,7 @@ def LeNet5_bn(conn, model_name='LENET_BN',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_channels : int, optional
         Specifies the number of the channels of the input layer
@@ -159,7 +159,7 @@ def LeNet5_bn(conn, model_name='LENET_BN',
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -181,7 +181,7 @@ def LeNet5_bn(conn, model_name='LENET_BN',
     return model
 
 
-def VGG11(conn, model_name='VGG11',
+def VGG11(conn, model_table='VGG11',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
@@ -191,7 +191,7 @@ def VGG11(conn, model_name='VGG11',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
@@ -237,7 +237,7 @@ def VGG11(conn, model_name='VGG11',
     if offsets is None:
         offsets = (103.939, 116.779, 123.68)
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -268,7 +268,7 @@ def VGG11(conn, model_name='VGG11',
     return model
 
 
-def VGG11_bn(conn, model_name='VGG11',
+def VGG11_bn(conn, model_table='VGG11',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
@@ -278,8 +278,8 @@ def VGG11_bn(conn, model_name='VGG11',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
         Default: 'VGG11_BN'
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model
@@ -325,7 +325,7 @@ def VGG11_bn(conn, model_name='VGG11',
     if offsets is None:
         offsets = (103.939, 116.779, 123.68)
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -372,7 +372,7 @@ def VGG11_bn(conn, model_name='VGG11',
     return model
 
 
-def VGG13(conn, model_name='VGG13',
+def VGG13(conn, model_table='VGG13',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
@@ -382,7 +382,7 @@ def VGG13(conn, model_name='VGG13',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
@@ -428,7 +428,7 @@ def VGG13(conn, model_name='VGG13',
     if offsets is None:
         offsets = (103.939, 116.779, 123.68)
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -481,7 +481,7 @@ def VGG13(conn, model_name='VGG13',
     return model
 
 
-def VGG13_bn(conn, model_name='VGG13',
+def VGG13_bn(conn, model_table='VGG13',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='none', random_crop='none', offsets=None):
     '''
@@ -491,7 +491,7 @@ def VGG13_bn(conn, model_name='VGG13',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_channels : int, optional
         Specifies the number of the channels of the input layer
@@ -537,7 +537,7 @@ def VGG13_bn(conn, model_name='VGG13',
     if offsets is None:
         offsets = (103.939, 116.779, 123.68)
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -570,7 +570,7 @@ def VGG13_bn(conn, model_name='VGG13',
     return model
 
 
-def VGG16(conn, model_name='VGG16',
+def VGG16(conn, model_table='VGG16',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
           pre_train_weight=False, pre_train_weight_file=None, include_top=False):
@@ -581,7 +581,7 @@ def VGG16(conn, model_name='VGG16',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
@@ -635,7 +635,7 @@ def VGG16(conn, model_name='VGG16',
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
     if not pre_train_weight:
-        model = Sequential(conn=conn, model_name=model_name)
+        model = Sequential(conn=conn, model_table=model_table)
 
         model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                              scale=scale, offsets=offsets, random_flip=random_flip,
@@ -680,14 +680,14 @@ def VGG16(conn, model_name='VGG16',
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_vgg16.VGG16_Model(
-            s=conn, model_name=model_name, n_channels=n_channels,
+            s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
         if include_top:
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -702,23 +702,23 @@ def VGG16(conn, model_name='VGG16',
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name), display_note=False)
+            model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
             weight_table_options.update(dict(where='_LayerID_<19'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc8')
-            model._retrieve_('deeplearn.addlayer', model=model_name, name='fc8',
+            model._retrieve_('deeplearn.removelayer', model=model_table, name='fc8')
+            model._retrieve_('deeplearn.addlayer', model=model_table, name='fc8',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['fc7'])
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
 
             return model
 
 
-def VGG16_bn(conn, model_name='VGG16',
+def VGG16_bn(conn, model_table='VGG16',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
@@ -728,7 +728,7 @@ def VGG16_bn(conn, model_name='VGG16',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_channels : int, optional
         Specifies the number of the channels of the input layer
@@ -770,7 +770,7 @@ def VGG16_bn(conn, model_name='VGG16',
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -832,7 +832,7 @@ def VGG16_bn(conn, model_name='VGG16',
     return model
 
 
-def VGG19(conn, model_name='VGG19',
+def VGG19(conn, model_table='VGG19',
           n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
           pre_train_weight=False, pre_train_weight_file=None, include_top=False):
@@ -843,7 +843,7 @@ def VGG19(conn, model_name='VGG19',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
@@ -899,7 +899,7 @@ def VGG19(conn, model_name='VGG19',
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
     if not pre_train_weight:
-        model = Sequential(conn=conn, model_name=model_name)
+        model = Sequential(conn=conn, model_table=model_table)
 
         model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                              scale=scale, offsets=offsets, random_flip=random_flip,
@@ -947,7 +947,7 @@ def VGG19(conn, model_name='VGG19',
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_vgg19.VGG19_Model(
-            s=conn, model_name=model_name, n_channels=n_channels,
+            s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
@@ -955,7 +955,7 @@ def VGG19(conn, model_name='VGG19',
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -971,23 +971,23 @@ def VGG19(conn, model_name='VGG19',
 
         else:
 
-            model = Model.from_table(conn.CASTable(model_name), display_note=False)
+            model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_train_weight_file)
 
             weight_table_options = model.model_weights.to_table_params()
             weight_table_options.update(dict(where='_LayerID_<22'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc8')
-            model._retrieve_('deeplearn.addlayer', model=model_name, name='fc8',
+            model._retrieve_('deeplearn.removelayer', model=model_table, name='fc8')
+            model._retrieve_('deeplearn.addlayer', model=model_table, name='fc8',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['fc7'])
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
 
             return model
 
 
-def VGG19_bn(conn, model_name='VGG19',
+def VGG19_bn(conn, model_table='VGG19',
              n_classes=1000, n_channels=3, width=224, height=224, scale=1,
              random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
     '''
@@ -997,7 +997,7 @@ def VGG19_bn(conn, model_name='VGG19',
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string
+    model_table : string
         Specifies the name of CAS table to store the model in
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
@@ -1040,7 +1040,7 @@ def VGG19_bn(conn, model_name='VGG19',
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1111,7 +1111,7 @@ def VGG19_bn(conn, model_name='VGG19',
     return model
 
 
-def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
+def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                  random_flip='none', random_crop='none',
                  offsets=(103.939, 116.779, 123.68)):
@@ -1122,7 +1122,7 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
+    model_table : string, optional
         Specifies the name of CAS table to store the model
         Default: 'RESNET18_SAS'
     batch_norm_first: boolean, optional
@@ -1173,7 +1173,7 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1211,7 +1211,7 @@ def ResNet18_SAS(conn, model_name='RESNET18_SAS', batch_norm_first=True,
     return model
 
 
-def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
+def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    random_flip='none', random_crop='none', offsets=None):
     '''
@@ -1221,8 +1221,8 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1271,7 +1271,7 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1312,7 +1312,7 @@ def ResNet18_Caffe(conn, model_name='RESNET18_CAFFE', batch_norm_first=False,
     return model
 
 
-def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
+def ResNet34_SAS(conn, model_table='RESNET34_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                  random_flip='none', random_crop='none',
                  offsets=(103.939, 116.779, 123.68)):
@@ -1323,8 +1323,8 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first: boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1373,7 +1373,7 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1411,7 +1411,7 @@ def ResNet34_SAS(conn, model_name='RESNET34_SAS', batch_norm_first=True,
     return model
 
 
-def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
+def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    random_flip='none', random_crop='none', offsets=None):
     '''
@@ -1421,8 +1421,8 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1471,14 +1471,14 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
     '''
 
     # conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
-    # model_resnet18.ResNet18_Model(s=conn, model_name=model_name,
+    # model_resnet18.ResNet18_Model(s=conn, model_table=model_table,
     #                               n_classes=n_classes, random_crop=random_crop,
     #                               random_flip=random_flip, offsets=offsets)
-    # model = Model.from_table(conn.CASTable(model_name))
+    # model = Model.from_table(conn.CASTable(model_table))
     # return model
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1520,7 +1520,7 @@ def ResNet34_Caffe(conn, model_name='RESNET34_CAFFE', batch_norm_first=False,
     return model
 
 
-def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
+def ResNet50_SAS(conn, model_table='RESNET50_SAS', batch_norm_first=True,
                  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                  random_flip='none', random_crop='none',
                  offsets=(103.939, 116.779, 123.68)):
@@ -1531,8 +1531,8 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1581,7 +1581,7 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1619,7 +1619,7 @@ def ResNet50_SAS(conn, model_name='RESNET50_SAS', batch_norm_first=True,
     return model
 
 
-def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
+def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', batch_norm_first=False,
                    n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    random_flip='none', random_crop='none',
                    offsets=(103.939, 116.779, 123.68),
@@ -1631,8 +1631,8 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1695,7 +1695,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
     if not pre_train_weight:
-        model = Sequential(conn=conn, model_name=model_name)
+        model = Sequential(conn=conn, model_table=model_table)
 
         model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                              scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1746,7 +1746,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_resnet50.ResNet50_Model(
-            s=conn, model_name=model_name, n_channels=n_channels,
+            s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
@@ -1754,7 +1754,7 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -1769,10 +1769,10 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name), display_note=False)
+            model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc1000')
-            model._retrieve_('deeplearn.addlayer', model=model_name, name='output',
+            model._retrieve_('deeplearn.removelayer', model=model_table, name='fc1000')
+            model._retrieve_('deeplearn.addlayer', model=model_table, name='output',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
@@ -1780,11 +1780,11 @@ def ResNet50_Caffe(conn, model_name='RESNET50_CAFFE', batch_norm_first=False,
             weight_table_options.update(dict(where='_LayerID_<125'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             return model
 
 
-def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
+def ResNet101_SAS(conn, model_table='RESNET101_SAS', batch_norm_first=True,
                   n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                   random_flip='none', random_crop='none',
                   offsets=(103.939, 116.779, 123.68)):
@@ -1795,8 +1795,8 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1845,7 +1845,7 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -1883,7 +1883,7 @@ def ResNet101_SAS(conn, model_name='RESNET101_SAS', batch_norm_first=True,
     return model
 
 
-def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
+def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', batch_norm_first=False,
                     n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                     random_flip='none', random_crop='none',
                     offsets=(103.939, 116.779, 123.68),
@@ -1895,8 +1895,8 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1959,7 +1959,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
     if not pre_train_weight:
-        model = Sequential(conn=conn, model_name=model_name)
+        model = Sequential(conn=conn, model_table=model_table)
 
         model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                              scale=scale, offsets=offsets, random_flip=random_flip,
@@ -2010,7 +2010,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_resnet101.ResNet101_Model(
-            s=conn, model_name=model_name, n_channels=n_channels,
+            s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
@@ -2018,7 +2018,7 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -2033,10 +2033,10 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name), display_note=False)
+            model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc1000')
-            model._retrieve_('deeplearn.addlayer', model=model_name, name='output',
+            model._retrieve_('deeplearn.removelayer', model=model_table, name='fc1000')
+            model._retrieve_('deeplearn.addlayer', model=model_table, name='output',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
@@ -2044,11 +2044,11 @@ def ResNet101_Caffe(conn, model_name='RESNET101_CAFFE', batch_norm_first=False,
             weight_table_options.update(dict(where='_LayerID_<244'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             return model
 
 
-def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
+def ResNet152_SAS(conn, model_table='RESNET152_SAS', batch_norm_first=True,
                   n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                   random_flip='none', random_crop='none',
                   offsets=(103.939, 116.779, 123.68)):
@@ -2059,8 +2059,8 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -2109,7 +2109,7 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -2148,7 +2148,7 @@ def ResNet152_SAS(conn, model_name='RESNET152_SAS', batch_norm_first=True,
     return model
 
 
-def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
+def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE', batch_norm_first=False,
                     n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                     random_flip='none', random_crop='none',
                     offsets=(103.939, 116.779, 123.68),
@@ -2160,8 +2160,8 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -2224,7 +2224,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
     if not pre_train_weight:
-        model = Sequential(conn=conn, model_name=model_name)
+        model = Sequential(conn=conn, model_table=model_table)
 
         model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                              scale=scale, offsets=offsets, random_flip=random_flip,
@@ -2275,7 +2275,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
                              'a server side directory which the CAS session has access to.\n'
                              '3. specify the pre_train_weight_file using the fully qualified server side path.')
         model_resnet152.ResNet152_Model(
-            s=conn, model_name=model_name, n_channels=n_channels,
+            s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
             offsets=offsets)
 
@@ -2283,7 +2283,7 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             if n_classes != 1000:
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
 
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             label_table = random_name('label')
             label_file = os.path.join(os.path.dirname(__file__),
                                       'datasources', 'imagenet_label.sas7bdat')
@@ -2298,10 +2298,10 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             return model
 
         else:
-            model = Model.from_table(conn.CASTable(model_name), display_note=False)
+            model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_train_weight_file)
-            model._retrieve_('deeplearn.removelayer', model=model_name, name='fc1000')
-            model._retrieve_('deeplearn.addlayer', model=model_name, name='output',
+            model._retrieve_('deeplearn.removelayer', model=model_table, name='fc1000')
+            model._retrieve_('deeplearn.addlayer', model=model_table, name='output',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 
@@ -2309,11 +2309,11 @@ def ResNet152_Caffe(conn, model_name='RESNET152_CAFFE', batch_norm_first=False,
             weight_table_options.update(dict(where='_LayerID_<363'))
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
-            model = Model.from_table(conn.CASTable(model_name))
+            model = Model.from_table(conn.CASTable(model_table))
             return model
 
 
-def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
+def wide_resnet(conn, model_table='WIDE_RESNET', batch_norm_first=True, depth=2,
                 k=4, n_classes=None, n_channels=3, width=32, height=32, scale=1,
                 random_flip='none', random_crop='none', offsets=(114, 122, 125)):
     '''
@@ -2323,8 +2323,8 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
     ----------
     conn : CAS
         Specifies the CAS connection object
-    model_name : string, optional
-        Specifies the name of CAS table to store the model in
+    model_table : string, dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
     batch_norm_first : boolean, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -2382,7 +2382,7 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
     n_stack = int((depth - 2) / 6)
     in_filters = 16
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
@@ -2420,7 +2420,7 @@ def wide_resnet(conn, model_name='WIDE_RESNET', batch_norm_first=True, depth=2,
     return model
 
 
-def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growth_rate=12,
+def DenseNet_Cifar(conn, model_table='DenseNet_Cifar', n_classes=None, conv_channel=16, growth_rate=12,
                    n_blocks=4, n_cells=4, n_channels=3, width=32, height=32, scale=1,
                    random_flip='none', random_crop='none', offsets=(85, 111, 139)):
     '''
@@ -2430,7 +2430,7 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
     ----------
     conn :
         Specifies the connection of the CAS connection.
-    model_name : string
+    model_table : string
         Specifies the name of CAS table to store the model.
     n_classes : int, optional.
         Specifies the number of classes. If None is assigned, the model will
@@ -2484,7 +2484,7 @@ def DenseNet_Cifar(conn, model_name=None, n_classes=None, conv_channel=16, growt
 
     channel_in = conv_channel  # number of channel of transition conv layer
 
-    model = Sequential(conn=conn, model_name=model_name)
+    model = Sequential(conn=conn, model_table=model_table)
 
     model.add(InputLayer(n_channels=n_channels, width=width, height=height,
                          scale=scale, offsets=offsets, random_flip=random_flip,
