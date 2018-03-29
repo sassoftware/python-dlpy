@@ -193,6 +193,7 @@ class Layer(object):
 
         return col1 + col2 + col3 + col4 + col5 + col6
 
+
 class InputLayer(Layer):
     '''
     Input layer
@@ -433,7 +434,7 @@ class Res(Layer):
         Specifies the activation types.
     name : str
         Specifies the name of the layer.
-    src_layers : iter-of-Layers, optional
+    src_layers : iter-of-Layers, optional.
         Specifies the source layer(s).
 
     Returns
