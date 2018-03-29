@@ -128,27 +128,27 @@ Display a print summary of the table.
 	
 	*==================*===============*========*============*=================*======================*
 	
-	|&nbsp&nbsp&nbspLayer&nbsp(Type)&nbsp&nbsp&nbsp|&nbsp&nbspKernel&nbspSize&nbsp&nbsp|&nbspStride&nbsp|&nbspActivation&nbsp|&nbsp&nbsp&nbspOutput&nbspSize&nbsp&nbsp&nbsp|&nbspNumber&nbspof&nbspParameters&nbsp|	
+	|   Layer (Type)   |  Kernel Size  | Stride | Activation |   Output Size   | Number of Parameters |	
 	
 	*------------------*---------------*--------*------------*-----------------*----------------------*	
 	
-	|&nbspData(Input)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbspNone&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbspNone&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspNone&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(224,&nbsp224,&nbsp3)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp0&nbsp/&nbsp0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| Data(Input)      |     None      |  None  |    None    |  (224, 224, 3)  |        0 / 0         |	
 	
-	|&nbspConv1_1(Convo.)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(7,&nbsp7)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp1&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspRelu&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(224,&nbsp224,&nbsp8)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp1176&nbsp/&nbsp8&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| Conv1_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (224, 224, 8)  |       1176 / 8       |	
 	
-	|&nbspPool1(Pool)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(2,&nbsp2)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp2&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspMax&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(112,&nbsp112,&nbsp8)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp0&nbsp/&nbsp0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| Pool1(Pool)      |    (2, 2)     |   2    |    Max     |  (112, 112, 8)  |        0 / 0         |	
 	
-	|&nbspConv2_1(Convo.)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(7,&nbsp7)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp1&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspRelu&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(112,&nbsp112,&nbsp8)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp3136&nbsp/&nbsp8&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| Conv2_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (112, 112, 8)  |       3136 / 8       |	
 	
-	|&nbspPool2(Pool)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(2,&nbsp2)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp2&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspMax&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp(56,&nbsp56,&nbsp8)&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp0&nbsp/&nbsp0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| Pool2(Pool)      |    (2, 2)     |   2    |    Max     |   (56, 56, 8)   |        0 / 0         |	
 	
-	|&nbspFC1(F.C.)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(25088,&nbsp16)&nbsp&nbsp|&nbsp&nbspNone&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspRelu&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp16&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp401408&nbsp/&nbsp16&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| FC1(F.C.)        |  (25088, 16)  |  None  |    Relu    |       16        |     401408 / 16      |	
 	
-	|&nbspOutput(Output)&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(16,&nbsp2)&nbsp&nbsp&nbsp&nbsp|&nbsp&nbspNone&nbsp&nbsp|&nbsp&nbspSoftmax&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp32&nbsp/&nbsp2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	| Output(Output)   |    (16, 2)    |  None  |  Softmax   |        2        |        32 / 2        |	
 	
 	*==================*===============*========*============*=================*======================*	
 	
-	|Total&nbspNumber&nbspof&nbspParameters:&nbsp405,786&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	|Total Number of Parameters: 405,786                                                              |	
 	
 	*=================================================================================================*
 	
