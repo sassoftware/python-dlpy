@@ -24,9 +24,9 @@ Note: To enable graphic visualizations of DLPy deep learning models, it is recom
 The Graphviz Python package has very few dependencies. All of the dependencies are included in Anaconda Python.
 
 To install DLPy, open an operating system console, navigate to the folder location where you downloaded DLPy, and submit the following:
-'''
+
     pip install dlpy
-'''
+
 
 Getting Started with DLPy
 =========================
@@ -126,19 +126,31 @@ Display a print summary of the table.
 	
 	>>>model1.print_summary()
 	
-	\*==================*===============*========*============*=================*======================*\	
-	\|   Layer (Type)   |  Kernel Size  | Stride | Activation |   Output Size   | Number of Parameters |\	
-	\*------------------*---------------*--------*------------*-----------------*----------------------*\	
-	\| Data(Input)      |     None      |  None  |    None    |  (224, 224, 3)  |        0 / 0         |\	
-	\| Conv1_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (224, 224, 8)  |       1176 / 8       |\	
-	\| Pool1(Pool)      |    (2, 2)     |   2    |    Max     |  (112, 112, 8)  |        0 / 0         |\	
-	\| Conv2_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (112, 112, 8)  |       3136 / 8       |\	
-	\| Pool2(Pool)      |    (2, 2)     |   2    |    Max     |   (56, 56, 8)   |        0 / 0         |\	
-	\| FC1(F.C.)        |  (25088, 16)  |  None  |    Relu    |       16        |     401408 / 16      |\	
-	\| Output(Output)   |    (16, 2)    |  None  |  Softmax   |        2        |        32 / 2        |\	
-	\*==================*===============*========*============*=================*======================*\	
-	\|Total Number of Parameters: 405,786                                                              |\	
-	\*=================================================================================================*\
+	*==================*===============*========*============*=================*======================*
+	
+	|&nbsp&nbsp&nbspLayer&nbsp(Type)&nbsp&nbsp&nbsp|&nbsp&nbspKernel&nbspSize&nbsp&nbsp|&nbspStride&nbsp|&nbspActivation&nbsp|&nbsp&nbsp&nbspOutput&nbspSize&nbsp&nbsp&nbsp|&nbspNumber&nbspof&nbspParameters&nbsp|	
+	
+	*------------------*---------------*--------*------------*-----------------*----------------------*	
+	
+	|&nbspData(Input)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbspNone&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbspNone&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspNone&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(224,&nbsp224,&nbsp3)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp0&nbsp/&nbsp0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	|&nbspConv1_1(Convo.)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(7,&nbsp7)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp1&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspRelu&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(224,&nbsp224,&nbsp8)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp1176&nbsp/&nbsp8&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	|&nbspPool1(Pool)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(2,&nbsp2)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp2&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspMax&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(112,&nbsp112,&nbsp8)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp0&nbsp/&nbsp0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	|&nbspConv2_1(Convo.)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(7,&nbsp7)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp1&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspRelu&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(112,&nbsp112,&nbsp8)&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp3136&nbsp/&nbsp8&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	|&nbspPool2(Pool)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(2,&nbsp2)&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp2&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspMax&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp(56,&nbsp56,&nbsp8)&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp0&nbsp/&nbsp0&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	|&nbspFC1(F.C.)&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp(25088,&nbsp16)&nbsp&nbsp|&nbsp&nbspNone&nbsp&nbsp|&nbsp&nbsp&nbsp&nbspRelu&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp16&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp401408&nbsp/&nbsp16&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	|&nbspOutput(Output)&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp(16,&nbsp2)&nbsp&nbsp&nbsp&nbsp|&nbsp&nbspNone&nbsp&nbsp|&nbsp&nbspSoftmax&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp32&nbsp/&nbsp2&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	*==================*===============*========*============*=================*======================*	
+	
+	|Total&nbspNumber&nbspof&nbspParameters:&nbsp405,786&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|	
+	
+	*=================================================================================================*
 	
 Use the open source utility Graphviz to display a plot of the model network. Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
