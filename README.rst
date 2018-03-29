@@ -24,9 +24,9 @@ Note: To enable graphic visualizations of DLPy deep learning models, it is recom
 The Graphviz Python package has very few dependencies. All of the dependencies are included in Anaconda Python.
 
 To install DLPy, open an operating system console, navigate to the folder location where you downloaded DLPy, and submit the following:
-
+'''
     pip install dlpy
-
+'''
 
 Getting Started with DLPy
 =========================
