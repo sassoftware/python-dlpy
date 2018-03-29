@@ -126,7 +126,9 @@ Display a print summary of the table.
 	
 	>>>model1.print_summary()
 
-::	
+
+::
+
     *==================*===============*========*============*=================*======================*    
     |   Layer (Type)   |  Kernel Size  | Stride | Activation |   Output Size   | Number of Parameters |    
     *------------------*---------------*--------*------------*-----------------*----------------------*    
