@@ -3,7 +3,8 @@
 Installation
 ============
 
-Pip
----
+DLPy can be installed using ``pip`` as follows::
 
-DLPy can be installed from `<https://github.com/sassoftware/dlpy/releases>`_.
+    pip install dlpy
+
+Releases can also be found on GitHub at  https://github.com/sassoftware/dlpy/releases.
