@@ -10,9 +10,9 @@ SAS Deep Learning Python Interface
 
 **Date**: |today| **Version**: |version|
 
-**Installers:** `<http://github.com/sassoftware/dlpy/releases>`_
+**Installers:** `<https://github.com/sassoftware/dlpy/releases>`_
 
-**Source Repository:** `<http://github.com/sassoftware/dlpy>`_
+**Source Repository:** `<https://github.com/sassoftware/dlpy>`_
 
 **Issues & Ideas:** `<https://github.com/sassoftware/dlpy/issues>`_
 
@@ -22,15 +22,15 @@ DLPy is a high-level package for the Python APIs created for the SAS Viya 3.3 (a
 Key Features
 ============
 
-Keras-style
------------
+Keras-like API
+--------------
 
-DLPy uses a Keras-style API to build the deep learning models. It even allows users to run Keras code with very few modifications to smoothly access SAS analytic and deep learning actions.
+DLPy uses an API similar to `Keras <https://keras.io/>`_ to build the deep learning models. It even allows users to run Keras code with very few modifications to smoothly access SAS analytic and deep learning actions.
 
 Built-in Networks
 -----------------
 
-DLPy provides many prebuilt models, including VGG11/13/16/19, ResNet34,50,101,152, wide_resnet, dense_net. The pretrained weights using ImageNet data are also provided for the following models:
+DLPy provides many prebuilt models, including VGG11/13/16/19, ResNet34/50/101/152, wide_resnet, dense_net. The pretrained weights using ImageNet data are also provided for the following models:
 
    * VGG16
    * VGG19
