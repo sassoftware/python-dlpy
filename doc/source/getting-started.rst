@@ -65,13 +65,13 @@ Now, add a 2D convolution layer and a pooling layer.
 
 .. ipython:: python
    # Add Pooling Layer of size 2
-   
    model1.add(Pooling(2))
 
 
    
 Now, add an additional pair of 2D convolution and pooling layers.
 .. ipython:: python
+
    # Add another 2D convolution Layer that has 8 filters
    # and a kernel size of 7 
    
@@ -110,7 +110,8 @@ Display a print summary of the table.
    model1.print_summary()
 
 
-Use the open source utility Graphviz to display a plot of the model network. Graphviz is available here: https://www.graphviz.org/download/. 
+Use the open source utility Graphviz to display a plot of the model network. 
+Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
 
 .. ipython:: python

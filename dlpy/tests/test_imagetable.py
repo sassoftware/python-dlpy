@@ -48,7 +48,7 @@ class TestImageTable(tm.TestCase):
             type(self).server_type = tm.get_cas_host_type(self.s)
 
         self.srcLib = tm.get_casout_lib(self.server_type)
-        filename = os.path.join(os.getcwd(), 'datasources', 'ImageData.sashdat')
+        filename = os.path.join(os.path.dirname(__file__), 'datasources', 'ImageData.sashdat')
         r = tm.load_data(self.s, filename, self.server_type)
 
         self.tablename = r['tableName']
