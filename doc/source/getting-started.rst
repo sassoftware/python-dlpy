@@ -18,8 +18,9 @@ To connect to a CAS server, you simply import SWAT and use the :class:`swat.CAS`
 to create a connection.
 
 .. ipython:: python
-
-   import os 
+   :suppress:
+   
+   import os
    host = os.environ['CASHOST']
    port = os.environ['CASPORT']
    userid = None
@@ -34,21 +35,25 @@ to create a connection.
 Next, import the DLPy package, and then build a simple convolutional neural network (CNN) model.
 
 .. ipython:: python
+
    from dlpy import Model, Sequential
 
 Import DLPy layer functions
 
 .. ipython:: python
+
    from dlpy.layers import *
    
 Use DLPy to create a sequential model and name it 'Simple_CNN' 
 
 .. ipython:: python
+
    model1 = Sequential(sess, model_table = 'Simple_CNN')
    
 Now define an input layer to add to model1
 
 .. ipython:: python
+
    # The input shape contains RGB images (3 channels)
    # The model images are 224 px in height and 224 px in width
    model1.add(InputLayer(3,224,224))
@@ -57,6 +62,7 @@ Now define an input layer to add to model1
 Now, add a 2D convolution layer and a pooling layer.
 
 .. ipython:: python
+
    # Add 2-Dimensional Convolution Layer to model1
    # that has 8 filters and a kernel size of 7. 
 
@@ -64,12 +70,14 @@ Now, add a 2D convolution layer and a pooling layer.
 
 
 .. ipython:: python
+
    # Add Pooling Layer of size 2
    model1.add(Pooling(2))
 
 
    
 Now, add an additional pair of 2D convolution and pooling layers.
+
 .. ipython:: python
 
    # Add another 2D convolution Layer that has 8 filters
@@ -77,9 +85,9 @@ Now, add an additional pair of 2D convolution and pooling layers.
    
    model1.add(Conv2d(8,7)
 
-
-
+   
 .. ipython:: python
+
    # Add a pooling layer of size 2 to 
    # complete the second pair of layers. 
    
@@ -89,6 +97,7 @@ Now, add an additional pair of 2D convolution and pooling layers.
 Add a fully connected layer.
 
 .. ipython:: python
+
    # Add Fully-Connected Layer with 16 units
    
    model1.add(Dense(16))
@@ -97,6 +106,7 @@ Add a fully connected layer.
 Finally, add the output layer.
 
 .. ipython:: python
+
    # Add an output layer that has 2 nodes and uses
    # the Softmax activation function 
    
@@ -106,6 +116,7 @@ Finally, add the output layer.
 Display a print summary of the table.
 
 .. ipython:: python
+
    #Display a brief summary table of model1
    
    model1.print_summary()
@@ -114,13 +125,14 @@ Display a print summary of the table.
 Use the open source utility Graphviz to display a plot of the model network. 
 Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
-
+   
 .. ipython:: python
+
    # Use Graphviz to display model network
    
    model1.plot_network()
    
 .. ipython:: python
-:suppress:
+   :suppress:
 
    sess.endsession()
