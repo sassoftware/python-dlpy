@@ -54,13 +54,13 @@ def caffe_to_sas(network_file, model_name, network_param=None,
     Parameters
     ----------
     network_file : string
-       Fully qualified file name of network definition file (*.prototxt)
+       Fully qualified file name of network definition file (*.prototxt).
     sas_file : string
-       Fully qualified file name of SAS deep learning Python model definition
+       Fully qualified file name of SAS deep learning Python model definition.
     model_name : string
-       Name for deep learning model
+       Name for deep learning model.
     network_param : string, optional
-       Fully qualified file name of network parameter file (*.caffemodel)
+       Fully qualified file name of network parameter file (*.caffemodel).
     phase : int, optional
        One of {caffe.TRAIN, caffe.TEST, None}.
     verbose : bool, optional
@@ -229,9 +229,9 @@ def caffe_pooling_layer(clayer, model_name):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     model_name : string
-       Deep learning model name
+       Deep learning model name.
 
     Returns
     -------
@@ -351,9 +351,9 @@ def caffe_convolution_layer(clayer, model_name):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     model_name : string
-       Deep learning model name
+       Deep learning model name.
 
     Returns
     -------
@@ -488,9 +488,9 @@ def caffe_batch_normalization_layer(clayer, model_name):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     model_name : string
-       Deep learning model name
+       Deep learning model name.
 
     Returns
     -------
@@ -521,9 +521,9 @@ def caffe_input_layer(clayer, model_name):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     model_name : string
-       Deep learning model name
+       Deep learning model name.
 
     Returns
     -------
@@ -563,9 +563,9 @@ def caffe_residual_layer(clayer, model_name):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     model_name : string
-       Deep learning model name
+       Deep learning model name.
 
     Returns
     -------
@@ -621,9 +621,9 @@ def caffe_full_connect_layer(clayer, model_name):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     model_name : string
-       Deep learning model name
+       Deep learning model name.
 
     Returns
     -------
@@ -757,11 +757,11 @@ def map_caffe_activation(layer_name, layer_type, act_type):
     Parameters
     ----------
     layer_name : string
-       Layer name
+       Layer name.
     layer_type : string
-       Caffe layer type
+       Caffe layer type.
     act_type : string
-       Caffe activation type
+       Caffe activation type.
 
     Returns
     -------
@@ -797,9 +797,9 @@ def extract_activation(clayer, layer_type):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
     layer_type : string
-       Caffe layer type
+       Caffe layer type.
 
     Returns
     -------
@@ -832,7 +832,7 @@ def extract_dropout(clayer):
     Parameters
     ----------
     clayer : CompositeLayer object
-       Layer parameters
+       Layer parameters.
 
     Returns
     -------
@@ -870,7 +870,7 @@ def extract_source_layers(clayer):
     Parameters
     ----------
     clayer : CompositeLayer
-       Layer parameters
+       Layer parameters.
 
     Returns
     -------
@@ -893,18 +893,18 @@ def extract_repeated_attr(param, field):
     Parameters
     ----------
     param : parameter object
-       Various parameter objects defined by Google messages
+       Various parameter objects defined by Google messages.
     field : string
-       Parameter field
+       Parameter field.
 
     Notes
     -----
-    Only the first value is returned
+    Only the first value is returned.
 
     Returns
     -------
     string or None
-        Field value or None if parameter or field doesn't exist
+        Field value or None if parameter or field doesn't exist.
 
     '''
     tmpval = getattr(param, field, None)
@@ -928,14 +928,14 @@ def extract_attr(param, field):
     Parameters
     ----------
     param : parameter object
-       Various parameter objects defined by Google messages
+       Various parameter objects defined by Google messages.
     field : string
-       Parameter field
+       Parameter field.
 
     Returns
     -------
     string or None
-        Field value or None if parameter or field doesn't exist
+        Field value or None if parameter or field doesn't exist.
 
     '''
     tmpval = getattr(param, field, None)

@@ -429,7 +429,7 @@ class Model(object):
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         elif file_name.lower().endswith('caffemodel.h5'):
-            self.load_weights_from_Caffe(path, **kwargs)
+            self.load_weights_from_caffe(path, **kwargs)
         elif file_name.lower().endswith('kerasmodel.h5'):
             self.load_weights_from_keras(path, **kwargs)
         else:
@@ -437,7 +437,7 @@ class Model(object):
                           'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
                           'Weights load failed.', RuntimeWarning)
 
-    def load_weights_from_Caffe(self, path, **kwargs):
+    def load_weights_from_caffe(self, path, **kwargs):
         '''
         Load the model weights from a HDF5 file
 
@@ -452,7 +452,6 @@ class Model(object):
                         modelWeights=dict(replace=True,
                                           name=self.model_name + '_weights'),
                         formatType='CAFFE', weightFilePath=path, **kwargs)
-
 
     def load_weights_from_keras(self, path, **kwargs):
         '''

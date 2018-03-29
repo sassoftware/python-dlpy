@@ -10,7 +10,7 @@ API Reference
 .. _api.functions:
 
 
-Applications
+Pre-built models
 ------------
 
 .. currentmodule:: dlpy.applications
@@ -39,6 +39,7 @@ Applications
        ResNet152_SAS
        ResNet152_Caffe
        wide_resnet
+	   DenseNet_Cifar
 
 
 ImageTable
@@ -101,7 +102,6 @@ Layers
 :toctree: generated/
 
        Layer
-       Layer.summary
        Layer.to_model_params
        InputLayer
        Conv2d
@@ -128,8 +128,9 @@ Models
        Model.load
        Model.set_weights
        Model.load_weights
-       Model.load_weights_from_CAFFE
-       Model.load_weights_from_table
+       Model.load_weights_from_caffe
+	   Model.load_weights_from_keras
+	   Model.load_weights_from_table
        Model.set_weights_attr
        Model.load_weights_attr
        Model.model_info
@@ -146,7 +147,7 @@ Models
        Model.save_to_table
        Model.deploy
        Model.count_params
-       Model.summary
+       Model.print_summary
        Model.plot_network
 
 
@@ -187,7 +188,7 @@ Functions
 Residual Networks
 -----------------
 
-.. currentmodule:: dlpy.ResNet
+.. currentmodule:: dlpy.blocks
 
 .. autosummary::
 :toctree: generated/
@@ -212,29 +213,6 @@ Residual Networks
        ResBlock_Caffe
        ResBlock_Caffe.compile
 
-
-RNN Model
----------
-
-.. currentmodule:: dlpy.RNN
-
-.. autosummary::
-:toctree: generated/
-
-       RNN
-       RNN.add
-       RNN.pop
-       RNN.switch
-       RNN.compile
-       RNN.summary
-       RNN.plot_network
-
-.. autosummary::
-:toctree: generated/
-
-       layer_to_node
-       layer_to_edge
-       model_to_graph
 
 
 Sequential Model
