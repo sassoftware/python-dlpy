@@ -18,7 +18,6 @@ To connect to a CAS server, you simply import SWAT and use the :class:`swat.CAS`
 to create a connection.
 
 .. ipython:: python
-   :suppress:
 
    import os 
    host = os.environ['CASHOST']
@@ -28,8 +27,8 @@ to create a connection.
 
 .. ipython:: python
 
-   import swat
-   sess = swat.CAS(host, port, userid, password)
+   from swat import * 
+   sess = CAS(host, port,userid, password)
 
 Now that we can import the DLPy package and build a simple CNN model:
 
@@ -41,21 +40,34 @@ Now that we can import the DLPy package and build a simple CNN model:
    
 .. ipython:: python
 
-   model1 = Sequential(sess, model_table='Simple_CNN')
-   model1.add(InputLayer(3, 224, 224, offsets=tr_img.channel_means))
-   model1.add(Conv2d(8, 7))
-   model1.add(Pooling(2))
-   model1.add(Conv2d(8, 7))
-   model1.add(Pooling(2))
-   model1.add(Dense(16))
-   model1.add(OutputLayer(act='softmax', n=2))
-   model1.summary()
+   model1 = Sequential(sess, model_table = 'Simple_CNN')
+.. ipython:: python
 
-   # You need install graphviz to run this, otherwise, just skip this line.
+   model1.add(InputLayer(3,224,224))
+.. ipython:: python
+
+   model1.add(Conv2d(8,7))
+   model1.add(Pooling(2))
+.. ipython:: python
+
+   model1.add(Conv2d(8,7))
+   model1.add(Pooling(2))
+.. ipython:: python
+
+   model1.add(Dense(16))
+.. ipython:: python
+
+   model1.add(OutputLayer(act='softmax',n=2))
+.. ipython:: python
+
+   model1.print_summary()
+.. ipython:: python
+
+# You need install graphviz to run this, otherwise, just skip this line.
    model1.plot_network()
 
 
 .. ipython:: python
-   :suppress:
+:suppress:
 
    sess.endsession()
