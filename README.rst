@@ -25,6 +25,8 @@ The Graphviz Python package has very few dependencies. All of the dependencies a
 
 To install DLPy, open an operating system console, navigate to the folder location where you downloaded DLPy, and submit the following:
 
+::
+
     pip install dlpy
 
 
@@ -36,93 +38,127 @@ In addition to the CAS host and port information, you need a CAS userID and pass
 
 To connect to a CAS server, import SWAT and use the swat.CAS class to create a connection.
 
-	>>>import swat 
-	
+::
+
+    >>>import swat
 	>>>sess = swat.CAS(host="cloud.example.com", port=5570, userid="user-ID", password="user-ID-password")
 	
 Next, import the DLPy package, and then build a simple convolutional neural network (CNN) model.
 
 Import DLPy model functions
-	
-	>>>from dlpy import Model, Sequential
+
+::
+
+    >>>from dlpy import Model, Sequential
 
 Import DLPy layer functions
-	
-	>>>from dlpy.layers import *
+
+::
+
+    >>>from dlpy.layers import *
 
 Import DLPy application functions
-	
-	>>>from dlpy.applications import *
+
+::
+
+    >>>from dlpy.applications import *
 	
 Use DLPy to create a sequential model and name it 'Simple_CNN' 
-	
-	>>>model1 = Sequential(sess, model_table = 'Simple_CNN')
+
+::
+
+    >>>model1 = Sequential(sess, model_table = 'Simple_CNN')
 	
 Now define an input layer to add to model1
-	
-	# The input shape contains RGB images (3 channels)
-	
+
+::
+
+    # The input shape contains RGB images (3 channels)
 	# The model images are 224 px in height and 224 px in width
 	
 	>>>model1.add(InputLayer(3,224,224))
-	
-	NOTE: Input layer added.
+
+::
+
+    NOTE: Input layer added.
 	
 Now, add a 2D convolution layer and a pooling layer.
 
-	# Add 2-Dimensional Convolution Layer to model1
-	
+::
+
+    # Add 2-Dimensional Convolution Layer to model1
 	# that has 8 filters and a kernel size of 7. 
 	
 	>>>model1.add(Conv2d(8,7)
-	
-	NOTE: Convolutional layer added.
-	
-	# Add Pooling Layer of size 2
+
+::
+
+    NOTE: Convolutional layer added.
+
+::
+
+    # Add Pooling Layer of size 2
 	
 	>>>model1.add(Pooling(2))
-	
-	NOTE: Pooling layer added.
+
+::
+
+    NOTE: Pooling layer added.
 	
 Now, add an additional pair of 2D convolution and pooling layers.
 
-	# Add another 2D convolution Layer that has 8 filters
-	
+::
+
+    # Add another 2D convolution Layer that has 8 filters
 	# and a kernel size of 7 
 	
 	>>>model1.add(Conv2d(8,7)
-	 
-	NOTE: Convolutional layer added.
-	
-	# Add a pooling layer of size 2 to # complete the second pair of layers. 
+
+::
+
+    NOTE: Convolutional layer added.
+
+::
+
+    # Add a pooling layer of size 2 to # complete the second pair of layers. 
 	
 	>>>model1.add(Pooling(2))
-	
-	NOTE: Pooling layer added.
+
+::
+
+    NOTE: Pooling layer added.
 	
 Add a fully connected layer.
 
-	# Add Fully-Connected Layer with 16 units
+::
+
+    # Add Fully-Connected Layer with 16 units
 	
 	>>>model1.add(Dense(16))
-	
-	NOTE: Fully-connected layer added.
+
+::
+
+    NOTE: Fully-connected layer added.
 	
 Finally, add the output layer.
 
-	# Add an output layer that has 2 nodes and uses
-	
+::
+
+    # Add an output layer that has 2 nodes and uses
 	# the Softmax activation function 
 	
 	>>>model1.add(OutputLayer(act='softmax',n=2))
-	
-	NOTE: Output layer added.
-	
+
+::
+
+    NOTE: Output layer added.
 	NOTE: Model compiled successfully 
 	
 Display a print summary of the table.
 
-	#Display a brief summary table of model1
+::
+
+    #Display a brief summary table of model1
 	
 	>>>model1.print_summary()
 
@@ -146,7 +182,9 @@ Display a print summary of the table.
 Use the open source utility Graphviz to display a plot of the model network. Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
 
-	# Use Graphviz to display model network
+::
+
+    # Use Graphviz to display model network
 	
 	>>>model1.plot_network()
 	
