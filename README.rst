@@ -41,7 +41,7 @@ To connect to a CAS server, import SWAT and use the swat.CAS class to create a c
 ::
 
     >>>import swat
-	>>>sess = swat.CAS(host="cloud.example.com", port=5570, userid="user-ID", password="user-ID-password")
+    >>>sess = swat.CAS(host="cloud.example.com", port=5570, userid="user-ID", password="user-ID-password")
 	
 Next, import the DLPy package, and then build a simple convolutional neural network (CNN) model.
 
@@ -74,9 +74,9 @@ Now define an input layer to add to model1
 ::
 
     # The input shape contains RGB images (3 channels)
-	# The model images are 224 px in height and 224 px in width
+    # The model images are 224 px in height and 224 px in width
 	
-	>>>model1.add(InputLayer(3,224,224))
+    >>>model1.add(InputLayer(3,224,224))
 
 ::
 
@@ -87,9 +87,9 @@ Now, add a 2D convolution layer and a pooling layer.
 ::
 
     # Add 2-Dimensional Convolution Layer to model1
-	# that has 8 filters and a kernel size of 7. 
+    # that has 8 filters and a kernel size of 7. 
 	
-	>>>model1.add(Conv2d(8,7)
+    >>>model1.add(Conv2d(8,7)
 
 ::
 
@@ -98,21 +98,21 @@ Now, add a 2D convolution layer and a pooling layer.
 ::
 
     # Add Pooling Layer of size 2
-	
-	>>>model1.add(Pooling(2))
+    
+    >>>model1.add(Pooling(2))
 
 ::
 
     NOTE: Pooling layer added.
-	
+    
 Now, add an additional pair of 2D convolution and pooling layers.
 
 ::
 
     # Add another 2D convolution Layer that has 8 filters
-	# and a kernel size of 7 
-	
-	>>>model1.add(Conv2d(8,7)
+    # and a kernel size of 7 
+    
+    >>>model1.add(Conv2d(8,7)
 
 ::
 
@@ -121,46 +121,46 @@ Now, add an additional pair of 2D convolution and pooling layers.
 ::
 
     # Add a pooling layer of size 2 to # complete the second pair of layers. 
-	
-	>>>model1.add(Pooling(2))
+    
+    >>>model1.add(Pooling(2))
 
 ::
 
     NOTE: Pooling layer added.
-	
+    
 Add a fully connected layer.
 
 ::
 
     # Add Fully-Connected Layer with 16 units
-	
-	>>>model1.add(Dense(16))
+    
+    >>>model1.add(Dense(16))
 
 ::
 
     NOTE: Fully-connected layer added.
-	
+    
 Finally, add the output layer.
 
 ::
 
     # Add an output layer that has 2 nodes and uses
-	# the Softmax activation function 
-	
-	>>>model1.add(OutputLayer(act='softmax',n=2))
+    # the Softmax activation function 
+    
+    >>>model1.add(OutputLayer(act='softmax',n=2))
 
 ::
 
     NOTE: Output layer added.
-	NOTE: Model compiled successfully 
-	
+    NOTE: Model compiled successfully 
+    
 Display a print summary of the table.
 
 ::
 
     #Display a brief summary table of model1
-	
-	>>>model1.print_summary()
+    
+    >>>model1.print_summary()
 
 
 ::
@@ -178,21 +178,21 @@ Display a print summary of the table.
     *==================*===============*========*============*=================*======================*    
     |Total Number of Parameters: 405,786                                                              |    
     *=================================================================================================*
-	
+    
 Use the open source utility Graphviz to display a plot of the model network. Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
 
 ::
 
     # Use Graphviz to display model network
-	
-	>>>model1.plot_network()
-	
-	<graphviz.dot.Digraph at 0x28d5cee32b0>
+    
+    >>>model1.plot_network()
+    
+    <graphviz.dot.Digraph at 0x28d5cee32b0>
 
 
 
-	
+    
 Resources
 =========
 
