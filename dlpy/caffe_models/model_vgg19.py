@@ -17,6 +17,7 @@
 #
 from ..utils import input_table_check
 
+
 def VGG19_Model(s, model_table='VGG19', n_channels=3, width=224, height=224,
                 random_crop=None, offsets=None):
     '''

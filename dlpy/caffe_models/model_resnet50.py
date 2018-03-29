@@ -26,17 +26,17 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
     Parameters
     ----------
     s : CAS
-        Specifies the CAS connection object
+        Specifies the CAS connection object.
     model_table : string, dict or CAS table, optional
-        Specifies the CAS table to store the model
+        Specifies the CAS table to store the model.
     n_channels : int, optional
-        Specifies the number of the channels of the input layer
+        Specifies the number of the channels of the input layer.
         Default: 3
     width : int, optional
-        Specifies the width of the input layer
+        Specifies the width of the input layer.
         Default: 224
     height : int, optional
-        Specifies the height of the input layer
+        Specifies the height of the input layer.
         Default: 224
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is

@@ -35,12 +35,12 @@ class ResBlock(object):
 
     Parameters
     ----------
-    kernel_size : int, optional
-        Kernel size of the convolution filters
-    n_filters : iter-of-ints, optional
-        List of numbers of filter in each convolution layers
-    strides : iter-of-ints, optional
-        List of stride in each convolution layers
+    kernel_size : int, optional.
+        Kernel size of the convolution filters.
+    n_filters : iter-of-ints, optional.
+        List of numbers of filter in each convolution layers.
+    strides : iter-of-ints, optional.
+        List of stride in each convolution layers.
 
     Returns
     -------
@@ -83,13 +83,13 @@ class ResBlock(object):
         ----------
         src_layer : Layer object.
             The source layer for the whole block.
-        block_num : int
-            The label of the block. (used to name the layers)
+        block_num : int.
+            The label of the block. (used to name the layers).
 
         Returns
         -------
         dict
-            A dictionary of keyword-arguments
+            A dictionary of keyword-arguments.
 
         '''
         options = []
@@ -115,13 +115,13 @@ class ResBlockBN(object):
 
     Parameters
     ----------
-    kernel_sizes : iter-of-ints, optional
-        Kernel size of the convolution filters
-    n_filters : iter-of-ints, optional
-        List of numbers of filter in each convolution layers
-    strides : iter-of-ints, optional
-        List of stride in each convolution layers
-    batch_norm_first : bool, optional
+    kernel_sizes : iter-of-ints, optional.
+        Kernel size of the convolution filters.
+    n_filters : iter-of-ints, optional.
+        List of numbers of filter in each convolution layers.
+    strides : iter-of-ints, optional.
+        List of stride in each convolution layers.
+    batch_norm_first : bool, optional.
         Specify whether to add batch normal layer before conv layer.
 
     Returns
