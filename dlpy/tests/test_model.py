@@ -49,7 +49,7 @@ class TestImageTable(tm.TestCase):
         self.srcLib = tm.get_casout_lib(self.server_type)
 
         # Define the model
-        model = Sequential(self.s, model_name='test_model')
+        model = Sequential(self.s, model_table='test_model')
         model.add(InputLayer(3, 224, 224, offsets=(0, 0, 0)))
         model.add(Conv2d(8, 7))
         model.add(Pooling(2))

@@ -75,7 +75,7 @@ class TestImageTable(tm.TestCase):
 
         out = self.table.columninfo(inputs='_image_').ColumnInfo
         column_list = ['Column', 'ID', 'Type', 'RawLength', 'FormattedLength', 'NFL', 'NFD']
-        value_list = ['_image_', 1, dtype1, 1075587, 1075587, 0, 0]
+        value_list = ['_image_', 1, dtype1, 858354, 858354, 0, 0]
         for i, k in zip(column_list, value_list):
             self.assertEqual(out[i][0], k)
 
@@ -85,13 +85,19 @@ class TestImageTable(tm.TestCase):
         for i, k in zip(column_list, value_list):
             self.assertEqual(out[i][0], k)
 
+        out = self.table.columninfo(inputs='_filename_0').ColumnInfo
+        column_list = ['Column', 'ID', 'Type', 'RawLength', 'FormattedLength', 'NFL', 'NFD']
+        value_list = ['_filename_0', 3, dtype2, 17, 17, 0, 0]
+        for i, k in zip(column_list, value_list):
+            self.assertEqual(out[i][0], k)
+
     def test_image_summary(self):
         out = self.table.image_summary
         column_list = ['jpg', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'meanWidth',
                        'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
                        'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
                        'min3rdChannel', 'max3rdChannel']
-        value_list = [409, 170, 1024, 127, 1024, 912, 778, 128, 0, 255, 124, 0, 255, 94, 0, 255]
+        value_list = [21, 500, 1024, 272, 1024, 840, 813, 134, 0, 255, 124, 0, 255, 87, 0, 255]
         for i, k in zip(column_list, value_list):
             self.assertEqual(int(out[i]), k)
 
@@ -102,7 +108,7 @@ class TestImageTable(tm.TestCase):
                        'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
                        'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
                        'min3rdChannel', 'max3rdChannel']
-        value_list = [409, 200, 200, 200, 200, 200, 200, 128, 0, 255, 123, 0, 255, 94, 0, 255]
+        value_list = [21, 200, 200, 200, 200, 200, 200, 134, 0, 255, 123, 0, 255, 87, 0, 255]
         for i, k in zip(column_list, value_list):
             self.assertEqual(int(out[i]), k)
 
@@ -113,7 +119,7 @@ class TestImageTable(tm.TestCase):
                        'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
                        'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
                        'min3rdChannel', 'max3rdChannel']
-        value_list = [409, 170, 200, 127, 200, 199, 199, 132, 0, 255, 125, 0, 255, 93, 0, 255]
+        value_list = [21, 200, 200, 200, 200, 200, 200, 137, 0, 255, 123, 0, 255, 86, 0, 255]
         for i, k in zip(column_list, value_list):
             self.assertEqual(int(out[i]), k)
 
@@ -125,7 +131,7 @@ class TestImageTable(tm.TestCase):
                        'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
                        'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
                        'min3rdChannel', 'max3rdChannel']
-        value_list = [26110, 100, 100, 100, 100, 100, 100, 125, 0, 255, 123, 0, 255, 98, 0, 255]
+        value_list = [1312, 100, 100, 100, 100, 100, 100, 129, 0, 255, 125, 0, 255, 98, 0, 255]
         for i, k in zip(column_list, value_list):
             self.assertEqual(int(out[i]), k)
 
