@@ -22,6 +22,7 @@ SAS Deep Learning Python Interface
    install
    getting-started
    api
+   license
 
 
 Index
