@@ -137,4 +137,4 @@ If you do not have Graphviz, skip this instruction.
 .. ipython:: python
    :suppress:
 
-   sess.endsession()
+   sess.terminate()
