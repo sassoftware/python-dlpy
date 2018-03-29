@@ -24,9 +24,9 @@ Note: To enable graphic visualizations of DLPy deep learning models, it is recom
 The Graphviz Python package has very few dependencies. All of the dependencies are included in Anaconda Python.
 
 To install DLPy, open an operating system console, navigate to the folder location where you downloaded DLPy, and submit the following:
-'''
+
     pip install dlpy
-'''
+
 
 Getting Started with DLPy
 =========================
@@ -126,19 +126,6 @@ Display a print summary of the table.
 	
 	>>>model1.print_summary()
 	
-	\*==================*===============*========*============*=================*======================*\	
-	\|   Layer (Type)   |  Kernel Size  | Stride | Activation |   Output Size   | Number of Parameters |\	
-	\*------------------*---------------*--------*------------*-----------------*----------------------*\	
-	\| Data(Input)      |     None      |  None  |    None    |  (224, 224, 3)  |        0 / 0         |\	
-	\| Conv1_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (224, 224, 8)  |       1176 / 8       |\	
-	\| Pool1(Pool)      |    (2, 2)     |   2    |    Max     |  (112, 112, 8)  |        0 / 0         |\	
-	\| Conv2_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (112, 112, 8)  |       3136 / 8       |\	
-	\| Pool2(Pool)      |    (2, 2)     |   2    |    Max     |   (56, 56, 8)   |        0 / 0         |\	
-	\| FC1(F.C.)        |  (25088, 16)  |  None  |    Relu    |       16        |     401408 / 16      |\	
-	\| Output(Output)   |    (16, 2)    |  None  |  Softmax   |        2        |        32 / 2        |\	
-	\*==================*===============*========*============*=================*======================*\	
-	\|Total Number of Parameters: 405,786                                                              |\	
-	\*=================================================================================================*\
 	
 Use the open source utility Graphviz to display a plot of the model network. Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
