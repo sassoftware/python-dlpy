@@ -36,7 +36,8 @@ In addition to the CAS host and port information, you need a CAS userID and pass
 
 To connect to a CAS server, import SWAT and use the swat.CAS class to create a connection.
 
-	>>>import swat 	
+	>>>import swat 
+	
 	>>>sess = swat.CAS(host="cloud.example.com", port=5570, userid="user-ID", password="user-ID-password")
 	
 Next, import the DLPy package, and then build a simple convolutional neural network (CNN) model.
@@ -59,7 +60,8 @@ Use DLPy to create a sequential model and name it 'Simple_CNN'
 	
 Now define an input layer to add to model1
 	
-	# The input shape contains RGB images (3 channels)	
+	# The input shape contains RGB images (3 channels)
+	
 	# The model images are 224 px in height and 224 px in width
 	
 	>>>model1.add(InputLayer(3,224,224))
@@ -69,6 +71,7 @@ Now define an input layer to add to model1
 Now, add a 2D convolution layer and a pooling layer.
 
 	# Add 2-Dimensional Convolution Layer to model1
+	
 	# that has 8 filters and a kernel size of 7. 
 	
 	>>>model1.add(Conv2d(8,7)
@@ -83,7 +86,8 @@ Now, add a 2D convolution layer and a pooling layer.
 	
 Now, add an additional pair of 2D convolution and pooling layers.
 
-	# Add another 2D convolution Layer that has 8 filters	
+	# Add another 2D convolution Layer that has 8 filters
+	
 	# and a kernel size of 7 
 	
 	>>>model1.add(Conv2d(8,7)
@@ -106,12 +110,14 @@ Add a fully connected layer.
 	
 Finally, add the output layer.
 
-	# Add an output layer that has 2 nodes and uses	
+	# Add an output layer that has 2 nodes and uses
+	
 	# the Softmax activation function 
 	
 	>>>model1.add(OutputLayer(act='softmax',n=2))
 	
-	NOTE: Output layer added.	
+	NOTE: Output layer added.
+	
 	NOTE: Model compiled successfully 
 	
 Display a print summary of the table.
@@ -120,19 +126,6 @@ Display a print summary of the table.
 	
 	>>>model1.print_summary()
 	
-    *==================*===============*========*============*=================*======================*    
-    |   Layer (Type)   |  Kernel Size  | Stride | Activation |   Output Size   | Number of Parameters |    
-    *------------------*---------------*--------*------------*-----------------*----------------------*
-    | Data(Input)      |     None      |  None  |    None    |  (224, 224, 3)  |        0 / 0         |    
-    | Conv1_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (224, 224, 8)  |       1176 / 8       |    
-    | Pool1(Pool)      |    (2, 2)     |   2    |    Max     |  (112, 112, 8)  |        0 / 0         |    
-    | Conv2_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (112, 112, 8)  |       3136 / 8       |    
-    | Pool2(Pool)      |    (2, 2)     |   2    |    Max     |   (56, 56, 8)   |        0 / 0         |    
-    | FC1(F.C.)        |  (25088, 16)  |  None  |    Relu    |       16        |     401408 / 16      |    
-    | Output(Output)   |    (16, 2)    |  None  |  Softmax   |        2        |        32 / 2        |    
-    *==================*===============*========*============*=================*======================*    
-    |Total Number of Parameters: 405,786                                                              |    
-    *=================================================================================================*
 	
 Use the open source utility Graphviz to display a plot of the model network. Graphviz is available here: https://www.graphviz.org/download/. 
 If you do not have Graphviz, skip this instruction.
