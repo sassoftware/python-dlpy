@@ -64,6 +64,7 @@ Now that we can import the DLPy package and build a simple CNN model:
 .. ipython:: python
 
 # You need install graphviz to run this, otherwise, just skip this line.
+.. ipython:: python
    model1.plot_network()
 
 
