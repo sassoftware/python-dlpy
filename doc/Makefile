@@ -54,6 +54,8 @@ clean:
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	mkdir -p $(BUILDDIR)/html/_images/.
+	cp -f _images/* $(BUILDDIR)/html/_images/.
 	find $(BUILDDIR)/html -type f -name '*.html' | xargs perl -0777 -i -pe 's/<\/table>\s*<table[^>]*>\s*<colgroup>\s*<col[^>]*>\s*<col[^>]*>\s*<\/colgroup>//g'
 	find $(BUILDDIR)/html -type f -name '*.html' | xargs perl -0777 -i -pe 's/<p[^>]*>Attributes<\/p>\s*<table[^>]*>\s*(?:\s*<\/?(?:colgroup|col|tbody|tr)[^>]*>\s*|\s*<td[^>]*>.*?<\/td>\s*)+\s*<\/table>\s*(<\/dd>\s*<\/dl>\s*<\/div>)/\1/g'
 	@echo

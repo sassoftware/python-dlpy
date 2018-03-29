@@ -948,9 +948,6 @@ class Model(object):
             Specifies the name of the column including the response variable
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
-            see http://casjml01.unx.sas.com:8080/job/Actions_ref_doc_latest/
-                ws/casaref/casaref_python_tkcasact_deepLearn_dlScore.html
-            for detail.
 
         Returns
         -------
