@@ -11,7 +11,7 @@ API Reference
 
 
 Pre-built models
-------------
+----------------
 
 .. currentmodule:: dlpy.applications
 
