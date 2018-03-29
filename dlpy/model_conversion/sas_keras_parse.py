@@ -41,7 +41,6 @@ class KerasParseError(ValueError):
     '''
 
 
-
 def keras_to_sas(model, model_name=None):
     output_code = ''
     layer_activation = {}
@@ -650,4 +649,3 @@ def make_source_str(layer_name):
     for ii in range(len(layer_name)):
         source_str.append(layer_name[ii])
     return repr(source_str)
-
