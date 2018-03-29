@@ -80,7 +80,8 @@ Now, add an additional pair of 2D convolution and pooling layers.
 
 
 .. ipython:: python
-   # Add a pooling layer of size 2 to # complete the second pair of layers. 
+   # Add a pooling layer of size 2 to 
+   # complete the second pair of layers. 
    
    model1.add(Pooling(2))
 
