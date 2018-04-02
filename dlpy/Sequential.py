@@ -71,25 +71,25 @@ class Sequential(Model):
         self.layers.append(layer)
 
         if layer.config['type'].lower() == 'input':
-            print('NOTE : Input layer added.')
+            print('NOTE: Input layer added.')
 
         elif layer.config['type'].lower() in ('convo', 'convolution'):
-            print('NOTE : Convolutional layer added.')
+            print('NOTE: Convolutional layer added.')
 
         elif layer.config['type'].lower() in ('pool', 'pooling'):
-            print('NOTE : Pooling layer added.')
+            print('NOTE: Pooling layer added.')
 
         elif layer.config['type'].lower() in ('fc', 'fullconnect'):
-            print('NOTE : Fully-connected layer added.')
+            print('NOTE: Fully-connected layer added.')
 
         elif layer.config['type'].lower() == 'batchnorm':
-            print('NOTE : Batch Normalization layer added.')
+            print('NOTE: Batch Normalization layer added.')
 
         elif layer.config['type'].lower() == 'block':
-            print('NOTE : A block of layers added.')
+            print('NOTE: A block of layers added.')
 
         elif layer.config['type'].lower() == 'output':
-            print('NOTE : Output layer added.')
+            print('NOTE: Output layer added.')
             self.compile()
 
     def pop(self, loc=-1):
@@ -184,5 +184,5 @@ class Sequential(Model):
 
                 self._retrieve_('deeplearn.addlayer', model=self.model_name, **option)
 
-        print('NOTE : Model compiled successfully.')
+        print('NOTE: Model compiled successfully.')
         self.layers = compiled_layers

@@ -108,8 +108,8 @@ class Model(object):
                                                  **input_model_table.to_table_params()))
         model_name = model_name.Fetch['_DLKey0_'][0]
         if display_note:
-            print(('NOTE : Model table is attached successfully!\n'
-                   'NOTE : Model is named to "{}" according to the '
+            print(('NOTE: Model table is attached successfully!\n'
+                   'NOTE: Model is named to "{}" according to the '
                    'model name in the table.').format(model_name))
         model.model_name = model_name
         model.model_table.update(**input_model_table.to_table_params())
@@ -273,7 +273,7 @@ class Model(object):
                 write_keras_hdf5(keras_model, temp_HDF5)
             else:
                 write_keras_hdf5_from_file(keras_model, input_weights_file, temp_HDF5)
-            print('NOTE : the model weights has been stored in the following file:\n'
+            print('NOTE: the model weights has been stored in the following file:\n'
                   '{}'.format(temp_HDF5))
         return model
 
@@ -319,8 +319,8 @@ class Model(object):
 
             self._retrieve_('table.droptable', **self.model_table)
             if display_note:
-                print(('NOTE : Model table is loaded successfully!\n'
-                       'NOTE : Model is renamed to "{}" according to the '
+                print(('NOTE: Model table is loaded successfully!\n'
+                       'NOTE: Model is renamed to "{}" according to the '
                        'model name in the table.').format(model_name))
             self.model_name = model_name
             self.model_table['name'] = model_name
@@ -367,7 +367,7 @@ class Model(object):
                                                 includeDirectories=False).FileInfo.Name)
 
         if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
-            print('NOTE : ' + _file_name_ + '_weights' + _extension_ +
+            print('NOTE: ' + _file_name_ + '_weights' + _extension_ +
                   ' is used as model weigths.')
 
             self._retrieve_('table.loadtable',
@@ -377,7 +377,7 @@ class Model(object):
             self.set_weights(self.model_name + '_weights')
 
             if (_file_name_ + '_weights_attr' + _extension_) in _file_name_list_:
-                print('NOTE : ' + _file_name_ + '_weights_attr' + _extension_ +
+                print('NOTE: ' + _file_name_ + '_weights_attr' + _extension_ +
                       ' is used as weigths attribute.')
                 self._retrieve_('table.loadtable',
                                 caslib=cas_lib_name,
@@ -407,7 +407,7 @@ class Model(object):
                             table=weight_tbl)
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
-        print('NOTE : Model weights attached successfully!')
+        print('NOTE: Model weights attached successfully!')
 
     def load_weights(self, path, **kwargs):
         '''
@@ -504,7 +504,7 @@ class Model(object):
                             includeDirectories=False).FileInfo.Name)
 
         if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
-            print('NOTE : ' + _file_name_ + '_attr' + _extension_ +
+            print('NOTE: ' + _file_name_ + '_attr' + _extension_ +
                   ' is used as weigths attribute.')
             self._retrieve_('table.loadtable',
                             caslib=cas_lib_name,
@@ -540,7 +540,7 @@ class Model(object):
             self._retrieve_('table.droptable',
                             table=attr_tbl)
 
-        print('NOTE : Model attributes attached successfully!')
+        print('NOTE: Model attributes attached successfully!')
 
     def load_weights_attr(self, path):
         '''
@@ -681,10 +681,10 @@ class Model(object):
 
         if self.model_weights.to_table_params()['name'].upper() in \
                 list(self._retrieve_('table.tableinfo').TableInfo.Name):
-            print('NOTE : Training based on existing weights.')
+            print('NOTE: Training based on existing weights.')
             train_options['initWeights'] = self.model_weights
         else:
-            print('NOTE : Training from scratch.')
+            print('NOTE: Training from scratch.')
 
         r = self._retrieve_('deeplearn.dltrain', message_level='note', **train_options)
 
@@ -1033,7 +1033,7 @@ class Model(object):
         masked_image_table = random_name('MASKED_IMG')
         blocksize = image_blocksize(output_width, output_height)
         if data.numrows().numrows > 5:
-            print('NOTE : The number of images in the table is too large,'
+            print('NOTE: The number of images in the table is too large,'
                   ' only 5 randomly selected images are used in analysis.')
             te_rate = 5 / data.numrows().numrows * 100
             from .splitting import two_way_split
@@ -1125,7 +1125,7 @@ class Model(object):
         if display:
             n_images = output_table.shape[0]
             if n_images > 5:
-                print('NOTE : Only the results from the first five images are displayed.')
+                print('NOTE: Only the results from the first five images are displayed.')
                 n_images = 5
             fig, axs = plt.subplots(ncols=3, nrows=n_images, figsize=(12, 4 * n_images))
             if n_images == 1:
@@ -1253,7 +1253,7 @@ class Model(object):
         file_name = os.path.join(path, file_name)
         with open(file_name, 'wb') as file:
             file.write(model_astore['blob'])
-        print('NOTE : Model astore file saved successfully.')
+        print('NOTE: Model astore file saved successfully.')
 
     def save_to_table(self, path):
         '''
@@ -1300,7 +1300,7 @@ class Model(object):
                         replace=True, caslib=cas_lib_name)
         if not flag:
             self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
-        print('NOTE : Model table saved successfully.')
+        print('NOTE: Model table saved successfully.')
 
     def deploy(self, path, output_format='astore'):
         '''
@@ -1426,8 +1426,8 @@ class FeatureMaps(object):
 
         if len(filter_id) > 64:
             filter_id = filter_id[0:64]
-            print('NOTE : The maximum number of filters to be displayed is 64.\n'
-                  'NOTE : Only the first 64 filters are displayed.')
+            print('NOTE: The maximum number of filters to be displayed is 64.\n'
+                  'NOTE: Only the first 64 filters are displayed.')
 
         n_images = len(filter_id)
         n_col = min(n_images, 8)
