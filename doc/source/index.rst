@@ -10,11 +10,11 @@ SAS Deep Learning Python Interface
 
 **Date**: |today| **Version**: |version|
 
-**Installers:** `<https://github.com/sassoftware/dlpy/releases>`_
+**Installers:** `<https://github.com/sassoftware/python-dlpy/releases>`_
 
-**Source Repository:** `<https://github.com/sassoftware/dlpy>`_
+**Source Repository:** `<https://github.com/sassoftware/python-dlpy>`_
 
-**Issues & Ideas:** `<https://github.com/sassoftware/dlpy/issues>`_
+**Issues & Ideas:** `<https://github.com/sassoftware/python-dlpy/issues>`_
 
 
 DLPy is a high-level package for the Python APIs created for the SAS Viya 3.3 (and newer) Deep Learning and Image action sets. It provides a convenient way to perform deep learning image processing in the SAS CAS environment.
