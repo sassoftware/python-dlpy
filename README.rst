@@ -157,6 +157,8 @@ Display a print summary of the table::
     >>> model1.plot_network()
     
     <graphviz.dot.Digraph at 0x28d5cee32b0>
+    
+.. image:: doc/images/model1_network.png
 
     
 Resources
