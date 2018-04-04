@@ -35,7 +35,7 @@ https://www.graphviz.org/download/.
 To install DLPy, open an operating system console, navigate to the 
 folder location where you downloaded DLPy, and submit the following::
 
-    pip install dlpy
+    pip install sas-dlpy
 
 
 Documentation

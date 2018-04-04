@@ -26,14 +26,13 @@ except:
     README = 'See README.rst'
 
 setup(
-    name='dlpy',
-    version='0.6.0',
+    name='sas-dlpy',
+    version='0.6.1',
     description='SAS Deep Learning Interface',
     long_description=README,
     author='SAS',
     author_email='support@sas.com',
     url='https://github.com/sassoftware/python-dlpy/',
-    download_url='https://github.com/sassoftware/python-dlpy/archive/v0.6.0.tar.gz',
     license='Apache 2.0',
     packages=find_packages(),
     package_data={
