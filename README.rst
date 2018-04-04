@@ -24,15 +24,13 @@ be added to the DLPy package in future releases.
 
 Installing DLPy
 ===============
-SAS provides APIs designed for use with Python 2.7 and Python 3.4+ at::
-
-    https://github.com/sassoftware/python-dlpy/releases
+SAS provides APIs designed for use with Python 2.7 and Python 3.4+ at
+https://github.com/sassoftware/python-dlpy/releases/.
 
 Note: To enable graphic visualizations of DLPy deep learning models, 
 it is recommended that you download and install the open source graph 
-visualization software called Graphviz. Graphviz is available here::
-
-    https://www.graphviz.org/download/
+visualization software called Graphviz. Graphviz is available at
+https://www.graphviz.org/download/.
 
 To install DLPy, open an operating system console, navigate to the 
 folder location where you downloaded DLPy, and submit the following::
@@ -43,9 +41,7 @@ folder location where you downloaded DLPy, and submit the following::
 Documentation
 =============
 
-The API documentation is located at::
-
-    https://sassoftware.github.io/python-dlpy/
+The API documentation is located at https://sassoftware.github.io/python-dlpy/.
 
 
 Getting Started with DLPy
