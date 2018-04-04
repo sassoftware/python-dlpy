@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.to_sashdat
+=================================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.to_sashdat

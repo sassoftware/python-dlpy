@@ -1,0 +1,185 @@
+dlpy.images.ImageTable
+======================
+
+.. currentmodule:: dlpy.images
+
+.. autoclass:: ImageTable
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ImageTable.__init__
+      ~ImageTable.abs
+      ~ImageTable.all
+      ~ImageTable.any
+      ~ImageTable.append
+      ~ImageTable.append_columns
+      ~ImageTable.append_computed_columns
+      ~ImageTable.append_computedvars
+      ~ImageTable.append_computedvarsprogram
+      ~ImageTable.append_groupby
+      ~ImageTable.append_orderby
+      ~ImageTable.append_where
+      ~ImageTable.as_matrix
+      ~ImageTable.as_patches
+      ~ImageTable.as_random_patches
+      ~ImageTable.boxplot
+      ~ImageTable.clip
+      ~ImageTable.clip_lower
+      ~ImageTable.clip_upper
+      ~ImageTable.copy
+      ~ImageTable.copy_table
+      ~ImageTable.corr
+      ~ImageTable.count
+      ~ImageTable.crop
+      ~ImageTable.css
+      ~ImageTable.cv
+      ~ImageTable.datastep
+      ~ImageTable.del_action_params
+      ~ImageTable.del_param
+      ~ImageTable.del_params
+      ~ImageTable.describe
+      ~ImageTable.drop
+      ~ImageTable.dropna
+      ~ImageTable.eval
+      ~ImageTable.fillna
+      ~ImageTable.from_csv
+      ~ImageTable.from_dict
+      ~ImageTable.from_items
+      ~ImageTable.from_records
+      ~ImageTable.from_table
+      ~ImageTable.get_action_names
+      ~ImageTable.get_action_params
+      ~ImageTable.get_actionset_names
+      ~ImageTable.get_connection
+      ~ImageTable.get_dtype_counts
+      ~ImageTable.get_fetch_params
+      ~ImageTable.get_ftype_counts
+      ~ImageTable.get_groupby_vars
+      ~ImageTable.get_inputs_param
+      ~ImageTable.get_param
+      ~ImageTable.get_params
+      ~ImageTable.get_value
+      ~ImageTable.groupby
+      ~ImageTable.has_groupby_vars
+      ~ImageTable.has_param
+      ~ImageTable.has_params
+      ~ImageTable.head
+      ~ImageTable.hist
+      ~ImageTable.info
+      ~ImageTable.invoke
+      ~ImageTable.iteritems
+      ~ImageTable.iterrows
+      ~ImageTable.itertuples
+      ~ImageTable.kurt
+      ~ImageTable.kurtosis
+      ~ImageTable.load_files
+      ~ImageTable.lookup
+      ~ImageTable.max
+      ~ImageTable.mean
+      ~ImageTable.median
+      ~ImageTable.merge
+      ~ImageTable.min
+      ~ImageTable.mode
+      ~ImageTable.next
+      ~ImageTable.nlargest
+      ~ImageTable.nmiss
+      ~ImageTable.nsmallest
+      ~ImageTable.nth
+      ~ImageTable.pop
+      ~ImageTable.probt
+      ~ImageTable.quantile
+      ~ImageTable.query
+      ~ImageTable.replace
+      ~ImageTable.reset_index
+      ~ImageTable.resize
+      ~ImageTable.retrieve
+      ~ImageTable.sample
+      ~ImageTable.select_dtypes
+      ~ImageTable.set_action_params
+      ~ImageTable.set_connection
+      ~ImageTable.set_param
+      ~ImageTable.set_params
+      ~ImageTable.show
+      ~ImageTable.skew
+      ~ImageTable.skewness
+      ~ImageTable.slice
+      ~ImageTable.sort
+      ~ImageTable.sort_values
+      ~ImageTable.std
+      ~ImageTable.stderr
+      ~ImageTable.sum
+      ~ImageTable.tail
+      ~ImageTable.to_clipboard
+      ~ImageTable.to_csv
+      ~ImageTable.to_datastep_params
+      ~ImageTable.to_dense
+      ~ImageTable.to_dict
+      ~ImageTable.to_excel
+      ~ImageTable.to_files
+      ~ImageTable.to_frame
+      ~ImageTable.to_gbq
+      ~ImageTable.to_hdf
+      ~ImageTable.to_html
+      ~ImageTable.to_json
+      ~ImageTable.to_latex
+      ~ImageTable.to_msgpack
+      ~ImageTable.to_outtable
+      ~ImageTable.to_outtable_params
+      ~ImageTable.to_params
+      ~ImageTable.to_pickle
+      ~ImageTable.to_records
+      ~ImageTable.to_sashdat
+      ~ImageTable.to_sparse
+      ~ImageTable.to_sql
+      ~ImageTable.to_stata
+      ~ImageTable.to_string
+      ~ImageTable.to_table
+      ~ImageTable.to_table_name
+      ~ImageTable.to_table_params
+      ~ImageTable.to_view
+      ~ImageTable.to_xarray
+      ~ImageTable.tvalue
+      ~ImageTable.uss
+      ~ImageTable.var
+      ~ImageTable.xs
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ImageTable.all_params
+      ~ImageTable.at
+      ~ImageTable.axes
+      ~ImageTable.channel_means
+      ~ImageTable.columns
+      ~ImageTable.dtypes
+      ~ImageTable.ftypes
+      ~ImageTable.getdoc
+      ~ImageTable.iat
+      ~ImageTable.iloc
+      ~ImageTable.image_summary
+      ~ImageTable.index
+      ~ImageTable.ix
+      ~ImageTable.label_freq
+      ~ImageTable.loc
+      ~ImageTable.ndim
+      ~ImageTable.outtable_params
+      ~ImageTable.param_names
+      ~ImageTable.plot
+      ~ImageTable.shape
+      ~ImageTable.size
+      ~ImageTable.table_params
+      ~ImageTable.uid
+      ~ImageTable.values
+   
+   

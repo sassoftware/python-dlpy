@@ -1,0 +1,6 @@
+dlpy.model.Model.get_features
+=============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.get_features

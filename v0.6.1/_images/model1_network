@@ -1,0 +1,18 @@
+digraph Simple_CNN {
+	node [shape=record style="filled,rounded"]
+	label="DAG for Simple_CNN:" labeljust=left labelloc=top
+	fontsize=20
+	Data [label="Data\n(input)|{<Output>Input Size:}|{(224, 224, 3)}" fillcolor="#F0FF00"]
+	Conv1_1 [label="Conv1_1\n(convo)|{<Kernel>Kernel Size:|<Act>Activation:|<Output>Output Size:}|{(7, 7)|Relu|(224, 224, 8)}" fillcolor="#6CFF00"]
+		Data -> Conv1_1 [len=0.2]
+	Pool1 [label="Pool1\n(pool)|{<Kernel>Kernel Size:|<Output>Output Size:}|{(2, 2)|(112, 112, 8)}" fillcolor="#FF9700"]
+		Conv1_1 -> Pool1 [len=0.2]
+	Conv2_1 [label="Conv2_1\n(convo)|{<Kernel>Kernel Size:|<Act>Activation:|<Output>Output Size:}|{(7, 7)|Relu|(112, 112, 8)}" fillcolor="#6CFF00"]
+		Pool1 -> Conv2_1 [len=0.2]
+	Pool2 [label="Pool2\n(pool)|{<Kernel>Kernel Size:|<Output>Output Size:}|{(2, 2)|(56, 56, 8)}" fillcolor="#FF9700"]
+		Conv2_1 -> Pool2 [len=0.2]
+	FC1 [label="FC1\n(fc)|{<Kernel>Kernel Size:|<Act>Activation:|<Output>Output Size:}|{(25088, 16)|Relu|16}" fillcolor="#00ECFF"]
+		Pool2 -> FC1 [len=0.2]
+	Output [label="Output\n(output)|{<Kernel>Kernel Size:|<Act>Activation:|<Output>Output Size:}|{(16, 2)|Softmax|2}" fillcolor="#C8C8C8"]
+		FC1 -> Output [len=0.2]
+}
