@@ -1,0 +1,6 @@
+dlpy.model.Model.get_feature_maps
+=================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.get_feature_maps

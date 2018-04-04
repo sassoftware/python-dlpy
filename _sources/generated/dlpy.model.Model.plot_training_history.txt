@@ -1,0 +1,6 @@
+dlpy.model.Model.plot_training_history
+======================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.plot_training_history

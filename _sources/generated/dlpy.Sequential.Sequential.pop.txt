@@ -1,0 +1,6 @@
+dlpy.Sequential.Sequential.pop
+==============================
+
+.. currentmodule:: dlpy.Sequential
+
+.. automethod:: Sequential.pop

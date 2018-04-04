@@ -1,0 +1,29 @@
+dlpy.layers.OutputLayer
+=======================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: OutputLayer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OutputLayer.__init__
+      ~OutputLayer.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OutputLayer.summary_str
+   
+   

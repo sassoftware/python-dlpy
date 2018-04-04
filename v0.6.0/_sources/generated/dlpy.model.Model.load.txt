@@ -1,0 +1,6 @@
+dlpy.model.Model.load
+=====================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.load

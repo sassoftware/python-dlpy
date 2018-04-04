@@ -1,0 +1,29 @@
+dlpy.layers.Dense
+=================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Dense
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Dense.__init__
+      ~Dense.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Dense.summary_str
+   
+   

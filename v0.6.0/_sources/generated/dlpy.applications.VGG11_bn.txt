@@ -1,0 +1,6 @@
+dlpy.applications.VGG11_bn
+==========================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: VGG11_bn

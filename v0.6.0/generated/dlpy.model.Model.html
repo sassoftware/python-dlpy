@@ -1,0 +1,387 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.model.Model &mdash; DLPy 0.6.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="DLPy 0.6.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.model.Model.from_table" href="dlpy.model.Model.from_table.html"/>
+        <link rel="prev" title="dlpy.layers.OutputLayer" href="dlpy.layers.OutputLayer.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models">Pre-built models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#models">Models</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.model.Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_table.html">dlpy.model.Model.from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_sashdat.html">dlpy.model.Model.from_sashdat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load.html">dlpy.model.Model.load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.set_weights.html">dlpy.model.Model.set_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights.html">dlpy.model.Model.load_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_from_caffe.html">dlpy.model.Model.load_weights_from_caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_from_keras.html">dlpy.model.Model.load_weights_from_keras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_from_table.html">dlpy.model.Model.load_weights_from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.set_weights_attr.html">dlpy.model.Model.set_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_attr.html">dlpy.model.Model.load_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.fit.html">dlpy.model.Model.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.tune.html">dlpy.model.Model.tune</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_training_history.html">dlpy.model.Model.plot_training_history</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.predict.html">dlpy.model.Model.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_predict_res.html">dlpy.model.Model.plot_predict_res</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.get_feature_maps.html">dlpy.model.Model.get_feature_maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.get_features.html">dlpy.model.Model.get_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.heat_map_analysis.html">dlpy.model.Model.heat_map_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_heat_map.html">dlpy.model.Model.plot_heat_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.save_to_astore.html">dlpy.model.Model.save_to_astore</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.save_to_table.html">dlpy.model.Model.save_to_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.deploy.html">dlpy.model.Model.deploy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.count_params.html">dlpy.model.Model.count_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.print_summary.html">dlpy.model.Model.print_summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_network.html">dlpy.model.Model.plot_network</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.model.Model</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="../_sources/generated/dlpy.model.Model.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-model-model">
+<h1>dlpy.model.Model<a class="headerlink" href="#dlpy-model-model" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dlpy.model.Model">
+<em class="property">class </em><code class="descclassname">dlpy.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>conn</em>, <em>model_table=None</em>, <em>model_weights=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>conn</strong> : CAS</p>
+<blockquote>
+<div><p>Specifies the CAS connection object</p>
+</div></blockquote>
+<p><strong>model_table</strong> : string, dict or CAS table, optional</p>
+<blockquote>
+<div><p>Specifies the CAS table to store the deep learning model.
+Default : None</p>
+</div></blockquote>
+<p><strong>model_weights</strong> : CASTable or string or dict</p>
+<blockquote>
+<div><p>Specifies the CASTable containing weights of the deep learning model.
+If not specified, random initial will be used.
+Default : None</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#dlpy.model.Model" title="dlpy.model.Model"><code class="xref py py-class docutils literal"><span class="pre">Model</span></code></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="dlpy.model.Model.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>conn</em>, <em>model_table=None</em>, <em>model_weights=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#dlpy.model.Model.__init__" title="dlpy.model.Model.__init__"><code class="xref py py-obj docutils literal"><span class="pre">__init__</span></code></a>(conn[,&nbsp;model_table,&nbsp;model_weights])</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.count_params.html#dlpy.model.Model.count_params" title="dlpy.model.Model.count_params"><code class="xref py py-obj docutils literal"><span class="pre">count_params</span></code></a>()</td>
+<td>Count the total number of parameters in the model</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.deploy.html#dlpy.model.Model.deploy" title="dlpy.model.Model.deploy"><code class="xref py py-obj docutils literal"><span class="pre">deploy</span></code></a>(path[,&nbsp;output_format])</td>
+<td>Deploy the deep learning model to a data file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.fit.html#dlpy.model.Model.fit" title="dlpy.model.Model.fit"><code class="xref py py-obj docutils literal"><span class="pre">fit</span></code></a>(data[,&nbsp;inputs,&nbsp;target,&nbsp;mini_batch_size,&nbsp;...])</td>
+<td>Train the deep learning model using the given data</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">from_caffe_model</span></code>(conn,&nbsp;input_network_file[,&nbsp;...])</td>
+<td>Generate a model object from a Caffe model proto file (e.g.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal"><span class="pre">from_keras_model</span></code>(conn,&nbsp;keras_model[,&nbsp;...])</td>
+<td>Generate a model object from a Keras model object</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.from_sashdat.html#dlpy.model.Model.from_sashdat" title="dlpy.model.Model.from_sashdat"><code class="xref py py-obj docutils literal"><span class="pre">from_sashdat</span></code></a>(conn,&nbsp;path[,&nbsp;output_model_table])</td>
+<td>Generate a model object using the model information in the sashdat file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.from_table.html#dlpy.model.Model.from_table" title="dlpy.model.Model.from_table"><code class="xref py py-obj docutils literal"><span class="pre">from_table</span></code></a>(input_model_table[,&nbsp;...])</td>
+<td>Create a Model object from CAS table that defines a deep learning model</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.get_feature_maps.html#dlpy.model.Model.get_feature_maps" title="dlpy.model.Model.get_feature_maps"><code class="xref py py-obj docutils literal"><span class="pre">get_feature_maps</span></code></a>(data[,&nbsp;label,&nbsp;image_id])</td>
+<td>Extract the feature maps for a single image</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.get_features.html#dlpy.model.Model.get_features" title="dlpy.model.Model.get_features"><code class="xref py py-obj docutils literal"><span class="pre">get_features</span></code></a>(data,&nbsp;dense_layer[,&nbsp;target])</td>
+<td>Extract linear features for a data table from the layer specified by dense_layer</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal"><span class="pre">get_model_info</span></code>()</td>
+<td>Return the information about the model table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.heat_map_analysis.html#dlpy.model.Model.heat_map_analysis" title="dlpy.model.Model.heat_map_analysis"><code class="xref py py-obj docutils literal"><span class="pre">heat_map_analysis</span></code></a>(data[,&nbsp;mask_width,&nbsp;...])</td>
+<td>Conduct a heat map analysis on the image</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load.html#dlpy.model.Model.load" title="dlpy.model.Model.load"><code class="xref py py-obj docutils literal"><span class="pre">load</span></code></a>(path[,&nbsp;display_note])</td>
+<td>Load the deep learning model architecture from existing table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights.html#dlpy.model.Model.load_weights" title="dlpy.model.Model.load_weights"><code class="xref py py-obj docutils literal"><span class="pre">load_weights</span></code></a>(path,&nbsp;**kwargs)</td>
+<td>Load the weights form a data file specified by ‘path’</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights_attr.html#dlpy.model.Model.load_weights_attr" title="dlpy.model.Model.load_weights_attr"><code class="xref py py-obj docutils literal"><span class="pre">load_weights_attr</span></code></a>(path)</td>
+<td>Load the weights attribute form a sashdat file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_caffe.html#dlpy.model.Model.load_weights_from_caffe" title="dlpy.model.Model.load_weights_from_caffe"><code class="xref py py-obj docutils literal"><span class="pre">load_weights_from_caffe</span></code></a>(path,&nbsp;**kwargs)</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_keras.html#dlpy.model.Model.load_weights_from_keras" title="dlpy.model.Model.load_weights_from_keras"><code class="xref py py-obj docutils literal"><span class="pre">load_weights_from_keras</span></code></a>(path,&nbsp;**kwargs)</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_table.html#dlpy.model.Model.load_weights_from_table" title="dlpy.model.Model.load_weights_from_table"><code class="xref py py-obj docutils literal"><span class="pre">load_weights_from_table</span></code></a>(path)</td>
+<td>Load the weights from a file</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.plot_heat_map.html#dlpy.model.Model.plot_heat_map" title="dlpy.model.Model.plot_heat_map"><code class="xref py py-obj docutils literal"><span class="pre">plot_heat_map</span></code></a>([image_id,&nbsp;alpha])</td>
+<td>Display the heat maps analysis results</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.plot_network.html#dlpy.model.Model.plot_network" title="dlpy.model.Model.plot_network"><code class="xref py py-obj docutils literal"><span class="pre">plot_network</span></code></a>()</td>
+<td>Display a graph that summarizes the model architecture.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.plot_predict_res.html#dlpy.model.Model.plot_predict_res" title="dlpy.model.Model.plot_predict_res"><code class="xref py py-obj docutils literal"><span class="pre">plot_predict_res</span></code></a>([type,&nbsp;image_id])</td>
+<td>Plot the classification results.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.plot_training_history.html#dlpy.model.Model.plot_training_history" title="dlpy.model.Model.plot_training_history"><code class="xref py py-obj docutils literal"><span class="pre">plot_training_history</span></code></a>([items,&nbsp;fig_size])</td>
+<td>Display the training iteration history.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.predict.html#dlpy.model.Model.predict" title="dlpy.model.Model.predict"><code class="xref py py-obj docutils literal"><span class="pre">predict</span></code></a>(data[,&nbsp;inputs,&nbsp;target])</td>
+<td>Evaluate the deep learning model on a specified validation data set</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.print_summary.html#dlpy.model.Model.print_summary" title="dlpy.model.Model.print_summary"><code class="xref py py-obj docutils literal"><span class="pre">print_summary</span></code></a>()</td>
+<td>Display a table that summarizes the model architecture</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.save_to_astore.html#dlpy.model.Model.save_to_astore" title="dlpy.model.Model.save_to_astore"><code class="xref py py-obj docutils literal"><span class="pre">save_to_astore</span></code></a>([path])</td>
+<td>Save the model to an astore object, and write it into a file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.save_to_table.html#dlpy.model.Model.save_to_table" title="dlpy.model.Model.save_to_table"><code class="xref py py-obj docutils literal"><span class="pre">save_to_table</span></code></a>(path)</td>
+<td>Save the model as SAS dataset</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.set_weights.html#dlpy.model.Model.set_weights" title="dlpy.model.Model.set_weights"><code class="xref py py-obj docutils literal"><span class="pre">set_weights</span></code></a>(weight_tbl)</td>
+<td>Assign weights to the Model object</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.set_weights_attr.html#dlpy.model.Model.set_weights_attr" title="dlpy.model.Model.set_weights_attr"><code class="xref py py-obj docutils literal"><span class="pre">set_weights_attr</span></code></a>(attr_tbl[,&nbsp;clear])</td>
+<td>Attach the weights attribute to the model weights</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.tune.html#dlpy.model.Model.tune" title="dlpy.model.Model.tune"><code class="xref py py-obj docutils literal"><span class="pre">tune</span></code></a>(data[,&nbsp;inputs,&nbsp;target])</td>
+<td>Tunes hyper parameters for the deep learning model.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.model.Model.from_table.html" class="btn btn-neutral float-right" title="dlpy.model.Model.from_table" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.layers.OutputLayer.html" class="btn btn-neutral" title="dlpy.layers.OutputLayer" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.6.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

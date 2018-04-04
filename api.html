@@ -1,0 +1,810 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API Reference &mdash; DLPy 0.6.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="DLPy 0.6.0 documentation" href="index.html"/>
+        <link rel="next" title="dlpy.applications.LeNet5" href="generated/dlpy.applications.LeNet5.html"/>
+        <link rel="prev" title="Getting Started" href="getting-started.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pre-built-models">Pre-built models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.LeNet5.html">dlpy.applications.LeNet5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.LeNet5_bn.html">dlpy.applications.LeNet5_bn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG11.html">dlpy.applications.VGG11</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG11_bn.html">dlpy.applications.VGG11_bn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG13.html">dlpy.applications.VGG13</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG13_bn.html">dlpy.applications.VGG13_bn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG16.html">dlpy.applications.VGG16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG16_bn.html">dlpy.applications.VGG16_bn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG19.html">dlpy.applications.VGG19</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG19_bn.html">dlpy.applications.VGG19_bn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet18_SAS.html">dlpy.applications.ResNet18_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet18_Caffe.html">dlpy.applications.ResNet18_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet34_SAS.html">dlpy.applications.ResNet34_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet34_Caffe.html">dlpy.applications.ResNet34_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet50_SAS.html">dlpy.applications.ResNet50_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet50_Caffe.html">dlpy.applications.ResNet50_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet101_SAS.html">dlpy.applications.ResNet101_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet101_Caffe.html">dlpy.applications.ResNet101_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet152_SAS.html">dlpy.applications.ResNet152_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet152_Caffe.html">dlpy.applications.ResNet152_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.wide_resnet.html">dlpy.applications.wide_resnet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.DenseNet_Cifar.html">dlpy.applications.DenseNet_Cifar</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#imagetable">ImageTable</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#constructors">Constructors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.html">dlpy.images.ImageTable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.from_table.html">dlpy.images.ImageTable.from_table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.load_files.html">dlpy.images.ImageTable.load_files</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#saving">Saving</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.to_files.html">dlpy.images.ImageTable.to_files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.to_sashdat.html">dlpy.images.ImageTable.to_sashdat</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#utilities">Utilities</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.copy_table.html">dlpy.images.ImageTable.copy_table</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.show.html">dlpy.images.ImageTable.show</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#image-processing">Image Processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.crop.html">dlpy.images.ImageTable.crop</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.resize.html">dlpy.images.ImageTable.resize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.as_patches.html">dlpy.images.ImageTable.as_patches</a></li>
+<li class="toctree-l4"><a class="reference internal" href="generated/dlpy.images.ImageTable.as_random_patches.html">dlpy.images.ImageTable.as_random_patches</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#layers">Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Layer.html">dlpy.layers.Layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Layer.to_model_params.html">dlpy.layers.Layer.to_model_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.InputLayer.html">dlpy.layers.InputLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Conv2d.html">dlpy.layers.Conv2d</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Pooling.html">dlpy.layers.Pooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Dense.html">dlpy.layers.Dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Recurrent.html">dlpy.layers.Recurrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.BN.html">dlpy.layers.BN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Res.html">dlpy.layers.Res</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Proj.html">dlpy.layers.Proj</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.OutputLayer.html">dlpy.layers.OutputLayer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#models">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.html">dlpy.model.Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_table.html">dlpy.model.Model.from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_sashdat.html">dlpy.model.Model.from_sashdat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load.html">dlpy.model.Model.load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.set_weights.html">dlpy.model.Model.set_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights.html">dlpy.model.Model.load_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_caffe.html">dlpy.model.Model.load_weights_from_caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_keras.html">dlpy.model.Model.load_weights_from_keras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_table.html">dlpy.model.Model.load_weights_from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.set_weights_attr.html">dlpy.model.Model.set_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_attr.html">dlpy.model.Model.load_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.fit.html">dlpy.model.Model.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.tune.html">dlpy.model.Model.tune</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_training_history.html">dlpy.model.Model.plot_training_history</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.predict.html">dlpy.model.Model.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_predict_res.html">dlpy.model.Model.plot_predict_res</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.get_feature_maps.html">dlpy.model.Model.get_feature_maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.get_features.html">dlpy.model.Model.get_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.heat_map_analysis.html">dlpy.model.Model.heat_map_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_heat_map.html">dlpy.model.Model.plot_heat_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.save_to_astore.html">dlpy.model.Model.save_to_astore</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.save_to_table.html">dlpy.model.Model.save_to_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.deploy.html">dlpy.model.Model.deploy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.count_params.html">dlpy.model.Model.count_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.print_summary.html">dlpy.model.Model.print_summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_network.html">dlpy.model.Model.plot_network</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-maps">Feature Maps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.FeatureMaps.html">dlpy.model.FeatureMaps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.FeatureMaps.display.html">dlpy.model.FeatureMaps.display</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.get_num_configs.html">dlpy.model.get_num_configs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.get_str_configs.html">dlpy.model.get_str_configs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_input_layer.html">dlpy.model.extract_input_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_conv_layer.html">dlpy.model.extract_conv_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_pooling_layer.html">dlpy.model.extract_pooling_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_batchnorm_layer.html">dlpy.model.extract_batchnorm_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_residual_layer.html">dlpy.model.extract_residual_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_fc_layer.html">dlpy.model.extract_fc_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.extract_output_layer.html">dlpy.model.extract_output_layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.layer_to_node.html">dlpy.model.layer_to_node</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.layer_to_edge.html">dlpy.model.layer_to_edge</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.model_to_graph.html">dlpy.model.model_to_graph</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#residual-networks">Residual Networks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.Block.html">dlpy.blocks.Block</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock.html">dlpy.blocks.ResBlock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock.compile.html">dlpy.blocks.ResBlock.compile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlockBN.html">dlpy.blocks.ResBlockBN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlockBN.compile.html">dlpy.blocks.ResBlockBN.compile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock_Caffe.html">dlpy.blocks.ResBlock_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock_Caffe.compile.html">dlpy.blocks.ResBlock_Caffe.compile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#sequential-model">Sequential Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.Sequential.Sequential.html">dlpy.Sequential.Sequential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.Sequential.Sequential.add.html">dlpy.Sequential.Sequential.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.Sequential.Sequential.pop.html">dlpy.Sequential.Sequential.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.Sequential.Sequential.switch.html">dlpy.Sequential.Sequential.switch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.Sequential.Sequential.compile.html">dlpy.Sequential.Sequential.compile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#splitting-utilities">Splitting Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.splitting.two_way_split.html">dlpy.splitting.two_way_split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.splitting.three_way_split.html">dlpy.splitting.three_way_split</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>API Reference</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="_sources/api.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-reference">
+<span id="api"></span><h1>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="pre-built-models">
+<span id="api-functions"></span><h2>Pre-built models<a class="headerlink" href="#pre-built-models" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.LeNet5.html#dlpy.applications.LeNet5" title="dlpy.applications.LeNet5"><code class="xref py py-obj docutils literal"><span class="pre">LeNet5</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate a deep learning model with LeNet5 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.LeNet5_bn.html#dlpy.applications.LeNet5_bn" title="dlpy.applications.LeNet5_bn"><code class="xref py py-obj docutils literal"><span class="pre">LeNet5_bn</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_channels,&nbsp;...])</td>
+<td>Generate a LeNet Model with Batch normalization</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.VGG11.html#dlpy.applications.VGG11" title="dlpy.applications.VGG11"><code class="xref py py-obj docutils literal"><span class="pre">VGG11</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate a deep learning model with VGG11 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.VGG11_bn.html#dlpy.applications.VGG11_bn" title="dlpy.applications.VGG11_bn"><code class="xref py py-obj docutils literal"><span class="pre">VGG11_bn</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate deep learning model with VGG11 architecture with batch normalization layers</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.VGG13.html#dlpy.applications.VGG13" title="dlpy.applications.VGG13"><code class="xref py py-obj docutils literal"><span class="pre">VGG13</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate a deep learning model with VGG13 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.VGG13_bn.html#dlpy.applications.VGG13_bn" title="dlpy.applications.VGG13_bn"><code class="xref py py-obj docutils literal"><span class="pre">VGG13_bn</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate deep learning model with VGG13 architecture with batch normalization layers</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.VGG16.html#dlpy.applications.VGG16" title="dlpy.applications.VGG16"><code class="xref py py-obj docutils literal"><span class="pre">VGG16</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate a deep learning model with VGG16 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.VGG16_bn.html#dlpy.applications.VGG16_bn" title="dlpy.applications.VGG16_bn"><code class="xref py py-obj docutils literal"><span class="pre">VGG16_bn</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate deep learning model with VGG16 architecture with batch normalization layers</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.VGG19.html#dlpy.applications.VGG19" title="dlpy.applications.VGG19"><code class="xref py py-obj docutils literal"><span class="pre">VGG19</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate a deep learning model with VGG19 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.VGG19_bn.html#dlpy.applications.VGG19_bn" title="dlpy.applications.VGG19_bn"><code class="xref py py-obj docutils literal"><span class="pre">VGG19_bn</span></code></a>(conn[,&nbsp;model_table,&nbsp;n_classes,&nbsp;...])</td>
+<td>Generate deep learning model with VGG19 architecture with batch normalization layers</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.ResNet18_SAS.html#dlpy.applications.ResNet18_SAS" title="dlpy.applications.ResNet18_SAS"><code class="xref py py-obj docutils literal"><span class="pre">ResNet18_SAS</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet18 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.ResNet18_Caffe.html#dlpy.applications.ResNet18_Caffe" title="dlpy.applications.ResNet18_Caffe"><code class="xref py py-obj docutils literal"><span class="pre">ResNet18_Caffe</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet18 architecture with convolution shortcut</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.ResNet34_SAS.html#dlpy.applications.ResNet34_SAS" title="dlpy.applications.ResNet34_SAS"><code class="xref py py-obj docutils literal"><span class="pre">ResNet34_SAS</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet34 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.ResNet34_Caffe.html#dlpy.applications.ResNet34_Caffe" title="dlpy.applications.ResNet34_Caffe"><code class="xref py py-obj docutils literal"><span class="pre">ResNet34_Caffe</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate deep learning model with ResNet34 architecture with convolution shortcut</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.ResNet50_SAS.html#dlpy.applications.ResNet50_SAS" title="dlpy.applications.ResNet50_SAS"><code class="xref py py-obj docutils literal"><span class="pre">ResNet50_SAS</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet50 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.ResNet50_Caffe.html#dlpy.applications.ResNet50_Caffe" title="dlpy.applications.ResNet50_Caffe"><code class="xref py py-obj docutils literal"><span class="pre">ResNet50_Caffe</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate deep learning model with ResNet50 architecture with convolution shortcut</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.ResNet101_SAS.html#dlpy.applications.ResNet101_SAS" title="dlpy.applications.ResNet101_SAS"><code class="xref py py-obj docutils literal"><span class="pre">ResNet101_SAS</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet101 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.ResNet101_Caffe.html#dlpy.applications.ResNet101_Caffe" title="dlpy.applications.ResNet101_Caffe"><code class="xref py py-obj docutils literal"><span class="pre">ResNet101_Caffe</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate deep learning model with ResNet101 architecture with convolution shortcut</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.ResNet152_SAS.html#dlpy.applications.ResNet152_SAS" title="dlpy.applications.ResNet152_SAS"><code class="xref py py-obj docutils literal"><span class="pre">ResNet152_SAS</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet152 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.ResNet152_Caffe.html#dlpy.applications.ResNet152_Caffe" title="dlpy.applications.ResNet152_Caffe"><code class="xref py py-obj docutils literal"><span class="pre">ResNet152_Caffe</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate deep learning model with ResNet152 architecture with convolution shortcut</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.applications.wide_resnet.html#dlpy.applications.wide_resnet" title="dlpy.applications.wide_resnet"><code class="xref py py-obj docutils literal"><span class="pre">wide_resnet</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with ResNet152 architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.applications.DenseNet_Cifar.html#dlpy.applications.DenseNet_Cifar" title="dlpy.applications.DenseNet_Cifar"><code class="xref py py-obj docutils literal"><span class="pre">DenseNet_Cifar</span></code></a>(conn[,&nbsp;model_table,&nbsp;...])</td>
+<td>Generate a deep learning model with DenseNet architecture</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="imagetable">
+<h2>ImageTable<a class="headerlink" href="#imagetable" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="xref py py-class docutils literal"><span class="pre">ImageTable</span></code> class is a specialized version of <code class="xref py py-class docutils literal"><span class="pre">swat.CASTable</span></code>
+that includes extra methods for working with images.</p>
+<div class="section" id="constructors">
+<h3>Constructors<a class="headerlink" href="#constructors" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.html#dlpy.images.ImageTable" title="dlpy.images.ImageTable"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable</span></code></a>(name,&nbsp;**table_params)</td>
+<td>Specialized CASTable for Image Data</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.from_table.html#dlpy.images.ImageTable.from_table" title="dlpy.images.ImageTable.from_table"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.from_table</span></code></a>(tbl[,&nbsp;image_col,&nbsp;...])</td>
+<td>Create an ImageTable from a CASTable</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.load_files.html#dlpy.images.ImageTable.load_files" title="dlpy.images.ImageTable.load_files"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.load_files</span></code></a>(conn,&nbsp;path[,&nbsp;casout,&nbsp;...])</td>
+<td>Create ImageTable from files in <cite>path</cite></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="saving">
+<h3>Saving<a class="headerlink" href="#saving" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.to_files.html#dlpy.images.ImageTable.to_files" title="dlpy.images.ImageTable.to_files"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.to_files</span></code></a>(path)</td>
+<td>Save the images in the original format under the specified directory</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.to_sashdat.html#dlpy.images.ImageTable.to_sashdat" title="dlpy.images.ImageTable.to_sashdat"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.to_sashdat</span></code></a>([path,&nbsp;name])</td>
+<td>Save the ImageTable to a sashdat file</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="utilities">
+<h3>Utilities<a class="headerlink" href="#utilities" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.copy_table.html#dlpy.images.ImageTable.copy_table" title="dlpy.images.ImageTable.copy_table"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.copy_table</span></code></a>([casout])</td>
+<td>Create a copy of the ImageTable</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.show.html#dlpy.images.ImageTable.show" title="dlpy.images.ImageTable.show"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.show</span></code></a>([nimages,&nbsp;ncol,&nbsp;randomize,&nbsp;...])</td>
+<td>Display a grid of images</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="image-processing">
+<h3>Image Processing<a class="headerlink" href="#image-processing" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.crop.html#dlpy.images.ImageTable.crop" title="dlpy.images.ImageTable.crop"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.crop</span></code></a>([x,&nbsp;y,&nbsp;width,&nbsp;height,&nbsp;inplace])</td>
+<td>Crop the images in the ImageTable</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.resize.html#dlpy.images.ImageTable.resize" title="dlpy.images.ImageTable.resize"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.resize</span></code></a>([width,&nbsp;height,&nbsp;inplace])</td>
+<td>Resize the images in the ImageTable</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.as_patches.html#dlpy.images.ImageTable.as_patches" title="dlpy.images.ImageTable.as_patches"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.as_patches</span></code></a>([x,&nbsp;y,&nbsp;width,&nbsp;height,&nbsp;...])</td>
+<td>Generate patches from the images in the ImageTable</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.images.ImageTable.as_random_patches.html#dlpy.images.ImageTable.as_random_patches" title="dlpy.images.ImageTable.as_random_patches"><code class="xref py py-obj docutils literal"><span class="pre">ImageTable.as_random_patches</span></code></a>([random_ratio,&nbsp;...])</td>
+<td>Generate random patches from the images in the ImageTable</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="layers">
+<h2>Layers<a class="headerlink" href="#layers" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.layers.Layer.html#dlpy.layers.Layer" title="dlpy.layers.Layer"><code class="xref py py-obj docutils literal"><span class="pre">Layer</span></code></a>([name,&nbsp;config,&nbsp;src_layers])</td>
+<td>Base class for all layers</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.layers.Layer.to_model_params.html#dlpy.layers.Layer.to_model_params" title="dlpy.layers.Layer.to_model_params"><code class="xref py py-obj docutils literal"><span class="pre">Layer.to_model_params</span></code></a>()</td>
+<td>Convert the model configuration to SAS Viya parameters</td>
+</tr>
+</tbody>
+
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.layers.InputLayer.html#dlpy.layers.InputLayer" title="dlpy.layers.InputLayer"><code class="xref py py-obj docutils literal"><span class="pre">InputLayer</span></code></a>([n_channels,&nbsp;width,&nbsp;height,&nbsp;...])</td>
+<td>Input layer</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.layers.Conv2d.html#dlpy.layers.Conv2d" title="dlpy.layers.Conv2d"><code class="xref py py-obj docutils literal"><span class="pre">Conv2d</span></code></a>(n_filters[,&nbsp;width,&nbsp;height,&nbsp;stride,&nbsp;...])</td>
+<td>2D convolutional layer</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.layers.Pooling.html#dlpy.layers.Pooling" title="dlpy.layers.Pooling"><code class="xref py py-obj docutils literal"><span class="pre">Pooling</span></code></a>([width,&nbsp;height,&nbsp;stride,&nbsp;pool,&nbsp;...])</td>
+<td>Pooling layer</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.layers.Dense.html#dlpy.layers.Dense" title="dlpy.layers.Dense"><code class="xref py py-obj docutils literal"><span class="pre">Dense</span></code></a>(n[,&nbsp;act,&nbsp;dropout,&nbsp;name,&nbsp;src_layers])</td>
+<td>Fully connected layer</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.layers.Recurrent.html#dlpy.layers.Recurrent" title="dlpy.layers.Recurrent"><code class="xref py py-obj docutils literal"><span class="pre">Recurrent</span></code></a>(n[,&nbsp;act,&nbsp;rnn_type,&nbsp;output_type,&nbsp;...])</td>
+<td>Recurrent layer</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.layers.BN.html#dlpy.layers.BN" title="dlpy.layers.BN"><code class="xref py py-obj docutils literal"><span class="pre">BN</span></code></a>([act,&nbsp;name,&nbsp;src_layers])</td>
+<td>Batch Normalization layer</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.layers.Res.html#dlpy.layers.Res" title="dlpy.layers.Res"><code class="xref py py-obj docutils literal"><span class="pre">Res</span></code></a>([act,&nbsp;name,&nbsp;src_layers])</td>
+<td>Residual layer</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.layers.Proj.html#dlpy.layers.Proj" title="dlpy.layers.Proj"><code class="xref py py-obj docutils literal"><span class="pre">Proj</span></code></a>([name,&nbsp;src_layers])</td>
+<td>Projection layer</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.layers.OutputLayer.html#dlpy.layers.OutputLayer" title="dlpy.layers.OutputLayer"><code class="xref py py-obj docutils literal"><span class="pre">OutputLayer</span></code></a>([n,&nbsp;act,&nbsp;name,&nbsp;src_layers])</td>
+<td>Output layer</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="models">
+<h2>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.html#dlpy.model.Model" title="dlpy.model.Model"><code class="xref py py-obj docutils literal"><span class="pre">Model</span></code></a>(conn[,&nbsp;model_table,&nbsp;model_weights])</td>
+<td><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.from_table.html#dlpy.model.Model.from_table" title="dlpy.model.Model.from_table"><code class="xref py py-obj docutils literal"><span class="pre">Model.from_table</span></code></a>(input_model_table[,&nbsp;...])</td>
+<td>Create a Model object from CAS table that defines a deep learning model</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.from_sashdat.html#dlpy.model.Model.from_sashdat" title="dlpy.model.Model.from_sashdat"><code class="xref py py-obj docutils literal"><span class="pre">Model.from_sashdat</span></code></a>(conn,&nbsp;path[,&nbsp;...])</td>
+<td>Generate a model object using the model information in the sashdat file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.load.html#dlpy.model.Model.load" title="dlpy.model.Model.load"><code class="xref py py-obj docutils literal"><span class="pre">Model.load</span></code></a>(path[,&nbsp;display_note])</td>
+<td>Load the deep learning model architecture from existing table</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.set_weights.html#dlpy.model.Model.set_weights" title="dlpy.model.Model.set_weights"><code class="xref py py-obj docutils literal"><span class="pre">Model.set_weights</span></code></a>(weight_tbl)</td>
+<td>Assign weights to the Model object</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.load_weights.html#dlpy.model.Model.load_weights" title="dlpy.model.Model.load_weights"><code class="xref py py-obj docutils literal"><span class="pre">Model.load_weights</span></code></a>(path,&nbsp;**kwargs)</td>
+<td>Load the weights form a data file specified by ‘path’</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_caffe.html#dlpy.model.Model.load_weights_from_caffe" title="dlpy.model.Model.load_weights_from_caffe"><code class="xref py py-obj docutils literal"><span class="pre">Model.load_weights_from_caffe</span></code></a>(path,&nbsp;**kwargs)</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_keras.html#dlpy.model.Model.load_weights_from_keras" title="dlpy.model.Model.load_weights_from_keras"><code class="xref py py-obj docutils literal"><span class="pre">Model.load_weights_from_keras</span></code></a>(path,&nbsp;**kwargs)</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_table.html#dlpy.model.Model.load_weights_from_table" title="dlpy.model.Model.load_weights_from_table"><code class="xref py py-obj docutils literal"><span class="pre">Model.load_weights_from_table</span></code></a>(path)</td>
+<td>Load the weights from a file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.set_weights_attr.html#dlpy.model.Model.set_weights_attr" title="dlpy.model.Model.set_weights_attr"><code class="xref py py-obj docutils literal"><span class="pre">Model.set_weights_attr</span></code></a>(attr_tbl[,&nbsp;clear])</td>
+<td>Attach the weights attribute to the model weights</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.load_weights_attr.html#dlpy.model.Model.load_weights_attr" title="dlpy.model.Model.load_weights_attr"><code class="xref py py-obj docutils literal"><span class="pre">Model.load_weights_attr</span></code></a>(path)</td>
+<td>Load the weights attribute form a sashdat file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.fit.html#dlpy.model.Model.fit" title="dlpy.model.Model.fit"><code class="xref py py-obj docutils literal"><span class="pre">Model.fit</span></code></a>(data[,&nbsp;inputs,&nbsp;target,&nbsp;...])</td>
+<td>Train the deep learning model using the given data</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.tune.html#dlpy.model.Model.tune" title="dlpy.model.Model.tune"><code class="xref py py-obj docutils literal"><span class="pre">Model.tune</span></code></a>(data[,&nbsp;inputs,&nbsp;target])</td>
+<td>Tunes hyper parameters for the deep learning model.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.plot_training_history.html#dlpy.model.Model.plot_training_history" title="dlpy.model.Model.plot_training_history"><code class="xref py py-obj docutils literal"><span class="pre">Model.plot_training_history</span></code></a>([items,&nbsp;fig_size])</td>
+<td>Display the training iteration history.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.predict.html#dlpy.model.Model.predict" title="dlpy.model.Model.predict"><code class="xref py py-obj docutils literal"><span class="pre">Model.predict</span></code></a>(data[,&nbsp;inputs,&nbsp;target])</td>
+<td>Evaluate the deep learning model on a specified validation data set</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.plot_predict_res.html#dlpy.model.Model.plot_predict_res" title="dlpy.model.Model.plot_predict_res"><code class="xref py py-obj docutils literal"><span class="pre">Model.plot_predict_res</span></code></a>([type,&nbsp;image_id])</td>
+<td>Plot the classification results.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.get_feature_maps.html#dlpy.model.Model.get_feature_maps" title="dlpy.model.Model.get_feature_maps"><code class="xref py py-obj docutils literal"><span class="pre">Model.get_feature_maps</span></code></a>(data[,&nbsp;label,&nbsp;image_id])</td>
+<td>Extract the feature maps for a single image</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.get_features.html#dlpy.model.Model.get_features" title="dlpy.model.Model.get_features"><code class="xref py py-obj docutils literal"><span class="pre">Model.get_features</span></code></a>(data,&nbsp;dense_layer[,&nbsp;target])</td>
+<td>Extract linear features for a data table from the layer specified by dense_layer</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.heat_map_analysis.html#dlpy.model.Model.heat_map_analysis" title="dlpy.model.Model.heat_map_analysis"><code class="xref py py-obj docutils literal"><span class="pre">Model.heat_map_analysis</span></code></a>(data[,&nbsp;mask_width,&nbsp;...])</td>
+<td>Conduct a heat map analysis on the image</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.plot_heat_map.html#dlpy.model.Model.plot_heat_map" title="dlpy.model.Model.plot_heat_map"><code class="xref py py-obj docutils literal"><span class="pre">Model.plot_heat_map</span></code></a>([image_id,&nbsp;alpha])</td>
+<td>Display the heat maps analysis results</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.save_to_astore.html#dlpy.model.Model.save_to_astore" title="dlpy.model.Model.save_to_astore"><code class="xref py py-obj docutils literal"><span class="pre">Model.save_to_astore</span></code></a>([path])</td>
+<td>Save the model to an astore object, and write it into a file.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.save_to_table.html#dlpy.model.Model.save_to_table" title="dlpy.model.Model.save_to_table"><code class="xref py py-obj docutils literal"><span class="pre">Model.save_to_table</span></code></a>(path)</td>
+<td>Save the model as SAS dataset</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.deploy.html#dlpy.model.Model.deploy" title="dlpy.model.Model.deploy"><code class="xref py py-obj docutils literal"><span class="pre">Model.deploy</span></code></a>(path[,&nbsp;output_format])</td>
+<td>Deploy the deep learning model to a data file</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.count_params.html#dlpy.model.Model.count_params" title="dlpy.model.Model.count_params"><code class="xref py py-obj docutils literal"><span class="pre">Model.count_params</span></code></a>()</td>
+<td>Count the total number of parameters in the model</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.Model.print_summary.html#dlpy.model.Model.print_summary" title="dlpy.model.Model.print_summary"><code class="xref py py-obj docutils literal"><span class="pre">Model.print_summary</span></code></a>()</td>
+<td>Display a table that summarizes the model architecture</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.Model.plot_network.html#dlpy.model.Model.plot_network" title="dlpy.model.Model.plot_network"><code class="xref py py-obj docutils literal"><span class="pre">Model.plot_network</span></code></a>()</td>
+<td>Display a graph that summarizes the model architecture.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="feature-maps">
+<h2>Feature Maps<a class="headerlink" href="#feature-maps" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.FeatureMaps.html#dlpy.model.FeatureMaps" title="dlpy.model.FeatureMaps"><code class="xref py py-obj docutils literal"><span class="pre">FeatureMaps</span></code></a>(conn,&nbsp;feature_maps_tbl[,&nbsp;structure])</td>
+<td>Feature Maps object</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.FeatureMaps.display.html#dlpy.model.FeatureMaps.display" title="dlpy.model.FeatureMaps.display"><code class="xref py py-obj docutils literal"><span class="pre">FeatureMaps.display</span></code></a>(layer_id[,&nbsp;filter_id])</td>
+<td>Display the feature maps</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.get_num_configs.html#dlpy.model.get_num_configs" title="dlpy.model.get_num_configs"><code class="xref py py-obj docutils literal"><span class="pre">get_num_configs</span></code></a>(keys,&nbsp;layer_type_prefix,&nbsp;...)</td>
+<td>Extract the numerical options from the model table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.get_str_configs.html#dlpy.model.get_str_configs" title="dlpy.model.get_str_configs"><code class="xref py py-obj docutils literal"><span class="pre">get_str_configs</span></code></a>(keys,&nbsp;layer_type_prefix,&nbsp;...)</td>
+<td>Extract the str options from the model table</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.extract_input_layer.html#dlpy.model.extract_input_layer" title="dlpy.model.extract_input_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_input_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from an input layer table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.extract_conv_layer.html#dlpy.model.extract_conv_layer" title="dlpy.model.extract_conv_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_conv_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from a convolution layer table</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.extract_pooling_layer.html#dlpy.model.extract_pooling_layer" title="dlpy.model.extract_pooling_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_pooling_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from a pooling layer table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.extract_batchnorm_layer.html#dlpy.model.extract_batchnorm_layer" title="dlpy.model.extract_batchnorm_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_batchnorm_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from a batch normalization layer table</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.extract_residual_layer.html#dlpy.model.extract_residual_layer" title="dlpy.model.extract_residual_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_residual_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from a residual layer table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.extract_fc_layer.html#dlpy.model.extract_fc_layer" title="dlpy.model.extract_fc_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_fc_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from a fully connected layer table</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.extract_output_layer.html#dlpy.model.extract_output_layer" title="dlpy.model.extract_output_layer"><code class="xref py py-obj docutils literal"><span class="pre">extract_output_layer</span></code></a>(layer_table)</td>
+<td>Extract layer configuration from an output layer table</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.layer_to_node.html#dlpy.model.layer_to_node" title="dlpy.model.layer_to_node"><code class="xref py py-obj docutils literal"><span class="pre">layer_to_node</span></code></a>(layer)</td>
+<td>Convert layer configuration to a node in the model graph</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.model.layer_to_edge.html#dlpy.model.layer_to_edge" title="dlpy.model.layer_to_edge"><code class="xref py py-obj docutils literal"><span class="pre">layer_to_edge</span></code></a>(layer)</td>
+<td>Convert layer to layer connection to an edge in the model graph</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.model.model_to_graph.html#dlpy.model.model_to_graph" title="dlpy.model.model_to_graph"><code class="xref py py-obj docutils literal"><span class="pre">model_to_graph</span></code></a>(model)</td>
+<td>Convert model configuration to a graph</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="residual-networks">
+<h2>Residual Networks<a class="headerlink" href="#residual-networks" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.blocks.Block.html#dlpy.blocks.Block" title="dlpy.blocks.Block"><code class="xref py py-obj docutils literal"><span class="pre">Block</span></code></a>()</td>
+<td>Block of layers that have special connectivity instead of sequential</td>
+</tr>
+</tbody>
+
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.blocks.ResBlock.html#dlpy.blocks.ResBlock" title="dlpy.blocks.ResBlock"><code class="xref py py-obj docutils literal"><span class="pre">ResBlock</span></code></a>([kernel_sizes,&nbsp;n_filters,&nbsp;strides])</td>
+<td>Residual block for Residual Network</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.blocks.ResBlock.compile.html#dlpy.blocks.ResBlock.compile" title="dlpy.blocks.ResBlock.compile"><code class="xref py py-obj docutils literal"><span class="pre">ResBlock.compile</span></code></a>(src_layer,&nbsp;block_num)</td>
+<td>Convert the options into DLPy layer definition.</td>
+</tr>
+</tbody>
+
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.blocks.ResBlockBN.html#dlpy.blocks.ResBlockBN" title="dlpy.blocks.ResBlockBN"><code class="xref py py-obj docutils literal"><span class="pre">ResBlockBN</span></code></a>([kernel_sizes,&nbsp;n_filters,&nbsp;...])</td>
+<td>Residual block for Residual Network with batch normalization.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.blocks.ResBlockBN.compile.html#dlpy.blocks.ResBlockBN.compile" title="dlpy.blocks.ResBlockBN.compile"><code class="xref py py-obj docutils literal"><span class="pre">ResBlockBN.compile</span></code></a>(src_layer,&nbsp;block_num)</td>
+<td>Convert the options into DLPy layer definition.</td>
+</tr>
+</tbody>
+
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.blocks.ResBlock_Caffe.html#dlpy.blocks.ResBlock_Caffe" title="dlpy.blocks.ResBlock_Caffe"><code class="xref py py-obj docutils literal"><span class="pre">ResBlock_Caffe</span></code></a>([kernel_sizes,&nbsp;n_filters,&nbsp;...])</td>
+<td>Residual block for Residual Network with batch normalization.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.blocks.ResBlock_Caffe.compile.html#dlpy.blocks.ResBlock_Caffe.compile" title="dlpy.blocks.ResBlock_Caffe.compile"><code class="xref py py-obj docutils literal"><span class="pre">ResBlock_Caffe.compile</span></code></a>(src_layer,&nbsp;block_num)</td>
+<td><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="sequential-model">
+<h2>Sequential Model<a class="headerlink" href="#sequential-model" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.Sequential.Sequential.html#dlpy.Sequential.Sequential" title="dlpy.Sequential.Sequential"><code class="xref py py-obj docutils literal"><span class="pre">Sequential</span></code></a>(conn[,&nbsp;layers,&nbsp;model_table])</td>
+<td>Model for sequentially building of deep learning models</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.Sequential.Sequential.add.html#dlpy.Sequential.Sequential.add" title="dlpy.Sequential.Sequential.add"><code class="xref py py-obj docutils literal"><span class="pre">Sequential.add</span></code></a>(layer)</td>
+<td>Add layer(s) to model</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.Sequential.Sequential.pop.html#dlpy.Sequential.Sequential.pop" title="dlpy.Sequential.Sequential.pop"><code class="xref py py-obj docutils literal"><span class="pre">Sequential.pop</span></code></a>([loc])</td>
+<td>Delete layer(s) from model and return it</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.Sequential.Sequential.switch.html#dlpy.Sequential.Sequential.switch" title="dlpy.Sequential.Sequential.switch"><code class="xref py py-obj docutils literal"><span class="pre">Sequential.switch</span></code></a>(loc1,&nbsp;loc2)</td>
+<td>Switch the oder of two layers in the model.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.Sequential.Sequential.compile.html#dlpy.Sequential.Sequential.compile" title="dlpy.Sequential.Sequential.compile"><code class="xref py py-obj docutils literal"><span class="pre">Sequential.compile</span></code></a>()</td>
+<td>Convert the layer objects into Viya options</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="splitting-utilities">
+<h2>Splitting Utilities<a class="headerlink" href="#splitting-utilities" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="generated/dlpy.splitting.two_way_split.html#dlpy.splitting.two_way_split" title="dlpy.splitting.two_way_split"><code class="xref py py-obj docutils literal"><span class="pre">two_way_split</span></code></a>(tbl[,&nbsp;test_rate,&nbsp;stratify_by,&nbsp;...])</td>
+<td>Split image data into training and testing sets</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="generated/dlpy.splitting.three_way_split.html#dlpy.splitting.three_way_split" title="dlpy.splitting.three_way_split"><code class="xref py py-obj docutils literal"><span class="pre">three_way_split</span></code></a>(tbl[,&nbsp;valid_rate,&nbsp;...])</td>
+<td>Split image data into training and testing sets</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="generated/dlpy.applications.LeNet5.html" class="btn btn-neutral float-right" title="dlpy.applications.LeNet5" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting-started.html" class="btn btn-neutral" title="Getting Started" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.6.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

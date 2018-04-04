@@ -1,0 +1,308 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Getting Started &mdash; DLPy 0.6.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="DLPy 0.6.0 documentation" href="index.html"/>
+        <link rel="next" title="API Reference" href="api.html"/>
+        <link rel="prev" title="Installation" href="install.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Getting Started</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="_sources/getting-started.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>Before you can use the DLPy package, you will need a running CAS server and the SWAT package.
+The SWAT package can connect to either the binary port or the HTTP port.  If you have the
+option of either, the binary protocol will give you better performance.</p>
+<p>Other than the CAS host and port, you just need a user name and password to connect.
+User names and passwords can be implemented in various ways, so you may need to see your
+system administrator on how to acquire an account.</p>
+<p>To connect to a CAS server, you simply import SWAT and use the <code class="xref py py-class docutils literal"><span class="pre">swat.CAS</span></code> class
+to create a connection.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span> <span class="nn">swat</span>
+
+<span class="gp">In [2]: </span><span class="n">sess</span> <span class="o">=</span> <span class="n">swat</span><span class="o">.</span><span class="n">CAS</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">userid</span><span class="p">,</span> <span class="n">password</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, import the DLPy package, and then build a simple convolutional neural network (CNN) model.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [3]: </span><span class="kn">from</span> <span class="nn">dlpy</span> <span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">Sequential</span>
+</pre></div>
+</div>
+<p>Import DLPy layer functions</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [4]: </span><span class="kn">from</span> <span class="nn">dlpy.layers</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<p>Use DLPy to create a sequential model and name it &#8216;Simple_CNN&#8217;</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [5]: </span><span class="n">model1</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">model_table</span><span class="o">=</span><span class="s1">&#39;Simple_CNN&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now define an input layer to add to model1</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># The input shape contains RGB images (3 channels)</span>
+<span class="go"># The model images are 224 px in height and 224 px in width</span>
+<span class="gp">In [6]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">InputLayer</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+<span class="go">NOTE: Input layer added.</span>
+</pre></div>
+</div>
+<p>Now, add a 2D convolution layer and a pooling layer.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># Add 2-Dimensional Convolution Layer to model1</span>
+<span class="go"># that has 8 filters and a kernel size of 7.</span>
+<span class="gp">In [7]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="go">NOTE: Convolutional layer added.</span>
+</pre></div>
+</div>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># Add Pooling Layer of size 2</span>
+<span class="gp">In [8]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Pooling</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">NOTE: Pooling layer added.</span>
+</pre></div>
+</div>
+<p>Now, add an additional pair of 2D convolution and pooling layers.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># Add another 2D convolution Layer that has 8 filters</span>
+<span class="go"># and a kernel size of 7</span>
+<span class="gp">In [9]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="go">NOTE: Convolutional layer added.</span>
+</pre></div>
+</div>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># Add a pooling layer of size 2 to</span>
+<span class="go"># complete the second pair of layers.</span>
+<span class="gp">In [10]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Pooling</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">NOTE: Pooling layer added.</span>
+</pre></div>
+</div>
+<p>Add a fully connected layer.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># Add Fully-Connected Layer with 16 units</span>
+<span class="gp">In [11]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">16</span><span class="p">))</span>
+<span class="go">NOTE: Fully-connected layer added.</span>
+</pre></div>
+</div>
+<p>Finally, add the output layer.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="go"># Add an output layer that has 2 nodes and uses</span>
+<span class="go"># the Softmax activation function</span>
+<span class="gp">In [12]: </span><span class="n">model1</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">OutputLayer</span><span class="p">(</span><span class="n">act</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+<span class="go">NOTE: Output layer added.</span>
+<span class="go">NOTE: Model compiled successfully.</span>
+</pre></div>
+</div>
+<p>Display a print summary of the table.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="n">model1</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+<span class="go">*==================*===============*========*============*=================*======================*</span>
+<span class="go">|   Layer (Type)   |  Kernel Size  | Stride | Activation |   Output Size   | Number of Parameters |</span>
+<span class="go">*------------------*---------------*--------*------------*-----------------*----------------------*</span>
+<span class="go">| Data(Input)      |     None      |  None  |    None    |  (224, 224, 3)  |        0 / 0         |</span>
+<span class="go">| Conv1_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (224, 224, 8)  |       1176 / 8       |</span>
+<span class="go">| Pool1(Pool)      |    (2, 2)     |   2    |    Max     |  (112, 112, 8)  |        0 / 0         |</span>
+<span class="go">| Conv2_1(Convo.)  |    (7, 7)     |   1    |    Relu    |  (112, 112, 8)  |       3136 / 8       |</span>
+<span class="go">| Pool2(Pool)      |    (2, 2)     |   2    |    Max     |   (56, 56, 8)   |        0 / 0         |</span>
+<span class="go">| FC1(F.C.)        |  (25088, 16)  |  None  |    Relu    |       16        |     401408 / 16      |</span>
+<span class="go">| Output(Output)   |    (16, 2)    |  None  |  Softmax   |        2        |        32 / 2        |</span>
+<span class="go">*==================*===============*========*============*=================*======================*</span>
+<span class="go">|Total Number of Parameters: 405,786                                                              |</span>
+<span class="go">*=================================================================================================*</span>
+</pre></div>
+</div>
+<p>Use the open source utility Graphviz to display a plot of the model network.
+Graphviz is available here: <a class="reference external" href="https://www.graphviz.org/download/">https://www.graphviz.org/download/</a>.
+If you do not have Graphviz, skip this instruction.</p>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">model1</span><span class="o">.</span><span class="n">plot_network</span><span class="p">()</span>
+<span class="gh">Out[14]: </span><span class="go">&lt;graphviz.dot.Digraph at 0x7fb6ecd68198&gt;</span>
+</pre></div>
+</div>
+<img alt="_images/model1_network.png" src="_images/model1_network.png" />
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.6.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

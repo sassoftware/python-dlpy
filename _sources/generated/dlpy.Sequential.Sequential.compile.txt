@@ -1,0 +1,6 @@
+dlpy.Sequential.Sequential.compile
+==================================
+
+.. currentmodule:: dlpy.Sequential
+
+.. automethod:: Sequential.compile

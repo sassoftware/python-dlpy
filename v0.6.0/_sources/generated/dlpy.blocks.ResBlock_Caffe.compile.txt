@@ -1,0 +1,6 @@
+dlpy.blocks.ResBlock_Caffe.compile
+==================================
+
+.. currentmodule:: dlpy.blocks
+
+.. automethod:: ResBlock_Caffe.compile

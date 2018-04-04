@@ -1,0 +1,6 @@
+dlpy.blocks.ResBlockBN.compile
+==============================
+
+.. currentmodule:: dlpy.blocks
+
+.. automethod:: ResBlockBN.compile

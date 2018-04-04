@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.to_files
+===============================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.to_files

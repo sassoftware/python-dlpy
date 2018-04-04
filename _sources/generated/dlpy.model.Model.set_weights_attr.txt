@@ -1,0 +1,6 @@
+dlpy.model.Model.set_weights_attr
+=================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.set_weights_attr

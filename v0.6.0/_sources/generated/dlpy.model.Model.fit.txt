@@ -1,0 +1,6 @@
+dlpy.model.Model.fit
+====================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.fit

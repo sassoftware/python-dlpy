@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.resize
+=============================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.resize

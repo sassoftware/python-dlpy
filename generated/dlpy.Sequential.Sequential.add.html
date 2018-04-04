@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.Sequential.Sequential.add &mdash; DLPy 0.6.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="DLPy 0.6.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.Sequential.Sequential.pop" href="dlpy.Sequential.Sequential.pop.html"/>
+        <link rel="prev" title="dlpy.Sequential.Sequential" href="dlpy.Sequential.Sequential.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.6.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models">Pre-built models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#models">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.Sequential.Sequential.html">dlpy.Sequential.Sequential</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.Sequential.Sequential.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.Sequential.Sequential.pop.html">dlpy.Sequential.Sequential.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.Sequential.Sequential.switch.html">dlpy.Sequential.Sequential.switch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.Sequential.Sequential.compile.html">dlpy.Sequential.Sequential.compile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+        <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.Sequential.Sequential.add</li>
+    <li class="wy-breadcrumbs-aside">
+      
+          
+          <a href="../_sources/generated/dlpy.Sequential.Sequential.add.txt" rel="nofollow"> View page source</a>
+        
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-sequential-sequential-add">
+<h1>dlpy.Sequential.Sequential.add<a class="headerlink" href="#dlpy-sequential-sequential-add" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="dlpy.Sequential.Sequential.add">
+<code class="descclassname">Sequential.</code><code class="descname">add</code><span class="sig-paren">(</span><em>layer</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.Sequential.Sequential.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add layer(s) to model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>layer</strong> : Layer or list-of-Layer</p>
+<blockquote class="last">
+<div><p>Specifies the layer to be added</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.Sequential.Sequential.pop.html" class="btn btn-neutral float-right" title="dlpy.Sequential.Sequential.pop" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.Sequential.Sequential.html" class="btn btn-neutral" title="dlpy.Sequential.Sequential" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.6.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

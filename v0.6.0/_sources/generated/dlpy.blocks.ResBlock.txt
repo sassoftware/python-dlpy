@@ -1,0 +1,23 @@
+dlpy.blocks.ResBlock
+====================
+
+.. currentmodule:: dlpy.blocks
+
+.. autoclass:: ResBlock
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ResBlock.__init__
+      ~ResBlock.compile
+   
+   
+
+   
+   
+   
