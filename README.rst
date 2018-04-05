@@ -68,10 +68,6 @@ Import DLPy model functions::
 
     >>> from dlpy import Model, Sequential
 
-Import DLPy layer functions::
-
-    >>> from dlpy.layers import *
-
 Import DLPy application functions::
 
     >>> from dlpy.applications import *
@@ -163,7 +159,7 @@ Display a print summary of the table::
     
     <graphviz.dot.Digraph at 0x28d5cee32b0>
     
-.. image:: doc/images/model1_network.png
+.. image:: https://github.com/sassoftware/python-dlpy/blob/master/doc/images/model1_network.png
 
     
 Resources
