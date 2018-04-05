@@ -1,0 +1,6 @@
+dlpy.Sequential.Sequential.switch
+=================================
+
+.. currentmodule:: dlpy.Sequential
+
+.. automethod:: Sequential.switch

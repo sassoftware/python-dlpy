@@ -1,0 +1,6 @@
+dlpy.model.Model.load_weights_from_table
+========================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.load_weights_from_table

@@ -1,0 +1,22 @@
+dlpy.blocks.Block
+=================
+
+.. currentmodule:: dlpy.blocks
+
+.. autoclass:: Block
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Block.__init__
+   
+   
+
+   
+   
+   

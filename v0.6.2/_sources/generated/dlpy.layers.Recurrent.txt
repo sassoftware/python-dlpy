@@ -1,0 +1,29 @@
+dlpy.layers.Recurrent
+=====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Recurrent
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Recurrent.__init__
+      ~Recurrent.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Recurrent.summary_str
+   
+   

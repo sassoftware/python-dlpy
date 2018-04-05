@@ -1,0 +1,6 @@
+dlpy.model.Model.plot_network
+=============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.plot_network
