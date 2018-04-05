@@ -159,7 +159,7 @@ Display a print summary of the table::
     
     <graphviz.dot.Digraph at 0x28d5cee32b0>
     
-.. image:: https://github.com/sassoftware/python-dlpy/blob/master/doc/images/model1_network.png
+.. image:: https://raw.githubusercontent.com/sassoftware/python-dlpy/master/doc/images/model1_network.png
 
     
 Resources
