@@ -27,7 +27,7 @@ except:
 
 setup(
     name='sas-dlpy',
-    version='0.6.2',
+    version='0.6.3',
     description='SAS Deep Learning Interface',
     long_description=README,
     author='SAS',
@@ -38,7 +38,7 @@ setup(
     package_data={
         'dlpy': ['datasources/*', 'tests/datasources/*'],
     },
-    include_package_data=True,
+    #include_package_data=True,
     install_requires=[
         'pandas >= 0.16.0',
         'six >= 1.9.0',
