@@ -1,0 +1,6 @@
+dlpy.model.Model.deploy
+=======================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.deploy

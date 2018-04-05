@@ -1,0 +1,29 @@
+dlpy.layers.Conv2d
+==================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Conv2d
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Conv2d.__init__
+      ~Conv2d.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Conv2d.summary_str
+   
+   

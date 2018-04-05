@@ -1,0 +1,6 @@
+dlpy.model.Model.from_table
+===========================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.from_table

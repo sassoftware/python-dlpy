@@ -1,0 +1,23 @@
+dlpy.model.FeatureMaps
+======================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: FeatureMaps
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FeatureMaps.__init__
+      ~FeatureMaps.display
+   
+   
+
+   
+   
+   

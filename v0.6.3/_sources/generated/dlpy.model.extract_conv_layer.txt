@@ -1,0 +1,6 @@
+dlpy.model.extract_conv_layer
+=============================
+
+.. currentmodule:: dlpy.model
+
+.. autofunction:: extract_conv_layer

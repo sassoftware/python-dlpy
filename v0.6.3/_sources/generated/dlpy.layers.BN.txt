@@ -1,0 +1,29 @@
+dlpy.layers.BN
+==============
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: BN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BN.__init__
+      ~BN.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BN.summary_str
+   
+   

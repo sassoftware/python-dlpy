@@ -1,0 +1,6 @@
+dlpy.applications.VGG19
+=======================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: VGG19

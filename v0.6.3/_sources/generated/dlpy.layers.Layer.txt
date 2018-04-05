@@ -1,0 +1,29 @@
+dlpy.layers.Layer
+=================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Layer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Layer.__init__
+      ~Layer.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Layer.summary_str
+   
+   
