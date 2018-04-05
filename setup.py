@@ -27,7 +27,7 @@ except:
 
 setup(
     name='sas-dlpy',
-    version='0.6.1',
+    version='0.6.2',
     description='SAS Deep Learning Interface',
     long_description=README,
     author='SAS',
