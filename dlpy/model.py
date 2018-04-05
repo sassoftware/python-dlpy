@@ -1216,7 +1216,7 @@ class Model(object):
 
         plt.show()
 
-    def save_to_astore(self, path=None):
+    def save_to_astore(self, path=None, **kwargs):
         '''
         Save the model to an astore object, and write it into a file.
 
@@ -1238,7 +1238,7 @@ class Model(object):
                         modelTable=self.model_table,
                         randomCrop='none',
                         randomFlip='none',
-                        randomMutation='none')
+                        **kwargs)
 
         model_astore = self._retrieve_('astore.download',
                                        rstore=CAS_tbl_name)
@@ -1302,7 +1302,7 @@ class Model(object):
             self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
         print('NOTE: Model table saved successfully.')
 
-    def deploy(self, path, output_format='astore'):
+    def deploy(self, path, output_format='astore', **kwargs):
         '''
         Deploy the deep learning model to a data file
 
@@ -1321,7 +1321,7 @@ class Model(object):
 
         '''
         if output_format.lower() == 'astore':
-            self.save_to_astore(path=path)
+            self.save_to_astore(path=path, **kwargs)
         elif output_format.lower() in ('castable', 'table'):
             self.save_to_table(path=path)
         else:
