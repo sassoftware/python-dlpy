@@ -90,7 +90,7 @@ Now, add a 2D convolution layer and a pooling layer::
     # Add 2-Dimensional Convolution Layer to model1
     # that has 8 filters and a kernel size of 7. 
 
-    >>> model1.add(Conv2d(8,7)
+    >>> model1.add(Conv2d(8,7))
 
     NOTE: Convolutional layer added.
 
@@ -105,7 +105,7 @@ Now, add an additional pair of 2D convolution and pooling layers::
     # Add another 2D convolution Layer that has 8 filters
     # and a kernel size of 7 
 
-    >>> model1.add(Conv2d(8,7)
+    >>> model1.add(Conv2d(8,7))
 
     NOTE: Convolutional layer added.
 
