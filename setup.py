@@ -43,6 +43,7 @@ setup(
         'pandas >= 0.16.0',
         'six >= 1.9.0',
         'graphviz',
+        'matplotlib',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
