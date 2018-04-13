@@ -5,7 +5,8 @@ DLPy - SAS Deep Learning Python API
 What is DLPy?
 =============
 DLPy is a high-level package for the Python APIs created for the 
-SAS Viya 3.3 (and newer) Deep Learning and Image action sets. DLPy 
+SAS Viya 3.3 (and newer) Deep Learning and Image action sets. 
+A SAS Viya VDMML license is required to use these action sets.  DLPy 
 provides a convenient way to perform deep learning image processing. 
 DLPy uses a familiar Keras-style Python API to access and utilize SAS 
 Viya Deep Learning actions in the SAS Cloud Analytic Services (CAS) 
