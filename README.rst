@@ -28,8 +28,8 @@ Installing DLPy
 SAS provides APIs designed for use with Python 2.7 and Python 3.4+ at
 https://github.com/sassoftware/python-dlpy/releases/.
 
-To install DLPy, open an operating system console, navigate to the 
-folder location where you downloaded DLPy, and submit the following::
+To install DLPy, run the following using the ``pip`` command from your 
+Python installation::
 
     pip install sas-dlpy
 
