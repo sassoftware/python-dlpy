@@ -649,6 +649,109 @@ class ImageTable(CASTable):
                                   output_height=output_height)
             return out
 
+    def random_mutations(self, color_jitter=True, color_shift=True, darken=False, 
+                         horizontal_flip=True, invert_pixels=False, lighten=False, pyramid_down=False,
+                         pyramid_up=False, rotate_left=False, rotate_right=False, sharpen=False,
+                         vertical_flip=True, inplace=True):
+        '''
+        Generate random mutations from the images in the ImageTable
+
+        Parameters
+        ----------
+        color_jitter : boolean, optional
+            Specifies whether to apply color jittering to an input image.
+        color_shift : boolean, optional
+            Specifies whether to randomly change pixel intensity values of an input image.
+        darken : boolean, optional
+            Specifies whether to darken the input image.
+        horizontal_flip : boolean, optional
+            Specifies whether to flip the input image horizontally.
+        invert_pixels : boolean, optional
+            Specifies whether to invert all pixels in the input image.
+        lighten : boolean, optional
+            Specifies whether to lighten the input image.
+        pyramid_down : boolean, optional
+            Specifies whether to downsample and then blur the input image.
+        pyramid_up : boolean, optional
+            Specifies whether to upsample and then blur the input image.
+        rotate_left : boolean, optional
+            Specifies whether to rotate the input image to the left.
+        rotate_right : boolean, optional
+            Specifies whether to rotate the input image to the right.
+        sharpen : boolean, optional
+            Specifies whether to sharpen the input image.
+        vertical_flip : boolean, optional
+            Specifies whether to vertically flip the input image.
+
+        Returns
+        -------
+        :class:`ImageTable`
+            If `inplace=True`
+        `None`
+            If `inplace=False`
+
+        '''
+
+        croplist = [{'mutations':dict(colorjittering=color_jitter, 
+                         colorshifting=color_shift,
+                         darken=darken, lighten=lighten,
+                         horizontalflip=horizontal_flip,
+                         invertpixels=invert_pixels,
+                         pyramiddown=pyramid_down,
+                         pyramidup=pyramid_up,
+                         rotateleft=rotate_left,
+                         rotateright=rotate_right,
+                         sharpen=sharpen, 
+                         verticalflip=vertical_flip),
+                      'usewholeimage':True}]
+
+        column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
+
+        if inplace:
+            self._retrieve('image.augmentimages',
+                           copyvars=column_names,
+                           casout=dict(replace=True, **self.to_outtable_params()),
+                           croplist=croplist,
+                           writerandomly=True)
+
+            # The following code generate the latest file name according
+            # to the number of patches and mutation (_m) operations.
+            computedvars = '_filename_{}'.format(self.patch_level + 1)
+            code = []
+            code.append('length _filename_{1} varchar(*);')
+            code.append('dot_loc = LENGTH(_filename_{0}) - '
+                        'INDEX(REVERSE(_filename_{0}),\'.\')+1;')
+            code.append('_filename_{1} = SUBSTR(_filename_{0},1,dot_loc-1) || '
+                        'compress(\'_\'||\'m{0}\'||SUBSTR(_filename_{0},dot_loc));')
+            code = '\n'.join(code)
+            code = code.format(self.patch_level, self.patch_level + 1)
+
+            self._retrieve('table.shuffle',
+                           casout=dict(replace=True, 
+                                       **self.to_outtable_params()),
+                           table=dict(computedvars=computedvars,
+                                      computedvarsprogram=code,
+                                      **self.to_table_params()))
+
+            self.patch_level += 1
+
+        else:
+            out = self.copy_table()
+            out.random_mutations(color_jitter=color_jitter, 
+                                 color_shift=color_shift, 
+                                 darken=darken, 
+                                 horizontal_flip=horizontal_flip, 
+                                 invert_pixels=invert_pixels, 
+                                 lighten=lighten, 
+                                 pyramid_down=pyramid_down,
+                                 pyramid_up=pyramid_up, 
+                                 rotate_left=rotate_left, 
+                                 rotate_right=rotate_right, 
+                                 sharpen=sharpen,
+                                 vertical_flip=vertical_flip, 
+                                 inplace=True)
+            return out
+
     @property
     def image_summary(self):
         '''
