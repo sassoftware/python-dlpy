@@ -1069,7 +1069,7 @@ class Model(object):
         valid_res_tbl = self.conn.CASTable(valid_res_tbl)
         key_map = dict()
         columninfo = valid_res_tbl.columninfo().ColumnInfo
-        for label in valid_res_tbl._label_.unique():
+        for label in valid_res_tbl['_label_'].unique():
             key_map[label] = columninfo.Column[columninfo.Label.tolist().index(
                 'Predicted: _label_={}'.format(label))]
 
