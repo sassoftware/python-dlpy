@@ -1036,9 +1036,16 @@ class Model(object):
             print('NOTE: The number of images in the table is too large,'
                   ' only 5 randomly selected images are used in analysis.')
             te_rate = 5 / data.numrows().numrows * 100
-            from .splitting import two_way_split
-            _, data2 = two_way_split(data, test_rate=te_rate)
-            data = data2
+
+            if not self.conn.queryactionset('sampling')['sampling']:
+                self.conn.loadactionset('sampling', _messagelevel='error')
+
+            self._retrieve_('sampling.srs',
+                            table=data.to_table_params(),
+                            output=dict(casout=dict(replace=True, **data.to_outtable_params(),
+                                blocksize=blocksize), copyvars='all'),
+                            samppct=te_rate)
+
         # Prepare masked images for analysis.
         self._retrieve_('image.augmentimages',
                         table=data.to_table_params(),
