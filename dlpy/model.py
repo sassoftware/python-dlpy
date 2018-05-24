@@ -1040,11 +1040,15 @@ class Model(object):
             if not self.conn.queryactionset('sampling')['sampling']:
                 self.conn.loadactionset('sampling', _messagelevel='error')
 
+            sample_tbl = random_name('SAMPLE_TBL')
             self._retrieve_('sampling.srs',
                             table=data.to_table_params(),
-                            output=dict(casout=dict(replace=True, **data.to_outtable_params(),
+                            output=dict(casout=dict(replace=True, name=sample_tbl,
                                 blocksize=blocksize), copyvars='all'),
                             samppct=te_rate)
+            from .images import ImageTable
+            sample_tbl = self.conn.CASTable(sample_tbl)
+            data = ImageTable.from_table(sample_tbl)
 
         # Prepare masked images for analysis.
         self._retrieve_('image.augmentimages',
