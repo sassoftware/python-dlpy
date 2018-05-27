@@ -75,6 +75,7 @@ class Model(object):
 
         self.layers = []
         self.valid_res = None
+        self.valid_res_tbl = None
         self.feature_maps = None
         self.valid_conf_mat = None
         self.valid_score = None
@@ -826,6 +827,7 @@ class Model(object):
         img_table = img_table.Images
 
         self.valid_res = img_table
+        self.valid_res_tbl = temp_tbl
 
         return res
 
@@ -979,8 +981,8 @@ class Model(object):
         y = self.conn.CASTable(**input_tbl_opts)[target].as_matrix().ravel()
         return x, y
 
-    def heat_map_analysis(self, data, mask_width=None, mask_height=None,
-                          step_size=None, display=True, **kwargs):
+    def heat_map_analysis(self, data=None, mask_width=None, mask_height=None,
+                          step_size=None, display=True, img_type='A', img_id=None, **kwargs):
         '''
         Conduct a heat map analysis on the image
 
@@ -989,6 +991,7 @@ class Model(object):
         data : ImageTable object
             Specifies the table containing the image data which must contain
             the columns '_image_', '_label_', and '_filename_0'.
+            If no data is specified, the most recent scored results are utilized.
         mask_width : int
             Specifies the width of the mask which cover the region of the image.
         mask_height : int
@@ -998,6 +1001,13 @@ class Model(object):
         display : boolean
             Specifies whether to display the results. By default, only the first
             five images will be displayed.
+        img_type : str, optional.
+            Specifies the type of classification results to plot
+            A - All type of results
+            C - Correctly classified results
+            M - Misclassified results
+        img_id : str, optional.
+            Specify the filename of a specific image.
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action.
 
@@ -1011,6 +1021,14 @@ class Model(object):
         :class:`pandas.DataFrame`
 
         '''
+
+        if data is None and self.valid_res_tbl is None:
+            raise ValueError('No input data.')
+        elif data is None and self.valid_res_tbl is not None:
+            data =  self.valid_res_tbl
+            from .images import ImageTable
+            data = ImageTable.from_table(data, columns=['I__label_'])
+
         output_width = int(data.image_summary.minWidth)
         output_height = int(data.image_summary.minHeight)
 
@@ -1029,7 +1047,21 @@ class Model(object):
         if step_size is None:
             step_size = max(int(mask_width / 4), 1)
 
-        copy_vars = data.columns.tolist()
+        # get image according to file id
+        if img_id:
+            data = data[data['_filename_0'] == img_id]
+
+        # filter on M / C, if data is already scored
+        table_vars = data.columns.tolist()
+        if 'I__label_' in table_vars and img_type == 'C':
+            data_temp = data[data['_label_'] == data['I__label_']]
+            if data_temp.numrows().numrows:
+                data = data_temp
+        elif 'I__label_' in table_vars and img_type == 'M':
+            data_temp = data[data['_label_'] != data['I__label_']]
+            if data_temp.numrows().numrows:
+                data = data_temp
+
         masked_image_table = random_name('MASKED_IMG')
         blocksize = image_blocksize(output_width, output_height)
         if data.numrows().numrows > 5:
@@ -1048,7 +1080,35 @@ class Model(object):
                             samppct=te_rate)
             from .images import ImageTable
             sample_tbl = self.conn.CASTable(sample_tbl)
-            data = ImageTable.from_table(sample_tbl)
+            columns = []
+            if 'I__label_' in table_vars:
+                columns.append('I__label_')
+            data = ImageTable.from_table(sample_tbl, columns=columns)
+
+        # score the images if the input images are not already scored
+        copy_vars = data.columns.tolist()
+        if 'I__label_' not in copy_vars:
+            predict_res_tbl = random_name('HEATMAP_PRED')
+            predict_options = dict(model=self.model_table, initweights=self.model_weights,
+                               table=data,
+                               copyvars=copy_vars,
+                               randomflip='none',
+                               randomcrop='none',
+                               casout=dict(replace=True, name=predict_res_tbl),
+                               encodename=True)
+            predict_options.update(kwargs)
+            self._retrieve_('deeplearn.dlscore', **predict_options)
+            predict_temp_tbl = self.conn.CASTable(predict_res_tbl)
+            from .images import ImageTable
+            data = ImageTable.from_table(predict_temp_tbl, columns=['I__label_'])
+            if img_type == 'C':
+                data_temp = data[data['_label_'] == data['I__label_']]
+                if data_temp.numrows().numrows:
+                    data = data_temp
+            elif img_type == 'M':
+                data_temp = data[data['_label_'] != data['I__label_']]
+                if data_temp.numrows().numrows:
+                    data = data_temp
 
         # Prepare masked images for analysis.
         self._retrieve_('image.augmentimages',
@@ -1064,8 +1124,7 @@ class Model(object):
                                        mask=True)])
 
         masked_image_table = self.conn.CASTable(masked_image_table)
-        copy_vars = masked_image_table.columns.tolist()
-        copy_vars.remove('_image_')
+        copy_vars = ['_filename_0', '_label_', 'x', 'y', 'width', 'height']
         valid_res_tbl = random_name('Valid_Res')
         dlscore_options = dict(model=self.model_table, initWeights=self.model_weights,
                                table=masked_image_table,
@@ -1123,6 +1182,7 @@ class Model(object):
             temp_dict.update({
                 '_image_': original_image_table['Image'][index].tolist()[0],
                 '_label_': original_image_table['Label'][index].tolist()[0],
+                'I__label_': original_image_table['I__label_'][index].tolist()[0],
                 'heat_map': np.nanmean(model_explain_table[name], axis=2)
             })
             output_table.append(temp_dict)
@@ -1143,6 +1203,8 @@ class Model(object):
                 axs = [axs]
             for image_id in range(n_images):
                 label = output_table['_label_'][image_id]
+                pred = output_table['I__label_'][image_id]
+                name = output_table['_filename_0'][image_id]
                 img = output_table['_image_'][image_id]
                 heat_map = output_table['heat_map'][image_id]
                 img_size = heat_map.shape
@@ -1153,7 +1215,9 @@ class Model(object):
 
                 axs[image_id][0].imshow(img, extent=extent)
                 axs[image_id][0].axis('off')
-                axs[image_id][0].set_title('Original Image: {}'.format(label))
+                axs[image_id][0].set_title(
+                    'Original Image: {}\nPrediction: {} \nKey: {}'
+                    .format(label, pred, name))
 
                 color_bar = axs[image_id][2].imshow(heat_map, vmax=vmax, vmin=vmin,
                                                     interpolation='none',
