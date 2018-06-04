@@ -1018,8 +1018,8 @@ class Model(object):
 
 
     def heat_map_analysis(self, data=None, mask_width=None, mask_height=None, step_size=None,
-                          display=True, img_type='A', image_id=None, filename=None, inputs="_image_",
-                          target="_label_", max_display=5, **kwargs):
+                           display=True, img_type='A', image_id=None, filename=None, inputs="_image_",
+                           target="_label_", max_display=5, **kwargs):
 
         '''
         Conduct a heat map analysis on table of images
@@ -1063,7 +1063,7 @@ class Model(object):
         Returns
         -------
         :class:`pandas.DataFrame`
-            Contains Columns: ['I__label_', 'P__label_Dolphin', 'P__label_Giraffe', '_filename_0',
+            Contains Columns: ['I__label_', 'P__label_(for each label)', '_filename_0',
            '_id_', '_image_', '_label_', 'heat_map']
 
         '''
@@ -1072,10 +1072,10 @@ class Model(object):
         def get_predictions(data=data, inputs=inputs, target=target, kwargs=kwargs):
             input_tbl_opts = input_table_check(data)
             input_table = self.conn.CASTable(**input_tbl_opts)
-            if target not in input_table.columninfo().ColumnInfo.Column.tolist():
+            if target not in input_table.columns.tolist():
                 raise ValueError('Column name "{}" not found in the data table.'.format(target))
 
-            if inputs not in input_table.columninfo().ColumnInfo.Column.tolist():
+            if inputs not in input_table.columns.tolist():
                 raise ValueError('Column name "{}" not found in the data table.'.format(inputs))
 
             input_table = self.conn.CASTable(**input_tbl_opts)
@@ -1093,30 +1093,32 @@ class Model(object):
                 kwargs = unify_keys(kwargs)
             except:
                 pass
-
             dlscore_options_com.update(kwargs)
             res = self._retrieve_('deeplearn.dlscore', **dlscore_options_com)
             return self.conn.CASTable(valid_res_tbl_com)
 
         from .images import ImageTable
 
+        run_predict = True
         # check input data, if None try to use model.predict results
-        from_predict = None
+        #     from_predict = None
         if data is None and self.valid_res_tbl is None:
             raise ValueError('No input data and model.predict() has not been run')
         elif data is None:
             print("Using results from model.predict()")
-            from_predict = self.valid_res_tbl
-            data = ImageTable.from_table(from_predict)
+            data = self.valid_res_tbl
+            run_predict = False
+        #         data = ImageTable.from_table(from_predict)
         elif data.shape[0] == 0:
             raise ValueError('Input table is empty.')
 
-        # setup mask sizes
-        output_width = int(data.image_summary.minWidth)
-        output_height = int(data.image_summary.minHeight)
 
-        if (data.image_summary.maxWidth != output_width) or \
-                (data.image_summary.maxHeight != output_height):
+        im_summary = data._retrieve('image.summarizeimages')['Summary']
+        output_width = int(im_summary.minWidth)
+        output_height = int(im_summary.minHeight)
+
+        if (int(im_summary.maxWidth) != output_width) or \
+                (int(im_summary.maxHeight) != output_height):
             raise ValueError('Input images must have same size.')
 
         if (mask_width is None) and (mask_height is None):
@@ -1130,34 +1132,31 @@ class Model(object):
         if step_size is None:
             step_size = max(int(mask_width / 4), 1)
 
-        copy_vars = data.columns.tolist()
+        # Used on calculating probs for masked images only need imageTable columns
+        copy_vars = ImageTable.from_table(data).columns.tolist()
+
         masked_image_table = random_name('MASKED_IMG')
         blocksize = image_blocksize(output_width, output_height)
 
-        #     if filename
-
+        #   if image_id does not exist but filename does, create image_id from filenam
         if filename and image_id:
             print(" image_id supersedes filename, image_id being used")
         elif filename:
             temp = data[data['_filename_0'].isin(filename)]
             image_id = temp['_id_'].tolist()
 
-        # check if model.predict data is used then filter by id if image_id exists
-        if from_predict:
-            if image_id:
-                data = from_predict[from_predict['_id_'].isin(image_id)]
-                if data.numrows().numrows == 0:
-                    raise ValueError('image_id not found in the table')
-            else:
-                data = from_predict
-        # data is passed in and we need to run get_predictions()
-        else:
-            if image_id:
-                data = data[data['_id_'].isin(image_id)]
-                data = ImageTable.from_table(data)
-                if data.numrows().numrows == 0:
-                    raise ValueError('image_id not found in the table')
+
+        # filter images by id number
+        if image_id:
+            data = data[data['_id_'].isin(image_id)]
+            if data.numrows().numrows == 0:
+                raise ValueError('image_id not found in the table')
+
+        # if data was passed in, run predict, otherwise predict has been run using model.predict()
+        if run_predict:
+            print("Running prediction ...")
             data = get_predictions(data)
+            print("... finished running prediction")
 
             # filter on M / C on scored data
         table_vars = data.columns.tolist()
@@ -1180,23 +1179,22 @@ class Model(object):
         if data.numrows().numrows > max_display:
             print('NOTE: The number of images in the table is too large,'
                   ' only {} randomly selected images are used in analysis.'.format(max_display))
+
             te_rate = max_display / data.numrows().numrows * 100
 
-            temp_tbl_name = random_name('Temp')
-            test_tbl_name = random_name()
-            partindname = random_name(name='PartInd_', length=2)
-            data._retrieve('sampling.stratified',
-                           output=dict(casout=temp_tbl_name, copyvars='all',
-                                       partindname=partindname),
-                           samppct=te_rate, samppct2=100 - te_rate, partind=True,
-                           table=dict(groupby='_label_', **data.to_table_params()), **kwargs)
-            data = data._retrieve('table.partition',
-                                  table=dict(where='{}=1'.format(partindname),
-                                             name=temp_tbl_name),
-                                  casout=dict(name=test_tbl_name, replace=True,
-                                              blocksize=128))['casTable']
-            data._retrieve('table.dropTable',
-                           name=temp_tbl_name)
+            if not self.conn.queryactionset('sampling')['sampling']:
+                self.conn.loadactionset('sampling', _messagelevel='error')
+
+            sample_tbl = random_name('SAMPLE_TBL')
+            self._retrieve_('sampling.srs',
+                            table=data.to_table_params(),
+                            output=dict(casout=dict(replace=True, name=sample_tbl,
+                                blocksize=blocksize), copyvars='all'),
+                            samppct=te_rate)
+            # from .images import ImageTable
+            data= self.conn.CASTable(sample_tbl)
+
+        #     print("data head", data.head())
 
         # Prepare masked images for analysis.
         self._retrieve_('image.augmentimages',
@@ -1214,6 +1212,8 @@ class Model(object):
         masked_image_table = self.conn.CASTable(masked_image_table)
         copy_vars = masked_image_table.columns.tolist()
 
+        #     print("head masked_tbl ", masked_image_table.head())
+
         copy_vars.remove('_image_')
         valid_res_tbl = random_name('Valid_Res')
         dlscore_options = dict(model=self.model_table, initWeights=self.model_weights,
@@ -1228,12 +1228,6 @@ class Model(object):
 
         # valid_res_tbl is on all masks
         valid_res_tbl = self.conn.CASTable(valid_res_tbl)
-
-        key_map = dict()
-        columninfo = valid_res_tbl.columninfo().ColumnInfo
-        for label in valid_res_tbl['_label_'].unique():
-            key_map[label] = columninfo.Column[columninfo.Label.tolist().index(
-                'Predicted: _label_={}'.format(label))]
 
         # brings to client but now down to a few images and we need to display
         temp_table = valid_res_tbl.to_frame()
