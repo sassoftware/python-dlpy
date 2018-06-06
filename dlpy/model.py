@@ -1138,7 +1138,7 @@ class Model(object):
         masked_image_table = random_name('MASKED_IMG')
         blocksize = image_blocksize(output_width, output_height)
 
-        #   if image_id does not exist but filename does, create image_id from filenam
+        #   if image_id does not exist but filename does, create image_id from filename
         if filename and image_id:
             print(" image_id supersedes filename, image_id being used")
         elif filename:
