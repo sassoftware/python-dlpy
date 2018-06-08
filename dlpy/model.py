@@ -1101,14 +1101,12 @@ class Model(object):
 
         run_predict = True
         # check input data, if None try to use model.predict results
-        #     from_predict = None
         if data is None and self.valid_res_tbl is None:
             raise ValueError('No input data and model.predict() has not been run')
         elif data is None:
             print("Using results from model.predict()")
             data = self.valid_res_tbl
             run_predict = False
-        #         data = ImageTable.from_table(from_predict)
         elif data.shape[0] == 0:
             raise ValueError('Input table is empty.')
 
