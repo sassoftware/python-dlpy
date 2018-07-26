@@ -1287,7 +1287,7 @@ class Model(object):
                 '_image_': original_image_table['Image'][index].tolist()[0],
                 '_label_': original_image_table['Label'][index].tolist()[0],
                 'I__label_': original_image_table['I__label_'][index].tolist()[0],
-                'heat_map': np.nanmean(model_explain_table[name], axis=2)
+                'heat_map': np.nanmean(model_explain_table[id_num], axis=2)
             })
             index2 = data['_id_'] == id_num
             for col_name in prob_cols:
