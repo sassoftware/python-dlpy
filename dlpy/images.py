@@ -339,6 +339,7 @@ class ImageTable(CASTable):
             else:
                 plt.imshow(image)
             plt.xticks([]), plt.yticks([])
+        plt.show()
 
     def crop(self, x=0, y=0, width=None, height=None, inplace=True):
         '''
