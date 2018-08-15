@@ -787,7 +787,7 @@ class Model(object):
 
 
         '''
-        self.training_history.plot(x=['Epoch'], y=list(items),
+        self.training_history.plot(x='Epoch', y=list(items),
                                    xticks=self.training_history.Epoch,
                                    figsize=fig_size)
 
