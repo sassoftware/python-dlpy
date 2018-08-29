@@ -137,6 +137,7 @@ class Sequential(Model):
         block_num = 1
 
         compiled_layers = []
+        output_layer = None
 
         for layer in self.layers:
             if layer.config['type'] == 'block':
