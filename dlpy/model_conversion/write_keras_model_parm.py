@@ -22,7 +22,10 @@ import sys
 import h5py
 import numpy as np
 from keras import backend as K
-from keras.engine.topology import preprocess_weights_for_loading
+try:
+    from keras.engine.topology import preprocess_weights_for_loading
+except ImportError:
+    from keras.engine.saving import preprocess_weights_for_loading
 
 
 # let Keras read parameters and then transform to format needed for SAS deep learning
