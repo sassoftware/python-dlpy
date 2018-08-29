@@ -1,0 +1,23 @@
+dlpy.blocks.ResBlock\_Caffe
+===========================
+
+.. currentmodule:: dlpy.blocks
+
+.. autoclass:: ResBlock_Caffe
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ResBlock_Caffe.__init__
+      ~ResBlock_Caffe.compile
+   
+   
+
+   
+   
+   

@@ -1,0 +1,29 @@
+dlpy.layers.Pooling
+===================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Pooling
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Pooling.__init__
+      ~Pooling.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Pooling.summary_str
+   
+   

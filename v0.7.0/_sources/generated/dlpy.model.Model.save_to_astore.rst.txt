@@ -1,0 +1,6 @@
+dlpy.model.Model.save\_to\_astore
+=================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.save_to_astore

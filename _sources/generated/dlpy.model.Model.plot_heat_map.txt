@@ -1,6 +1,0 @@
-dlpy.model.Model.plot_heat_map
-==============================
-
-.. currentmodule:: dlpy.model
-
-.. automethod:: Model.plot_heat_map

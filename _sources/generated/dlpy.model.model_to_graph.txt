@@ -1,6 +1,0 @@
-dlpy.model.model_to_graph
-=========================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: model_to_graph

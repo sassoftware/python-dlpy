@@ -1,0 +1,6 @@
+dlpy.layers.Layer.to\_model\_params
+===================================
+
+.. currentmodule:: dlpy.layers
+
+.. automethod:: Layer.to_model_params

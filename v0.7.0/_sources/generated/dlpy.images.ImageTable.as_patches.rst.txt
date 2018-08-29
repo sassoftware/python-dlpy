@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.as\_patches
+==================================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.as_patches

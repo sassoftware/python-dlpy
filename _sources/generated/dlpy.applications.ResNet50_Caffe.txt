@@ -1,6 +1,0 @@
-dlpy.applications.ResNet50_Caffe
-================================
-
-.. currentmodule:: dlpy.applications
-
-.. autofunction:: ResNet50_Caffe

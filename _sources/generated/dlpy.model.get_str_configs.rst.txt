@@ -1,0 +1,6 @@
+dlpy.model.get\_str\_configs
+============================
+
+.. currentmodule:: dlpy.model
+
+.. autofunction:: get_str_configs

@@ -1,6 +1,0 @@
-dlpy.model.layer_to_node
-========================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: layer_to_node

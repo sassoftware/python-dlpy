@@ -1,0 +1,50 @@
+dlpy.model.Model
+================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: Model
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Model.__init__
+      ~Model.count_params
+      ~Model.deploy
+      ~Model.fit
+      ~Model.from_caffe_model
+      ~Model.from_keras_model
+      ~Model.from_sashdat
+      ~Model.from_table
+      ~Model.get_feature_maps
+      ~Model.get_features
+      ~Model.get_model_info
+      ~Model.heat_map_analysis
+      ~Model.load
+      ~Model.load_weights
+      ~Model.load_weights_attr
+      ~Model.load_weights_from_caffe
+      ~Model.load_weights_from_keras
+      ~Model.load_weights_from_table
+      ~Model.plot_heat_map
+      ~Model.plot_network
+      ~Model.plot_predict_res
+      ~Model.plot_training_history
+      ~Model.predict
+      ~Model.print_summary
+      ~Model.save_to_astore
+      ~Model.save_to_table
+      ~Model.set_weights
+      ~Model.set_weights_attr
+      ~Model.tune
+   
+   
+
+   
+   
+   

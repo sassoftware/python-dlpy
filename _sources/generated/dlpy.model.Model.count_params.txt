@@ -1,6 +1,0 @@
-dlpy.model.Model.count_params
-=============================
-
-.. currentmodule:: dlpy.model
-
-.. automethod:: Model.count_params

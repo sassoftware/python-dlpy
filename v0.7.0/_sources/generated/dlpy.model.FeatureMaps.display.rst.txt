@@ -1,0 +1,6 @@
+dlpy.model.FeatureMaps.display
+==============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: FeatureMaps.display

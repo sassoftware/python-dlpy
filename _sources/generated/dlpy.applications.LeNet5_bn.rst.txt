@@ -1,0 +1,6 @@
+dlpy.applications.LeNet5\_bn
+============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: LeNet5_bn

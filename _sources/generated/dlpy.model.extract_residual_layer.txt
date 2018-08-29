@@ -1,6 +1,0 @@
-dlpy.model.extract_residual_layer
-=================================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: extract_residual_layer

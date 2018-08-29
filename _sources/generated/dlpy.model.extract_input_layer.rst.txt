@@ -1,0 +1,6 @@
+dlpy.model.extract\_input\_layer
+================================
+
+.. currentmodule:: dlpy.model
+
+.. autofunction:: extract_input_layer

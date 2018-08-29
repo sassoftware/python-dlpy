@@ -1,6 +1,0 @@
-dlpy.images.ImageTable.from_table
-=================================
-
-.. currentmodule:: dlpy.images
-
-.. automethod:: ImageTable.from_table

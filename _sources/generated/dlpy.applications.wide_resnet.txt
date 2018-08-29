@@ -1,6 +1,0 @@
-dlpy.applications.wide_resnet
-=============================
-
-.. currentmodule:: dlpy.applications
-
-.. autofunction:: wide_resnet

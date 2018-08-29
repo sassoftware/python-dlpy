@@ -1,6 +1,0 @@
-dlpy.model.extract_fc_layer
-===========================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: extract_fc_layer

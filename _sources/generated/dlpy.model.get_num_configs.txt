@@ -1,6 +1,0 @@
-dlpy.model.get_num_configs
-==========================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: get_num_configs

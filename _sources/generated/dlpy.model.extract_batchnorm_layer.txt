@@ -1,6 +1,0 @@
-dlpy.model.extract_batchnorm_layer
-==================================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: extract_batchnorm_layer

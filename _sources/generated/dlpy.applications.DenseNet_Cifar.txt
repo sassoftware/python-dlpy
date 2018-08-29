@@ -1,6 +1,0 @@
-dlpy.applications.DenseNet_Cifar
-================================
-
-.. currentmodule:: dlpy.applications
-
-.. autofunction:: DenseNet_Cifar

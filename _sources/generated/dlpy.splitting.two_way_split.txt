@@ -1,6 +1,0 @@
-dlpy.splitting.two_way_split
-============================
-
-.. currentmodule:: dlpy.splitting
-
-.. autofunction:: two_way_split

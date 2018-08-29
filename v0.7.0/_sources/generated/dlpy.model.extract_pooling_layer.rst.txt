@@ -1,0 +1,6 @@
+dlpy.model.extract\_pooling\_layer
+==================================
+
+.. currentmodule:: dlpy.model
+
+.. autofunction:: extract_pooling_layer

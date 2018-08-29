@@ -1,6 +1,0 @@
-dlpy.model.extract_output_layer
-===============================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: extract_output_layer
