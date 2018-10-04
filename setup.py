@@ -27,7 +27,7 @@ except:
 
 setup(
     name='sas-dlpy',
-    version='0.7.0',
+    version='0.7.1-dev',
     description='SAS Deep Learning Interface',
     long_description=README,
     author='SAS',
@@ -44,6 +44,7 @@ setup(
         'six >= 1.9.0',
         'graphviz',
         'matplotlib',
+        'swat'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -56,6 +57,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Scientific/Engineering',
     ],
 )

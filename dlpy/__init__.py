@@ -18,7 +18,7 @@
 
 ''' SAS Deep Learning '''
 
-__version__ = '0.7.0'
+__version__ = '0.7.1-dev'
 
 from .model import Model
 from .images import ImageTable
