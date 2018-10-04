@@ -23,8 +23,8 @@ to create a connection.
    import os
    host = os.environ['CASHOST']
    port = os.environ['CASPORT']
-   userid = None
-   password = None
+   userid = os.environ.get('CASUSER', None)
+   password = os.environ.get('CASPASSWORD', None)
 
 .. ipython:: python
 
