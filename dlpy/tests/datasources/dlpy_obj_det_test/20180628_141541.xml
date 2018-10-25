@@ -1,0 +1,50 @@
+<annotation>
+	<folder>S6</folder>
+	<filename>20180628_141541.jpg</filename>
+	<path>U:/Public/Chess_pics_KRvK/S6/20180628_141541.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>5312</width>
+		<height>2988</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>White Rook</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>2453</xmin>
+			<ymin>2273</ymin>
+			<xmax>2720</xmax>
+			<ymax>2435</ymax>
+		</bndbox>
+	</object>
+	<object>
+		<name>White King</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>2078</xmin>
+			<ymin>1719</ymin>
+			<xmax>2532</xmax>
+			<ymax>1898</ymax>
+		</bndbox>
+	</object>
+	<object>
+		<name>Black King</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>2104</xmin>
+			<ymin>2189</ymin>
+			<xmax>2474</xmax>
+			<ymax>2381</ymax>
+		</bndbox>
+	</object>
+</annotation>

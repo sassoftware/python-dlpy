@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+import os
+import re
+import sys
+
+html_files = []
+objects = {}
+
+BASE = sys.argv[1]
+
+CUSTOM_CSS = r'''
+code.docutils > .pre {
+    color: #505050 !important
+}
+.rst-content dl:not(.docutils) dl dt {
+    border-width: 0px !important;
+    background-color: transparent !important;
+    margin-bottom: 0px !important;
+}
+.rst-content table.field-list td.field-body {
+    padding-top: 1px;
+}
+.rst-content dl:not(.docutils) dl dt strong {
+    font-size: 115%;
+}
+.rst-content dl:not(.docutils) dl dt span {
+    font-style: italic;
+    font-weight: normal;
+}
+.rst-content dl:not(.docutils) dl dt span.classifier:before {
+    content: ' (';
+}
+.rst-content dl:not(.docutils) dl dt span.classifier:after {
+    content: ')';
+}
+.rst-content dl:not(.docutils) dl dt span.optional,
+.rst-content dl:not(.docutils) dl dt span.opt-sep {
+    font-weight: normal;
+}
+.rst-content dl:not(.docutils) dl dt .classifier-delimiter {
+    display: none;
+}
+.rst-content dl:not(.docutils) dl dd strong {
+    font-weight: bold;
+    font-size: smaller;
+}
+'''
+
+
+def class2link(match):
+    name = match.group(1)
+    if name in objects:
+        return '<a href="%s">%s</a>' % (objects[name], name)
+    return match.group(1)
+
+
+# Get list of HTML files and object-to-file mappings
+for root, dirs, files in os.walk(BASE):
+    for file in files:
+        if file.lower().endswith('.html'):
+            html_files.append(os.path.join(root, file))
+            if root.endswith('/generated'):
+                obj = '.'.join(file.split('.')[:-1])
+                while obj:
+                    objects[obj] = file
+                    if '.' in obj:
+                        obj = obj.split('.', 1)[-1]
+                    else:
+                        break
+
+# Process HTML files
+for file in html_files:
+    with open(file, 'r') as html_file:
+        txt = html_file.read()
+
+        # Merge consecutive tables
+        txt = re.sub(r'</table>\s*<table[^>]*>\s*<colgroup>\s*<col[^>]*>\s*' +
+                     r'<col[^>]*>\s*</colgroup>',
+                     r'', txt)
+
+        txt = re.sub(r'<p[^>]*>Attributes</p>\s*<table[^>]*>\s*(?:\s*' +
+                     r'</?(?:colgroup|col|tbody|tr)[^>]*>\s*|\s*' +
+                     r'<td[^>]*>.*?</td>\s*)+\s*</table>\s*(</dd>\s*</dl>\s*</div>)',
+                     r'\1', txt)
+
+        # Fix property rendering to look like normal attribute
+        txt = re.sub(r'<code[^>]+>\s*<span class="pre">\s*(.+?)\s*</span>\s*</code>',
+                     r'<strong>\1</strong>', txt)
+
+        # Move ", optional" to new construct
+        txt = re.sub(r',\s*optional\s*</span>',
+                     r'</span><span class="opt-sep">, ' +
+                     r'</span><span class="optional">optional</span>',
+                     txt)
+
+        # Convert :class:`Name` constructs to links
+        txt = re.sub(r':class:`([^`]+)`', class2link, txt)
+
+        # Convert ``self`` to text
+        txt = re.sub(r'``self``', r'self', txt)
+
+        # Add line-breaks and formatting for known parameter details
+        txt = re.sub(r'\bDefault: ', r'<br/><strong class="param-meta">Default:</strong> ', txt, flags=re.I)
+        txt = re.sub(r'\bValid Values: ', r'<br/><strong class="param-meta">Valid Values:</strong> ', txt, flags=re.I)
+        txt = re.sub(r'\bNote: ', r'<br/><strong class="param-meta">Note:</strong> ', txt, flags=re.I)
+
+    with open(file, 'w') as html_file:
+        html_file.write(txt)
+
+
+with open(os.path.join(BASE, '_static', 'custom.css'), 'w') as custom_css:
+    custom_css.write(CUSTOM_CSS.strip())

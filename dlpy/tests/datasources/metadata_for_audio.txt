@@ -1,0 +1,7 @@
+recording_1.wav He made a sales call he says.
+recording_2.wav It wasn't a giveaway.
+recording_3.wav The gates and corridors were designed for smaller aircraft.
+recording_4.wav The <gates> and corridors were designed for smaller aircraft.
+recording_5.wav Hello !EXCLAMATION-POINT man!
+recording_6.wav You should not have'CLOSE-QUOTE
+recording_7.wav You should not,COMMA(BRACEhave)CLOSE-BRACE
