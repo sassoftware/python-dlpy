@@ -20,8 +20,7 @@ The DLPy package is mainly designed for image classification problems
 using Convolutional Neural Network (CNN) models. DLPy currently enables 
 GPU support, but on an experimental basis.  Support for Recurrent Neural 
 Networks (RNNs) and object detection is under development, and will 
-be added to the DLPy package in future releases.
-
+be added to the DLPy package in future releases..
 
 Installing DLPy
 ===============
