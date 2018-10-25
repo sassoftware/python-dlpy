@@ -2,7 +2,7 @@
 
 ## What is DLPy?
 
-DLPy is a high-level Python library for the SAS Deep learning features available in SAS Viya 3.3 (and newer).
+DLPy is a high-level Python library for the SAS Deep learning features available in SAS Viya.
 DLPy is designed to provide an efficient way to apply deep learning methods to image, text, and audio data.
 DLPy APIs created following the Keras (https://keras.io/) APIs with a touch of PyTorch (https://pytorch.org/) flavor.
 
