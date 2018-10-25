@@ -18,6 +18,8 @@
 
 ''' Install the SAS Deep Learning package '''
 
+import io
+import os
 from setuptools import setup, find_packages
 
 def get_file(fname):
