@@ -21,8 +21,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
-
-from .utils import random_name, image_blocksize
+from .utils import random_name, image_blocksize, caslibify
 
 
 class ImageTable(CASTable):
@@ -44,7 +43,6 @@ class ImageTable(CASTable):
         The count of images in different categories.
     channel_means : tuple of double
         The mean of the image intensities in each channels.
-
 
     Returns
     -------
@@ -156,7 +154,8 @@ class ImageTable(CASTable):
         return out
 
     @classmethod
-    def load_files(cls, conn, path, casout=None, columns=None, **kwargs):
+    def load_files(cls, conn, path, casout=None, columns=None,
+                   caslib=None, **kwargs):
         '''
         Create ImageTable from files in `path`
 
@@ -165,11 +164,14 @@ class ImageTable(CASTable):
         conn : CAS
             The CAS connection object
         path : string
-            The path to the image directory on the server
+            The path to the image directory on the server.
+            Path may be absolute, or relative to caslib root if specified.
         casout : dict, optional
             The output table specifications
         columns : list of str, optional
             Specifies the extra columns in the image table.
+        caslib : string, optional
+            The name of the caslib containing the images.
         **kwargs : keyword arguments, optional
             Additional keyword arguments to the `image.loadimages` action
 
@@ -188,11 +190,14 @@ class ImageTable(CASTable):
         if 'name' not in casout:
             casout['name'] = random_name()
 
+        if caslib is None:
+            caslib, path = caslibify(conn, path, task='load')
+
         conn.retrieve('image.loadimages', _messagelevel='error',
                       casout=casout,
                       distribution=dict(type='random'),
                       recurse=True, labellevels=-1,
-                      path=path, **kwargs)
+                      path=path, caslib=caslib, **kwargs)
 
         code = []
         code.append('length _filename_0 varchar(*);')
@@ -233,11 +238,13 @@ class ImageTable(CASTable):
             Specifies the directory on the server to save the images
 
         '''
+
         caslib = random_name('Caslib', 6)
         self._retrieve('addcaslib', name=caslib, path=path, activeonadd=False)
 
         file_name = '_filename_{}'.format(self.patch_level)
-        self._retrieve('image.saveimages', caslib=caslib,
+
+        rt = self._retrieve('image.saveimages', caslib=caslib,
                        images=dict(table=self.to_table_params(), path=file_name),
                        labellevels=1)
 
@@ -302,7 +309,7 @@ class ImageTable(CASTable):
         ncol : int, optional
             Specifies the layout of the display, determine the number of
             columns in the plots.
-        randomize : boolean, optional
+        randomize : bool, optional
             Specifies whether to randomly choose the images for display.
 
         '''
@@ -356,14 +363,14 @@ class ImageTable(CASTable):
         height : int, optional
             Specify the height of the cropped images.
             If not specified, height will be set to be equal to width.
-        inplace: boolean, optional
+        inplace : bool, optional
             Specifies whether to update the original table, or to create a new one.
 
         Returns
         -------
         :class:`ImageTable`
             If `inplace=False`
-        `None`
+        None
             If `inplace=True`
 
         '''
@@ -403,7 +410,7 @@ class ImageTable(CASTable):
         height : int, optional
             Specify the target height of the resized images.
             If not specified, height will be set to be equal to width.
-        inplace: boolean, optional
+        inplace : bool, optional
             Specifies whether to update the original table, or to create
             a new one.
 
@@ -411,7 +418,7 @@ class ImageTable(CASTable):
         -------
         :class:`ImageTable`
             If `inplace=False`
-        `None`
+        None
             If `inplace=True`
 
         '''
@@ -473,7 +480,7 @@ class ImageTable(CASTable):
             If not equal to height, the patches will be resize to the
             output height.
             Default : None, meaning output_height=height.
-        inplace: boolean, optional
+        inplace : bool, optional
             Specifies whether to update the original table, or create a
             new one.
 
@@ -484,7 +491,7 @@ class ImageTable(CASTable):
 
         Returns
         -------
-        ImageTable
+        :class:`ImageTable`
             If `inplace=False`
         None
             If `inplace=True`
@@ -555,7 +562,7 @@ class ImageTable(CASTable):
 
         Parameters
         ----------
-        random_ratio: double, optional
+        random_ratio : double, optional
             Specifies the proportion of the generated patches to output.
         x : int, optional
             Specifies the x location of the top-left corner of the first patches.
@@ -575,14 +582,14 @@ class ImageTable(CASTable):
         output_height : int, optional
             Specifies the output height of the patches.
             If not specified, it will be set to be equal to height.
-        inplace: boolean, optional
+        inplace : bool, optional
             Specifies whether to update the original table, or create a new one.
 
         Returns
         -------
         :class:`ImageTable`
             If `inplace=True`
-        `None`
+        None
             If `inplace=False`
 
         '''
@@ -650,7 +657,7 @@ class ImageTable(CASTable):
                                   output_height=output_height)
             return out
 
-    def random_mutations(self, color_jitter=True, color_shift=True, darken=False, 
+    def random_mutations(self, color_jitter=True, color_shift=True, darken=False,
                          horizontal_flip=True, invert_pixels=False, lighten=False, pyramid_down=False,
                          pyramid_up=False, rotate_left=False, rotate_right=False, sharpen=False,
                          vertical_flip=True, inplace=True):
@@ -659,41 +666,41 @@ class ImageTable(CASTable):
 
         Parameters
         ----------
-        color_jitter : boolean, optional
+        color_jitter : bool, optional
             Specifies whether to apply color jittering to an input image.
-        color_shift : boolean, optional
+        color_shift : bool, optional
             Specifies whether to randomly change pixel intensity values of an input image.
-        darken : boolean, optional
+        darken : bool, optional
             Specifies whether to darken the input image.
-        horizontal_flip : boolean, optional
+        horizontal_flip : bool, optional
             Specifies whether to flip the input image horizontally.
-        invert_pixels : boolean, optional
+        invert_pixels : bool, optional
             Specifies whether to invert all pixels in the input image.
-        lighten : boolean, optional
+        lighten : bool, optional
             Specifies whether to lighten the input image.
-        pyramid_down : boolean, optional
+        pyramid_down : bool, optional
             Specifies whether to downsample and then blur the input image.
-        pyramid_up : boolean, optional
+        pyramid_up : bool, optional
             Specifies whether to upsample and then blur the input image.
-        rotate_left : boolean, optional
+        rotate_left : bool, optional
             Specifies whether to rotate the input image to the left.
-        rotate_right : boolean, optional
+        rotate_right : bool, optional
             Specifies whether to rotate the input image to the right.
-        sharpen : boolean, optional
+        sharpen : bool, optional
             Specifies whether to sharpen the input image.
-        vertical_flip : boolean, optional
+        vertical_flip : bool, optional
             Specifies whether to vertically flip the input image.
 
         Returns
         -------
         :class:`ImageTable`
             If `inplace=True`
-        `None`
+        None
             If `inplace=False`
 
         '''
 
-        croplist = [{'mutations':dict(colorjittering=color_jitter, 
+        croplist = [{'mutations':dict(colorjittering=color_jitter,
                          colorshifting=color_shift,
                          darken=darken, lighten=lighten,
                          horizontalflip=horizontal_flip,
@@ -702,7 +709,7 @@ class ImageTable(CASTable):
                          pyramidup=pyramid_up,
                          rotateleft=rotate_left,
                          rotateright=rotate_right,
-                         sharpen=sharpen, 
+                         sharpen=sharpen,
                          verticalflip=vertical_flip),
                       'usewholeimage':True}]
 
@@ -728,7 +735,7 @@ class ImageTable(CASTable):
             code = code.format(self.patch_level, self.patch_level + 1)
 
             self._retrieve('table.shuffle',
-                           casout=dict(replace=True, 
+                           casout=dict(replace=True,
                                        **self.to_outtable_params()),
                            table=dict(computedvars=computedvars,
                                       computedvarsprogram=code,
@@ -738,18 +745,18 @@ class ImageTable(CASTable):
 
         else:
             out = self.copy_table()
-            out.random_mutations(color_jitter=color_jitter, 
-                                 color_shift=color_shift, 
-                                 darken=darken, 
-                                 horizontal_flip=horizontal_flip, 
-                                 invert_pixels=invert_pixels, 
-                                 lighten=lighten, 
+            out.random_mutations(color_jitter=color_jitter,
+                                 color_shift=color_shift,
+                                 darken=darken,
+                                 horizontal_flip=horizontal_flip,
+                                 invert_pixels=invert_pixels,
+                                 lighten=lighten,
                                  pyramid_down=pyramid_down,
-                                 pyramid_up=pyramid_up, 
-                                 rotate_left=rotate_left, 
-                                 rotate_right=rotate_right, 
+                                 pyramid_up=pyramid_up,
+                                 rotate_left=rotate_left,
+                                 rotate_right=rotate_right,
                                  sharpen=sharpen,
-                                 vertical_flip=vertical_flip, 
+                                 vertical_flip=vertical_flip,
                                  inplace=True)
             return out
 

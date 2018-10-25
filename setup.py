@@ -16,20 +16,21 @@
 #  limitations under the License.
 #
 
-''' Install the SAS Deep Learning module '''
+''' Install the SAS Deep Learning package '''
 
 from setuptools import setup, find_packages
 
-try:
-    README = open('README.rst', 'r').read()
-except:
-    README = 'See README.rst'
+def get_file(fname):
+    with io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), fname),
+                 encoding='utf8') as infile:
+        return infile.read()
 
 setup(
     name='sas-dlpy',
-    version='0.7.1-dev',
+    version='1.0.0',
     description='SAS Deep Learning Interface',
-    long_description=README,
+    long_description=get_file('README.md'),
+    long_description_content_type='text/markdown',
     author='SAS',
     author_email='support@sas.com',
     url='https://github.com/sassoftware/python-dlpy/',
@@ -40,20 +41,18 @@ setup(
     },
     #include_package_data=True,
     install_requires=[
+        'swat >= 1.5.0',
         'pandas >= 0.16.0',
         'six >= 1.9.0',
         'graphviz',
         'matplotlib',
-        'swat'
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

@@ -19,13 +19,12 @@
 ''' Functions to support different splitting schemes '''
 
 from swat.cas.table import CASTable
-
 from .images import ImageTable
 from .utils import random_name
 
 
-def two_way_split(tbl, test_rate=20, stratify_by='_label_',
-                  image_col='_image_', **kwargs):
+def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='_label_',
+                  image_col='_image_', train_name=None, test_name=None, **kwargs):
     '''
     Split image data into training and testing sets
 
@@ -36,50 +35,91 @@ def two_way_split(tbl, test_rate=20, stratify_by='_label_',
     test_rate : double, optional
         Specifies the proportion of the testing data set,
         e.g. 20 mean 20% of the data will be in the testing set.
-    stratify_by : string, optional
-        The variable to stratify by
+    stratify : boolean, optional
+        If True statify the sampling by the stratify_by column name
+        If False do random sampling without stratification
+    im_table : boolean, optional
+        If True outputs are converted to an imageTable
+        If False CASTables are returned with all columns
+    image_col : string
+        Name of image column if returning ImageTable
+    train_name : string
+        Specifies the output table name for the training set
+    test_name : string
+        Specifies the output table name for the test set
     **kwargs : keyword arguments, optional
-        Additional keyword arguments to the `sample.stratified` action
+        Additional keyword arguments to the `sample.stratified` or
+        'sample.src' actions
 
     Returns
     -------
     ( training CASTable, testing CASTable )
 
     '''
-    train_tbl_name = random_name()
-    test_tbl_name = random_name()
+    if train_name is None:
+        train_tbl_name = random_name('train')
+    elif isinstance(train_name, str):
+        train_tbl_name = train_name
+    else:
+        raise ValueError('train_name must be a string')
+
+    if test_name is None:
+        test_tbl_name = random_name('test')
+    elif isinstance(test_name, str):
+        test_tbl_name = test_name
+    else:
+        raise ValueError('test_name must be a string')
+
     temp_tbl_name = random_name('Temp')
 
     tbl._retrieve('loadactionset', actionset='sampling')
 
-    partindname = random_name(name='PartInd_', length=2)
+    partind_name = random_name(name='PartInd_', length=2)
 
-    tbl._retrieve('sampling.stratified',
-                  output=dict(casout=temp_tbl_name, copyvars='all',
-                              partindname=partindname),
-                  samppct=test_rate, samppct2=100 - test_rate, partind=True,
-                  table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
+    tbl_columns = tbl.columns.tolist()
 
-    train = tbl._retrieve('table.partition',
-                          table=dict(where='{}=2'.format(partindname),
-                                     name=temp_tbl_name),
-                          casout=dict(name=train_tbl_name, replace=True,
-                                      blocksize=128))['casTable']
+    if stratify:
+        tbl._retrieve('sampling.stratified',
+                      output=dict(casout=temp_tbl_name, copyvars='all',
+                                  partindname=partind_name),
+                      samppct=test_rate, samppct2=100 - test_rate, partind=True,
+                      table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
+
+    else:
+        tbl._retrieve('sampling.srs',
+                      output=dict(casout=temp_tbl_name, copyvars='all',
+                                  partindname=partind_name),
+                      samppct=test_rate, samppct2=100 - test_rate, partind=True,
+                      table=dict(**tbl.to_table_params()), **kwargs)
 
     test = tbl._retrieve('table.partition',
-                         table=dict(where='{}=1'.format(partindname),
-                                    name=temp_tbl_name),
+                         table=dict(where='{}=1'.format(partind_name),
+                                    name=temp_tbl_name, Vars=tbl_columns),
                          casout=dict(name=test_tbl_name, replace=True,
                                      blocksize=128))['casTable']
+
+    train = tbl._retrieve('table.partition',
+                          table=dict(where='{}=2'.format(partind_name),
+                                     name=temp_tbl_name, Vars=tbl_columns),
+                          casout=dict(name=train_tbl_name, replace=True,
+                                      blocksize=128))['casTable']
 
     tbl._retrieve('table.dropTable',
                   name=temp_tbl_name)
 
-    return (ImageTable.from_table(train, label_col=stratify_by, image_col=image_col),
-            ImageTable.from_table(test, label_col=stratify_by, image_col=image_col))
+    if im_table:
+        train_im = ImageTable.from_table(train, label_col=stratify_by, image_col=image_col,
+                                         casout=dict(name=train.name))
+        test_im = ImageTable.from_table(test, label_col=stratify_by, image_col=image_col,
+                                        casout=dict(name=test.name))
+        return train_im, test_im
+    else:
+        return train, test
 
 
-def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **kwargs):
+def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, im_table=True,
+                    stratify_by='_label_', image_col='_image_', train_name=None,
+                    valid_name=None, test_name=None, **kwargs):
     '''
     Split image data into training and testing sets
 
@@ -94,50 +134,101 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify_by='_label_', **k
         Specifies the proportion of the testing data set,
         e.g. 20 mean 20% of the images will be in the testing set.
         Note: the total of valid_rate and test_rate cannot be exceed 100
+    stratify : boolean, optional
+        If True statify the sampling by the stratify_by column name
+        If False do random sampling without stratification
+    im_table : boolean, optional
+        If True outputs are converted to an imageTable
+        If False CASTables are returned with all columns
     stratify_by : string, optional
         The variable to stratify by
+    image_col : string
+        Name of image column if returning ImageTable
+    train_name : string
+        Specifies the output table name for the training set
+    valid_name : string
+        Specifies the output table name for the validation set
+    test_name : string
+        Specifies the output table name for the test set
     **kwargs : keyword arguments, optional
-        Additional keyword arguments to the `sample.stratified` action
+        Additional keyword arguments to the `sample.stratified` or
+        'sample.srs' actions
 
     Returns
     -------
     ( train CASTable, valid CASTable, test CASTable )
 
     '''
-    train_tbl_name = random_name()
-    valid_tbl_name = random_name()
-    test_tbl_name = random_name()
+
+    if train_name is None:
+        train_tbl_name = random_name('train')
+    elif isinstance(train_name, str):
+        train_tbl_name = train_name
+    else:
+        raise ValueError('train_name must be a string')
+
+    if valid_name is None:
+        valid_tbl_name = random_name('valid')
+    elif isinstance(test_name, str):
+        valid_tbl_name = valid_name
+    else:
+        raise ValueError('test_name must be a string')
+
+    if test_name is None:
+        test_tbl_name = random_name('test')
+    elif isinstance(test_name, str):
+        test_tbl_name = test_name
+    else:
+        raise ValueError('test_name must be a string')
+
     temp_tbl_name = random_name('Temp')
 
     tbl._retrieve('loadactionset', actionset='sampling')
 
-    partindname = random_name(name='PartInd_', length=2)
+    partind_name = random_name(name='part_ind_', length=2)
+    tbl_columns = tbl.columns.tolist()
 
-    tbl._retrieve('sampling.stratified',
-                  output=dict(casout=temp_tbl_name, copyvars='all',
-                              partindname=partindname),
-                  samppct=valid_rate, samppct2=test_rate,
-                  partind=True,
-                  table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
+    if stratify:
+        tbl._retrieve('sampling.stratified',
+                      output=dict(casout=temp_tbl_name, copyvars='all',
+                                  partindname=partind_name),
+                      samppct=valid_rate, samppct2=test_rate,
+                      partind=True,
+                      table=dict(groupby=stratify_by, **tbl.to_table_params()), **kwargs)
+    else:
+        tbl._retrieve('sampling.srs',
+                      output=dict(casout=temp_tbl_name, copyvars='all',
+                                  partindname=partind_name),
+                      samppct=valid_rate, samppct2=test_rate, partind=True,
+                      table=dict(**tbl.to_table_params()), **kwargs)
+
+
 
     train = tbl._retrieve('table.partition',
-                          table=dict(where='{}=0'.format(partindname),
-                                     name=temp_tbl_name),
-                          casout=train_tbl_name)['casTable']
+                          table=dict(where='{}=0'.format(partind_name),
+                                     name=temp_tbl_name, Vars=tbl_columns),
+                          casout=dict(name=train_tbl_name, replace=True))['casTable']
 
     valid = tbl._retrieve('table.partition',
-                          table=dict(where='{}=1'.format(partindname),
-                                     name=temp_tbl_name),
-                          casout=valid_tbl_name)['casTable']
+                          table=dict(where='{}=1'.format(partind_name),
+                                     name=temp_tbl_name, Vars=tbl_columns),
+                          casout=dict(name=valid_tbl_name, replace=True))['casTable']
 
     test = tbl._retrieve('table.partition',
-                         table=dict(where='{}=2'.format(partindname),
-                                    name=temp_tbl_name),
-                         casout=test_tbl_name)['casTable']
+                         table=dict(where='{}=2'.format(partind_name),
+                                    name=temp_tbl_name, Vars=tbl_columns),
+                         casout=dict(name=test_tbl_name, replace=True))['casTable']
 
     tbl._retrieve('table.dropTable',
                   name=temp_tbl_name)
+    if im_table:
+        train_im = ImageTable.from_table(train, label_col=stratify_by, image_col=image_col,
+                                         casout=dict(name=train.name))
+        valid_im = ImageTable.from_table(valid, label_col=stratify_by, image_col=image_col,
+                                        casout=dict(name=valid.name))
+        test_im = ImageTable.from_table(test, label_col=stratify_by, image_col=image_col,
+                                        casout=dict(name=test.name))
 
-    return (ImageTable.from_table(train),
-            ImageTable.from_table(valid),
-            ImageTable.from_table(test))
+        return train_im, valid_im, test_im
+    else:
+        return train, valid, test

@@ -16,9 +16,7 @@
 #  limitations under the License.
 #
 
-''' Write python codes for create sas model '''
-
-import sys
+''' Write python code for creating the SAS model '''
 
 
 # model/input layer definition
@@ -49,8 +47,6 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
 
     '''
     out = [
-        'import sys',
-        '',
         'def sas_model_gen(s, input_crop_type=None, input_channel_offset=None, input_image_size=None):',
         '   # quick check for deeplearn actionset',
         '   actionset_list = s.actionsetinfo().setinfo.actionset.tolist()',
@@ -62,7 +58,7 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
         '       input_crop_type="NONE"',
         '   else:',
         '       if (input_crop_type.upper() != "NONE") and (input_crop_type.upper() != "UNIQUE"):',
-        '           sys.exit("ERROR: input_crop_type can only be NONE or UNIQUE")',
+        '           raise ValueError("input_crop_type can only be NONE or UNIQUE")',
         '',
         '   if (input_image_size is not None):',
         '       channels = input_image_size[0]',
@@ -71,7 +67,7 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
         '       elif (len(inputImageSize) == 3):',
         '           height,width = input_image_size[1:]',
         '       else:',
-        '           sys.exit("ERROR: input_image_size must be a tuple with two or three entries")',
+        '           raise ValueError("input_image_size must be a tuple with two or three entries")',
         '',
         '   # instantiate model',
         '   s.buildModel(model=dict(name=' + repr(model_name) + ',replace=True),type="CNN")',
@@ -99,7 +95,8 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
 # convolution layer definition
 def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
                             width='3', height='3', stride='1', nobias='False',
-                            activation='identity', dropout='0', src_layer='none'):
+                            activation='identity', dropout='0', src_layer='none',
+                            padding='None'):
     '''
     Generate Python code defining a SAS deep learning convolution layer
 
@@ -135,7 +132,7 @@ def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
         '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
         '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
         '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
-            activation) + ', dropout=' + dropout + '), \n',
+            activation) + ', dropout=' + dropout + ', padding=' + padding +'), \n',
         '              srcLayers=' + src_layer + ')'
     ]
     return '\n'.join(out)
@@ -174,7 +171,7 @@ def write_batch_norm_layer(model_name='sas', layer_name='bn',
 # pooling layer definition
 def write_pooling_layer(model_name='sas', layer_name='pool',
                         width='2', height='2', stride='2', type='max',
-                        dropout='0', src_layer='none'):
+                        dropout='0', src_layer='none', padding='None'):
     '''
     Generate Python code defining a SAS deep learning pooling layer
 
@@ -205,7 +202,8 @@ def write_pooling_layer(model_name='sas', layer_name='pool',
     out = [
         '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
         '              layer=dict(type="pooling", width=' + width + ', height=' + height + ',',
-        '                         stride=' + stride + ', pool=' + repr(type) + ', dropout=' + dropout + '),',
+        '                         stride=' + stride + ', pool=' + repr(type) + ', dropout=' + dropout + ',',
+        '                         padding=' + padding + '),',
         '              srcLayers=' + src_layer + ')'
     ]
     return '\n'.join(out)
@@ -290,6 +288,36 @@ def write_full_connect_layer(model_name='sas', layer_name='fullconnect',
     return '\n'.join(out)
 
 
+# concat layer definition
+def write_concatenate_layer(model_name='sas', layer_name='concat',
+                            activation='identity', src_layer='none'):
+    '''
+    Generate Python code defining a SAS deep learning concat layer
+
+    Parameters
+    ----------
+    model_name : string, optional
+       Name for deep learning model
+    layer_name : string, optional
+       Layer name
+    activation : string, optional
+       activation function
+    src_layer : string, optional
+       source layer(s) for the concat layer
+
+    Returns
+    -------
+    string
+
+    '''
+    out = [
+        '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+        '              layer=dict( type="concat", act="' + activation + '"),',
+        '              srcLayers=' + src_layer + ')'
+    ]
+    return '\n'.join(out)
+
+
 # Python __main__ function
 def write_main_entry(model_name):
     '''
@@ -305,14 +333,4 @@ def write_main_entry(model_name):
     string
 
     '''
-    out = [
-        '#############################################################',
-        'if __name__ == "__main__":',
-        '   sys.exit("ERROR: this module defines the ' + model_name + ' model.  Do not call directly.")'
-    ]
-    return '\n'.join(out)
-
-
-#############################################################
-if __name__ == '__main__':
-    sys.exit('ERROR: this module cannot be invoked from the command line.')
+    return ''
