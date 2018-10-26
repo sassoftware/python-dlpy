@@ -128,10 +128,10 @@ If you do not have Graphviz, skip this instruction.
 .. ipython:: python
    :suppress:
 
-    _.format = 'png'
+    _.format = 'svg'
     _.render('_images/model1_network')
 
-.. image:: _images/model1_network.png
+.. image:: _images/model1_network.svg
 
    
 .. ipython:: python
