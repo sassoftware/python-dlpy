@@ -1,0 +1,33 @@
+dlpy.model.LBFGSolver
+=====================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: LBFGSolver
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LBFGSolver.__init__
+      ~LBFGSolver.add_parameter
+      ~LBFGSolver.clear
+      ~LBFGSolver.get
+      ~LBFGSolver.items
+      ~LBFGSolver.keys
+      ~LBFGSolver.pop
+      ~LBFGSolver.popitem
+      ~LBFGSolver.set_method
+      ~LBFGSolver.setdefault
+      ~LBFGSolver.update
+      ~LBFGSolver.values
+   
+   
+
+   
+   
+   

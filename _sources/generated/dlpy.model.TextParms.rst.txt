@@ -1,0 +1,31 @@
+dlpy.model.TextParms
+====================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: TextParms
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TextParms.__init__
+      ~TextParms.clear
+      ~TextParms.get
+      ~TextParms.items
+      ~TextParms.keys
+      ~TextParms.pop
+      ~TextParms.popitem
+      ~TextParms.setdefault
+      ~TextParms.update
+      ~TextParms.values
+   
+   
+
+   
+   
+   

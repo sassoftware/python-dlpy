@@ -1,0 +1,43 @@
+dlpy.layers.Keypoints
+=====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Keypoints
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Keypoints.__init__
+      ~Keypoints.count_instances
+      ~Keypoints.format_name
+      ~Keypoints.get_number_of_instances
+      ~Keypoints.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Keypoints.can_be_last_layer
+      ~Keypoints.kernel_size
+      ~Keypoints.num_bias
+      ~Keypoints.num_features
+      ~Keypoints.num_weights
+      ~Keypoints.number_of_instances
+      ~Keypoints.output_size
+      ~Keypoints.rnn_summary
+      ~Keypoints.summary
+      ~Keypoints.type
+      ~Keypoints.type_desc
+      ~Keypoints.type_label
+   
+   

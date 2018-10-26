@@ -1,0 +1,6 @@
+dlpy.timeseries.plot\_timeseries
+================================
+
+.. currentmodule:: dlpy.timeseries
+
+.. autofunction:: plot_timeseries

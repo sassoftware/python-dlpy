@@ -1,0 +1,6 @@
+dlpy.applications.YoloV2\_MultiSize
+===================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: YoloV2_MultiSize

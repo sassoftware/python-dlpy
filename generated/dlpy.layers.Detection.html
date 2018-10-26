@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.layers.Detection &mdash; DLPy 1.0.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.layers.Scale" href="dlpy.layers.Scale.html"/>
+        <link rel="prev" title="dlpy.layers.Keypoints" href="dlpy.layers.Keypoints.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audio">Audio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#layers">Layers</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Layer.html">dlpy.layers.Layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.InputLayer.html">dlpy.layers.InputLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Conv2d.html">dlpy.layers.Conv2d</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Pooling.html">dlpy.layers.Pooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Dense.html">dlpy.layers.Dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Recurrent.html">dlpy.layers.Recurrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.BN.html">dlpy.layers.BN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Res.html">dlpy.layers.Res</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Concat.html">dlpy.layers.Concat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Proj.html">dlpy.layers.Proj</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.OutputLayer.html">dlpy.layers.OutputLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Keypoints.html">dlpy.layers.Keypoints</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.layers.Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Scale.html">dlpy.layers.Scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Reshape.html">dlpy.layers.Reshape</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#models">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.layers.Detection</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.layers.Detection.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-layers-detection">
+<h1>dlpy.layers.Detection<a class="headerlink" href="#dlpy-layers-detection" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dlpy.layers.Detection">
+<em class="property">class </em><code class="descclassname">dlpy.layers.</code><code class="descname">Detection</code><span class="sig-paren">(</span><em>name=None</em>, <em>act='AUTO'</em>, <em>detection_model_type=None</em>, <em>anchors=None</em>, <em>softmax_for_class_prob=None</em>, <em>coord_type=None</em>, <em>class_number=None</em>, <em>grid_number=None</em>, <em>predictions_per_grid=None</em>, <em>do_sqrt=None</em>, <em>coord_scale=None</em>, <em>object_scale=None</em>, <em>prediction_not_a_object_scale=None</em>, <em>class_scale=None</em>, <em>detection_threshold=None</em>, <em>iou_threshold=None</em>, <em>random_boxes=None</em>, <em>src_layers=None</em>, <em>max_boxes=None</em>, <em>max_label_per_image=None</em>, <em>match_anchor_size=None</em>, <em>num_to_force_coord=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.layers.Detection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dlpy.layers.Layer.html#dlpy.layers.Layer" title="dlpy.layers.Layer"><strong>dlpy.layers.Layer</strong></a></p>
+<p>Detection layer</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>name</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the name of the layer.</p>
+</dd>
+<dt><strong>act</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the activation function.
+<br/><strong class="param-meta">Valid Values:</strong> AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+<br/><strong class="param-meta">Default:</strong> AUTO</p>
+</dd>
+<dt><strong>detection_model_type</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the type of the object detection model.
+<br/><strong class="param-meta">Valid Values:</strong> YOLOV1, YOLOV2
+<br/><strong class="param-meta">Default:</strong> YOLOV2</p>
+</dd>
+<dt><strong>anchors</strong> <span class="classifier-delimiter">:</span> <span class="classifier">iter-of-floats</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the anchor box values. Anchor box values are a list of scalar
+value pairs that represent the normalized box sizes in X and Y
+direction for objects to be detected. The normalized box sizes
+are calculated by dividing the box size in pixels by the grid size.</p>
+</dd>
+<dt><strong>softmax_for_class_prob</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to perform Softmax on class probability per
+predicted object.
+<br/><strong class="param-meta">Default:</strong> True</p>
+</dd>
+<dt><strong>coord_type</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the coordinates format type in the input label and detection result.
+<br/><strong class="param-meta">Valid Values:</strong> RECT, COCO, YOLO
+<br/><strong class="param-meta">Default:</strong> RECT</p>
+</dd>
+<dt><strong>class_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Specifies the number of classes to detection in the detection layer.</p>
+</dd>
+<dt><strong>grid_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Specifies the number of grids per side in the detection layer.</p>
+</dd>
+<dt><strong>predictions_per_grid</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Specifies the number of predictions to generate in the detection layer.</p>
+</dd>
+<dt><strong>do_sqrt</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to apply the SQRT function to width and height of
+the object for the cost function.
+<br/><strong class="param-meta">Default:</strong> True</p>
+</dd>
+<dt><strong>coord_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for the cost function in the detection layer,
+when objects exist in the grid.</p>
+</dd>
+<dt><strong>object_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for object detected for the cost function in
+the detection layer.</p>
+</dd>
+<dt><strong>prediction_not_a_object_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for the cost function in the detection layer,
+when objects do not exist in the grid.</p>
+</dd>
+<dt><strong>class_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for the class of object detected for the cost
+function in the detection layer.</p>
+</dd>
+<dt><strong>detection_threshold</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the threshold for object detection.</p>
+</dd>
+<dt><strong>iou_threshold</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the IOU Threshold of maximum suppression in object detection.</p>
+</dd>
+<dt><strong>random_boxes</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Randomizing boxes when loading the bounding box information. <br/><strong class="param-meta">Default:</strong> False</p>
+</dd>
+<dt><strong>src_layers</strong> <span class="classifier-delimiter">:</span> <span class="classifier">iter-of-Layers</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the layers directed to this layer.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong><a href="dlpy.layers.Detection.html">Detection</a></strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="dlpy.layers.Detection.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name=None</em>, <em>act='AUTO'</em>, <em>detection_model_type=None</em>, <em>anchors=None</em>, <em>softmax_for_class_prob=None</em>, <em>coord_type=None</em>, <em>class_number=None</em>, <em>grid_number=None</em>, <em>predictions_per_grid=None</em>, <em>do_sqrt=None</em>, <em>coord_scale=None</em>, <em>object_scale=None</em>, <em>prediction_not_a_object_scale=None</em>, <em>class_scale=None</em>, <em>detection_threshold=None</em>, <em>iou_threshold=None</em>, <em>random_boxes=None</em>, <em>src_layers=None</em>, <em>max_boxes=None</em>, <em>max_label_per_image=None</em>, <em>match_anchor_size=None</em>, <em>num_to_force_coord=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.layers.Detection.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#dlpy.layers.Detection.__init__" title="dlpy.layers.Detection.__init__"><strong>__init__</strong></a>([name,&nbsp;act,&nbsp;detection_model_type,&nbsp;…])</td>
+<td>Initialize self.</td>
+</tr>
+<tr class="row-even"><td><strong>count_instances</strong>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><strong>format_name</strong>([block_num,&nbsp;local_count])</td>
+<td>Format the name of the layer</td>
+</tr>
+<tr class="row-even"><td><strong>get_number_of_instances</strong>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><strong>to_model_params</strong>()</td>
+<td>Convert the model configuration to CAS action parameters</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.layers.Scale.html" class="btn btn-neutral float-right" title="dlpy.layers.Scale" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.layers.Keypoints.html" class="btn btn-neutral" title="dlpy.layers.Keypoints" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

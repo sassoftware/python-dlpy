@@ -1,0 +1,334 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.timeseries.plot_timeseries &mdash; DLPy 1.0.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.0.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.layers.Layer" href="dlpy.layers.Layer.html"/>
+        <link rel="prev" title="dlpy.timeseries.TimeseriesTable.timeseries_partition" href="dlpy.timeseries.TimeseriesTable.timeseries_partition.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audio">Audio</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#timeseries">Timeseries</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.html">dlpy.timeseries.TimeseriesTable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_table.html">dlpy.timeseries.TimeseriesTable.from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_pandas.html">dlpy.timeseries.TimeseriesTable.from_pandas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_localfile.html">dlpy.timeseries.TimeseriesTable.from_localfile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_serverfile.html">dlpy.timeseries.TimeseriesTable.from_serverfile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.timeseries_formatting.html">dlpy.timeseries.TimeseriesTable.timeseries_formatting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.timeseries_accumlation.html">dlpy.timeseries.TimeseriesTable.timeseries_accumlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.prepare_subsequences.html">dlpy.timeseries.TimeseriesTable.prepare_subsequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.timeseries_partition.html">dlpy.timeseries.TimeseriesTable.timeseries_partition</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.timeseries.plot_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#models">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.timeseries.plot_timeseries</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.timeseries.plot_timeseries.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-timeseries-plot-timeseries">
+<h1>dlpy.timeseries.plot_timeseries<a class="headerlink" href="#dlpy-timeseries-plot-timeseries" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="dlpy.timeseries.plot_timeseries">
+<code class="descclassname">dlpy.timeseries.</code><code class="descname">plot_timeseries</code><span class="sig-paren">(</span><em>tbl</em>, <em>timeid</em>, <em>timeseries</em>, <em>figure=None</em>, <em>groupid=None</em>, <em>start_time=None</em>, <em>end_time=None</em>, <em>xlim=None</em>, <em>ylim=None</em>, <em>xlabel=None</em>, <em>ylabel=None</em>, <em>xdate_format=None</em>, <em>title=None</em>, <em>figsize=None</em>, <em>fontsize_spec=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.timeseries.plot_timeseries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an timeseries line plot from a CASTable or pandas DataFrame</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>tbl</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><strong>CASTable</strong> or <a class="reference external" href="http://pandas.pydata.org/pandas-docs/version/0.19.2/generated/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v0.19.2)"><strong>pandas.DataFrame</strong></a> or <a class="reference external" href="http://pandas.pydata.org/pandas-docs/version/0.19.2/generated/pandas.Series.html#pandas.Series" title="(in pandas v0.19.2)"><strong>pandas.Series</strong></a></span></dt>
+<dd><p class="first last">The input table for the plot. If it is CASTable, it will be fetched to 
+the client. If it is pandas.Series, the index name will become timeid, 
+the series name will become timeseries.</p>
+</dd>
+<dt><strong>timeid</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">The name of the timeid variable. It will be the value to be used in the 
+x-axis.</p>
+</dd>
+<dt><strong>timeseries</strong> <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd><p class="first last">The name of the column contains the timeseries value. It will be the
+value to be used in the y-axis.</p>
+</dd>
+<dt><strong>figure</strong> <span class="classifier-delimiter">:</span> <span class="classifier">two-element-tuple</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">The tuple must be in the form (<a class="reference external" href="https://matplotlib.org/api/_as_gen/matplotlib.figure.Figure.html#matplotlib.figure.Figure" title="(in Matplotlib v3.0.0)"><strong>matplotlib.figure.Figure</strong></a>,
+<a class="reference external" href="https://matplotlib.org/api/axes_api.html#matplotlib.axes.Axes" title="(in Matplotlib v3.0.0)"><strong>matplotlib.axes.Axes</strong></a>). These are the figure and axes that the
+user wants to plot on. It can be used to plot new timeseries plot on
+pre-existing figures.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>groupid</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">It is in the format {column1 : value1, column2 : value2, …}.
+It is used to plot subset of the data where column1 = value1 and 
+column2 = value2, etc.
+<br/><strong class="param-meta">Default:</strong> None, which means do not subset the data.</p>
+</dd>
+<dt><strong>start_time</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.7)"><strong>datetime.datetime</strong></a> or <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.7)"><strong>datetime.date</strong></a></span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">The start time of the plotted timeseries. 
+<br/><strong class="param-meta">Default:</strong> None, which means the plot starts at the beginning of the
+timeseries.</p>
+</dd>
+<dt><strong>end_time</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime" title="(in Python v3.7)"><strong>datetime.datetime</strong></a> or <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.date" title="(in Python v3.7)"><strong>datetime.date</strong></a></span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">The end time of the plotted timeseries.
+<br/><strong class="param-meta">Default:</strong> None, which means the plot ends at the end of the timeseries.</p>
+</dd>
+<dt><strong>xlim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Set the data limits for the x-axis.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>ylim</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Set the data limits for the y-axis.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>xlabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Set the label for the x-axis.</p>
+</dd>
+<dt><strong>ylabel</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Set the label for the y-axis.</p>
+</dd>
+<dt><strong>xdate_format</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">If the x-axis represents date or datetime, this is the date or datetime 
+format string. (e.g. ‘%Y-%m-%d’ is the format of 2000-03-10, 
+refer to documentation for <a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.datetime.strftime" title="(in Python v3.7)"><strong>datetime.datetime.strftime()</strong></a>)
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>title</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Set the title of the figure.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>figsize</strong> <span class="classifier-delimiter">:</span> <span class="classifier">tuple</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">The size of the figure.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>fontsize_spec</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">It specifies the fontsize for ‘xlabel’, ‘ylabel’, ‘xtick’, ‘ytick’, 
+‘legend’ and ‘title’. (e.g. {‘xlabel’:14, ‘ylabel’:14}).
+If None, and figure is specified, then it will take from provided
+figure object. Otherwise, it will take the default fontsize, which are
+{‘xlabel’:16, ‘ylabel’:16, ‘xtick’:14, ‘ytick’:14, ‘legend’:14, ‘title’:20}
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+<dt><strong>`**kwargs`</strong> <span class="classifier-delimiter">:</span> <span class="classifier">keyword arguments</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Options to pass to matplotlib plotting method.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>(matplotlib.figure.Figure, matplotlib.axes.Axes)</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.layers.Layer.html" class="btn btn-neutral float-right" title="dlpy.layers.Layer" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.timeseries.TimeseriesTable.timeseries_partition.html" class="btn btn-neutral" title="dlpy.timeseries.TimeseriesTable.timeseries_partition" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

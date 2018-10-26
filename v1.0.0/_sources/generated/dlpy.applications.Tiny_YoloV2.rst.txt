@@ -1,0 +1,6 @@
+dlpy.applications.Tiny\_YoloV2
+==============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: Tiny_YoloV2

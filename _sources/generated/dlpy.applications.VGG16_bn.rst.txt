@@ -1,6 +1,0 @@
-dlpy.applications.VGG16\_bn
-===========================
-
-.. currentmodule:: dlpy.applications
-
-.. autofunction:: VGG16_bn

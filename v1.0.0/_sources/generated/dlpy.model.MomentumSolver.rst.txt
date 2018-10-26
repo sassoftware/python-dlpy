@@ -1,0 +1,33 @@
+dlpy.model.MomentumSolver
+=========================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: MomentumSolver
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MomentumSolver.__init__
+      ~MomentumSolver.add_parameter
+      ~MomentumSolver.clear
+      ~MomentumSolver.get
+      ~MomentumSolver.items
+      ~MomentumSolver.keys
+      ~MomentumSolver.pop
+      ~MomentumSolver.popitem
+      ~MomentumSolver.set_method
+      ~MomentumSolver.setdefault
+      ~MomentumSolver.update
+      ~MomentumSolver.values
+   
+   
+
+   
+   
+   

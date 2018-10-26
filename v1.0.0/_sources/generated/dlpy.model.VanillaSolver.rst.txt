@@ -1,0 +1,33 @@
+dlpy.model.VanillaSolver
+========================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: VanillaSolver
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~VanillaSolver.__init__
+      ~VanillaSolver.add_parameter
+      ~VanillaSolver.clear
+      ~VanillaSolver.get
+      ~VanillaSolver.items
+      ~VanillaSolver.keys
+      ~VanillaSolver.pop
+      ~VanillaSolver.popitem
+      ~VanillaSolver.set_method
+      ~VanillaSolver.setdefault
+      ~VanillaSolver.update
+      ~VanillaSolver.values
+   
+   
+
+   
+   
+   

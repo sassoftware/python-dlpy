@@ -1,0 +1,6 @@
+dlpy.model.Model.heat\_map\_analysis
+====================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.heat_map_analysis

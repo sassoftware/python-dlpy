@@ -1,6 +1,0 @@
-dlpy.model.Model.plot\_predict\_res
-===================================
-
-.. currentmodule:: dlpy.model
-
-.. automethod:: Model.plot_predict_res

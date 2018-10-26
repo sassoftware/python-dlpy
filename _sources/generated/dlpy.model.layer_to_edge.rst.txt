@@ -1,6 +1,0 @@
-dlpy.model.layer\_to\_edge
-==========================
-
-.. currentmodule:: dlpy.model
-
-.. autofunction:: layer_to_edge

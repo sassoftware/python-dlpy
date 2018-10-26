@@ -1,0 +1,31 @@
+dlpy.model.Gpu
+==============
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: Gpu
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Gpu.__init__
+      ~Gpu.clear
+      ~Gpu.get
+      ~Gpu.items
+      ~Gpu.keys
+      ~Gpu.pop
+      ~Gpu.popitem
+      ~Gpu.setdefault
+      ~Gpu.update
+      ~Gpu.values
+   
+   
+
+   
+   
+   

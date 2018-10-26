@@ -1,0 +1,33 @@
+dlpy.model.NatGradSolver
+========================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: NatGradSolver
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NatGradSolver.__init__
+      ~NatGradSolver.add_parameter
+      ~NatGradSolver.clear
+      ~NatGradSolver.get
+      ~NatGradSolver.items
+      ~NatGradSolver.keys
+      ~NatGradSolver.pop
+      ~NatGradSolver.popitem
+      ~NatGradSolver.set_method
+      ~NatGradSolver.setdefault
+      ~NatGradSolver.update
+      ~NatGradSolver.values
+   
+   
+
+   
+   
+   
