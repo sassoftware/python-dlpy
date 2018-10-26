@@ -135,7 +135,7 @@ Finally, add the output layer::
     NOTE: Model compiled successfully 
 
 
-**Check out** https://sassoftware.github.io/python-dlpy/examples **for more examples.**
+**Check out** https://github.com/sassoftware/python-dlpy/tree/master/examples **for more examples.**
 
 ## Resources
 
