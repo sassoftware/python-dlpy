@@ -48,6 +48,7 @@ setup(
         'six >= 1.9.0',
         'graphviz',
         'matplotlib',
+        'pillow'
     ],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
