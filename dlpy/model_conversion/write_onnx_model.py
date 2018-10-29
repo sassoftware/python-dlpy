@@ -522,6 +522,10 @@ def sas_to_onnx(layers, model_table, model_weights):
                                               outputs=act_output))
 
 
+        else:
+            layer_type = layer.__class__.__name__
+            raise OnnxWriteError(str(layer_type) + ' is not supported.')
+
     graph_def = helper.make_graph(nodes=nodes,
                                   name=model_name,
                                   inputs=inputs,
