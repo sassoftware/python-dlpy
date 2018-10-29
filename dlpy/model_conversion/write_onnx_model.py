@@ -653,9 +653,17 @@ def get_padding(layer):
         H = int(layer.config['height'])
         W = int(layer.config['width'])
         S_h, S_w = get_strides(layer)
-
-        P_h = max(0, H - S_h) // 2
-        P_w = max(0, W - S_w) // 2
+        
+        in_W = layer.src_layers[0].output_size[0]
+        in_H = layer.src_layers[0].output_size[1]
+        if (in_H % S_h == 0):
+            P_h = max(0, H - S_h) // 2
+        else:
+            P_h = max(0, H - (in_H % S_h)) // 2
+        if (in_W % S_w == 0):
+            P_w = max(0, W - S_w) // 2
+        else:
+            P_w = max(0, W - (in_W % S_w)) // 2
         P_h_ = P_h
         P_w_ = P_w
         if max(0, H - S_h) % 2 != 0:
