@@ -84,6 +84,8 @@ def sas_to_onnx(layers, model_table, model_weights):
             padding = get_padding(layer)
 
             bias = layer.config['include_bias']
+            if bias is None:
+                bias = True
             dropout = layer.config['dropout']
             act = layer.config['act']
             if act in [None, 'AUTO']:
@@ -170,6 +172,8 @@ def sas_to_onnx(layers, model_table, model_weights):
         elif layer.__class__.__name__.lower() == 'dense':
             n = int(layer.config['n'])
             bias = layer.config['include_bias']
+            if bias is None:
+                bias = True
             dropout = layer.config['dropout']
             act = layer.config['act']
             if act in [None, 'AUTO']:
@@ -318,6 +322,8 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             n = int(layer.config['n'])
             bias = layer.config['include_bias']
+            if bias is None:
+                bias = True
             act = layer.config['act']
             if act in [None, 'AUTO']:
                 act = 'SOFTMAX'
