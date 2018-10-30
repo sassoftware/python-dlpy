@@ -2393,6 +2393,11 @@ class Model(object):
 
         from .model_conversion.write_onnx_model import sas_to_onnx
         if model_weights is None:
+            try:
+                self.model_weights.numrows()
+            except:
+                raise DLPyError('No model weights yet. Please load weights or'
+                                ' train the model first.') 
             print('NOTE: Model weights will be fetched from server')
             model_weights = self.model_weights
         else:
