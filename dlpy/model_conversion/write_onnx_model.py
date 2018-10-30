@@ -66,7 +66,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                             .fetch()['Fetch']['_DLKey0_'][0]
 
     for layer in layers:
-        if layer.__class__.__name__.lower() == 'inputlayer':
+        if layer.type == 'input':
             H = int(layer.config['height'])
             W = int(layer.config['width'])
             C = int(layer.config['n_channels'])
@@ -74,7 +74,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                                        elem_type=TensorProto.FLOAT,
                                                        shape=[1, C, H, W])
             inputs.append(value_info)
-        elif layer.__class__.__name__.lower() == 'conv2d':
+        elif layer.type == 'convo':
             H = int(layer.config['height'])
             W = int(layer.config['width'])
             M = int(layer.config['n_filters'])
@@ -170,7 +170,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                                   elem_type=TensorProto.FLOAT,
                                                   shape=list(bias_weights.shape)))
 
-        elif layer.__class__.__name__.lower() == 'dense':
+        elif layer.type == 'fc':
             n = int(layer.config['n'])
             bias = layer.config['include_bias']
             if bias is None:
@@ -273,7 +273,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                                   elem_type=TensorProto.FLOAT,
                                                   shape=list(bias_weights.shape)))
 
-        elif layer.__class__.__name__.lower() == 'pooling':
+        elif layer.type == 'pool':
             H = int(layer.config['height'])
             W = int(layer.config['width'])
             # set stride
@@ -319,7 +319,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                               ratio=dropout)
                 nodes.append(dropout_op)
 
-        elif layer.__class__.__name__.lower() == 'outputlayer':
+        elif layer.type == 'output':
             if layer.config['full_connect'] == False:
                 continue
 
@@ -412,7 +412,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                                   elem_type=TensorProto.FLOAT,
                                                   shape=list(bias_weights.shape)))
 
-        elif layer.__class__.__name__.lower() == 'bn':
+        elif layer.type == 'batchnorm':
             act = layer.config['act']
             if act in [None, 'AUTO']:
                 act = 'IDENTITY'
@@ -472,7 +472,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                               inputs=act_input,
                                               outputs=act_output))
 
-        elif layer.__class__.__name__.lower() == 'res':
+        elif layer.type == 'residual':
             act = layer.config['act']
             if act in [None, 'AUTO']:
                 act = 'IDENTITY'
@@ -498,7 +498,7 @@ def sas_to_onnx(layers, model_table, model_weights):
                                               inputs=act_input,
                                               outputs=act_output))
 
-        elif layer.__class__.__name__.lower() == 'concat':
+        elif layer.type == 'concat':
             act = layer.config['act']
             if act in [None, 'AUTO']:
                 act = 'IDENTITY'

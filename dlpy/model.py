@@ -2444,6 +2444,8 @@ class Model(object):
         Notes
         -----
         Currently, this function supports sashdat, astore, and onnx formats.
+        
+        More information about ONNX can be found at: https://onnx.ai/
 
         """
         if output_format.lower() == 'astore':
