@@ -135,7 +135,8 @@ def sas_to_onnx(layers, model_table, model_weights):
             if dropout:
                 dropout_op = helper.make_node(op_type='Dropout',
                                               inputs=dropout_input,
-                                              outputs=dropout_output)
+                                              outputs=dropout_output,
+                                              ratio=dropout)
                 nodes.append(dropout_op)
 
             # create weight tensors
@@ -236,7 +237,8 @@ def sas_to_onnx(layers, model_table, model_weights):
             if dropout:
                 dropout_op = helper.make_node(op_type='Dropout',
                                               inputs=dropout_input,
-                                              outputs=dropout_output)
+                                              outputs=dropout_output,
+                                              ratio=dropout)
                 nodes.append(dropout_op)
 
             # fc weights
@@ -313,7 +315,8 @@ def sas_to_onnx(layers, model_table, model_weights):
             if dropout:
                 dropout_op = helper.make_node(op_type='Dropout',
                                               inputs=dropout_input,
-                                              outputs=dropout_output)
+                                              outputs=dropout_output,
+                                              ratio=dropout)
                 nodes.append(dropout_op)
 
         elif layer.__class__.__name__.lower() == 'outputlayer':
