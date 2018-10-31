@@ -12,7 +12,7 @@ Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning
 product).
 
 ## Installing DLPy
-DLPy versions >= 1.0 works with Python 3.4+ and Viya 3.4
+DLPy versions >= 1.0 works with Python 3+ and Viya 3.4
 
 To install DLPy using ``pip``, run the following::
 
