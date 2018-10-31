@@ -432,7 +432,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # get bn input dimension
             src = layer.src_layers[0]
-            if src.__class__.__name__.lower() == 'dense':
+            if src.type == 'fc':
                 n = int(src.config.get('n'))
             else:
                 n = int(src.output_size[2])
@@ -532,7 +532,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
 
         else:
-            layer_type = layer.__class__.__name__
+            layer_type = layer.type
             raise OnnxWriteError(str(layer_type) + ' is not supported.')
 
     graph_def = helper.make_graph(nodes=nodes,
