@@ -504,7 +504,8 @@ def sas_to_onnx(layers, model_table, model_weights):
                 act = 'IDENTITY'
 
             # get inputs in correct order
-            l_conf = model_table[model_table['_DLKey0_'] == layer.name].fetch()['Fetch']
+            l_conf = model_table[model_table['_DLKey0_'] == layer.name.lower()]
+            l_conf = l_conf.fetch()['Fetch']
             concat_input = [l_conf[l_conf['_DLKey1_'] == 'srclayers.' + str(i)]
                             for i in range(len(layer.src_layers))]
             concat_input = [row.iloc[0][2] for row in concat_input]
