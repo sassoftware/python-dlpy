@@ -72,7 +72,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'eee.sashdat', task='load')
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
