@@ -667,6 +667,10 @@ def get_padding(layer):
             pad_w = max(0, W - S_w)
         else:
             pad_w = max(0, W - (in_W % S_w))
+
+        if layer.type == 'pool':
+            return [0, 0, pad_h, pad_w]
+
         if pad_h % 2 == 0:
             P_h = P_h_ = pad_h // 2
         else:
