@@ -26,7 +26,8 @@ import os
 import swat
 import swat.utils.testing as tm
 from dlpy.sequential import Sequential
-from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, OutputLayer, Keypoints
+from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer, 
+                         Keypoints, BN, Res, Concat)
 from dlpy.utils import caslibify
 import unittest
 
@@ -533,6 +534,88 @@ class TestModel(unittest.TestCase):
         model1.save_weights_csv(self.data_dir)
         weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
         model1.deploy(self.data_dir, output_format='onnx', model_weights=weights_path)
+
+    def test_model21(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        pool1 = Pooling(2)
+        model1.add(pool1)
+        conv1 = Conv2d(1, 7, src_layers=[pool1])
+        conv2 = Conv2d(1, 7, src_layers=[pool1])
+        model1.add(conv1)
+        model1.add(conv2)
+        model1.add(Concat(act='identity', src_layers=[conv1, conv2]))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model22(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        pool1 = Pooling(2)
+        model1.add(pool1)
+        conv1 = Conv2d(1, 1, act='identity', src_layers=[pool1])
+        model1.add(conv1)
+        model1.add(Res(act='relu', src_layers=[conv1, pool1]))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model23(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(BN(act='relu'))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(BN(act='relu'))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
 
     @classmethod
     def tearDownClass(cls):
