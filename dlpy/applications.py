@@ -596,8 +596,6 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
                 warnings.warn('If include_top = True, n_classes will be set to 1000.', RuntimeWarning)
             model = Model.from_table(model_cas)
             model.load_weights(path=pre_trained_weights_file, labels=True)
-            return model
-
         else:
             model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_trained_weights_file)
@@ -612,7 +610,10 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
                              srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_table))
 
-            return model
+        model.inputs = ['_image_']
+        model.tasks = ['classification_0']
+        model.targets['classification_0'] = '_label_'
+        return model
 
 
 def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
@@ -742,8 +743,6 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
 
             model = Model.from_table(model_cas)
             model.load_weights(path=pre_trained_weights_file, labels=True)
-            return model
-
         else:
 
             model = Model.from_table(model_cas, display_note=False)
@@ -759,7 +758,10 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
                              srcLayers=['fc7'])
             model = Model.from_table(conn.CASTable(model_table))
 
-            return model
+        model.inputs = ['_image_']
+        model.tasks = ['classification_0']
+        model.targets['classification_0'] = '_label_'
+        return model
 
 
 def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_classes=1000, n_channels=3, width=224,
@@ -1406,8 +1408,6 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
 
             model = Model.from_table(model_cas)
             model.load_weights(path=pre_trained_weights_file, labels=True)
-            return model
-
         else:
             model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_trained_weights_file)
@@ -1421,7 +1421,11 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
             model = Model.from_table(conn.CASTable(model_table))
-            return model
+
+        model.inputs = ['_image_']
+        model.tasks = ['classification_0']
+        model.targets['classification_0'] = '_label_'
+        return model
 
 
 def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
@@ -1664,8 +1668,6 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
 
             model = Model.from_table(model_cas)
             model.load_weights(path=pre_trained_weights_file, labels=True)
-            return model
-
         else:
             model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_trained_weights_file)
@@ -1679,7 +1681,11 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
             model = Model.from_table(conn.CASTable(model_table))
-            return model
+
+        model.inputs = ['_image_']
+        model.tasks = ['classification_0']
+        model.targets['classification_0'] = '_label_'
+        return model
 
 
 def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
@@ -1923,8 +1929,6 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
 
             model = Model.from_table(model_cas)
             model.load_weights(path=pre_trained_weights_file, labels=True)
-            return model
-
         else:
             model = Model.from_table(conn.CASTable(model_table), display_note=False)
             model.load_weights(path=pre_trained_weights_file)
@@ -1938,7 +1942,11 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
             model._retrieve_('table.partition', table=weight_table_options,
                              casout=dict(replace=True, **model.model_weights.to_table_params()))
             model = Model.from_table(conn.CASTable(model_table))
-            return model
+
+        model.inputs = ['_image_']
+        model.tasks = ['classification_0']
+        model.targets['classification_0'] = '_label_'
+        return model
 
 
 def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_of_blocks=1, k=4, n_classes=None,
@@ -3769,8 +3777,6 @@ def InceptionV3(conn, model_table='InceptionV3',
                               'n_classes will be set to 1000.', RuntimeWarning)
             model = Model.from_table(model_cas)
             model.load_weights(path=pre_trained_weights_file, labels=True)
-            return model
-
         else:
             model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_trained_weights_file)
@@ -3788,4 +3794,7 @@ def InceptionV3(conn, model_table='InceptionV3',
                              srcLayers=['avg_pool'])
             model = Model.from_table(conn.CASTable(model_table))
 
-            return model
+        model.inputs = ['_image_']
+        model.tasks = ['classification_0']
+        model.targets['classification_0'] = '_label_'
+        return model

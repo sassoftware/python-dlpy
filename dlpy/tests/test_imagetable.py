@@ -27,6 +27,11 @@ import unittest
 import swat
 import swat.utils.testing as tm
 from dlpy.images import ImageTable
+from dlpy import Sequential
+from dlpy.model import *
+from dlpy.layers import *
+from dlpy.splitting import two_way_split
+from dlpy.applications import *
 
 
 class TestImageTable(unittest.TestCase):
@@ -64,6 +69,85 @@ class TestImageTable(unittest.TestCase):
             pass
         del cls.s
         swat.reset_option()
+
+    def test_two_way_split(self):
+        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
+        my_images = ImageTable.load_files(self.s, path = img_path)
+        my_images.resize(width = 224)
+        tr_img, te_img = two_way_split(my_images, test_rate = 20, seed = 123)
+        self.assertTrue(tr_img.numrows().numrows == 328)
+        self.assertTrue(tr_img.cls_cols == '_label_')
+        self.assertTrue(tr_img.id_col == '_id_')
+        self.assertTrue(tr_img.filename_col == '_filename_')
+
+    def test_two_way_split2(self):
+        self.s.table.addcaslib(activeonadd = False,
+                               datasource = {'srctype': 'path'},
+                               name = 'dnfs',
+                               path = '/bigdisk/lax/dlpy/',
+                               subdirectories = False)
+        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
+                               casout = dict(name = 'data', replace = True))
+        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
+                                     filename_col = 'file',
+                                     cls_cols = 'label')
+        tr_img, te_img = two_way_split(test, test_rate = 20, stratify_by = test.cls_cols, seed = 123)
+        self.assertTrue(tr_img.image_cols == 'img')
+        self.assertTrue(te_img.cls_cols == 'label')
+        self.assertTrue(te_img.id_col == 'id')
+        self.assertTrue(tr_img.filename_col == 'file')
+
+        tr_img, te_img = two_way_split(test, test_rate = 20, stratify = False, stratify_by = test.cls_cols, seed = 123)
+        self.assertTrue(tr_img.image_cols == 'img')
+        self.assertTrue(te_img.cls_cols == 'label')
+        self.assertTrue(te_img.id_col == 'id')
+        self.assertTrue(tr_img.filename_col == 'file')
+
+    def test_as_patches(self):
+        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
+        my_images = ImageTable.load_files(self.s, path = img_path)
+        my_images.resize(width = 224)
+        tr_img, te_img = two_way_split(my_images, test_rate = 20, seed = 123)
+        te_img.as_patches(width = 200, height = 200, step_size = 24, output_width = 224, output_height = 224)
+        te_img.random_mutations(darken = True)
+
+    def test_as_random_patches(self):
+        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
+        my_images = ImageTable.load_files(self.s, path = img_path)
+        my_images.resize(width = 224)
+        tr_img, te_img = two_way_split(my_images, test_rate = 20, seed = 123)
+        te_img.as_random_patches()
+        te_img.random_mutations(darken = True)
+
+    def test_from_table(self):
+        self.s.table.addcaslib(activeonadd = False, datasource = {'srctype': 'path'}, name = 'dnfs',
+                               path = '/bigdisk/lax/dlpy/', subdirectories = False)
+        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
+                               casout = dict(name = 'data', replace = True))
+        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img',
+                                     id_col = 'id', filename_col = 'file', cls_cols = 'label')
+        channel_mean = [round(i, 2) for i in test.channel_means]
+        self.assertTrue(channel_mean[0] == 127.28)
+        self.assertTrue(test.image_cols == 'img')
+        self.assertTrue(test.cls_cols == 'label')
+        self.assertTrue(test.id_col == 'id')
+        self.assertTrue(test.filename_col == 'file')
+
+    def test_from_table2(self):
+        self.s.table.addcaslib(activeonadd = False,
+                              datasource = {'srctype': 'path'},
+                              name = 'dnfs',
+                              path = '/bigdisk/lax/dlpy/',
+                              subdirectories = False)
+        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
+                               casout = dict(name = 'data', replace = True))
+        with self.assertRaises(ValueError):
+            ImageTable.from_table(tbl = self.s.CASTable('data'), id_col = 'id', filename_col = 'file',
+                                  cls_cols = 'label')
+        with self.assertRaises(ValueError):
+            test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
+                                         filename_col = 'file', cls_cols = 'labels')
+
 
     def test_load_images(self):
         if self.data_dir is None:

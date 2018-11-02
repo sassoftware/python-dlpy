@@ -30,6 +30,9 @@ from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputL
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
 from .utils import filter_by_image_id, filter_by_filename
 from dlpy.utils import DLPyError, Box
+from dlpy.images import ImageTable
+
+from swat.cas.table import CASTable
 
 
 class Model(object):
@@ -87,8 +90,10 @@ class Model(object):
         self.best_weights = None
         self.valid_res_tbl = None
         self.model_type = 'CNN'
-        self.target = None
+        self.targets = dict()
         self.model_ever_trained = False
+        self.inputs = []
+        self.tasks = []
 
 
     @classmethod
@@ -820,11 +825,16 @@ class Model(object):
         input_table = self.conn.CASTable(**input_tbl_opts)
 
         if data_specs is None and inputs is None:
-            if '_image_' in input_table.columns.tolist():
-                print('NOTE: Either dataspecs or inputs need to be non-None, therefore inputs=_image_ is used')
-                inputs = '_image_'
+            if isinstance(data, ImageTable):
+                inputs = data.image_cols
             else:
                 raise DLPyError('either dataspecs or inputs need to be non-None')
+
+        if data_specs is None and target is None:
+            if isinstance(data, ImageTable):
+                target = data.cls_cols
+            else:
+                raise DLPyError('either dataspecs or target need to be non-None')
 
         if optimizer is None:
             optimizer = Optimizer(algorithm=VanillaSolver(learning_rate=lr),  mini_batch_size=mini_batch_size,
@@ -834,9 +844,6 @@ class Model(object):
                 raise DLPyError('optimizer should be an Optimizer object')
 
         max_epochs = optimizer['maxepochs']
-
-        if target is None and '_label_' in input_table.columns.tolist():
-            target = '_label_'
 
         if self.model_weights.to_table_params()['name'].upper() in \
                 list(self._retrieve_('table.tableinfo').TableInfo.Name):
@@ -849,7 +856,7 @@ class Model(object):
         if save_best_weights and self.best_weights is None:
             self.best_weights = random_name('model_best_weights', 6)
 
-        r = self.train(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
+        r = self.train(table=input_table, inputs=inputs, target=target, data_specs=data_specs,
                        optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
                        sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
                        gpu=gpu, attributes=attributes, weight=weight, seed=seed, record_seed=record_seed,
@@ -876,7 +883,47 @@ class Model(object):
             pass
 
         if r.severity < 2:
-            self.target = target
+            if data_specs is None:
+                self.inputs = [inputs]
+                self.tasks = ['classification_0']
+                self.targets['classification_0'] = target
+            else:
+                cls_task_id = 0
+                keypoints_task_id = 0
+                object_detection_task_id = 0
+                data_specs_dicts = [dict(item) for item in data_specs]
+                for layer in self.layers:
+                    if layer.type == 'detection':
+                        task = 'object_detection_' + str(object_detection_task_id)
+                        object_detection_task_id += 1
+                        self.tasks = [task]
+                        for item in data_specs_dicts:
+                            if item['layer'] == layer.name:
+                                self.targets[task] = item['data']
+                    elif layer.type == 'keypoints':
+                        task = 'keypoints_' + str(keypoints_task_id)
+                        keypoints_task_id += 1
+                        self.tasks = [task]
+                        for item in data_specs:
+                            if item['layer'] == layer.name:
+                                self.targets[task] = item['data']
+                    elif layer.type == 'output':
+                        # TODO determine task of output layer
+                        # for item in data_specs:
+                        # if item.__dict__['layer'] == layer.name:
+                        #     if 'nominals' in data_specs[1].__dict__.keys():
+                        #         self.tasks.append('classification')
+                        task = 'classification_' + str(cls_task_id)
+                        cls_task_id += 1
+                        self.tasks = [task]
+                        for item in data_specs:
+                            if item['layer'] == layer.name:
+                                self.targets[task] = item['data']
+                    elif layer.type == 'input':
+                        for item in data_specs:
+                            if item['layer'] == layer.name:
+                                self.inputs = [item['data']]
+                    # TODO support auto-encoder task
 
         return r
 
@@ -1003,7 +1050,7 @@ class Model(object):
 
         return rt
 
-    def tune(self, data, inputs='_image_', target='_label_', **kwargs):
+    def tune(self, data, inputs=None, target=None, **kwargs):
         '''
         Tunes hyper parameters for the deep learning model.
 
@@ -1014,11 +1061,11 @@ class Model(object):
         inputs : string, optional
             Specifies the variable name of in the input_tbl, that is the
             input of the deep learning model.
-            Default : '_image_'
+            Default : None
         target : string, optional
             Specifies the variable name of in the input_tbl, that is the
             response of the deep learning model.
-            Default : '_label_'
+            Default : None
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dltune action.
 
@@ -1027,6 +1074,13 @@ class Model(object):
         :class:`CASResults`
 
         '''
+        # TODO: dltune supports dataSpecs and autoencoder
+        if inputs is None and target is None:
+            if isinstance(data, ImageTable):
+                inputs = data.image_cols
+                target = data.cls_cols
+            else:
+                raise ValueError('Parameter inputs and target should be specified if data is not ImageTable')
         r = self._retrieve_('deeplearn.dltune',
                             message_level='note', model=self.model_table,
                             table=data,
@@ -1059,7 +1113,7 @@ class Model(object):
         else:
             raise DLPyError('model.fit should be run before calling plot_training_history')
 
-    def evaluate(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
+    def evaluate(self, data, input=None, target=None, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
                  mini_batch_buf_size=None, top_probs=None, use_best_weights=False):
         """
         Evaluate the deep learning model on a specified validation data set
@@ -1071,7 +1125,10 @@ class Model(object):
         ----------
         data : string or CASTable, optional
             Specifies the input data.
-        text_parms : TextParms, optional
+        target : string
+            Specifies the target column of data. It would be optional if data is ImageTable
+            Default: None
+        text_parms : TextParms
             Specifies the parameters for the text inputs.
         layer_out : string, optional
             Specifies the settings for an output table that includes
@@ -1117,6 +1174,18 @@ class Model(object):
         :class:`CASResults`
 
         """
+        if not self.targets and target is None:
+            raise ValueError('Parameter target is required.')
+        else:
+            if target is None:
+                target = self.targets['classification_0']
+
+        if len(self.inputs) == 0 and input is None:
+            raise ValueError('Parameter input is required.')
+        else:
+            if input is None:
+                input = self.inputs[0]
+
         input_tbl_opts = input_table_check(data)
         input_table = self.conn.CASTable(**input_tbl_opts)
 
@@ -1158,17 +1227,9 @@ class Model(object):
         if res.ScoreInfo is not None:
             self.valid_score = res.ScoreInfo
 
-        # TODO work on here to make it more user friendly and remove assumptions
+        inference_column = 'I_' + target
 
-        if self.target is not None:
-            self.valid_conf_mat = self.conn.crosstab(table=valid_res_tbl, row=self.target, col='I_' + self.target)
-        else:
-            v = self.conn.CASTable(valid_res_tbl)
-            temp_columns = v.columns.tolist()
-            output_names = [name for name in temp_columns if (name.startswith('I_'))]
-            if len(output_names) > 0:
-                self.target = output_names[0][2:]
-                self.valid_conf_mat = self.conn.crosstab(table=valid_res_tbl, row=self.target, col='I_' + self.target)
+        self.valid_conf_mat = self.conn.crosstab(table=valid_res_tbl, row=target, col=inference_column)
 
         if self.model_type == 'CNN':
             if not self.conn.has_actionset('image'):
@@ -1176,8 +1237,9 @@ class Model(object):
 
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             temp_columns = self.valid_res_tbl.columns.tolist()
-            columns = [item for item in temp_columns if item[0:9] == 'P_' + self.target or item == 'I_' + self.target]
-            img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
+            columns = [item for item in temp_columns if item.startswith('P_') or item == inference_column]
+            img_table = self._retrieve_('image.fetchimages', image = input,
+                                        fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
             img_table = img_table.Images
 
             self.valid_res = img_table
@@ -1204,14 +1266,16 @@ class Model(object):
             Perform evaluation on the table. If the parameter is not specified,
             the function evaluates the last prediction performed
             by the model.
-        classes : string or list-of-strings, optional
-            The classes are selected to be evaluated. If you never set it,
-            then it will perform on all of classes in ground truth table
-            and detection_data table.
-        iou_thresholds : float or list-of-floats, optional
-            Specifying an iou threshold or a list of iou thresholds that
-            determines what is counted as a model predicted positive
-            detection of the classes defined by classes parameter.
+            Default : None
+        classes : string or list of strings, optional
+            The classes are selected to be evaluated. If you never set it, then it will perform on all
+            of classes in ground truth table and detection_data table.
+            Default : None
+        iou_thresholds : float or list of floats, optional
+            Specifying an iou threshold or a list of iou thresholds that determines
+            what is counted as a model predicted positive detection of the classes defined
+            by classes parameter.
+            Default : [0.5: 0.05: 0.95]
 
         Returns
         -------
@@ -1294,7 +1358,7 @@ class Model(object):
         elif isinstance(classes, str):
             classes = [classes]
         nrof_classes = len(classes)
-
+        # classes are not detected
         classes_not_detected = [x for x in classes_gt if x not in classes]
         if len([x for x in classes if x not in classes_gt]) > 0:
             raise DLPyError('Detection data contains classes that are not in ground truth')
@@ -1304,27 +1368,38 @@ class Model(object):
         results = []
         for iou_threshold in iou_thresholds:
             results_iou = []
+            # analysis on class
             for i, cls in enumerate(classes):
                 det_bb_cls_list = []
+                # all detections of the class
                 [det_bb_cls_list.append(bb) for bb in det_bb_list if bb.class_type == cls]  # all of detections of the class
                 gt_bb_cls_list = []
+                # all ground truth of the class
                 [gt_bb_cls_list.append(bb) for bb in gt_bb_list if bb.class_type == cls]
+                # sort them by confidence
                 det_bb_cls_list = sorted(det_bb_cls_list, key=lambda bb: bb.confidence, reverse=True)
-                tp = np.zeros(len(det_bb_cls_list))  # the detections of the class
+                # each detection can be either true positive or false positive
+                tp = np.zeros(len(det_bb_cls_list))
                 fp = np.zeros(len(det_bb_cls_list))
+                # count how many detections of the class in each image
                 gt_image_index_list = collections.Counter([bb.image_name for bb in gt_bb_cls_list])
                 for key, val in gt_image_index_list.items():
                     gt_image_index_list[key] = np.zeros(val)
                 print("Evaluating class: %s (%d detections)" % (str(cls), len(det_bb_cls_list)))
+                # loop all of detections
                 for idx, det_bb in enumerate(det_bb_cls_list):
+                    # find according image and ground truth boxes
                     gt_cls_image_list = [bb for bb in gt_bb_cls_list if bb.image_name == det_bb.image_name]
                     iou_max = sys.float_info.min
+                    # find the most match ground truth and its index
                     for j, gt_bb in enumerate(gt_cls_image_list):
                         if Box.iou(det_bb, gt_bb) > iou_max:
                             match_idx = j
                             iou_max = Box.iou(det_bb, gt_bb)
                     if iou_max >= iou_threshold:
                         if gt_image_index_list[det_bb.image_name][match_idx] == 0:
+                            # if there is no higher confidence detection matching the ground truth box
+                            # this is a truth positive detection
                             tp[idx] = 1
                         gt_image_index_list[det_bb.image_name][match_idx] = 1
                     else:
@@ -1433,6 +1508,7 @@ class Model(object):
         input_tbl_opts = input_table_check(data)
         input_table = self.conn.CASTable(**input_tbl_opts)
         copy_vars = input_table.columns.tolist()
+        # todo for object detection, copy ground truth in dlscore casout.
         copy_vars = [x for x in copy_vars if not (x.startswith('_Object') or x.startswith('_nObject'))]
 
         if self.valid_res_tbl is None:
@@ -1451,16 +1527,16 @@ class Model(object):
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
                              n_threads=n_threads)
-            self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
-            return res
         else:
             res = self.score(table=input_table, model=self.model_table, init_weights=self.model_weights,
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=True,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
                              n_threads=n_threads)
-            self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
-            return res
+        if res.severity > 1:
+            raise DLPyError('something is wrong while scoring the input data with the model.')
+        self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
+        return res
 
     def score(self, table, model=None, init_weights=None, text_parms=None, layer_out=None,
               layer_image_type='jpg', layers=None, copy_vars=None, casout=None, gpu=None, buffer_size=10,
@@ -1575,14 +1651,16 @@ class Model(object):
 
         return self._retrieve_('deeplearn.dlscore', message_level='note', **parameters)
 
-    def plot_evaluate_res(self, cas_table=None, img_type='A', image_id=None, filename=None, n_images=5,
-                          target='_label_', predicted_class=None, label_class=None, randomize=False,
-                          seed=-1):
+    def plot_evaluate_res(self, cas_table=None, img_type='A', n_images=5, target=None, predicted_class=None,
+                          label_class=None, randomize=False, filter_column=None, filter_list= None, seed=-1):
         '''
         Plot the bar chart of the classification predictions
 
         Parameters
         ----------
+        data : string, or castable
+            Specifies the input data to do evaluation
+        cas_table : CASTable
         cas_table : CASTable, optional
             If None results from model.evaluate are used
             Can pass in another table that has the same
@@ -1598,15 +1676,27 @@ class Model(object):
             The name of a file in '_filename_0' or '_path_' if not unique
             returns multiple
         n_images : int, optional
+            A - All type of results
+            C - Correctly classified results
+            M - Miss classified results
+            The name of a file in '_filename_0' or '_path_' if not unique returns multiple
+        n_images : int
             Number of images to evaluate
         target : string, optional
             name of column for the correct label
+            Default : None
+        predicted_class: string, optional
         predicted_class : string, optional
             Name of desired prediction class to plot results
         label_class : string, optional
             Actual target label of desired class to plot results
         randomize : bool, optional
             If true randomize results
+        filter_column : str
+            Name of column used to filter cas_table
+        filter_list : list of str
+
+        seed: int, optional
         seed : int, optional
             Random seed used if randomize is true
 
@@ -1619,98 +1709,126 @@ class Model(object):
             else:
                 raise DLPyError("Need to run model.evaluate()")
         else:
-            cas_table = cas_table.partition(casout=dict(name='temp_plot', replace=True))['casTable']
+            cas_table = cas_table.partition(casout=dict(name='', replace=True))['casTable']
+            # todo: cas_table = CASTable.__deepcopy__(cas_table, 'temp_plot')
+
+        if filter_column is not None and filter_list is not None:
+            cas_table = cas_table[cas_table[filter_column].isin(filter_list)]
+            if cas_table.numrows().numrows == 0:
+                raise DLPyError("There is no observation selected by the filter")
+
+        if not self.targets and target is None:
+            raise ValueError('Parameter target is required.')
+        else:
+            if target is None:
+                target = self.targets['classification_0']
+
+        prediction_column = 'I_'+target
+        confidence_prefix = 'P_'+target
+        # if isinstance(cas_table, ImageTable):
+        #     prediction_column = cas_table.cls_cols
+        # elif target is not None:
+        #     prediction_column = 'I_' + target
+        # else:
+        #     raise DLPyError('Parameter target should be specified if cas_table is not ImageTable')
 
         if target not in cas_table.columns:
-            if 'Label' in cas_table.columns:
-                target = 'Label'
-            else:
-                raise DLPyError("target column {} not found in cas_table {}".format(target, cas_table.name))
-        if 'I__label_' not in cas_table.columns:
-            raise DLPyError("cas_table must contain prediction column named 'I__lable_'."
-                            "i.e. model.valid_res_tbl can be used after running model.evaluate")
+            raise DLPyError("target column {} not found in cas_table {}".format(target, cas_table.name))
+        if prediction_column not in cas_table.columns:
+            raise DLPyError("cas_table must contain prediction column named '{}'."
+                            "i.e. model.valid_res_tbl can be used after running model.evaluate".format(prediction_column))
 
-        filtered = None
-        if filename or image_id:
-
-            if '_id_' not in cas_table.columns.tolist():
-                print("'_id_' column not in cas_table, processing complete table")
-            else:
-                if filename and image_id:
-                    print(" image_id supersedes filename, image_id being used")
-                if image_id:
-                    filtered = filter_by_image_id(cas_table, image_id)
-                elif filename:
-                    filtered = filter_by_filename(cas_table, filename)
-
-            if filtered:
-                if filtered.numrows == 0:
-                    raise DLPyError(" image_id or filename not found in CASTable {}".format(cas_table.name))
-                self.conn.droptable(cas_table)
-                cas_table = filtered
+        # filtered = None
+        # if filename or image_id:
+        #
+        #     if '_id_' not in cas_table.columns.tolist():
+        #         print("'_id_' column not in cas_table, processing complete table")
+        #     else:
+        #         if filename and image_id:
+        #             print(" image_id supersedes filename, image_id being used")
+        #         if image_id:
+        #             filtered = filter_by_image_id(cas_table, image_id)
+        #         elif filename:
+        #             filtered = filter_by_filename(cas_table, filename)
+        #
+        #     if filtered:
+        #         if filtered.numrows == 0:
+        #             raise DLPyError(" image_id or filename not found in CASTable {}".format(cas_table.name))
+        #         self.conn.droptable(cas_table)
+        #         cas_table = filtered
 
         if img_type == 'A':
             if cas_table.numrows().numrows == 0:
-                raise DLPyError("No images to heatmap")
+                raise DLPyError("No images to plot")
         elif img_type == 'C':
-            cas_table = cas_table[cas_table[target] == cas_table['I__label_']]
+            cas_table = cas_table[cas_table[target] == cas_table[prediction_column]]
             cas_table = cas_table.partition(casout=dict(name=cas_table.name, replace=True))['casTable']
             if cas_table.numrows().numrows == 0:
-                raise DLPyError("No correct labels to heatmap")
+                raise DLPyError("No correct labels to plot")
         elif img_type == 'M':
-            cas_table = cas_table[cas_table[target] != cas_table['I__label_']]
+            cas_table = cas_table[cas_table[target] != cas_table[prediction_column]]
             cas_table.partition(casout=dict(name=cas_table.name, replace=True))['casTable']
             if cas_table.numrows().numrows == 0:
-                raise DLPyError("No misclassified labels to heatmap")
+                raise DLPyError("No misclassified labels to plot")
         else:
             raise DLPyError('img_type must be one of the following:\n'
                             'A: for all the images\n'
                             'C: for correctly classified images\n'
                             'M: for misclassified images\n')
 
-
         if label_class:
             unique_labels = list(set(cas_table[target].tolist()))
-            cas_table = cas_table[cas_table['_label_'] == label_class]
+            cas_table = cas_table[cas_table[target] == label_class]
             cas_table.partition(casout=dict(name=cas_table.name, replace=True))['casTable']
             if cas_table.numrows().numrows == 0:
                 raise DLPyError("There are no labels of {}. The labels consist of {}". \
                                 format(label_class, unique_labels))
         if predicted_class:
-            unique_predictions = list(set(cas_table['I__label_'].tolist()))
-            cas_table = cas_table[cas_table['I__label_'] == predicted_class]
+            unique_predictions = list(set(cas_table[prediction_column].tolist()))
+            cas_table = cas_table[cas_table[prediction_column] == predicted_class]
             cas_table.partition(casout=dict(name=cas_table.name, replace=True))['casTable']
             if cas_table.numrows().numrows == 0:
                 raise DLPyError("There are no predicted labels of {}. The predicted labels consist of {}". \
                                 format(predicted_class, unique_predictions))
 
-        columns_for_pred = [item for item in cas_table.columns
-                            if item[0:9] == 'P__label_']
+        columns_for_pred = [item for item in cas_table.columns if item.startswith(confidence_prefix)]
         if len(columns_for_pred) == 0:
             raise DLPyError("Input table has no columns for predictions. "
                             "Run model.predict the predictions are stored "
                             "in the attribute model.valid_res_tbl.")
-        fetch_cols = columns_for_pred + ['_id_']
+        fetch_cols = columns_for_pred + [target]
+        if filter_column is not None:
+            fetch_cols = columns_for_pred + [filter_column]
 
         if randomize:
             cas_table.append_computedvars(['random_index'])
             cas_table.append_computedvarsprogram('call streaminit({});' 'random_index=''rand("UNIFORM")'.format(seed))
 
-            img_table = cas_table.retrieve('image.fetchimages', _messagelevel='error',
+            img_table = cas_table.retrieve('image.fetchimages', _messagelevel='error', image = self.inputs[0],
                                            table=dict(**cas_table.to_table_params()),
                                            fetchVars=fetch_cols,
                                            sortby='random_index', to=n_images)
         else:
-            img_table = cas_table.retrieve('image.fetchimages', fetchVars=fetch_cols, to=n_images,
-                                           sortBy=[{'name': '_id_', 'order': 'ASCENDING'}])
+            img_table = cas_table.retrieve('image.fetchimages', fetchVars=fetch_cols, to=n_images, image = self.inputs[0])
         self.conn.droptable(cas_table)
         img_table = img_table['Images']
         for im_idx in range(len(img_table)):
             image = img_table['Image'][im_idx]
-            label = 'Correct Label for image {} : {}'.format(img_table['_id_'][im_idx], img_table['Label'][im_idx])
-            labels = [item[9:].title() for item in columns_for_pred]
+            # reserved column _label_ would be convert to Label after fetchImages
+            if '_label_' in self.targets['classification_0']:
+                label_col = 'Label'
+            else:
+                label_col = target
+            # if don't use filter, no need to display the id or name of the images
+            if filter_column is None:
+                label = 'Correct Label for the image is {}'.format(img_table[label_col][im_idx])
+            else:
+                label = 'Correct Label for image {} : {}'.format(img_table[filter_column][im_idx],
+                                                                 img_table[label_col][im_idx])
+            labels = [item[len(confidence_prefix):].title() for item in columns_for_pred]
             values = np.asarray(img_table[columns_for_pred].iloc[im_idx])
             values, labels = zip(*sorted(zip(values, labels)))
+            # top5
             values = values[-5:]
             labels = labels[-5:]
             labels = [item[:(item.find('__') > 0) * item.find('__') +
@@ -1719,7 +1837,7 @@ class Model(object):
 
             plot_predict_res(image, label, labels, values)
 
-    def get_feature_maps(self, data, label=None, idx=0, image_id=None,  **kwargs):
+    def get_feature_maps(self, data, filter_column=None, filter_list= None, **kwargs):
         """
         Extract the feature maps for a single image
 
@@ -1739,6 +1857,11 @@ class Model(object):
             Specifies the optional arguments for the dlScore action.
 
         """
+
+        if filter_column is not None and filter_list is not None:
+            data = data[data[filter_column].isin(filter_list)]
+            if data.numrows().numrows == 0:
+                raise ValueError("There is no observation selected by the filter")
         from .images import ImageTable
         if image_id:
             filtered = filter_by_image_id(data, image_id)
@@ -1761,19 +1884,18 @@ class Model(object):
 
         input_tbl = input_table_check(data)
 
-        feature_maps_tbl = random_name('Feature_Maps') + '_{}'.format(idx)
+        feature_maps_tbl = random_name('Feature_Maps')
         score_options = dict(model=self.model_table, initWeights=self.model_weights,
-                             table=dict(where='{}="{}"'.format(uid_name,
-                                                               uid_value), **input_tbl),
+                             table=dict(**input_tbl),
                              layerOut=dict(name=feature_maps_tbl),
                              randomflip='none',
                              randomcrop='none',
                              layerImageType='jpg',
                              encodeName=True)
         score_options.update(kwargs)
-        self._retrieve_('deeplearn.dlscore', **score_options)
+        res = self._retrieve_('deeplearn.dlscore', **score_options)
         layer_out_jpg = self.conn.CASTable(feature_maps_tbl)
-        feature_maps_names = [i for i in layer_out_jpg.columninfo().ColumnInfo.Column]
+        feature_maps_names = layer_out_jpg.columns.tolist()
         feature_maps_structure = dict()
         for feature_map_name in feature_maps_names:
             feature_maps_structure[int(feature_map_name.split('_')[2])] = \
@@ -1826,8 +1948,8 @@ class Model(object):
         y = self.conn.CASTable(**input_tbl_opts)[target].as_matrix().ravel()
         return x, y
 
-    def heat_map_analysis(self, data=None, mask_width=None, mask_height=None, step_size=None,
-                          display=True, img_type='A', image_id=None, filename=None, inputs="_image_",
+    def heat_map_analysis(self, data, mask_width=None, mask_height=None, step_size=None,
+                          display=True, img_type='A', filter_column=None, filter_list= None, inputs="_image_",
                           target="_label_", max_display=5, **kwargs):
         """
         Conduct a heat map analysis on table of images
@@ -1906,19 +2028,17 @@ class Model(object):
 
         from .images import ImageTable
 
-        run_predict = True
-        if data is None and self.valid_res_tbl is None:
-            raise ValueError('No input data and model.predict() has not been run')
-        elif data is None:
-            print("Using results from model.predict()")
-            data = self.valid_res_tbl
-            run_predict = False
-        elif data.shape[0] == 0:
-            raise ValueError('Input table is empty.')
+        if not isinstance(data, ImageTable):
+            raise ValueError('data should be ImageTable')
 
-        data = data.partition(casout=dict(name='temp_anotated', replace=True))['casTable']
+        if len(self.inputs) == 0 and inputs is None:
+            raise ValueError('Parameter input is required.')
+        else:
+            if inputs is None:
+                inputs = self.inputs[0]
 
-        im_summary = data._retrieve('image.summarizeimages')['Summary']
+        # check input images
+        im_summary = data._retrieve('image.summarizeimages', image=inputs)['Summary']
         output_width = int(im_summary.minWidth)
         output_height = int(im_summary.minHeight)
 
@@ -1937,50 +2057,40 @@ class Model(object):
         if step_size is None:
             step_size = max(int(mask_width / 4), 1)
 
-        copy_vars = ImageTable.from_table(data).columns.tolist()
-
         masked_image_table = random_name('MASKED_IMG')
-        blocksize = image_blocksize(output_width, output_height)
+        block_size = image_blocksize(output_width, output_height)
 
-        filtered = None
-        if filename or image_id:
-            print(" filtering by filename or _id_ ")
-            if '_id_' not in data.columns.tolist():
-                print("'_id_' column not in cas_table, processing complete table")
-            else:
-                if filename and image_id:
-                    print(" image_id supersedes filename, image_id being used")
+        if filter_column is not None and filter_list is not None:
+            data = data[data[filter_column].isin(filter_list)]
+            if data.numrows().numrows == 0:
+                raise ValueError("There is no observation selected by the filter")
 
-                if image_id:
-                    filtered = filter_by_image_id(data, image_id)
-                elif filename:
-                    filtered = filter_by_filename(data, filename)
+        '''make prediction on the filtered image table'''
+        print("Running prediction ...")
+        predict_data = get_predictions(data)
+        print("... finished running prediction")
 
-            if filtered:
-                self.conn.droptable(data)
-                data = filtered
-
-        if run_predict:
-            print("Running prediction ...")
-            data = get_predictions(data)
-            print("... finished running prediction")
-
-        table_vars = data.columns.tolist()
-        if 'I__label_' in table_vars and img_type == 'C':
-            data_temp = data[data['_label_'] == data['I__label_']]
-            if data_temp.numrows().numrows != 0:
-                data = data_temp
-            else:
+        prediction_col = 'I_' + self.targets['classification_0']
+        confidence_prefix = 'P_' + self.targets['classification_0']
+        '''predict_data is the data used for doing augmentation'''
+        if img_type == 'A':
+            if predict_data.numrows().numrows == 0:
+                raise DLPyError("No images to plot")
+        elif img_type == 'C':
+            predict_data = predict_data[predict_data[self.targets['classification_0']] == predict_data[prediction_col]]
+            if predict_data.numrows().numrows != 0:
                 raise ValueError('No Correct Labels to Heatmap')
-
-        elif 'I__label_' in table_vars and img_type == 'M':
-            data_temp = data[data['_label_'] != data['I__label_']]
-            if data_temp.numrows().numrows != 0:
-                data = data_temp
-            else:
+        elif img_type == 'M':
+            predict_data = predict_data[predict_data[self.targets['classification_0']] != predict_data[prediction_col]]
+            if predict_data.numrows().numrows != 0:
                 raise ValueError('No Misclassified Data to Heatmap')
+        else:
+            raise DLPyError('img_type must be one of the following:\n'
+                            'A: for all the images\n'
+                            'C: for correctly classified images\n'
+                            'M: for misclassified images\n')
 
-        if data.numrows().numrows > max_display:
+        if predict_data.numrows().numrows > max_display:
             print('NOTE: The number of images in the table is too large,'
                   ' only {} randomly selected images are used in analysis.'.format(max_display))
 
@@ -1991,17 +2101,20 @@ class Model(object):
 
             sample_tbl = random_name('SAMPLE_TBL')
             self._retrieve_('sampling.srs',
-                            table=data.to_table_params(),
+                            table=predict_data.to_table_params(),
                             output=dict(casout=dict(replace=True, name=sample_tbl,
-                                                    blocksize=blocksize), copyvars='all'),
+                                                    blocksize=block_size), copyvars='all'),
                             samppct=te_rate)
-            data= self.conn.CASTable(sample_tbl)
+            predict_data = data.assign_property(self.conn.CASTable(sample_tbl))
+            # predict_data = self.conn.CASTable(sample_tbl)
 
+        copy_vars = [data.image_cols, data.cls_cols, data.filename_col]
         self._retrieve_('image.augmentimages',
-                        table=data.to_table_params(),
+                        image = input,
+                        table=predict_data.to_table_params(),
                         copyvars=copy_vars,
                         casout=dict(replace=True, name=masked_image_table,
-                                    blocksize=blocksize),
+                                    blocksize=block_size),
                         cropList=[dict(sweepImage=True, x=0, y=0,
                                        width=mask_width, height=mask_height,
                                        stepsize=step_size,
@@ -2009,10 +2122,11 @@ class Model(object):
                                        outputheight=output_height,
                                        mask=True)])
 
+        '''masked_image_table: augmented on predict_data'''
         masked_image_table = self.conn.CASTable(masked_image_table)
         copy_vars = masked_image_table.columns.tolist()
-
-        copy_vars.remove('_image_')
+        '''masked_image_table is predicted'''
+        copy_vars.remove(data.image_cols)
         valid_res_tbl = random_name('Valid_Res')
         dlscore_options = dict(model=self.model_table, initWeights=self.model_weights,
                                table=masked_image_table,
@@ -2022,15 +2136,19 @@ class Model(object):
                                casout=dict(replace=True, name=valid_res_tbl),
                                encodeName=True)
         dlscore_options.update(kwargs)
-        self._retrieve_('deeplearn.dlscore', **dlscore_options)
+        res = self._retrieve_('deeplearn.dlscore', **dlscore_options)
+
+        if res.severity > 1:
+            raise DLPyError('something is wrong while scoring the input data with the model.')
 
         valid_res_tbl = self.conn.CASTable(valid_res_tbl)
 
-        temp_table = valid_res_tbl.to_frame()
-        image_id_list = temp_table['_parentId_'].unique().tolist()
-        n_masks = len(temp_table['_id_'].unique())
+        temp_table = valid_res_tbl.to_frame()  # number of rows = len(image_id_list) * n_masks
+        image_id_list = temp_table['_parentId_'].unique().tolist()  # parent id of original image
+        '''_id_ is generated by augmentImages'''
+        n_masks = len(temp_table['_id_'].unique())  # for each image how many masks are cropped
 
-        prob_tensor = np.empty((output_width, output_height, n_masks))
+        prob_tensor = np.empty((output_width, output_height, n_masks))  # create a tensor to store mask probability
         prob_tensor[:] = np.nan
         model_explain_table = dict()
         count_for_subject = dict()
@@ -2046,35 +2164,46 @@ class Model(object):
             y = int(row['y'])
             x_step = int(row['width'])
             y_step = int(row['height'])
-            true_class = row['_label_'].replace(' ', '_')
-            true_pred_prob_col = 'P__label_' + true_class
+            true_class = row[data.cls_cols].replace(' ', '_')
+            true_pred_prob_col = confidence_prefix + true_class
             prob = row[true_pred_prob_col]
+            # try:
+            if count_for_subject[name] >= n_masks:
+                print('{}{}'.format(count_for_subject[name]), n_masks)
             model_explain_table[name][y:min(y + y_step, output_height), x:min(x + x_step, output_width), count_for_subject[name]] = prob
+            # except:
+            #     print('{} {} {} {}'.format(y, min(y + y_step, output_height),
+            #                                    x, min(x + x_step, output_width)
+            #                                    ))
             count_for_subject[name] += 1
 
-        original_image_table = data.fetchimages(fetchVars=data.columns.tolist(),
-                                                to=data.numrows().numrows).Images
+        original_image_table = predict_data.fetchimages(image=inputs, to=data.numrows().numrows).Images
+        meta_image_table = predict_data.fetch(to = data.numrows().numrows).Fetch
 
-        prob_cols = []
-        for col in data.columns:
-            if 'P__label' in col:
-                prob_cols.append(col)
+        prob_cols = [col for col in meta_image_table.columns if col.startswith(confidence_prefix)]
 
         output_table = []
         for id_num in model_explain_table.keys():
             temp_dict = dict()
-            temp_dict.update({'_id_': id_num})
-            index = original_image_table['_id_'] == int(id_num)
+            # temp_dict.update({'_id_': id_num})
+            index = meta_image_table['_id_'] == int(id_num)
+            if filter_column is not None:
+                meta = meta_image_table[filter_column][index].tolist()[0]
+            elif data.filename_col is not None:
+                meta = meta_image_table[data.filename_col][index].tolist()[0]
+            else:
+                meta = None
             temp_dict.update({
-                '_filename_0': original_image_table['_filename_0'][index].tolist()[0],
+                'meta_data': meta,
                 '_image_': original_image_table['Image'][index].tolist()[0],
-                '_label_': original_image_table['Label'][index].tolist()[0],
-                'I__label_': original_image_table['I__label_'][index].tolist()[0],
+                '_label_': meta_image_table[data.cls_cols][index].tolist()[0],
+                'I__label_': predict_data.fetch().Fetch[prediction_col][index].tolist()[0],
+                # 'I__label_': predict_data[predict_data[data.filename_col] == meta][prediction_col].tolist()[0],
                 'heat_map': np.nanmean(model_explain_table[id_num], axis=2)
             })
-            index2 = data['_id_'] == id_num
-            for col_name in prob_cols:
-                temp_dict.update({'{}'.format(col_name): data[col_name][index2].tolist()[0]})
+            # prob_cols
+            # for col_name in prob_cols:
+            #     temp_dict.update({col_name: predict_data[predict_data[data.filename_col] == meta][col_name].tolist()[0]})
 
             output_table.append(temp_dict)
 
@@ -2095,8 +2224,8 @@ class Model(object):
             for im_idx in range(n_images):
                 label = output_table['_label_'][im_idx]
                 pred_label = output_table['I__label_'][im_idx]
-                id_num = output_table['_id_'][im_idx]
-                filename = output_table['_filename_0'][im_idx]
+                # id_num = output_table['_id_'][im_idx]
+                meta_data = output_table['meta_data'][im_idx]
                 img = output_table['_image_'][im_idx]
                 heat_map = output_table['heat_map'][im_idx]
                 img_size = heat_map.shape
@@ -2133,9 +2262,9 @@ class Model(object):
                 bottom, height = -.14, .2
                 top = bottom + height
 
-                output_str = 'Predicted Label: {}'.format(pred_label)
-                output_str += ', filename: {}'.format(filename)
-                output_str += ', image_id: {},'.format(id_num)
+                output_str = 'Image: {}'.format(meta_data)
+                output_str += ', Predicted Label: {}'.format(pred_label)
+                # output_str += ', image_id: {},'.format(id_num)
 
                 axs[im_idx][0].text(left, 0.5 * (bottom + top), output_str,
                                     horizontalalignment='left',
@@ -2144,8 +2273,6 @@ class Model(object):
                                     transform=axs[im_idx][0].transAxes)
 
             plt.show()
-
-        self.conn.droptable(data)
 
         return output_table
 
@@ -2501,7 +2628,8 @@ class FeatureMaps(object):
             for i in range(n_images):
                 filter_num = filter_id[i]
                 col_name = '_LayerAct_{}_IMG_{}_'.format(layer_id, filter_num)
-                image = self.conn.retrieve('image.fetchimages', _messagelevel='error',
+                image = self.conn.retrieve('image.fetchimages',
+                                           _messagelevel='error',
                                            table=self.tbl,
                                            image=col_name).Images.Image[0]
                 image = np.asarray(image)

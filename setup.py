@@ -18,8 +18,6 @@
 
 ''' Install the SAS Deep Learning package '''
 
-import io
-import os
 from setuptools import setup, find_packages
 
 def get_file(fname):
@@ -29,7 +27,7 @@ def get_file(fname):
 
 setup(
     name='sas-dlpy',
-    version='1.0.1-dev',
+    version='1.0.0',
     description='SAS Deep Learning Interface',
     long_description=get_file('README.md'),
     long_description_content_type='text/markdown',
@@ -48,10 +46,9 @@ setup(
         'six >= 1.9.0',
         'graphviz',
         'matplotlib',
-        'pillow'
     ],
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python',
