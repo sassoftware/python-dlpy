@@ -161,3 +161,29 @@ class TestSequential(tm.TestCase):
         model.add(Recurrent(n=10))
         model.add(OutputLayer())
         model.print_summary()
+
+    def test_unet(self):
+        model = Sequential(conn = self.s, model_table = 'model_table')
+
+        model.add(InputLayer(n_channels = 1, width = 512, height = 512,
+                             scale = 1.0 / 255, random_flip = 'None',
+                             random_crop = 'None'))
+        # conv1 512
+        model.add(Conv2d(8, width = 3, act = 'relu', include_bias = False, stride = 1))
+        # model.add(BN(act=actx))
+        model.add(Pooling(width = 2, height = 2, stride = 2, pool = 'max'))
+        # conv2 256
+        model.add(Conv2d(16, width = 3, act = 'relu', include_bias = False, stride = 1))
+        # model.add(BN(act=actx))
+        model.add(Pooling(width = 2, height = 2, stride = 2, pool = 'max'))
+        # conv3 128
+        model.add(Transconvo(n_filters = 8, output_size = (256, 256, 8), height = 3, padding = 1,
+                             width = 3, act = 'relu', include_bias = False, stride = 2))
+        # model.add(BN(act=actx))
+        # conv4 256
+        model.add(Transconvo(n_filters = 2, output_size = (512, 512, 2), height = 3, padding = 1,
+                             width = 3, act = 'relu', include_bias = False, stride = 2))
+        # model.add(BN(act=actx))
+        # 512
+        model.add(Segmentation(n_class = 2))
+        model.print_summary()

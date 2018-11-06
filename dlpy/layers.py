@@ -21,6 +21,7 @@
 import pandas as pd
 import six
 from dlpy.utils import multiply_elements, DLPyError, camelcase_to_underscore, underscore_to_camelcase
+from dlpy.utils import DLPyError, _pair, _triple, parameter_2d
 from . import __dev__
 import warnings
 
@@ -113,6 +114,7 @@ class Layer(object):
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
         self.config = config
+        self.depth = None
 
         if src_layers is None:
             self.src_layers = None
@@ -123,6 +125,24 @@ class Layer(object):
             self.activation = self.config['act'].title()
         else:
             self.activation = None
+
+    def __call__(self, inputs, **kwargs):
+        layer_type = self.__class__.__name__
+        if isinstance(inputs, list) and len(inputs) > 1:
+            if layer_type not in ['Concat', 'Res', 'Scale']:
+                raise DLPyError('The input of {layer_type} has one layer.')
+            inputs = inputs[:]
+        if self.src_layers is None:
+            self.src_layers = []
+        self.src_layers.append(inputs)
+        '''give the layer a name'''
+        self.count_instances()
+        if self.name is None:
+            self.name = str(layer_type) + '_' + str(type(self).number_of_instances)
+        return self
+
+    def __lt__(self, other):
+        return self.depth < other.depth
 
     @classmethod
     def count_instances(cls):
@@ -875,8 +895,8 @@ class Concat(Layer):
 
     Parameters
     ----------
-    name : string, optional
-        Specifies the name of the layer.
+    src_layers : iterable Layer
+        Specifies the layers concatenated together
     act : string, optional
         Specifies the activation function.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
@@ -1438,6 +1458,185 @@ class Reshape(Layer):
     def output_size(self):
         if self._output_size is None:
             self._output_size = (self.config['width'], self.config['height'], self.config['depth'])
+        return self._output_size
+
+    @property
+    def num_bias(self):
+        return 0
+
+
+class Transconvo(Layer):
+    """
+    Transconvo layer
+
+    Parameters
+    ----------
+    name : string, optional
+        Specifies the name of the layer.
+    act : string, optional
+        | Specifies the activation function.
+        | possible values: [ AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP ]
+        | default: AUTO
+    fcmp_act : string, optional
+        Specifies the FCMP activation function for the layer.
+    src_layers : iterable Layer, optional
+        Specifies the layers directed to this layer.
+    height : int, required
+        Specifies the height of the input data. By default the height is determined automatically
+        when the model training begins.
+    width : int, required
+        Specifies the width of the input data. By default the width is determined automatically
+        when the model training begins.
+    depth : int, required
+        Specifies the depth of the feature maps.
+    src_layers : iterable Layer, optional
+        Specifies the layers directed to this layer.
+
+    Returns
+    -------
+    :class:`Reshape`
+    """
+
+    type = 'transconvo'
+    type_label = 'Transconvo'
+    type_desc = 'Transconvo layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, n_filters, height=None, width=None, name=None, act='AUTO', dropout=0, fcmp_act=None,
+                 include_bias=True, init='XAVIER', init_bias=0, mean=0, std=1,
+                 output_padding=None, output_padding_height=None, output_padding_width=None,
+                 padding=None, padding_height=None, padding_width=None,
+                 stride=None, stride_horizontal=None, stride_vertical=None, truncation_factor=None,
+                 src_layers=None, output_size=None, **kwargs):
+        if any([output_padding, output_padding_height, output_padding_width]) and output_size is not None:
+            raise DLPyError('you cannot specify values for both output_size '
+                            'and output_padding or output_padding_height or output_padding_width')
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        if width is None and height is None:
+            width = 3
+            height = 3
+            parameters['width'] = 3
+            parameters['height'] = 3
+        elif width is None:
+            width = height
+            parameters['width'] = height
+        elif height is None:
+            height = width
+            parameters['height'] = width
+        else:
+            if height != width:
+                DLPyError("DLPy doesn't support non-square feature map and non-square kernel size. Please use action")
+        # _clean_parameters(parameters)
+        Layer.__init__(self, name, parameters, src_layers)
+        self._output_size = output_size
+        self.padding = parameter_2d(padding, padding_height, padding_width, (0, 0))
+        self.stride = parameter_2d(stride, stride_vertical, stride_horizontal, (1, 1))
+        self.output_padding = parameter_2d(output_padding, output_padding_height, output_padding_width, (0, 0))
+        self._num_weights = None
+        self.color_code = get_color(self.type)
+
+    @property
+    def kernel_size(self):
+        return (int(self.config['height']), int(self.config['width']))
+
+    @property
+    def num_weights(self):
+        if self._num_weights is None:
+            self._num_weights = int(self.config['width'] * self.config['height'] *
+                                    self.config['n_filters'] * self.src_layers[0].output_size[2])
+        return self._num_weights
+
+    @property
+    def output_size(self):
+        #if self._output_size is None:
+        input_size = self.src_layers[0].output_size[:-1]
+        output_height = (input_size[0]-1)*self.stride[0]-2*self.padding[0]+self.config['height']+self.output_padding[0]
+        output_width = (input_size[1]-1)*self.stride[1]-2*self.padding[1]+self.config['width']+self.output_padding[1]
+        self._output_size = (output_height, output_width, int(self.config['n_filters']))
+        return self._output_size
+
+    def calculate_output_padding(self):
+        '''calculate output_padding before adding the layer'''
+        if self._output_size is not None:
+            input_size = self.src_layers[0].output_size[:2]
+            stride = self.stride
+            padding = self.padding
+            kernel_size = (self.config['height'], self.config['width'])
+            min_sizes = [(input_size[i]-1)*stride[i]-2*padding[i]+kernel_size[i] for i in range(2)]
+            self.output_padding = tuple([self._output_size[i]-min_sizes[i] for i in range(2)])
+            if len(set(self.output_padding)) == 1:
+                self.config['output_padding'] = self.output_padding[0]
+            else:
+                self.config['output_padding_height'] = self.output_padding[0]
+                self.config['output_padding_width'] = self.output_padding[1]
+
+    @property
+    def num_bias(self):
+        return 0
+
+
+class Segmentation(Layer):
+    """
+    Reshape layer
+
+    Parameters
+    ----------
+    name : string, optional
+        Specifies the name of the layer.
+    act : string, optional
+        | Specifies the activation function.
+        | possible values: [ AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP ]
+        | default: AUTO
+    fcmp_act : string, optional
+        Specifies the FCMP activation function for the layer.
+    src_layers : iterable Layer, optional
+        Specifies the layers directed to this layer.
+    height : int, required
+        Specifies the height of the input data. By default the height is determined automatically
+        when the model training begins.
+    width : int, required
+        Specifies the width of the input data. By default the width is determined automatically
+        when the model training begins.
+    depth : int, required
+        Specifies the depth of the feature maps.
+    src_layers : iterable Layer, optional
+        Specifies the layers directed to this layer.
+
+    Returns
+    -------
+    :class:`Reshape`
+    """
+
+    type = 'segmentation'
+    type_label = 'Segmentation'
+    type_desc = 'Segmentation layer'
+    can_be_last_layer = True
+    number_of_instances = 0
+
+    def __init__(self, name=None, act=None, error=None, src_layers=None, **kwargs):
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        # _clean_parameters(parameters)
+        Layer.__init__(self, name, parameters, src_layers)
+        self._output_size = None
+        self.color_code = get_color(self.type)
+
+    @property
+    def kernel_size(self):
+        return None
+
+    @property
+    def num_weights(self):
+        return 0
+
+    @property
+    def output_size(self):
+        if self._output_size is None:
+            if self.src_layers is None:
+                self._output_size = 0
+            self._output_size = self.src_layers[0].output_size
         return self._output_size
 
     @property
