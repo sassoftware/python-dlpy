@@ -1,0 +1,3 @@
+[
+  "dlpy/tests/test_model.py::TestModel::test_find_lr"
+]

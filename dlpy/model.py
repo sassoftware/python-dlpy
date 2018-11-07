@@ -89,6 +89,7 @@ class Model(object):
         self.model_type = 'CNN'
         self.target = None
         self.model_ever_trained = False
+        self.find_lr_function = None
 
 
     @classmethod
@@ -686,6 +687,70 @@ class Model(object):
 
         '''
         return self._retrieve_('deeplearn.modelinfo', modelTable=self.model_table)
+
+    def find_lr(self, start_lr=1e-7, end_lr=1.0, num_iteration=100, **kwargs):
+        # TODO: need to polish, add test cases, support user define fcmplearningrate finding funcion
+        from parse import *
+        if start_lr >= end_lr:
+            raise ValueError('start_lr should be smaller than end_lr')
+        self.conn.loadactionset('fcmpact')
+        if self.find_lr_function is None:
+            self.find_lr_function = random_name('find_lr', 6)
+            active_caslib_name = self.conn.caslibinfo(active = True).CASLibInfo.loc[0]['Name']
+            active_caslib_name = 'CASUSER' if active_caslib_name.startswith('CASUSER(') else active_caslib_name
+            self.conn.sessionProp.setsessopt(cmplib = f'{active_caslib_name}.{self.find_lr_function}')
+            self.conn.addRoutines(
+                routineCode = f'''
+                function annealing_exp(rate, initRate, batch);
+                    lrmin = {start_lr};
+                    lrmax = {end_lr};
+                    prt = batch / {num_iteration};
+                    rate = min(lrmin*(lrmax/lrmin)**prt, lrmax);
+                    return(rate);
+                endsub;
+                ''',
+                package = 'pkg',
+                funcTable = dict(name = self.find_lr_function, replace = 1)
+            )
+        if 'optimizer' not in kwargs:
+            optimizer = Optimizer(algorithm=VanillaSolver(learning_rate=start_lr, fcmp_learning_rate='annealing_exp'),
+                                  mini_batch_size=4, max_epochs=1, log_level=3)
+            kwargs['optimizer'] = optimizer
+        else:
+            if not isinstance(kwargs['optimizer'], Optimizer):
+                raise DLPyError('optimizer should be an Optimizer object')
+            kwargs['optimizer'].algorithm.add_parameter('fcmp_learning_rate', 'annealing_exp')
+            kwargs['optimizer'].algorithm['log_level'] = 3
+            kwargs['optimizer'].algorithm['max_epochs'] = 1
+            kwargs['optimizer'].algorithm['learning_rate'] = start_lr
+
+        res = self.fit(**kwargs)
+        lrs = []
+        loss = []
+        record_begin = False
+        for idx, line in enumerate(res.messages):
+            print(line)
+            if not record_begin:
+                if search('NOTE:  Batch', line) is not None:
+                    record_begin = True
+                    continue
+                else:
+                    continue
+            if search('NOTE:  Epoch', line):
+                break
+            parse_result = parse('NOTE: {:^} {:^} {:^} {:^} {:^}', line)
+            lrs = lrs + [float(parse_result[2])]
+            loss = loss + [float(parse_result[3])]
+            if float(parse_result[2]) == end_lr:
+                break
+        min_loss, min_loss_idx = min((loss[i], i) for i in range(len(loss)))
+        min_loss_lr = lrs[min_loss_idx]
+        found_lr = min_loss_lr / 10.0
+        plt.ylabel("Loss")
+        plt.xlabel("Learning rate (log scale)")
+        plt.plot(lrs, loss)
+        plt.xscale('log')
+        return found_lr
 
     def fit(self, data, inputs=None, target=None, data_specs=None, mini_batch_size=1, max_epochs=5, log_level=3,
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
@@ -3051,6 +3116,8 @@ class Solver(DLPyDict):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
 
     Returns
     -------
@@ -3058,10 +3125,10 @@ class Solver(DLPyDict):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None):
         DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy, gamma=gamma,
                           step_size=step_size, power=power, use_locking=use_locking, clip_grad_max=clip_grad_max,
-                          clip_grad_min=clip_grad_min, steps=steps)
+                          clip_grad_min=clip_grad_min, steps=steps, fcmp_learning_rate=fcmp_learning_rate)
 
     def set_method(self, method):
         '''
@@ -3125,6 +3192,8 @@ class VanillaSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
 
     Returns
     -------
@@ -3132,9 +3201,9 @@ class VanillaSolver(Solver):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate)
         self.set_method('vanilla')
 
 
@@ -3173,6 +3242,8 @@ class MomentumSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth,
         ninth, and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
 
     Returns
     -------
@@ -3180,9 +3251,9 @@ class MomentumSolver(Solver):
 
     '''
     def __init__(self, momentum=0.9, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10,
-                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate)
         self.set_method('momentum')
         self.add_parameter('momentum', momentum)
 
@@ -3226,6 +3297,8 @@ class AdamSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
 
     Returns
     -------
@@ -3233,9 +3306,10 @@ class AdamSolver(Solver):
 
     '''
     def __init__(self, beta1=0.9, beta2=0.999, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate)
         self.set_method('adam')
         self.add_parameter('beta1', beta1)
         self.add_parameter('beta2', beta2)
@@ -3289,6 +3363,8 @@ class LBFGSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
 
     Returns
     -------
@@ -3297,9 +3373,9 @@ class LBFGSolver(Solver):
     '''
     def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, learning_rate=0.001,
                  learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75, use_locking=True,
-                 clip_grad_max=None, clip_grad_min=None, steps=None):
+                 clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate)
         self.set_method('lbfg')
         self.add_parameters('m', m)
         self.add_parameters('maxlinesearchiters', max_line_search_iters)
@@ -3342,6 +3418,8 @@ class NatGradSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
 
     Returns
     -------
@@ -3349,9 +3427,10 @@ class NatGradSolver(Solver):
 
     '''
     def __init__(self, approximation_type=1, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate)
         self.set_method('natgrad')
         self.add_parameter('approximationtype', approximation_type)
 

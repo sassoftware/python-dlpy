@@ -46,7 +46,7 @@ class TestModel(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
+        cls.s = swat.CAS('dlgrd009', 13314)
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -459,6 +459,27 @@ class TestModel(unittest.TestCase):
         model.add(layer=InputLayer(n_channels=1, height=10, width=10))
         model.add(layer=Keypoints(n=10))
         self.assertTrue(model.summary.loc[1, 'Number of Parameters'] == (1000, 10))
+
+    def test_find_lr(self):
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+        model1.find_lr(start_lr=0.0001, end_lr=1, num_iteration=60, data='eee', inputs='_image_', target='_label_',)
 
     @classmethod
     def tearDownClass(cls):
