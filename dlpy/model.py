@@ -2342,30 +2342,132 @@ class Model(object):
 
         print('NOTE: Model table saved successfully.')
 
-    def deploy(self, path, output_format='astore', **kwargs):
+    def save_weights_csv(self, path):
+        '''
+        Save model weights table as csv
+
+        Parameters
+        ----------
+        path : string
+            Specifies the server-side path to store the model
+            weights csv.
+
+        '''
+        weights_table_opts = input_table_check(self.model_weights)
+        weights_table_opts.update(**dict(groupBy='_LayerID_',
+                                         groupByMode='REDISTRIBUTE',
+                                         orderBy='_WeightID_'))
+        self.conn.partition(table=weights_table_opts,
+                            casout=dict(name=self.model_weights.name,
+                                        replace=True))
+        
+        caslib, path_remaining = caslibify(self.conn, path, task='save')
+        _file_name_ = self.model_name.replace(' ', '_')
+        _extension_ = '.csv'
+        weights_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
+        rt = self._retrieve_('table.save', table=weights_table_opts, 
+                             name=weights_tbl_file, replace=True, caslib=caslib)
+        if rt.severity > 1:
+            for msg in rt.messages:
+                print(msg)
+            raise DLPyError('something is wrong while saving the the model to a table!')
+        
+        print('NOTE: Model weights csv saved successfully.')
+
+    def save_to_onnx(self, path, model_weights=None):
+        '''
+        Save to ONNX model
+
+        Parameters
+        ----------
+        path : string
+            Specifies the client-side path to save the ONNX model.
+        model_weights : string, optional
+            Specifies the client-side path of the csv file of the 
+            model weights table.  If no csv file is specified, the 
+            weights will be fetched from the CAS server.  This can 
+            take a long time to complete if the size of model weights
+            is large.
+
+        '''
+
+        from .model_conversion.write_onnx_model import sas_to_onnx
+        if model_weights is None:
+            try:
+                self.model_weights.numrows()
+            except:
+                raise DLPyError('No model weights yet. Please load weights or'
+                                ' train the model first.') 
+            print('NOTE: Model weights will be fetched from server')
+            model_weights = self.model_weights
+        else:
+            print('NOTE: Model weights will be loaded from csv.')
+            model_weights = pd.read_csv(model_weights)
+        model_table = self.conn.CASTable(**self.model_table)
+        onnx_model = sas_to_onnx(layers=self.layers, 
+                                 model_table=model_table, 
+                                 model_weights=model_weights)
+        file_name = self.model_name + '.onnx'
+        if path is None:
+            path = os.getcwd()
+
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        file_name = os.path.join(path, file_name)
+       
+        with open(file_name, 'wb') as f:
+            f.write(onnx_model.SerializeToString())
+
+        print('NOTE: ONNX model file saved successfully.')
+
+    def deploy(self, path, output_format='astore', model_weights=None, **kwargs):
         """
         Deploy the deep learning model to a data file
 
         Parameters
         ----------
         path : string
-            Specifies the server-side path to store the model tables or astore
+            Specifies the server-side path to store the model files.
         output_format : string, optional
             Specifies the format of the deployed model
-            Valid Values: astore or castable
+            Valid Values: astore, castable, or onnx
             Default: astore
+        model_weights : string, optional
+            Specifies the client-side path to the csv file of the 
+            model weights table.  Only effective when
+            output_format='onnx'.  If no csv file is specified when 
+            deploying to ONNX, the weights will be fetched from the 
+            CAS server.  This may take a long time to complete if 
+            the size of model weights is large.
 
         Notes
         -----
-        Currently, this function only supports sashdat and astore formats.
+        Currently, this function supports sashdat, astore, and onnx formats.
+        
+        More information about ONNX can be found at: https://onnx.ai/
+        
+        DLPy supports ONNX version >= 1.3.0, and Opset version 8.
+
+        For ONNX format, currently supported layers are convo, pool,
+        fc, batchnorm, residual, concat, and detection.
+        
+        If dropout is specified in the model, train the model using 
+        inverted dropout, which can be specified in :class:`Optimizer`.
+        This will ensure the results are correct when running the
+        model during test phase.
+
 
         """
         if output_format.lower() == 'astore':
             self.save_to_astore(path=path, **kwargs)
         elif output_format.lower() in ('castable', 'table'):
             self.save_to_table(path=path)
+        elif output_format.lower() == 'onnx':
+            self.save_to_onnx(path, model_weights=model_weights)
         else:
-            raise DLPyError('output_format must be "astore", "castable" or "table"')
+            raise DLPyError('output_format must be "astore", "castable", "table",'
+                            'or "onnx"')
 
     def count_params(self):
         ''' Count the total number of parameters in the model '''
@@ -2668,10 +2770,18 @@ def extract_conv_layer(layer_table):
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
 
-    if layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'convopts.no_bias'].any():
+    dl_numval = layer_table['_DLNumVal_']
+    if dl_numval[layer_table['_DLKey1_'] == 'convopts.no_bias'].any():
         conv_layer_config['include_bias'] = False
     else:
         conv_layer_config['include_bias'] = True
+
+    padding_width = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_left'].tolist()[0]
+    padding_height = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_top'].tolist()[0]
+    if padding_width != -1:
+        conv_layer_config['padding_width'] = padding_width
+    if padding_height != -1:
+        conv_layer_config['padding_height'] = padding_height
 
     layer = Conv2d(**conv_layer_config)
     return layer
@@ -2703,6 +2813,13 @@ def extract_pooling_layer(layer_table):
     pool_layer_config['pool'] = pool_layer_config['poolingtype'].lower().split(' ')[0]
     del pool_layer_config['poolingtype']
     pool_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    padding_width = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_left'].tolist()[0]
+    padding_height = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_top'].tolist()[0]
+    if padding_width != -1:
+        pool_layer_config['padding_width'] = padding_width
+    if padding_height != -1:
+        pool_layer_config['padding_height'] = padding_height
 
     layer = Pooling(**pool_layer_config)
     return layer

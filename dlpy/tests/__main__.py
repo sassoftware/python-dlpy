@@ -91,7 +91,7 @@ parser.add_argument('--to-console', action='store_true', default=True,
 args = parser.parse_args()
 
 os.environ['CASHOST'] = args.host
-os.environ['CASPORT'] = args.port
+os.environ['CASPORT'] = str(args.port)
 os.environ['CASUSER'] = args.user
 if args.protocol != 'auto':
     os.environ['CASPROTOCOL'] = args.protocol
