@@ -18,6 +18,7 @@
 
 ''' Write ONNX model '''
 
+from onnx import defs
 from onnx import helper, numpy_helper
 from onnx import TensorProto
 import numpy as np
@@ -531,6 +532,8 @@ def sas_to_onnx(layers, model_table, model_weights):
                                               inputs=act_input,
                                               outputs=act_output))
 
+        elif layer.type == 'detection':
+            continue
 
         else:
             layer_type = layer.type
@@ -542,7 +545,10 @@ def sas_to_onnx(layers, model_table, model_weights):
                                   outputs=outputs,
                                   initializer=initializer)
 
-    model_def = helper.make_model(graph_def, producer_name='SAS')
+    opset = helper.make_opsetid(defs.ONNX_DOMAIN, 8)
+    model_def = helper.make_model(graph_def,
+                                  producer_name='SAS',
+                                  opset_imports=[opset])
 
     return model_def
 

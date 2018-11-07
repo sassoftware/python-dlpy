@@ -2446,6 +2446,17 @@ class Model(object):
         Currently, this function supports sashdat, astore, and onnx formats.
         
         More information about ONNX can be found at: https://onnx.ai/
+        
+        DLPy supports ONNX version >= 1.3.0, and Opset version 8.
+
+        For ONNX format, currently supported layers are convo, pool,
+        fc, batchnorm, residual, concat, and detection.
+        
+        If dropout is specified in the model, train the model using 
+        inverted dropout, which can be specified in :class:`Optimizer`.
+        This will ensure the results are correct when running the
+        model during test phase.
+
 
         """
         if output_format.lower() == 'astore':
