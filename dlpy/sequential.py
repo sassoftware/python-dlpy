@@ -48,9 +48,9 @@ class Sequential(Model):
     def __init__(self, conn, layers=None, model_table=None):
         Model.__init__(self, conn, model_table=model_table)
 
+        self.layers_dict = {}
         if layers is None:
             self.layers = []
-            self.layers_dict = {}
         elif type(layers) is list or type(layers) is set or type(layers) is tuple:
             self.layers = layers
             for layer in self.layers:
