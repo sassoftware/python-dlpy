@@ -6,7 +6,6 @@
   "dlpy/tests/test_model.py::TestModel::test_data_specs2": true,
   "dlpy/tests/test_model.py::TestModel::test_data_specs_dict2": true,
   "dlpy/tests/test_model.py::TestModel::test_evaluate2": true,
-  "dlpy/tests/test_model.py::TestModel::test_find_lr": true,
   "dlpy/tests/test_model.py::TestModel::test_get_feature_maps": true,
   "dlpy/tests/test_model.py::TestModel::test_heat_map_analysis2": true,
   "dlpy/tests/test_model.py::TestModel::test_image_table2": true,

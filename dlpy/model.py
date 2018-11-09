@@ -729,7 +729,6 @@ class Model(object):
         loss = []
         record_begin = False
         for idx, line in enumerate(res.messages):
-            print(line)
             if not record_begin:
                 if search('NOTE:  Batch', line) is not None:
                     record_begin = True

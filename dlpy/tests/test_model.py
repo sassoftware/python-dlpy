@@ -28,6 +28,7 @@ import swat.utils.testing as tm
 from dlpy.sequential import Sequential
 from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, OutputLayer, Keypoints
 from dlpy.utils import caslibify
+from dlpy.images import ImageTable
 import unittest
 
 
@@ -474,12 +475,11 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        train = ImageTable.load_files(self.s, path=self.data_dir+'Giraffe_Dolphin')
+        train.resize(224, inplace=1)
 
-        self.s.table.loadtable(caslib=caslib,
-                               casout={'name': 'eee', 'replace': True},
-                               path=path)
-        model1.find_lr(start_lr=0.0001, end_lr=1, num_iteration=60, data='eee', inputs='_image_', target='_label_',)
+        model1.find_lr(start_lr=0.0001, end_lr=0.1, num_iteration=10, n_threads=4, mini_batch_size=4, gpu=1,
+                       data=train, inputs='_image_', target='_label_')
 
     @classmethod
     def tearDownClass(cls):
