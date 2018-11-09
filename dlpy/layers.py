@@ -1644,6 +1644,35 @@ class Segmentation(Layer):
         return 0
 
 
+class FCMP(Layer):
+    type = 'FCMP'
+    type_label = 'FCMP'
+    type_desc = 'FCMP layer'
+    can_be_last_layer = True
+    number_of_instances = 0
+
+    def __init__(self, name = None, backward_func = None, forward_func = None, height = None, width = None,
+                 depth = None, n_weights = None, src_layers = None, **kwargs):
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        # _clean_parameters(parameters)
+        Layer.__init__(self, name, parameters, src_layers)
+        self._output_size = None
+        self.color_code = get_color(self.type)
+
+    @property
+    def kernel_size(self):
+        return None
+
+    @property
+    def num_weights(self):
+        return self.n_weights
+
+    @property
+    def output_size(self):
+        return self._output_size
+
+
 def _clean_input_parameters(parameters):
     del parameters['self']
     del parameters['name']

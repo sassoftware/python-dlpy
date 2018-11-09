@@ -944,6 +944,9 @@ def convert_xml_annotation(filename, coord_type, resize):
     height = int(size.find('height').text)
     for obj in root.iter('object'):
         cls = obj.find('name').text
+        # remove ignore class which is reserved in segmentation tool
+        if cls == 'ignore':
+            continue
         xmlbox = obj.find('bndbox')
         boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))

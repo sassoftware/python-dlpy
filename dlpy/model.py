@@ -690,7 +690,7 @@ class Model(object):
 
     def find_lr(self, start_lr=1e-7, end_lr=1.0, num_iteration=100, **kwargs):
         # TODO: need to polish, add test cases, support user define fcmplearningrate finding funcion
-        from parse import *
+        from parse import parse, search
         if start_lr >= end_lr:
             raise ValueError('start_lr should be smaller than end_lr')
         self.conn.loadactionset('fcmpact')
