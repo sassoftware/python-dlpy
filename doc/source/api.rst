@@ -143,6 +143,7 @@ Models
    Model.tune
    Model.plot_training_history
    Model.predict
+   Model.evaluate
    Model.get_feature_maps
    Model.get_features
    Model.heat_map_analysis
