@@ -25,6 +25,7 @@
 import os
 import swat
 import swat.utils.testing as tm
+from dlpy.model import Model
 from dlpy.sequential import Sequential
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer, 
                          Keypoints, BN, Res, Concat)
@@ -616,6 +617,18 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity == 0)
 
         model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model24(self):
+        import onnx
+        m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m)
+        model1.print_summary()
+
+    def test_model25(self):
+        import onnx
+        m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
 
     @classmethod
     def tearDownClass(cls):
