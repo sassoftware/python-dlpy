@@ -802,6 +802,12 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
 
                     # check if need to transpose fc weight
                     if len(w.shape) == 2:
+                        # check if weight was transposed in Gemm op
+                        if node.op_type == 'Gemm':
+                            for attr in node.attribute:
+                                if attr.name == 'transB':
+                                    if attr.i == 1:
+                                        w = np.transpose(w, (1, 0))
                         if w.shape[1] == layer.config['n']:
                             w = np.transpose(w, (1,0))
                     g_out.create_dataset(dset_name.encode('utf8'), data=w)
