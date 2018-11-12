@@ -138,6 +138,9 @@ def onnx_to_sas(model, model_name=None):
     # apply activations
     for node in graph_def.node:
         if node.op_type in _act_map.keys():
+            # handle output layer activations separately 
+            if node.op_type == 'Softmax':
+                continue
             previous = onnx_find_previous_compute_layer(graph_def, node)
             if len(previous) != 1:
                 print('Warning: Unable to apply activation for node '
@@ -147,7 +150,7 @@ def onnx_to_sas(model, model_name=None):
                 # TODO: better checks for valid activations 
                 if layer.name == previous[0].name: 
                     if 'act' in layer.config.keys():
-                        layer.config.update(act=_act_map.get(node.op_type, 'IDENTITY'))
+                        layer.config.update(act=_act_map.get(node.op_type))
                     else:
                         print('Warning: Unable to apply activation for'
                               + layer.name + ' layer.')
@@ -175,19 +178,14 @@ def onnx_to_sas(model, model_name=None):
     if dlpy_layers[-1].type == 'fc':
         last_layer = dlpy_layers.pop()
         out_layer = OutputLayer(name=last_layer.name,
-                                act=last_layer.config['act'],
+                                act='SOFTMAX',
                                 n=last_layer.config['n'],
                                 src_layers=last_layer.src_layers)
         dlpy_layers.append(out_layer)
     else:
-        if graph_def.node[-1].op_type == 'Softmax':
-            out_layer = OutputLayer(name='output',
-                                    act='SOFTMAX',
-                                    src_layers=[layers[-1]])
-        else:
-            out_layer = OutputLayer(name='output',
-                                    act='IDENTITY',
-                                    src_layers=[layers[-1]])
+        out_layer = OutputLayer(name='output',
+                                act='SOFTMAX',
+                                src_layers=[layers[-1]])
         dlpy_layers.append(out_layer)
 
     return dlpy_layers
@@ -369,6 +367,7 @@ def onnx_extract_conv(graph, node, layers):
                   padding=padding,
                   padding_width=padding_width,
                   padding_height=padding_height,
+                  act=act,
                   include_bias=include_bias,
                   src_layers=src) 
 
@@ -752,6 +751,7 @@ def is_bias_op(graph, node):
 def onnx_find_next_activation(graph, node):
     ''' Check if an activation follows current compute node '''
     # if so, return that. Otherwise, return None
+    # TODO: use this to find activations during layer generation
     activation_ops = ['Relu', 'Tanh', 'LeakyRelu', 'Log', 'Identity']
     
     out = onnx_get_out_nodes(graph, node)
