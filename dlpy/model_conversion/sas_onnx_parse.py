@@ -32,7 +32,7 @@ from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
 
 _onnx_ops = ['Conv', 'MaxPool', 'AveragePool', 'GlobalAveragePool',
              'BatchNormalization', 'Concat', 'Gemm', 'MatMul',
-             'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten']
+             'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten', 'Constant']
 
 
 _act_map = {
@@ -526,11 +526,17 @@ def onnx_extract_gemm(graph, node, layers):
     # check inferred shapes in graph
     for v in graph.value_info:
         if v.name == node.input[0]:
-            a_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
-                       v.type.tensor_type.shape.dim[1].dim_value)
+            try:
+                a_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
+                           v.type.tensor_type.shape.dim[1].dim_value)
+            except IndexError:
+                pass
         if v.name == node.input[1]:
-            b_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
-                       v.type.tensor_type.shape.dim[1].dim_value)
+            try:
+                b_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
+                           v.type.tensor_type.shape.dim[1].dim_value)
+            except IndexError:
+                pass
 
     if a_shape is None and b_shape is None:
         raise OnnxParseError('Unable to determine number of neurons '
