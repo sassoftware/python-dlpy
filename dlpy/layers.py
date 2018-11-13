@@ -1648,12 +1648,13 @@ class FCMP(Layer):
     type = 'FCMP'
     type_label = 'FCMP'
     type_desc = 'FCMP layer'
-    can_be_last_layer = True
     number_of_instances = 0
 
     def __init__(self, name = None, backward_func = None, forward_func = None, height = None, width = None,
-                 depth = None, n_weights = None, src_layers = None, **kwargs):
+                 depth = None, n_weights = None, src_layers = None, can_be_last_layer = False, **kwargs):
         parameters = locals()
+        self.can_be_last_layer = can_be_last_layer
+        del parameters['can_be_last_layer']
         parameters = _unpack_config(parameters)
         # _clean_parameters(parameters)
         Layer.__init__(self, name, parameters, src_layers)

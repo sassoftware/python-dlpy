@@ -148,6 +148,8 @@ class Model(object):
                 model.layers.append(extract_concatenate_layer(layer_table=layer_table))
             elif layer_type == 11:
                 model.layers.append(extract_detection_layer(layer_table=layer_table))
+            elif layer_type == 11:
+                model.layers.append(extract_fcmp_layer(layer_table=layer_table))
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
         layer_id_list = conn_mat['_DLLayerID_'].tolist()
@@ -156,10 +158,13 @@ class Model(object):
         for row_id in range(conn_mat.shape[0]):
             layer_id = int(layer_id_list[row_id])
             src_layer_id = int(src_layer_id_list[row_id])
-            if model.layers[layer_id].src_layers is None:
-                model.layers[layer_id].src_layers = [model.layers[src_layer_id]]
-            else:
-                model.layers[layer_id].src_layers.append(model.layers[src_layer_id])
+            try:
+                if model.layers[layer_id].src_layers is None:
+                    model.layers[layer_id].src_layers = [model.layers[src_layer_id]]
+                else:
+                    model.layers[layer_id].src_layers.append(model.layers[src_layer_id])
+            except:
+                raise
 
         return model
 
@@ -720,8 +725,8 @@ class Model(object):
             if not isinstance(kwargs['optimizer'], Optimizer):
                 raise DLPyError('optimizer should be an Optimizer object')
             kwargs['optimizer'].algorithm.add_parameter('fcmp_learning_rate', 'annealing_exp')
-            kwargs['optimizer'].algorithm['log_level'] = 3
-            kwargs['optimizer'].algorithm['max_epochs'] = 1
+            kwargs['optimizer']['log_level'] = 3
+            kwargs['optimizer']['max_epochs'] = 1
             kwargs['optimizer'].algorithm['learning_rate'] = start_lr
 
         res = self.fit(**kwargs)

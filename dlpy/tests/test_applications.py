@@ -41,7 +41,7 @@ class TestApplications(unittest.TestCase):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
-        cls.s = swat.CAS()
+        cls.s = swat.CAS('dlgrd009', 13314)
         cls.server_type = tm.get_cas_host_type(cls.s)
 
         cls.server_sep = '\\'
@@ -412,3 +412,86 @@ class TestApplications(unittest.TestCase):
         from dlpy.applications import SpeechRecognition
         model = SpeechRecognition(self.s, n_blocks=1)
         model.print_summary()
+
+    def test_pretrained(self):
+        self.s.loadactionset('fcmpact')
+        self.s.loadactionset('deepLearn')
+        self.s.sessionProp.setsessopt(cmplib = 'CASUSER.gramfcmp')
+        self.s.addRoutines(
+            routineCode = {
+                '''
+                function forward_prop( srcHeight, srcWidth, srcDepth, srcY[*], weights[*], y_out[*] );
+                    outargs y_out;
+                    nWeights = 0;
+                    nNeurons = dim(y_out);
+                    srcNeurons = srcHeight*srcWidth*srcDepth;
+                    featuremapsize = srcHeight*srcWidth;
+                    gramsize = srcDepth*srcDepth;
+                    do row=1 to srcDepth;
+                        do rowt=1 to srcDepth;
+                            y_out[row*rowt] = 0;
+                            do column=1 to featuremapsize;
+                                do columnt=1 to featuremapsize;
+                                    y_out[row*rowt] = y_out[row*rowt]+srcY[(row-1)*featuremapsize+column]*srcY[(rowt-1)*featuremapsize+columnt];
+                                end;
+                            end;
+                            y_out[row*rowt] = y_out[row*rowt]/featuremapsize;
+                        end;
+                    end;
+                    return;
+                endsub;
+    
+                function back_prop( srcHeight, srcWidth, srcDepth, srcY[*], Y[*], weights[*], 
+                                   deltas[*], gradient_out[*], srcDeltas_out[*]);
+                    outargs srcDeltas_out;
+                    nWeights = 0;
+                    nNeurons = dim(Y);
+                    srcNeurons = srcHeight*srcWidth*srcDepth;
+                    featuremapsize = srcHeight*srcWidth;
+                    do rowdelta=1 to srcDepth;
+                        do columnsrc=1 to featuremapsize;
+                            index = rowdelta*columnsrc;
+                            srcDeltas_out[index] = 0;
+                            do columndelta=1 to srcDepth;
+                                do rowsrc=1 to srcDepth;
+                                    indexdeltas = (rowdelta-1)*srcDepth+columndelta;
+                                    indexsrcY = (columnsrc-1)*featuremapsize+rowsrc;
+                                    srcDeltas_out[index] = srcDeltas_out[index]+deltas[indexdeltas]*srcY[indexsrcY];
+                                end;
+                            end;
+                            srcDeltas_out[index] = srcDeltas_out[index]*featuremapsize;
+                        end;
+                    end;
+                    return;
+                endsub;
+                '''},
+            package = "pkg",
+            saveTable = 1,
+            funcTable = dict(name = "gramfcmp", caslib = "casuser", replace = 1)
+        )
+        pre_trained_weights_file = '/dept/cas/weshiz/VGG-16/VGG_ILSVRC_16_layers.caffemodel.h5'
+        n_classes = 10
+        model_table = 'vgg16'
+        model_cas = model_vgg16.VGG16_Model(self.s, model_table = model_table, n_channels = 3, width = 224, height = 224,
+                                            random_crop = 'None',
+                                            offsets = (103.939 / 255, 116.779 / 255, 123.68 / 255))
+        model = Model.from_table(model_cas, display_note = False)
+        model.load_weights(path = pre_trained_weights_file)
+
+        weight_table_options = model.model_weights.to_table_params()
+        weight_table_options.update(dict(where = '_LayerID_<18'))
+        model._retrieve_('table.partition', table = weight_table_options,
+                         casout = dict(replace = True, **model.model_weights.to_table_params()))
+        model._retrieve_('deeplearn.removelayer', model = model_table, name = 'fc8')
+        model._retrieve_('deeplearn.removelayer', model = model_table, name = 'fc7')
+        model._retrieve_('deeplearn.removelayer', model = model_table, name = 'fc6')
+        model._retrieve_('deeplearn.removelayer', model = model_table, name = 'pool5')
+
+        model._retrieve_('deeplearn.addlayer', model = model_table, name = 'gram',
+                         layer = dict(type = 'FCMP', forwardFunc = "forward_prop", backwardFunc = "back_prop",
+                                      height = 14, width = 14, depth = 512, nWeights = 0),
+                         srcLayers = ['conv5_3'])
+        model._retrieve_('deeplearn.addlayer', model = model_table, name = 'fc8',
+                         layer = dict(type = 'output', n = n_classes),
+                         srcLayers = ['gram'])
+        model = Model.from_table(self.s.CASTable(model_table))
