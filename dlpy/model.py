@@ -1753,7 +1753,10 @@ class Model(object):
             label = uid.iloc[0, 0]
         uid = uid.loc[uid['_label_'] == label]
 
-        if idx >= uid.shape[0]:
+        if len(uid) == 0:
+            raise DLPyError('No images were found. Please check input '
+                            'table or label name.')
+        elif idx >= uid.shape[0]:
             raise DLPyError('image_id should be an integer between 0'
                             ' and {}.'.format(uid.shape[0] - 1))
         uid_value = uid.iloc[idx, 1]
