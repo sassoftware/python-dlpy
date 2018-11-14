@@ -291,6 +291,82 @@ class Model(object):
                   '{}'.format(temp_HDF5))
         return model
 
+    @classmethod
+    def from_onnx_model(cls, conn, onnx_model, output_model_table=None,
+                        offsets=None, scale=None, std=None):
+        '''
+        Generate a Model object from ONNX model.
+
+        Parameters
+        ----------
+        conn : CAS
+            Specifies the CAS connection object.
+        onnx_model : ModelProto
+            Specifies the ONNX model.
+        output_model_table : string or dict or CAS table, optional
+            Specifies the CAS table to store the deep learning model.
+            Default: None
+        offsets : int-list, optional
+            Specifies the values to be subtracted from the pixel values
+            of the input data, used if the data is an image.
+        scale : float, optional
+            Specifies the scaling factor to apply to each image.
+        std : string, optional
+            Specifies how to standardize the variables in the input layer.
+            Valid Values: MIDRANGE, NONE, STD
+
+        Returns
+        -------
+        :class:`Model`
+
+        '''
+
+        from .model_conversion.sas_onnx_parse import onnx_to_sas
+        if output_model_table is None:
+            output_model_table = dict(name=random_name('onnx_model', 6))
+
+        model_table_opts = input_table_check(output_model_table)
+
+        if 'name' not in model_table_opts.keys():
+            model_table_opts.update(**dict(name=random_name('onnx_model', 6)))
+
+        model_name = model_table_opts['name']
+        
+        _layers = onnx_to_sas(onnx_model, model_name)
+        if offsets is not None:
+            _layers[0].config.update(offsets=offsets)
+        if scale is not None:
+            _layers[0].config.update(scale=scale)
+        if std is not None:
+            _layers[0].config.update(std=std)
+        if len(_layers) == 0:
+            raise DLPyError('Unable to import ONNX model.')
+
+        conn.loadactionset('deeplearn', _messagelevel='error')
+        rt = conn.retrieve('deeplearn.buildmodel',
+                           _messagelevel='error',
+                           model=dict(name=model_name, replace=True),
+                           type='CNN')
+        if rt.severity > 1:
+            for msg in rt.messages:
+                print(msg)
+            raise DLPyError('Cannot build model, there seems to be a problem.')
+
+        for layer in _layers:
+            option = layer.to_model_params()
+            rt = conn.retrieve('deeplearn.addlayer', _messagelevel='error',
+                               model=model_name, **option)
+            if rt.severity > 1:
+                for m in rt.messages:
+                    print(m)
+                raise DLPyError('There seems to be an error while adding the '
+                                + layer.name + '.')
+
+        input_model_table = conn.CASTable(**model_table_opts)
+        model = cls.from_table(input_model_table=input_model_table)
+        print('NOTE: Successfully imported ONNX model.')
+        return model
+
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         ''' Call a CAS action '''
         return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)
@@ -494,6 +570,8 @@ class Model(object):
         elif file_name.lower().endswith('caffemodel.h5'):
             self.load_weights_from_caffe(path, labels=labels)
         elif file_name.lower().endswith('kerasmodel.h5'):
+            self.load_weights_from_keras(path, labels=labels)
+        elif file_name.lower().endswith('onnxmodel.h5'):
             self.load_weights_from_keras(path, labels=labels)
         else:
             warnings.warn('Weights file must be one of the follow types:\n'
