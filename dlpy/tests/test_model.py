@@ -23,6 +23,7 @@
 #       the CASPROTOCOL environment variable.
 
 import os
+import onnx
 import swat
 import swat.utils.testing as tm
 from dlpy.model import Model
@@ -619,14 +620,27 @@ class TestModel(unittest.TestCase):
         model1.deploy(self.data_dir, output_format='onnx')
 
     def test_model24(self):
-        import onnx
         m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m)
         model1.print_summary()
 
     def test_model25(self):
-        import onnx
         m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model26(self):
+        m = onnx.load(os.path.join(self.data_dir, 'Simple_CNN1.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model27(self):
+        m = onnx.load(os.path.join(self.data_dir, 'pytorch_net1.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model28(self):
+        m = onnx.load(os.path.join(self.data_dir, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
