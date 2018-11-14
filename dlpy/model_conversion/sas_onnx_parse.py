@@ -65,7 +65,7 @@ def onnx_to_sas(model, model_name=None):
     
     Parameters
     ----------
-    model : ModelProto
+    model : ONNX ModelProto
         Specifies the loaded ONNX model.
     model_name : string, optional
         Specifies the name of the model.
@@ -199,7 +199,19 @@ def onnx_to_sas(model, model_name=None):
 
 
 def onnx_initializer_to_tensors(initializer):
-    ''' Convert ONNX graph initializer to tensors '''
+    ''' 
+    Convert ONNX graph initializer to tensors 
+    
+    Parameters
+    ----------
+    initializer : list of ONNX TensorProto
+        Specifies the initializer of the graph.
+
+    Returns
+    -------
+    list of numpy.ndarray
+
+    '''
 
     return [(init.name,
              numpy_helper.to_array(init))
@@ -207,7 +219,19 @@ def onnx_initializer_to_tensors(initializer):
 
 
 def onnx_filter_sas_layers(graph):
-    ''' Filter nodes that correspond to SAS Deep learning layer types '''
+    ''' 
+    Filter nodes that correspond to SAS Deep learning layer types 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    
+    Returns
+    -------
+    list of ONNX NodeProto
+
+    '''
 
     sas_layers = [node for node in graph.node
                   if is_compute_layer(graph, node)]
@@ -216,7 +240,19 @@ def onnx_filter_sas_layers(graph):
 
 
 def onnx_input_layer(value_info):
-    ''' Construct Input Layer '''
+    ''' 
+    Construct Input Layer 
+    
+    Parameters
+    ----------
+    value_info : ONNX ValueInfoProto
+        Specifies a ValueInfoProto object.
+
+    Returns
+    -------
+    :class:`InputLayer`
+    
+    '''
     input_layer_name = value_info.name
     _, C, H, W = list(d.dim_value for d in
                       value_info.type.tensor_type.shape.dim)
@@ -229,9 +265,9 @@ def onnx_extract_sas_layer(graph, node, layers):
 
     Parameters
     ----------
-    graph : :class:`GraphProto`
+    graph : ONNX :class:`GraphProto`
         Specifies the ONNX graph.
-    node : :class:`NodeProto`
+    node : ONNX :class:`NodeProto`
         Specifies the ONNX node.
     layers : list of Layers
         The sequential layers of the model.
@@ -239,7 +275,8 @@ def onnx_extract_sas_layer(graph, node, layers):
     Returns
     -------
     :class:`Layer`
-        Layer corresponding to the ONNX node.
+        Layer object corresponding to the ONNX node.
+
     '''
     if node.op_type == 'Conv':
         return onnx_extract_conv(graph, node, layers)
@@ -266,7 +303,19 @@ def onnx_extract_sas_layer(graph, node, layers):
 
 
 def find_input_layer_name(graph):
-    ''' Determine the name of the input layer '''
+    ''' 
+    Determine the name of the input layer 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies the GraphProto object.
+
+    Returns
+    -------
+    string
+
+    '''
     initialized = [init.name for init in graph.initializer]
     uninitialized = [value_info.name for value_info in graph.input
                      if value_info.name not in initialized]
@@ -278,7 +327,21 @@ def find_input_layer_name(graph):
 
 
 def get_dlpy_layer(layers, name):
-    ''' Get a layer by name from list of layers ''' 
+    ''' 
+    Get a layer by name from list of layers 
+    
+    Parameters
+    ----------
+    layers : list of Layers
+        Specifies a list of Layers.
+    name : string
+        Specifies the name of a Layer.
+
+    Returns
+    -------
+    Layer, or None
+        The layer matching the name, or None.
+    ''' 
     for layer in layers:
         if layer.name == name:
             return layer
@@ -286,7 +349,23 @@ def get_dlpy_layer(layers, name):
 
 
 def onnx_extract_conv(graph, node, layers):
-    ''' Construct convo layer from ONNX op '''
+    ''' 
+    Construct convo layer from ONNX op 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+
+    Returns
+    -------
+    :class:`Conv2d`
+
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -380,7 +459,26 @@ def onnx_extract_conv(graph, node, layers):
 
     
 def onnx_extract_pool(graph, node, layers, pool='MAX'):
-    ''' Construct pool layer from ONNX op '''
+    ''' 
+    Construct pool layer from ONNX op 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+    pool : str, optional
+        Specifies the type of pooling.
+        Default: MAX
+
+    Returns
+    -------
+    :class:`Pooling`
+
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -453,7 +551,23 @@ def onnx_extract_pool(graph, node, layers, pool='MAX'):
 
 
 def onnx_extract_globalpool(graph, node, layers):
-    ''' Construct global pool layer from ONNX op '''
+    ''' 
+    Construct global pool layer from ONNX op 
+
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+
+    Returns
+    -------
+    :class:`Pooling`
+   
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -476,7 +590,23 @@ def onnx_extract_globalpool(graph, node, layers):
 
 
 def onnx_extract_batchnormalization(graph, node, layers):
-    ''' Construct batchnorm layer from ONNX op '''
+    ''' 
+    Construct batchnorm layer from ONNX op 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+    
+    Returns
+    -------
+    :class:`BN`
+
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -492,7 +622,23 @@ def onnx_extract_batchnormalization(graph, node, layers):
 
 
 def onnx_extract_concat(graph, node, layers):
-    ''' Construct concat layer from ONNX op '''
+    ''' 
+    Construct concat layer from ONNX op 
+
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+    
+    Returns
+    -------
+    :class:`Concat`
+
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -508,7 +654,23 @@ def onnx_extract_concat(graph, node, layers):
 
 
 def onnx_extract_gemm(graph, node, layers):
-    ''' Construct FC layer from ONNX op '''
+    ''' 
+    Construct FC layer from ONNX op 
+
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+   
+    Returns
+    -------
+    :class:`Dense`
+
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -586,7 +748,23 @@ def onnx_extract_gemm(graph, node, layers):
 
 
 def onnx_extract_matmul(graph, node, layers):
-    ''' Construct FC layer from ONNX op '''
+    ''' 
+    Construct FC layer from ONNX op 
+
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+    
+    Returns
+    -------
+    :class:`Dense`
+
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -643,7 +821,23 @@ def onnx_extract_matmul(graph, node, layers):
 
 
 def onnx_extract_residual(graph, node, layers):
-    ''' Construct residual layer from ONNX op '''
+    ''' 
+    Construct residual layer from ONNX op 
+
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    layers : list of Layers
+        Specifies the existing layers of a model.
+
+    Returns
+    -------
+    :class:`Res`
+   
+    '''
     previous = onnx_find_previous_compute_layer(graph, node)
     
     if not previous:
@@ -659,14 +853,43 @@ def onnx_extract_residual(graph, node, layers):
 
 
 def onnx_get_node(graph, name):
-    ''' Get ONNX node from graph by name '''
+    ''' 
+    Get ONNX node from graph by name 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+    
+    Returns
+    -------
+    NodeProto
+
+    '''
     for node in graph.node:
         if node.name == name:
             return node
 
 
 def onnx_get_input_nodes(graph, node):
-    ''' Return all nodes that are inputs for a node '''
+    ''' 
+    Return all nodes that are inputs for a node 
+
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    list
+        list of NodeProto
+    
+    '''
     in_nodes = []
     for i in node.input:
         for n in graph.node:
@@ -676,7 +899,22 @@ def onnx_get_input_nodes(graph, node):
 
 
 def onnx_get_out_nodes(graph, node):
-    ''' Return all nodes that connect to output '''
+    ''' 
+    Return all nodes that connect to output 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    list
+        list of NodeProto
+
+    '''
     out_nodes = []
     for i in node.output:
         for n in graph.node:
@@ -686,7 +924,22 @@ def onnx_get_out_nodes(graph, node):
 
 
 def onnx_find_previous_compute_layer(graph, node):
-    ''' Determine a node's previous corresponding SAS compute layer '''
+    ''' 
+    Determine a node's previous corresponding SAS compute layer 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    list
+        List of NodeProto 
+
+    '''
     src = []
 
     def f(graph, node, src_layers):
@@ -702,7 +955,21 @@ def onnx_find_previous_compute_layer(graph, node):
 
         
 def is_compute_layer(graph, node):
-    ''' Determine if this ONNX node corresponds to a SAS layer '''
+    ''' 
+    Determine if this ONNX node corresponds to a SAS layer 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    bool
+
+    '''
     # 'Add' and 'Sum' are handled separately since they may be
     # either a bias op for previous layer, or a SAS residual layer
     # TODO: add reshape 
@@ -720,7 +987,21 @@ def is_compute_layer(graph, node):
 
 
 def is_residual_layer(graph, node):
-    ''' Correctly identify add op as residual layer '''
+    ''' 
+    Correctly identify add op as residual layer 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    bool
+    
+    '''
     # or add/sum for residual layer
     if node.op_type not in ['Add', 'Sum']:
         return False
@@ -747,7 +1028,21 @@ def is_residual_layer(graph, node):
 
 
 def is_bias_op(graph, node):
-    ''' Correctly identify bias op ''' 
+    ''' 
+    Correctly identify bias op 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    bool
+
+    ''' 
     if node.op_type not in ['Add', 'Sum']:
         return False
     
@@ -771,7 +1066,22 @@ def is_bias_op(graph, node):
 
 
 def onnx_find_next_activation(graph, node):
-    ''' Check if an activation follows current compute node '''
+    ''' 
+    Check if an activation follows current compute node 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    node : ONNX NodeProto
+        Specifies a NodeProto object.
+
+    Returns
+    -------
+    string
+        Name of the ONNX activation op
+
+    '''
     # if so, return that. Otherwise, return None
     # TODO: use this to find activations during layer generation
     activation_ops = ['Relu', 'Tanh', 'LeakyRelu', 'Log', 'Identity']
@@ -790,14 +1100,43 @@ def onnx_find_next_activation(graph, node):
 
 
 def onnx_get_shape(graph, tensor):
-    ''' Get shape from valueinfo '''
+    ''' 
+    Get shape from valueinfo 
+    
+    Parameters
+    ----------
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    tensor : ONNX ValueInfoProto 
+        Specifies a ValueInfoProto object.
+
+    Returns
+    -------
+    list
+        list of ints of the dimensions
+
+    '''
     for i in graph.value_info:
         if i.name == tensor:
             return [d.dim_value for d in i.type.tensor_type.shape.dim]
 
 
 def write_weights_hdf5(layers, graph, tensor_dict, name):
-    ''' Write SAS compatible HDF5 weights file '''
+    ''' 
+    Write SAS compatible HDF5 weights file 
+    
+    Parameters
+    ----------
+    layers : list of Layers
+        Specifies the layers of the model.
+    graph : ONNX GraphProto
+        Specifies a GraphProto object.
+    tensor_dict : dict of numpy.ndarray
+        Specifies the dictionary of weight tensors.
+    name : string
+        Specifies the name of the model.
+
+    '''
     import os
     temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.onnxmodel.h5'.format(name))
     f_out = h5py.File(temp_HDF5, 'w')
