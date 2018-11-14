@@ -625,7 +625,6 @@ def onnx_extract_matmul(graph, node, layers):
     
     # set number of neurons according to shape
     if a_shape[0] == 1:
-    if a_shape[0] == 1:
         neurons = b_shape[1]
     else:
         neurons = a_shape[0]
