@@ -30,11 +30,13 @@ from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
                          BN, Concat, Res)
 
 
+# The supported ONNX ops that can be parsed by this module
 _onnx_ops = ['Conv', 'MaxPool', 'AveragePool', 'GlobalAveragePool',
              'BatchNormalization', 'Concat', 'Gemm', 'MatMul',
              'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten', 'Constant']
 
 
+# mapping ONNX ops to SAS activations
 _act_map = {
     'Relu': 'RELU',
     'Tanh': 'TANH',
@@ -75,11 +77,12 @@ def onnx_to_sas(model, model_name=None):
 
     '''
     
-    # verify supported ops
+    # verify model ops are supported 
     for n in model.graph.node:
         if n.op_type not in _onnx_ops + list(_act_map.keys()):
             raise OnnxParseError('Unsupported op: ' + n.op_type)
 
+    # get shapes of tensors in graph
     model = infer_shapes(model)
     graph_def = model.graph
     dlpy_layers = []
@@ -107,6 +110,7 @@ def onnx_to_sas(model, model_name=None):
     tensor_dict = dict(init_tensors)
 
     # check reshape ops following initialized tensor
+    # if present, reshape and add to tensor_dict
     for node in graph_def.node:
         if node.op_type != 'Reshape':
             continue
@@ -126,11 +130,13 @@ def onnx_to_sas(model, model_name=None):
     if not uninitialized:
         raise OnnxParseError('Unable to determine input layer.')
     elif len(uninitialized) > 1:
+        # TODO: support multipe input layers
         raise OnnxParseError('Unable to determine input layer.')
     else:
         input_layer = onnx_input_layer(uninitialized[0])
         dlpy_layers.append(input_layer)
 
+    # create SAS layers from the ONNX nodes 
     for node in sas_computation_nodes:
         layer = onnx_extract_sas_layer(graph_def, node, dlpy_layers)
         dlpy_layers.append(layer)
@@ -175,6 +181,7 @@ def onnx_to_sas(model, model_name=None):
     write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)  
 
     # add output layer
+    # currently, only SOFTMAX activation in the output layer is supported
     if dlpy_layers[-1].type == 'fc':
         last_layer = dlpy_layers.pop()
         out_layer = OutputLayer(name=last_layer.name,
@@ -456,6 +463,7 @@ def onnx_extract_globalpool(graph, node, layers):
     
     src = [get_dlpy_layer(layers, i) for i in src_names]
     
+    # check the shape of the input to pool op
     _, C, height, width = onnx_get_shape(graph, node.input[0])
     
     return Pooling(width=width,
@@ -514,6 +522,7 @@ def onnx_extract_gemm(graph, node, layers):
     act = 'identity'
     neurons = None
 
+    # determine dimensions of the multiply 
     a_shape = None
     b_shape = None
     # check initializer for weight tensors
@@ -563,6 +572,7 @@ def onnx_extract_gemm(graph, node, layers):
             if attr.i == 1:
                 b_shape = (b_shape[1], b_shape[0])
 
+    # set number of neurons according to shape
     if a_shape[0] == 1:
         neurons = b_shape[1]
     else:
@@ -590,6 +600,7 @@ def onnx_extract_matmul(graph, node, layers):
     act = 'identity'
     neurons = None
 
+    # determine dimensions of the multiply 
     a_shape = None
     b_shape = None
     # check initializer for weight tensors
@@ -612,6 +623,8 @@ def onnx_extract_matmul(graph, node, layers):
         raise OnnxParseError('Unable to determine number of neurons '
                              'in FC layer.')
     
+    # set number of neurons according to shape
+    if a_shape[0] == 1:
     if a_shape[0] == 1:
         neurons = b_shape[1]
     else:
@@ -717,6 +730,7 @@ def is_residual_layer(graph, node):
     # i.e. a bias term
     initialized = [init.name for init in graph.initializer]
     
+    # if initializer->reshape->input, return False
     for n in graph.node:
         if n.op_type != 'Reshape':
             continue
@@ -725,6 +739,7 @@ def is_residual_layer(graph, node):
             if n.output in node.input:
                 return False
 
+    # if an input comes from initializer, return False
     for i in node.input:
         if i in initialized:
             return False
@@ -739,10 +754,12 @@ def is_bias_op(graph, node):
     
     initialized = [init.name for init in graph.initializer]
 
+    # if an input comes from initializer, return True 
     for i in node.input:
         if i in initialized:
             return True
 
+    # if initializer->reshape->input, return True 
     for n in graph.node:
         if n.op_type != 'Reshape':
             continue
@@ -805,10 +822,9 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
             for w in weights:
                 if len(w.shape) > 1:
                     dset_name = layer.name + '/' + 'kernel:0'
-
                     # check if need to transpose fc weight
                     if len(w.shape) == 2:
-                        # check if weight was transposed in Gemm op
+                        # check if transposed was specified in Gemm op
                         if node.op_type == 'Gemm':
                             for attr in node.attribute:
                                 if attr.name == 'transB':
