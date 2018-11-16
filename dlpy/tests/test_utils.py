@@ -73,7 +73,7 @@ class TestUtils(unittest.TestCase):
         underscore = camelcase_to_underscore('includeBias')
         self.assertTrue('include_bias' == underscore)
 
-    def test_camelcase_to_underscore(self):
+    def test_underscore_to_camelcase(self):
         underscore = underscore_to_camelcase('include_bias')
         self.assertTrue('includeBias' == underscore)
 

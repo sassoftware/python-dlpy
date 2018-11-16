@@ -41,7 +41,7 @@ class TestNetwork(tm.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS('dlgrd009', 13322)
+        cls.s = swat.CAS('dlgrd009', 13314)
         cls.server_type = tm.get_cas_host_type(cls.s)
 
     def test_option_type(self):
@@ -218,6 +218,31 @@ class TestNetwork(tm.TestCase):
         seg = Segmentation(name = 'Segmentation_1', act = 'auto')(x)
         model = Network(self.s, inputs = inp, outputs = seg)
         model.compile()
+
+    def test_multi_src_layer_fc(self):
+        inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
+        fc1 = Dense(n = 128)(inputs)
+        fc2 = Dense(n = 64)(fc1)
+        output1 = OutputLayer(n = 10, name = 'OutputLayer_1')([fc1, fc2])
+        model = Network(self.s, inputs = inputs, outputs = output1)
+        model.compile()
+
+    def test_non_list_src_layers(self):
+        inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
+        fc1 = Dense(n = 128, src_layers = inputs)(inputs)
+        fc2 = Dense(n = 64)(fc1)
+        output1 = OutputLayer(n = 10, name = 'OutputLayer_1', src_layers = [fc1, fc2])
+        model = Network(self.s, inputs = inputs, outputs = output1)
+        model.compile()
+
+    def test_dulplicated_src_layers_call(self):
+        inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
+        fc1 = Dense(n = 128, src_layers = inputs)(inputs)
+        fc2 = Dense(n = 64)(fc1)
+        output1 = OutputLayer(n = 10, name = 'OutputLayer_1', src_layers = [fc1, fc2])([fc1, fc2])
+        model = Network(self.s, inputs = inputs, outputs = output1)
+        model.compile()
+        self.assertTrue(len(output1.src_layers) == 2)
 
     @classmethod
     def tearDownClass(cls):

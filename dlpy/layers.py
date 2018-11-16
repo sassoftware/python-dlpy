@@ -24,6 +24,7 @@ from dlpy.utils import multiply_elements, DLPyError, camelcase_to_underscore, un
 from dlpy.utils import DLPyError, _pair, _triple, parameter_2d
 from . import __dev__
 import warnings
+import collections
 
 PALETTES = dict(
     original={
@@ -119,7 +120,11 @@ class Layer(object):
         if src_layers is None:
             self.src_layers = None
         else:
-            self.src_layers = list(src_layers)
+            # to be compatible with network
+            if isinstance(src_layers, collections.Iterable):
+                self.src_layers = list(src_layers)
+            else:
+                self.src_layers = [src_layers]
 
         if 'act' in self.config.keys() and self.config['act'] is not None:
             self.activation = self.config['act'].title()
@@ -129,16 +134,24 @@ class Layer(object):
     def __call__(self, inputs, **kwargs):
         layer_type = self.__class__.__name__
         if isinstance(inputs, list) and len(inputs) > 1:
-            if layer_type not in ['Concat', 'Res', 'Scale']:
-                raise DLPyError('The input of {layer_type} has one layer.')
-            inputs = inputs[:]
+            if layer_type not in ['Concat', 'Res', 'Scale', 'Dense']:
+                raise DLPyError('The input of {layer_type} should have only one layer.')
+        else:
+            inputs = [inputs]
         if self.src_layers is None:
             self.src_layers = []
-        self.src_layers.append(inputs)
+        self.src_layers = self.src_layers + inputs
+
         '''give the layer a name'''
         self.count_instances()
         if self.name is None:
             self.name = str(layer_type) + '_' + str(type(self).number_of_instances)
+
+        # remove duplicated src_layers
+        if len(self.src_layers) != len(set(self.src_layers)):
+            self.src_layers = list(set(self.src_layers))
+            warnings.warn('You have duplicated src_layers in Layer {} '
+                          'and the duplicated layers have been removed.'.format(self.name))
         return self
 
     def __lt__(self, other):
