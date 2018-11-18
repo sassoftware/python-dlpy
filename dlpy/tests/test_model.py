@@ -23,10 +23,13 @@
 #       the CASPROTOCOL environment variable.
 
 import os
+import onnx
 import swat
 import swat.utils.testing as tm
+from dlpy.model import Model
 from dlpy.sequential import Sequential
-from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, OutputLayer, Keypoints
+from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
+                         Keypoints, BN, Res, Concat)
 from dlpy.utils import caslibify
 from dlpy.images import ImageTable
 import unittest
@@ -58,6 +61,12 @@ class TestModel(unittest.TestCase):
             if cls.data_dir.endswith(cls.server_sep):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
+
+        if 'DLPY_DATA_DIR_LOCAL' in os.environ:
+            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if cls.data_dir_local.endswith(cls.server_sep):
+                cls.data_dir_local = cls.data_dir_local[:-1]
+            cls.data_dir_local += cls.server_sep
 
     def test_model1(self):
 
@@ -480,6 +489,187 @@ class TestModel(unittest.TestCase):
 
         model1.find_lr(start_lr=0.0001, end_lr=0.1, num_iteration=10, n_threads=4, mini_batch_size=4, gpu=1,
                        data=train, inputs='_image_', target='_label_')
+
+    def test_model18(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.save_weights_csv(self.data_dir)
+
+    def test_model19(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model20(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.save_weights_csv(self.data_dir)
+        weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
+        model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
+
+    def test_model21(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        pool1 = Pooling(2)
+        model1.add(pool1)
+        conv1 = Conv2d(1, 7, src_layers=[pool1])
+        conv2 = Conv2d(1, 7, src_layers=[pool1])
+        model1.add(conv1)
+        model1.add(conv2)
+        model1.add(Concat(act='identity', src_layers=[conv1, conv2]))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model22(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        pool1 = Pooling(2)
+        model1.add(pool1)
+        conv1 = Conv2d(1, 1, act='identity', src_layers=[pool1])
+        model1.add(conv1)
+        model1.add(Res(act='relu', src_layers=[conv1, pool1]))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model23(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(BN(act='relu'))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(BN(act='relu'))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model24(self):
+        m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m)
+        model1.print_summary()
+
+    def test_model25(self):
+        m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model26(self):
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model27(self):
+        m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net1.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model28(self):
+        m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net2.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
 
     @classmethod
     def tearDownClass(cls):

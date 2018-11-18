@@ -21,6 +21,12 @@
 import os
 
 from keras import backend as K
+from distutils.version import StrictVersion
+import keras
+from dlpy.utils import DLPyError
+if StrictVersion( keras.__version__) < '2.1.3' or StrictVersion( keras.__version__) > '2.1.6':
+    raise DLPyError('This keras version ('+keras.__version__+') is not supported, '
+                                                             'please use a version >= 2.1.3 and <= 2.1.6')
 
 from .write_keras_model_parm import write_keras_hdf5
 from .write_sas_code import (write_input_layer, write_convolution_layer,
@@ -51,8 +57,7 @@ def keras_to_sas(model, model_name=None):
     for layer in model.layers:
         class_name = layer.__class__.__name__.lower()
         if (class_name in computation_layer_classes):
-            comp_layer_name = find_previous_computation_layer(
-                model, layer.name, computation_layer_classes)
+            comp_layer_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
             source_str = make_source_str(comp_layer_name)
             src_layer.update({layer.name: source_str})
         elif (class_name == 'activation'):

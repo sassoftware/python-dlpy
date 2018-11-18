@@ -223,7 +223,8 @@ class TestNetwork(tm.TestCase):
         inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
         fc1 = Dense(n = 128)(inputs)
         fc2 = Dense(n = 64)(fc1)
-        output1 = OutputLayer(n = 10, name = 'OutputLayer_1')([fc1, fc2])
+        fc3 = Dense(n = 64)([fc1, fc2])
+        output1 = OutputLayer(n = 10, name = 'OutputLayer_1')(fc3)
         model = Network(self.s, inputs = inputs, outputs = output1)
         model.compile()
 
@@ -239,10 +240,10 @@ class TestNetwork(tm.TestCase):
         inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
         fc1 = Dense(n = 128, src_layers = inputs)(inputs)
         fc2 = Dense(n = 64)(fc1)
-        output1 = OutputLayer(n = 10, name = 'OutputLayer_1', src_layers = [fc1, fc2])([fc1, fc2])
+        output1 = OutputLayer(n = 10, name = 'OutputLayer_1', src_layers = fc1)
         model = Network(self.s, inputs = inputs, outputs = output1)
         model.compile()
-        self.assertTrue(len(output1.src_layers) == 2)
+        self.assertTrue(len(fc1.src_layers) == 1)
 
     @classmethod
     def tearDownClass(cls):
