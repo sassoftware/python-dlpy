@@ -23,7 +23,7 @@
 #       the CASPROTOCOL environment variable.
 
 import os
-import onnx
+#import onnx
 import swat
 import swat.utils.testing as tm
 from dlpy.model import Model
@@ -488,6 +488,11 @@ class TestModel(unittest.TestCase):
         model1.save_weights_csv(self.data_dir)
 
     def test_model19(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
@@ -512,6 +517,11 @@ class TestModel(unittest.TestCase):
         model1.deploy(self.data_dir, output_format='onnx')
 
     def test_model20(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
@@ -538,6 +548,11 @@ class TestModel(unittest.TestCase):
         model1.deploy(self.data_dir, output_format='onnx', model_weights=weights_path)
 
     def test_model21(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
@@ -567,6 +582,11 @@ class TestModel(unittest.TestCase):
         model1.deploy(self.data_dir, output_format='onnx')
 
     def test_model22(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
@@ -594,6 +614,11 @@ class TestModel(unittest.TestCase):
         model1.deploy(self.data_dir, output_format='onnx')
 
     def test_model23(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7, act='identity', include_bias=False))
@@ -620,26 +645,51 @@ class TestModel(unittest.TestCase):
         model1.deploy(self.data_dir, output_format='onnx')
 
     def test_model24(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m)
         model1.print_summary()
 
     def test_model25(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
     def test_model26(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         m = onnx.load(os.path.join(self.data_dir, 'Simple_CNN1.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
     def test_model27(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
         m = onnx.load(os.path.join(self.data_dir, 'pytorch_net1.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
     def test_model28(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+            
         m = onnx.load(os.path.join(self.data_dir, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
