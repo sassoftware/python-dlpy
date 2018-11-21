@@ -119,3 +119,8 @@ class TestUtils(unittest.TestCase):
                                           data_path=self.data_dir+'dlpy_obj_det_test')
 
         get_anchors(self.s, coord_type='yolo', data='output')
+
+    def test_create_object_detection_table2(self):
+        create_object_detection_table(conn = self.s, data_path = '/dept/cas/weshiz/test_11_19',
+                                      local_path = r'\\sashq\root\dept\cas\weshiz\test_11_19', coord_type = 'yolo',
+                                      output = 'detTbl')
