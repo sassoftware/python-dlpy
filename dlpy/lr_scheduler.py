@@ -16,6 +16,7 @@
 #  limitations under the License.
 #
 
+import math
 from .model import DLPyDict
 from .utils import random_name
 
@@ -110,14 +111,17 @@ class ReduceLROnPlateau(FCMPLR):
 
 class CyclicLR(FCMPLR):
 
-    def __init__(self, conn, learning_rate, max_lr, step_size):
-        super(CyclicLR, self).__init__(conn, learning_rate=learning_rate, step_size=step_size,
+    def __init__(self, conn, data, batch_size, factor, learning_rate, max_lr):
+        super(CyclicLR, self).__init__(conn, learning_rate=learning_rate,
                                        fcmp_learning_rate='cyclic_lr')
+        num_batch_per_epoch = math.ceil(conn.numrows(data).numrows / batch_size)
+        step_size = int(num_batch_per_epoch * factor)
         conn.addRoutines(
             routineCode = f'''
-                        function cyclic_lr(rate, batch, initRate, stepSize);
-                            cycle = floor(batch / (2 * stepSize) + 1);
-                            x = abs(batch / stepSize - 2 * cycle + 1);
+                        function cyclic_lr(rate, iterNum, batch, initRate);
+                            batch_cum = {num_batch_per_epoch} * iterNum + batch;
+                            cycle = floor(batch_cum / (2 * {step_size}) + 1);
+                            x = abs(batch_cum / {step_size} - 2 * cycle + 1);
                             rate = initRate + ({max_lr} - initRate) * max(0, 1-x);
                             return(rate);
                         endsub;

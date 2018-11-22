@@ -73,8 +73,31 @@ class TestLRScheduler(unittest.TestCase):
         print(lr_policy)
 
     def test_CyclicLR(self):
-        lr_policy = CyclicLR(self.s, 1.0, 1.2, 30)
-        print(lr_policy)
+        model1 = Sequential(self.s, model_table = 'Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act = 'softmax', n = 2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path = self.data_dir + 'images.sashdat', task = 'load')
+
+        self.s.table.loadtable(caslib = caslib,
+                               casout = {'name': 'eee', 'replace': True},
+                               path = path)
+        solver = VanillaSolver(CyclicLR(self.s, 'eee', 4, 1.0, 0.001, 0.01))
+        # solver = VanillaSolver(FixedLR(0.1))
+        optimizer = Optimizer(algorithm = solver, log_level = 3, max_epochs = 4, mini_batch_size = 2)
+        r = model1.fit(data = 'eee', inputs = '_image_', target = '_label_', optimizer = optimizer, n_threads=2)
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertTrue(r.severity <= 1)
 
     def test_ReduceLROnPlateau(self):
         model1 = Sequential(self.s, model_table = 'Simple_CNN1')
