@@ -504,12 +504,17 @@ def sas_to_onnx(layers, model_table, model_weights):
             if act in [None, 'AUTO']:
                 act = 'IDENTITY'
 
-            # get inputs in correct order
+            # get correct order of concat inputs from model table
             l_conf = model_table[model_table['_DLKey0_'] == layer.name.lower()]
             l_conf = l_conf.fetch()['Fetch']
-            concat_input = [l_conf[l_conf['_DLKey1_'] == 'srclayers.' + str(i)]
+            concat_order = [l_conf[l_conf['_DLKey1_'] == 'srclayers.' + str(i)]
                             for i in range(len(layer.src_layers))]
-            concat_input = [row.iloc[0][2] for row in concat_input]
+            concat_order = [row.iloc[0][2] for row in concat_order]
+            # concat_order contains lower case layer names
+            # sort the names of src layer objects according to this order
+            concat_input = [l.name for l in layer.src_layers]
+            concat_input = sorted(concat_input,
+                                  key=lambda name: concat_order.index(name.lower())
 
             if act.lower() != 'identity':
                 concat_output = [layer.name + '_concat_out']

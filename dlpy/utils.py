@@ -1140,10 +1140,13 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     det_img_table = random_name('DET_IMG')
 
+    caslib, path_after_caslib = caslibify(conn, data_path, task='load')
+
     with sw.option_context(print_messages=False):
-        res = conn.image.loadImages(path=data_path,
+        res = conn.image.loadImages(path=path_after_caslib,
                                     recurse=False,
                                     labelLevels=-1,
+                                    caslib=caslib,
                                     casout={'name': det_img_table, 'replace':True})
         if res.severity > 0:
             for msg in res.messages:
@@ -1163,6 +1166,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                 print(msg)
         else:
             print("NOTE: Images are processed.")
+
+    conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
     with sw.option_context(print_messages = False):
         caslib = find_caslib(conn, data_path)
@@ -1284,6 +1289,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         for var in var_name:
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
+
+    conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
