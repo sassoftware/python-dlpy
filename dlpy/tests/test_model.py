@@ -689,7 +689,7 @@ class TestModel(unittest.TestCase):
             import onnx
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
-            
+
         m = onnx.load(os.path.join(self.data_dir, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()

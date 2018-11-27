@@ -72,6 +72,7 @@ neural network (CNN) model.
 Import DLPy model functions::
 
     >>> from dlpy import Model, Sequential
+    >>> from dlpy.layers import *
 
 Use DLPy to create a sequential model and name it 'Simple_CNN'::
 
