@@ -23,13 +23,14 @@ from .images import ImageTable
 from .utils import random_name
 
 
-def two_way_split(tbl, test_rate=20, stratify=True, stratify_by='_label_', train_name=None, test_name=None, **kwargs):
+def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='_label_',
+                  image_col='_image_', train_name=None, test_name=None, **kwargs):
     '''
-    Split data into training and testing sets
+    Split image data into training and testing sets
 
     Parameters
     ----------
-    tbl : CASTable or ImageTable
+    tbl : CASTable
         The CAS table to split
     test_rate : double, optional
         Specifies the proportion of the testing data set,
@@ -37,8 +38,11 @@ def two_way_split(tbl, test_rate=20, stratify=True, stratify_by='_label_', train
     stratify : boolean, optional
         If True stratify the sampling by the stratify_by column name
         If False do random sampling without stratification
-    stratify_by : string, optional
-        The variable to stratify by
+    im_table : boolean, optional
+        If True outputs are converted to an imageTable
+        If False CASTables are returned with all columns
+    image_col : string
+        Name of image column if returning ImageTable
     train_name : string
         Specifies the output table name for the training set
     test_name : string
@@ -100,20 +104,24 @@ def two_way_split(tbl, test_rate=20, stratify=True, stratify_by='_label_', train
                           casout=dict(name=train_tbl_name, replace=True,
                                       blocksize=128))['casTable']
 
-    tbl._retrieve('table.dropTable', name=temp_tbl_name)
-    # if tbl is ImageTable, assign the property of tbl to splitted table
-    if isinstance(tbl, ImageTable):
-        train_im = tbl.assign_property(train)
-        test_im = tbl.assign_property(test)
+    tbl._retrieve('table.dropTable',
+                  name=temp_tbl_name)
+
+    if im_table:
+        train_im = ImageTable.from_table(train, label_col=stratify_by, image_col=image_col,
+                                         casout=dict(name=train.name))
+        test_im = ImageTable.from_table(test, label_col=stratify_by, image_col=image_col,
+                                        casout=dict(name=test.name))
         return train_im, test_im
     else:
         return train, test
 
 
-def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, stratify_by='_label_', train_name=None,
+def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, im_table=True,
+                    stratify_by='_label_', image_col='_image_', train_name=None,
                     valid_name=None, test_name=None, **kwargs):
     '''
-    Split data into training and testing sets
+    Split image data into training and testing sets
 
     Parameters
     ----------
@@ -129,8 +137,13 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, stratify_by
     stratify : boolean, optional
         If True stratify the sampling by the stratify_by column name
         If False do random sampling without stratification
+    im_table : boolean, optional
+        If True outputs are converted to an imageTable
+        If False CASTables are returned with all columns
     stratify_by : string, optional
         The variable to stratify by
+    image_col : string
+        Name of image column if returning ImageTable
     train_name : string
         Specifies the output table name for the training set
     valid_name : string
@@ -206,11 +219,15 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, stratify_by
                                     name=temp_tbl_name, Vars=tbl_columns),
                          casout=dict(name=test_tbl_name, replace=True))['casTable']
 
-    tbl._retrieve('table.dropTable', name=temp_tbl_name)
-    if isinstance(tbl, ImageTable):
-        train_im = tbl.assign_property(train)
-        valid_im = tbl.assign_property(valid)
-        test_im = tbl.assign_property(test)
+    tbl._retrieve('table.dropTable',
+                  name=temp_tbl_name)
+    if im_table:
+        train_im = ImageTable.from_table(train, label_col=stratify_by, image_col=image_col,
+                                         casout=dict(name=train.name))
+        valid_im = ImageTable.from_table(valid, label_col=stratify_by, image_col=image_col,
+                                        casout=dict(name=valid.name))
+        test_im = ImageTable.from_table(test, label_col=stratify_by, image_col=image_col,
+                                        casout=dict(name=test.name))
 
         return train_im, valid_im, test_im
     else:
