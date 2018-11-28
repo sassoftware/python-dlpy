@@ -61,6 +61,7 @@ __pycache__/
 _stats.txt
 cover/
 test-reports/
+pytest_cache
 
 ## OS generated files
 .directory
