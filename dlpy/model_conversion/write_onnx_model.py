@@ -514,7 +514,7 @@ def sas_to_onnx(layers, model_table, model_weights):
             # sort the names of src layer objects according to this order
             concat_input = [l.name for l in layer.src_layers]
             concat_input = sorted(concat_input,
-                                  key=lambda name: concat_order.index(name.lower())
+                                  key=lambda name: concat_order.index(name.lower()))
 
             if act.lower() != 'identity':
                 concat_output = [layer.name + '_concat_out']

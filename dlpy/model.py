@@ -90,7 +90,6 @@ class Model(object):
         self.model_type = 'CNN'
         self.target = None
         self.model_ever_trained = False
-        self.find_lr_function = None
 
 
     @classmethod
@@ -779,26 +778,22 @@ class Model(object):
             raise ValueError('start_lr should be smaller than end_lr')
         if not self.conn.has_actionset('fcmp'):
             self.conn.loadactionset(actionSet = 'fcmp', _messagelevel = 'error')
-        if self.find_lr_function is None:
-            self.find_lr_function = random_name('find_lr', 6)
-            active_caslib_name = self.conn.caslibinfo(active = True).CASLibInfo.loc[0]['Name']
-            active_caslib_name = 'CASUSER' if active_caslib_name.startswith('CASUSER(') else active_caslib_name
-            self.conn.sessionProp.setsessopt(cmplib = f'{active_caslib_name}.{self.find_lr_function}')
-            self.conn.addRoutines(
-                routineCode = f'''
-                function annealing_exp(rate, initRate, batch);
-                    lrmin = {start_lr};
-                    lrmax = {end_lr};
-                    prt = batch / {num_iteration};
-                    rate = min(lrmin*(lrmax/lrmin)**prt, lrmax);
-                    return(rate);
-                endsub;
-                ''',
-                package = 'pkg',
-                funcTable = dict(name = self.find_lr_function, replace = 1)
-            )
+        self.conn.addRoutines(
+            routineCode = f'''
+            function annealing_exp(rate, initRate, batch);
+                lrmin = {start_lr};
+                lrmax = {end_lr};
+                prt = batch / {num_iteration};
+                rate = min(lrmin*(lrmax/lrmin)**prt, lrmax);
+                return(rate);
+            endsub;
+            ''',
+            package = 'pkg',
+            funcTable = dict(name = 'annealing_exp', replace = 1)
+        )
         if 'optimizer' not in kwargs:
-            optimizer = Optimizer(algorithm=VanillaSolver(lr_scheduler=FCMPLR(fcmp_learning_rate='annealing_exp',
+            optimizer = Optimizer(algorithm=VanillaSolver(lr_scheduler=FCMPLR(self.conn,
+                                                                              fcmp_learning_rate='annealing_exp',
                                                                               learning_rate=start_lr)),
                                   mini_batch_size=4, max_epochs=1, log_level=3)
             kwargs['optimizer'] = optimizer
@@ -2581,7 +2576,7 @@ class Model(object):
         Parameters
         ----------
         path : string
-            Specifies the server-side path to store the model files.
+            Specifies the local-side path to store the model files.
         output_format : string, optional
             Specifies the format of the deployed model
             Valid Values: astore, castable, or onnx

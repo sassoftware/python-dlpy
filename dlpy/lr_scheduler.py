@@ -18,14 +18,13 @@
 
 import math
 from .model import DLPyDict
-from .utils import random_name
 
 
 class _LRScheduler(DLPyDict):
     def __init__(self, learning_rate_policy='FIXED', learning_rate=0.001, gamma=None, steps=None, step_size=None,
                  power=0.75, fcmp_learning_rate=None):
-        DLPyDict.__init__(self, learning_rate_policy=learning_rate_policy, learning_rate=learning_rate, gamma=gamma,
-                          steps=steps, step_size=step_size, power=power, fcmp_learning_rate=fcmp_learning_rate)
+        super(_LRScheduler, self).__init__(learning_rate_policy=learning_rate_policy, learning_rate=learning_rate, gamma=gamma,
+                                           steps=steps, step_size=step_size, power=power, fcmp_learning_rate=fcmp_learning_rate)
 
 
 class FCMPLR(_LRScheduler):
@@ -33,12 +32,11 @@ class FCMPLR(_LRScheduler):
     def __init__(self, conn, fcmp_learning_rate, learning_rate=0.001, gamma=0.1, step_size=10):
         if not conn.has_actionset('fcmp'):
             conn.loadactionset(actionSet = 'fcmp', _messagelevel = 'error')
-        self.lr_function = random_name(self.__class__.__name__, 6)
         active_caslib_name = conn.caslibinfo(active = True).CASLibInfo.loc[0]['Name']
         active_caslib_name = 'CASUSER' if active_caslib_name.startswith('CASUSER(') else active_caslib_name
-        conn.sessionProp.setsessopt(cmplib = f'{active_caslib_name}.{self.lr_function}')
-        _LRScheduler.__init__(self, fcmp_learning_rate=fcmp_learning_rate, learning_rate = learning_rate, gamma=gamma,
-                              step_size=step_size)
+        conn.sessionProp.setsessopt(cmplib = f'{active_caslib_name}.{fcmp_learning_rate}')
+        super(FCMPLR, self).__init__(fcmp_learning_rate=fcmp_learning_rate, learning_rate = learning_rate, gamma=gamma,
+                                     step_size=step_size)
 
 
 class FixedLR(_LRScheduler):
@@ -104,9 +102,8 @@ class ReduceLROnPlateau(FCMPLR):
                         endsub;
                         ''',
             package = 'pkg',
-            funcTable = dict(name = self.lr_function, replace = 1)
+            funcTable = dict(name = 'reduce_lr_on_plateau', replace = 1)
         )
-        del self.__dict__['lr_function']
 
 
 class CyclicLR(FCMPLR):
@@ -127,7 +124,6 @@ class CyclicLR(FCMPLR):
                         endsub;
                         ''',
             package = 'pkg',
-            funcTable = dict(name = self.lr_function, replace = 1)
+            funcTable = dict(name = 'cyclic_lr', replace = 1)
         )
-        del self.__dict__['lr_function']
 

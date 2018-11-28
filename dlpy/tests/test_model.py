@@ -490,6 +490,9 @@ class TestModel(unittest.TestCase):
         model1.find_lr(start_lr=0.0001, end_lr=0.1, num_iteration=10, n_threads=4, mini_batch_size=4, gpu=1,
                        data=train, inputs='_image_', target='_label_')
 
+        model1.find_lr(start_lr = 0.0001, end_lr = 0.1, num_iteration = 10, n_threads = 4, mini_batch_size = 4, gpu = 1,
+                       data = train, inputs = '_image_', target = '_label_')
+
     def test_model18(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -677,6 +680,10 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
         m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m)
         model1.print_summary()
@@ -686,6 +693,10 @@ class TestModel(unittest.TestCase):
             import onnx
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
 
         m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
@@ -697,6 +708,10 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
         m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
@@ -707,6 +722,10 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
         m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net1.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
@@ -716,6 +735,10 @@ class TestModel(unittest.TestCase):
             import onnx
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
 
         m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
