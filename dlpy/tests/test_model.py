@@ -23,13 +23,13 @@
 #       the CASPROTOCOL environment variable.
 
 import os
+#import onnx
 import swat
 import swat.utils.testing as tm
+from dlpy.model import Model
 from dlpy.sequential import Sequential
-from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, OutputLayer, Keypoints
-from dlpy.images import ImageTable
-from dlpy.splitting import two_way_split
-from dlpy.model import *
+from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
+                         Keypoints, BN, Res, Concat)
 from dlpy.utils import caslibify
 import unittest
 
@@ -49,7 +49,7 @@ class TestModel(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
+        cls.s = swat.CAS('dlgrd009', 13314)
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -60,6 +60,12 @@ class TestModel(unittest.TestCase):
             if cls.data_dir.endswith(cls.server_sep):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
+
+        if 'DLPY_DATA_DIR_LOCAL' in os.environ:
+            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if cls.data_dir_local.endswith(cls.server_sep):
+                cls.data_dir_local = cls.data_dir_local[:-1]
+            cls.data_dir_local += cls.server_sep
 
     def test_model1(self):
 
@@ -463,432 +469,256 @@ class TestModel(unittest.TestCase):
         model.add(layer=Keypoints(n=10))
         self.assertTrue(model.summary.loc[1, 'Number of Parameters'] == (1000, 10))
 
-    def test_model13(self):
-        model = Sequential(self.s, model_table='simple_cnn')
-        model.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model.add(layer = OutputLayer(n = 10, full_connect = False))
-        self.assertTrue(model.summary.loc[1, 'Number of Parameters'] == (0, 0))
-
-        model1 = Sequential(self.s, model_table = 'simple_cnn')
-        model1.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model1.add(layer = OutputLayer(n = 10, full_connect = True))
-        self.assertTrue(model1.summary.loc[1, 'Number of Parameters'] == (1000, 10))
-
-        model2 = Sequential(self.s, model_table = 'Simple_CNN')
-        model2.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model2.add(layer = OutputLayer(n = 10, full_connect = True, include_bias = False))
-        self.assertTrue(model2.summary.loc[1, 'Number of Parameters'] == (1000, 0))
-
-        model3 = Sequential(self.s, model_table = 'Simple_CNN')
-        model3.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model3.add(layer = Conv2d(4, 3))
-        model3.add(layer = OutputLayer(n = 10))
-        self.assertTrue(model3.summary.loc[2, 'Number of Parameters'] == (4000, 10))
-
-        model4 = Sequential(self.s, model_table = 'Simple_CNN')
-        model4.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model4.add(layer = Conv2d(4, 3))
-        model4.add(layer = OutputLayer(n = 10, full_connect = False))
-        self.assertTrue(model4.summary.loc[2, 'Number of Parameters'] == (0, 0))
-
-    def test_model14(self):
-        model = Sequential(self.s, model_table = 'Simple_CNN')
-        model.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model.add(layer = OutputLayer())
-        model.summary
-
-    def test_model15(self):
-        model = Sequential(self.s, model_table = 'Simple_CNN')
-        model.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model.add(layer = Keypoints())
-        self.assertTrue(model.summary.loc[1, 'Number of Parameters'] == (0, 0))
-
-    def test_model16(self):
-        model = Sequential(self.s, model_table = 'Simple_CNN')
-        model.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model.add(layer = Keypoints(n = 10, include_bias = False))
-        self.assertTrue(model.summary.loc[1, 'Number of Parameters'] == (1000, 0))
-
-    def test_model16(self):
-        model = Sequential(self.s, model_table = 'Simple_CNN')
-        model.add(layer = InputLayer(n_channels = 1, height = 10, width = 10))
-        model.add(layer = Keypoints(n = 10))
-        self.assertTrue(model.summary.loc[1, 'Number of Parameters'] == (1000, 10))
-
-    def test_data_specs_dict(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
+    def test_model18(self):
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
         model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [dict(type = 'IMAGE', layer = 'Input1', data = '_image_'),
-                      dict(type = 'NUMERICNOMINAL', layer = 'Output1', data = '_label_')]
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
+        model1.add(OutputLayer(act='softmax', n=2))
 
-    def test_data_specs_dict2(self):
-        self.s.table.addcaslib(activeonadd = False,
-                               datasource = {'srctype': 'path'},
-                               name = 'dnfs',
-                               path = '/bigdisk/lax/dlpy/',
-                               subdirectories = False)
-        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
-                               casout = dict(name = 'data', replace = True))
-        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
-                                     filename_col = 'file', cls_cols = 'label')
-        tr_img, te_img = two_way_split(test, test_rate = 20, stratify_by = test.cls_cols, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.save_weights_csv(self.data_dir)
+
+    def test_model19(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
         model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [dict(type = 'IMAGE', layer = 'Input1', data = 'img'),
-                      dict(type = 'NUMERICNOMINAL', layer = 'Output1', data = 'label')]
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == 'img' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == 'label')
+        model1.add(OutputLayer(act='softmax', n=2))
 
-    def test_image_table(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        tr_img, te_img = two_way_split(my_images, test_rate = 20, stratify_by = my_images.cls_cols, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model20(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
         model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        model1.fit(data = tr_img,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
+        model1.add(OutputLayer(act='softmax', n=2))
 
-    ''' bug here '''
-    def test_image_table2(self):
-        self.s.table.addcaslib(activeonadd = False,
-                               datasource = {'srctype': 'path'},
-                               name = 'dnfs',
-                               path = '/bigdisk/lax/dlpy/',
-                               subdirectories = False)
-        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
-                               casout = dict(name = 'data', replace = True))
-        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
-                                     filename_col = 'file', cls_cols = 'label')
-        tr_img, te_img = two_way_split(test, test_rate = 20, stratify_by = test.cls_cols, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        model1.fit(data = tr_img,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == 'img' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == 'label')
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-    def test_data_specs(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = '_image_'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = '_label_')]
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
-        model1.fit(data = tr_img, target = '_label_', inputs = '_image_',
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        model1.evaluate(te_img)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
-    def test_data_specs2(self):
-        self.s.table.addcaslib(activeonadd = False,
-                               datasource = {'srctype': 'path'},
-                               name = 'dnfs',
-                               path = '/bigdisk/lax/dlpy/',
-                               subdirectories = False)
-        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
-                               casout = dict(name = 'data', replace = True))
-        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
-                                     filename_col = 'file', cls_cols = 'label')
-        tr_img, te_img = two_way_split(test, test_rate = 20, stratify_by = test.cls_cols, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = 'img'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = 'label')]
-        model1.fit(data = tr_img,  # target = 'label', inputs = 'img',
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        model1.evaluate(te_img)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == 'img' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == 'label')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
 
-    def test_heat_map_analysis(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = '_image_'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = '_label_')]
-        te_img.as_patches(width = 200, height = 200, step_size = 24, output_width = 224, output_height = 224)
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
-        model1.evaluate(te_img)
-        filter_list = list(range(500))
-        model1.heat_map_analysis(data = te_img, mask_width = 56, mask_height = 56,
-                                 step_size = 8, max_display = 2, display=False)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
 
-        model1.heat_map_analysis(data = te_img, mask_width = 56, mask_height = 56, step_size = 8, max_display = 2,
-                                 filter_column = te_img.id_col, filter_list = filter_list, display=False)
+        model1.save_weights_csv(self.data_dir)
+        weights_path = os.path.join(self.data_dir_local, 'Simple_CNN1_weights.csv')
+        model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
 
-    '''train with datasteps and score img'''
-    def test_heat_map_analysis2(self):
-        self.s.table.addcaslib(activeonadd = False,
-                               datasource = {'srctype': 'path'},
-                               name = 'dnfs',
-                               path = '/bigdisk/lax/dlpy/',
-                               subdirectories = False)
-        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
-                               casout = dict(name = 'data', replace = True))
-        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
-                                     filename_col = 'file', cls_cols = 'label')
-        tr_img, te_img = two_way_split(test, test_rate = 20, stratify_by = test.cls_cols, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = 'img'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = 'label')]
-        te_img.as_patches(width = 200, height = 200, step_size = 24, output_width = 224, output_height = 224)
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == 'img' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == 'label')
-        model1.evaluate(te_img)
-        filter_list = list(range(500))
-        model1.heat_map_analysis(data = te_img, mask_width = 56, mask_height = 56,
-                                 step_size = 8, max_display = 2, display=False)
+    def test_model21(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
-        model1.heat_map_analysis(data = te_img, mask_width = 56, mask_height = 56, step_size = 8, max_display = 2,
-                                 filter_column = te_img.id_col, filter_list = filter_list, display=False)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == 'img' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == 'label')
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        pool1 = Pooling(2)
+        model1.add(pool1)
+        conv1 = Conv2d(1, 7, src_layers=[pool1])
+        conv2 = Conv2d(1, 7, src_layers=[pool1])
+        model1.add(conv1)
+        model1.add(conv2)
+        model1.add(Concat(act='identity', src_layers=[conv1, conv2]))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
 
-    def test_load(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        te_img.as_patches(width = 200, height = 200, step_size = 24, output_width = 224, output_height = 224)
-        model = Model(self.s)
-        model_file = '/bigdisk/lax/dlpy/vgg16.sashdat'
-        model.load(path = model_file)
-        model.evaluate(te_img, target = '_label_', input = '_image_')
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-    def test_get_feature_maps(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = '_image_'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = '_label_')]
-        te_img.as_patches(width = 200, height = 200, step_size = 24, output_width = 224, output_height = 224)
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        model1.evaluate(te_img)
-        model1.get_feature_maps(data = te_img)
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
-    def test_plot_evaluate_res_with_filter(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = '_image_'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = '_label_')]
-        model1.fit(data = tr_img, target = '_label_', inputs = '_image_',
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
-        model1.evaluate(te_img)
-        filter_list = list(range(100))
-        model1.plot_evaluate_res(img_type = 'C', randomize = True, n_images = 2,
-                                 filter_column = tr_img.id_col, filter_list = filter_list)
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
 
-    def test_evaluate(self):
-        img_path = '/bigdisk/lax/dlpy/Giraffe_Dolphin'
-        my_images = ImageTable.load_files(self.s, path = img_path)
-        my_images.resize(width = 224)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        tr_img, te_img = two_way_split(my_images, test_rate = 1, seed = 123)
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means))
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model22(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
+        pool1 = Pooling(2)
+        model1.add(pool1)
+        conv1 = Conv2d(1, 1, act='identity', src_layers=[pool1])
+        model1.add(conv1)
+        model1.add(Res(act='relu', src_layers=[conv1, pool1]))
         model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model23(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(BN(act='relu'))
         model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2))
-        model1.fit(data = tr_img,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == '_image_' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == '_label_')
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(BN(act='relu'))
+        model1.add(Pooling(2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model24(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m)
         model1.print_summary()
-        model1.evaluate(te_img)
 
-    def test_evaluate2(self):
-        self.s.table.addcaslib(activeonadd = False,
-                               datasource = {'srctype': 'path'},
-                               name = 'dnfs',
-                               path = '/bigdisk/lax/dlpy/',
-                               subdirectories = False)
-        self.s.table.loadTable(caslib = 'dnfs', path = 'imageTable_test.sashdat',
-                               casout = dict(name = 'data', replace = True))
-        test = ImageTable.from_table(tbl = self.s.CASTable('data'), image_col = 'img', id_col = 'id',
-                                     filename_col = 'file', cls_cols = 'label')
-        tr_img, te_img = two_way_split(test, test_rate = 20, stratify_by = test.cls_cols, seed = 123)
-        model1 = Sequential(self.s, model_table = 'Simple_CNN')
-        model1.add(InputLayer(3, 224, 224, offsets = tr_img.channel_means, name = 'Input1'))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act = 'softmax', n = 2, name = 'Output1'))
-        data_specs = [DataSpec(type_ = 'IMAGE', layer = 'Input1', data = 'img'),
-                      DataSpec(type_ = 'NUMERICNOMINAL', layer = 'Output1', data = 'label')]
-        te_img.as_patches(width = 200, height = 200, step_size = 24, output_width = 224, output_height = 224)
-        model1.fit(data = tr_img,
-                   data_specs = data_specs,
-                   mini_batch_size = 2,
-                   max_epochs = 2,
-                   lr = 1E-4,
-                   log_level = 2)
-        self.assertTrue(model1.tasks[0] == 'classification_0' and len(model1.tasks) == 1)
-        self.assertTrue(model1.inputs[0] == 'img' and len(model1.inputs) == 1)
-        self.assertTrue(model1.targets['classification_0'] == 'label')
+    def test_model25(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
-        model1.predict(te_img)
-        model1.evaluate(te_img)
+
+    def test_model26(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model27(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net1.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
+
+    def test_model28(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net2.onnx'))
+        model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
+        model1.print_summary()
 
     @classmethod
     def tearDownClass(cls):
