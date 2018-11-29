@@ -1101,16 +1101,10 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     det_img_table = random_name('DET_IMG')
 
-    caslib = find_caslib(conn, data_path)
-    if caslib is None:
-        caslib = random_name('Caslib', 6)
-        rt = conn.retrieve('addcaslib', _messagelevel = 'error', name = caslib, path = data_path,
-                           activeonadd = False, subdirectories = True, datasource = {'srctype': 'path'})
-        if rt.severity > 1:
-            raise DLPyError('something went wrong while adding the caslib for the specified path.')
+    caslib, path_after_caslib = caslibify(conn, data_path, task='load')
 
     with sw.option_context(print_messages=False):
-        res = conn.image.loadImages(path='',
+        res = conn.image.loadImages(path=path_after_caslib,
                                     recurse=False,
                                     labelLevels=-1,
                                     caslib=caslib,
@@ -1165,7 +1159,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     # load all of txt files into cas server
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
     label_files = [x for x in label_files if x.endswith('.txt')]
-    idjoin_format_length = len(max(label_files, key=len)) - 4
+    idjoin_format_length = len(max(label_files, key=len)) - 4 # 4 is lenght of '.txt'
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
