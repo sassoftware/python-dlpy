@@ -130,6 +130,9 @@ Models
 
    Model
    Model.from_table
+   Model.from_keras_model
+   Model.from_caffe_model
+   Model.from_onnx_model
    Model.from_sashdat
    Model.load
    Model.set_weights
