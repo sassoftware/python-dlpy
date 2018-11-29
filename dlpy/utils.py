@@ -1159,6 +1159,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     # load all of txt files into cas server
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
     label_files = [x for x in label_files if x.endswith('.txt')]
+    idjoin_format_length = len(max(label_files, key=len)) - 4 # 4 is lenght of '.txt'
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
@@ -1166,8 +1167,10 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                           casout = dict(name = tbl_name, replace = True),
                           importOptions = dict(fileType = 'csv', getNames = False,
                                                varChars = True, delimiter = ','))
-            conn.retrieve('partition', table = dict(name = tbl_name, compvars = ['idjoin'],
-                                                    comppgm = 'idjoin="{}";'.format(filename[:-4])),
+            conn.retrieve('partition',
+                          table = dict(name = tbl_name,
+                                       compvars = ['idjoin'],
+                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length, filename[:-4])),
                           casout = dict(name = tbl_name, replace = True))
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]

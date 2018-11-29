@@ -28,7 +28,7 @@ import swat
 import swat.utils.testing as tm
 from dlpy.model import Model
 from dlpy.sequential import Sequential
-from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer, 
+from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
                          Keypoints, BN, Res, Concat)
 from dlpy.utils import caslibify
 import unittest
@@ -60,6 +60,12 @@ class TestModel(unittest.TestCase):
             if cls.data_dir.endswith(cls.server_sep):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
+
+        if 'DLPY_DATA_DIR_LOCAL' in os.environ:
+            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if cls.data_dir_local.endswith(cls.server_sep):
+                cls.data_dir_local = cls.data_dir_local[:-1]
+            cls.data_dir_local += cls.server_sep
 
     def test_model1(self):
 
@@ -544,8 +550,8 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity == 0)
 
         model1.save_weights_csv(self.data_dir)
-        weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
-        model1.deploy(self.data_dir, output_format='onnx', model_weights=weights_path)
+        weights_path = os.path.join(self.data_dir_local, 'Simple_CNN1_weights.csv')
+        model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
 
     def test_model21(self):
         try:
@@ -650,7 +656,11 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
-        m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m)
         model1.print_summary()
 
@@ -660,7 +670,11 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
-        m = onnx.load(os.path.join(self.data_dir, 'model.onnx'))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'model.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
@@ -670,7 +684,11 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
-        m = onnx.load(os.path.join(self.data_dir, 'Simple_CNN1.onnx'))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
@@ -680,7 +698,11 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
-        m = onnx.load(os.path.join(self.data_dir, 'pytorch_net1.onnx'))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net1.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
@@ -690,7 +712,11 @@ class TestModel(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "onnx not found in the libraries")
 
-        m = onnx.load(os.path.join(self.data_dir, 'pytorch_net2.onnx'))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 

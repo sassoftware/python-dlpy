@@ -1729,23 +1729,22 @@ class Model(object):
 
         if img_type == 'A':
             if cas_table.numrows().numrows == 0:
-                raise DLPyError("No images to heatmap")
+                raise DLPyError("No images to plot")
         elif img_type == 'C':
             cas_table = cas_table[cas_table[target] == cas_table['I__label_']]
             cas_table = cas_table.partition(casout=dict(name=cas_table.name, replace=True))['casTable']
             if cas_table.numrows().numrows == 0:
-                raise DLPyError("No correct labels to heatmap")
+                raise DLPyError("No correct labels to plot")
         elif img_type == 'M':
             cas_table = cas_table[cas_table[target] != cas_table['I__label_']]
             cas_table.partition(casout=dict(name=cas_table.name, replace=True))['casTable']
             if cas_table.numrows().numrows == 0:
-                raise DLPyError("No misclassified labels to heatmap")
+                raise DLPyError("No misclassified labels to plot")
         else:
             raise DLPyError('img_type must be one of the following:\n'
                             'A: for all the images\n'
                             'C: for correctly classified images\n'
                             'M: for misclassified images\n')
-
 
         if label_class:
             unique_labels = list(set(cas_table[target].tolist()))
@@ -2509,7 +2508,7 @@ class Model(object):
         Parameters
         ----------
         path : string
-            Specifies the server-side path to store the model files.
+            Specifies the client-side path to store the model files.
         output_format : string, optional
             Specifies the format of the deployed model
             Valid Values: astore, castable, or onnx

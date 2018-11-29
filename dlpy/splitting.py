@@ -36,7 +36,7 @@ def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='
         Specifies the proportion of the testing data set,
         e.g. 20 mean 20% of the data will be in the testing set.
     stratify : boolean, optional
-        If True statify the sampling by the stratify_by column name
+        If True stratify the sampling by the stratify_by column name
         If False do random sampling without stratification
     im_table : boolean, optional
         If True outputs are converted to an imageTable
@@ -135,7 +135,7 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, im_table=Tr
         e.g. 20 mean 20% of the images will be in the testing set.
         Note: the total of valid_rate and test_rate cannot be exceed 100
     stratify : boolean, optional
-        If True statify the sampling by the stratify_by column name
+        If True stratify the sampling by the stratify_by column name
         If False do random sampling without stratification
     im_table : boolean, optional
         If True outputs are converted to an imageTable
