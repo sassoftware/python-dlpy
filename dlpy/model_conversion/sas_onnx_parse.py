@@ -33,7 +33,8 @@ from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
 # The supported ONNX ops that can be parsed by this module
 _onnx_ops = ['Conv', 'MaxPool', 'AveragePool', 'GlobalAveragePool',
              'BatchNormalization', 'Concat', 'Gemm', 'MatMul',
-             'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten', 'Constant']
+             'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten', 'Constant',
+             'ImageScaler']
 
 
 # mapping ONNX ops to SAS activations
@@ -133,7 +134,11 @@ def onnx_to_sas(model, model_name=None):
         # TODO: support multipe input layers
         raise OnnxParseError('Unable to determine input layer.')
     else:
-        input_layer = onnx_input_layer(uninitialized[0])
+        scale_node = None 
+        for node in graph_def.node:
+            if node.op_type == 'ImageScaler':
+                scale_node = node
+        input_layer = onnx_input_layer(uninitialized[0], scale_node)
         dlpy_layers.append(input_layer)
 
     # create SAS layers from the ONNX nodes 
@@ -239,7 +244,7 @@ def onnx_filter_sas_layers(graph):
     return sas_layers
 
 
-def onnx_input_layer(value_info):
+def onnx_input_layer(value_info, image_scaler=None):
     ''' 
     Construct Input Layer 
     
@@ -247,6 +252,8 @@ def onnx_input_layer(value_info):
     ----------
     value_info : ONNX ValueInfoProto
         Specifies a ValueInfoProto object.
+    image_scaler : ONNX NodeProto, optional
+        Specifies an ImageScaler operator, if any. 
 
     Returns
     -------
@@ -256,7 +263,13 @@ def onnx_input_layer(value_info):
     input_layer_name = value_info.name
     _, C, H, W = list(d.dim_value for d in
                       value_info.type.tensor_type.shape.dim)
-    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    scale = None
+    offsets = None
+    if image_scaler:
+        offsets = list(image_scaler.attribute[0].floats)
+        scale = image_scaler.attribute[1].f
+    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name,
+                      scale=scale, offsets=offsets)
 
 
 def onnx_extract_sas_layer(graph, node, layers):
