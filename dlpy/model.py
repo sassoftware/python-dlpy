@@ -293,7 +293,7 @@ class Model(object):
 
     @classmethod
     def from_onnx_model(cls, conn, onnx_model, output_model_table=None,
-                        offsets=None, scale=None, std=None):
+                        offsets=None, scale=None, std=None, output_layer=None):
         '''
         Generate a Model object from ONNX model.
 
@@ -314,6 +314,10 @@ class Model(object):
         std : string, optional
             Specifies how to standardize the variables in the input layer.
             Valid Values: MIDRANGE, NONE, STD
+        output_layer : Layer object, optional
+            Specifies the output layer of the model. If no output
+            layer is specified, the last layer is automatically set
+            as :class:`OutputLayer` with SOFTMAX activation.
 
         Returns
         -------
@@ -332,7 +336,7 @@ class Model(object):
 
         model_name = model_table_opts['name']
         
-        _layers = onnx_to_sas(onnx_model, model_name)
+        _layers = onnx_to_sas(onnx_model, model_name, output_layer)
         if offsets is not None:
             _layers[0].config.update(offsets=offsets)
         if scale is not None:
