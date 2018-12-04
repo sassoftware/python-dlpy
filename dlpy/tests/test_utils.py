@@ -73,7 +73,7 @@ class TestUtils(unittest.TestCase):
         underscore = camelcase_to_underscore('includeBias')
         self.assertTrue('include_bias' == underscore)
 
-    def test_camelcase_to_underscore(self):
+    def test_underscore_to_camelcase(self):
         underscore = underscore_to_camelcase('include_bias')
         self.assertTrue('includeBias' == underscore)
 
@@ -100,6 +100,16 @@ class TestUtils(unittest.TestCase):
 
             create_object_detection_table(self.s, data_path=self.data_dir+'dlpy_obj_det_test',
                                           coord_type='coco', output='output')
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*10)
+
+    def test_create_object_detection_table_2(self):
+        # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type = 'yolo',
+                                      output = 'output')
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*10)
 
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
@@ -119,3 +129,8 @@ class TestUtils(unittest.TestCase):
                                           data_path=self.data_dir+'dlpy_obj_det_test')
 
         get_anchors(self.s, coord_type='yolo', data='output')
+
+    def test_get_txt_annotation(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', 416)

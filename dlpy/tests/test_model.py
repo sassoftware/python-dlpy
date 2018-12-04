@@ -867,7 +867,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(l1.type == 'input')
         self.assertTrue(l1.config['offsets'] == [0., 0., 0.])
         self.assertTrue(l1.config['scale'] == 1.)
-    
+
     def test_imagescaler2(self):
         # test export model with imagescaler
         try:
