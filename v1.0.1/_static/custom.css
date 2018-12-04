@@ -1,0 +1,35 @@
+code.docutils > .pre {
+    color: #505050 !important
+}
+.rst-content dl:not(.docutils) dl dt {
+    border-width: 0px !important;
+    background-color: transparent !important;
+    margin-bottom: 0px !important;
+}
+.rst-content table.field-list td.field-body {
+    padding-top: 1px;
+}
+.rst-content dl:not(.docutils) dl dt strong {
+    font-size: 115%;
+}
+.rst-content dl:not(.docutils) dl dt span {
+    font-style: italic;
+    font-weight: normal;
+}
+.rst-content dl:not(.docutils) dl dt span.classifier:before {
+    content: ' (';
+}
+.rst-content dl:not(.docutils) dl dt span.classifier:after {
+    content: ')';
+}
+.rst-content dl:not(.docutils) dl dt span.optional,
+.rst-content dl:not(.docutils) dl dt span.opt-sep {
+    font-weight: normal;
+}
+.rst-content dl:not(.docutils) dl dt .classifier-delimiter {
+    display: none;
+}
+.rst-content dl:not(.docutils) dl dd strong {
+    font-weight: bold;
+    font-size: smaller;
+}

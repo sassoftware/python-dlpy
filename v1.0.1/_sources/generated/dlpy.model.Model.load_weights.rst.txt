@@ -1,0 +1,6 @@
+dlpy.model.Model.load\_weights
+==============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.load_weights

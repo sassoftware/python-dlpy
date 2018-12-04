@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.sequential.Sequential &mdash; DLPy 1.0.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.0.1 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.sequential.Sequential.add" href="dlpy.sequential.Sequential.add.html"/>
+        <link rel="prev" title="dlpy.model.FeatureMaps.display" href="dlpy.model.FeatureMaps.display.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audio">Audio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#models">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.sequential.Sequential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.sequential.Sequential.add.html">dlpy.sequential.Sequential.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.sequential.Sequential.pop.html">dlpy.sequential.Sequential.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.sequential.Sequential.switch.html">dlpy.sequential.Sequential.switch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.sequential.Sequential.compile.html">dlpy.sequential.Sequential.compile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.sequential.Sequential</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.sequential.Sequential.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-sequential-sequential">
+<h1>dlpy.sequential.Sequential<a class="headerlink" href="#dlpy-sequential-sequential" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="dlpy.sequential.Sequential">
+<em class="property">class </em><code class="descclassname">dlpy.sequential.</code><code class="descname">Sequential</code><span class="sig-paren">(</span><em>conn</em>, <em>layers=None</em>, <em>model_table=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.sequential.Sequential" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="dlpy.model.Model.html#dlpy.model.Model" title="dlpy.model.Model"><strong>dlpy.model.Model</strong></a></p>
+<p>Model for sequentially building of deep learning models</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>conn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">CAS</span></dt>
+<dd><p class="first last">Specifies the CAS connection object</p>
+</dd>
+<dt><strong>layers</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list-of-Layers</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the layers of the sequential model.</p>
+</dd>
+<dt><strong>model_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or dict or CAS table</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the CAS table to store the deep learning model.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong><a href="dlpy.sequential.Sequential.html">Sequential</a></strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="dlpy.sequential.Sequential.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>conn</em>, <em>layers=None</em>, <em>model_table=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.sequential.Sequential.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#dlpy.sequential.Sequential.__init__" title="dlpy.sequential.Sequential.__init__"><strong>__init__</strong></a>(conn[,&nbsp;layers,&nbsp;model_table])</td>
+<td>Initialize self.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.sequential.Sequential.add.html#dlpy.sequential.Sequential.add" title="dlpy.sequential.Sequential.add"><strong>add</strong></a>(layer)</td>
+<td>Add layer(s) to model</td>
+</tr>
+<tr class="row-odd"><td><strong>change_labels</strong>(label_file,&nbsp;id_column,&nbsp;…)</td>
+<td>Overrides the labels already in the model</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.sequential.Sequential.compile.html#dlpy.sequential.Sequential.compile" title="dlpy.sequential.Sequential.compile"><strong>compile</strong></a>()</td>
+<td>Convert the layer objects into CAS action parameters</td>
+</tr>
+<tr class="row-odd"><td><strong>count_params</strong>()</td>
+<td>Count the total number of parameters in the model</td>
+</tr>
+<tr class="row-even"><td><strong>deploy</strong>(path[,&nbsp;output_format,&nbsp;model_weights])</td>
+<td>Deploy the deep learning model to a data file</td>
+</tr>
+<tr class="row-odd"><td><strong>evaluate</strong>(data[,&nbsp;text_parms,&nbsp;layer_out,&nbsp;…])</td>
+<td>Evaluate the deep learning model on a specified validation data set</td>
+</tr>
+<tr class="row-even"><td><strong>evaluate_object_detection</strong>(ground_truth,&nbsp;…)</td>
+<td>Evaluate the deep learning model on a specified validation data set.</td>
+</tr>
+<tr class="row-odd"><td><strong>fit</strong>(data[,&nbsp;inputs,&nbsp;target,&nbsp;data_specs,&nbsp;…])</td>
+<td>Fitting a deep learning model.</td>
+</tr>
+<tr class="row-even"><td><strong>from_caffe_model</strong>(conn,&nbsp;input_network_file[,&nbsp;…])</td>
+<td>Generate a model object from a Caffe model proto file (e.g.</td>
+</tr>
+<tr class="row-odd"><td><strong>from_keras_model</strong>(conn,&nbsp;keras_model[,&nbsp;…])</td>
+<td>Generate a model object from a Keras model object</td>
+</tr>
+<tr class="row-even"><td><strong>from_onnx_model</strong>(conn,&nbsp;onnx_model[,&nbsp;…])</td>
+<td>Generate a Model object from ONNX model.</td>
+</tr>
+<tr class="row-odd"><td><strong>from_sashdat</strong>(conn,&nbsp;path[,&nbsp;output_model_table])</td>
+<td>Generate a model object using the model information in the sashdat file</td>
+</tr>
+<tr class="row-even"><td><strong>from_table</strong>(input_model_table[,&nbsp;…])</td>
+<td>Create a Model object from CAS table that defines a deep learning model</td>
+</tr>
+<tr class="row-odd"><td><strong>get_feature_maps</strong>(data[,&nbsp;label,&nbsp;idx,&nbsp;image_id])</td>
+<td>Extract the feature maps for a single image</td>
+</tr>
+<tr class="row-even"><td><strong>get_features</strong>(data,&nbsp;dense_layer[,&nbsp;target])</td>
+<td>Extract linear features for a data table from the layer specified by dense_layer</td>
+</tr>
+<tr class="row-odd"><td><strong>get_model_info</strong>()</td>
+<td>Return the information about the model table</td>
+</tr>
+<tr class="row-even"><td><strong>heat_map_analysis</strong>([data,&nbsp;mask_width,&nbsp;…])</td>
+<td>Conduct a heat map analysis on table of images</td>
+</tr>
+<tr class="row-odd"><td><strong>load</strong>(path[,&nbsp;display_note])</td>
+<td>Load the deep learning model architecture from existing table</td>
+</tr>
+<tr class="row-even"><td><strong>load_weights</strong>(path[,&nbsp;labels])</td>
+<td>Load the weights form a data file specified by ‘path’</td>
+</tr>
+<tr class="row-odd"><td><strong>load_weights_attr</strong>(path)</td>
+<td>Load the weights attribute form a sashdat file</td>
+</tr>
+<tr class="row-even"><td><strong>load_weights_from_caffe</strong>(path[,&nbsp;labels])</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-odd"><td><strong>load_weights_from_file</strong>(path[,&nbsp;format_type])</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-even"><td><strong>load_weights_from_file_with_labels</strong>(path[,&nbsp;…])</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-odd"><td><strong>load_weights_from_keras</strong>(path[,&nbsp;labels])</td>
+<td>Load the model weights from a HDF5 file</td>
+</tr>
+<tr class="row-even"><td><strong>load_weights_from_table</strong>(path)</td>
+<td>Load the weights from a file</td>
+</tr>
+<tr class="row-odd"><td><strong>plot_evaluate_res</strong>([cas_table,&nbsp;img_type,&nbsp;…])</td>
+<td>Plot the bar chart of the classification predictions</td>
+</tr>
+<tr class="row-even"><td><strong>plot_heat_map</strong>([idx,&nbsp;alpha])</td>
+<td>Display the heat maps analysis results</td>
+</tr>
+<tr class="row-odd"><td><strong>plot_network</strong>()</td>
+<td>Display a graph that summarizes the model architecture.</td>
+</tr>
+<tr class="row-even"><td><strong>plot_training_history</strong>([items,&nbsp;fig_size])</td>
+<td>Display the training iteration history.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.sequential.Sequential.pop.html#dlpy.sequential.Sequential.pop" title="dlpy.sequential.Sequential.pop"><strong>pop</strong></a>([loc])</td>
+<td>Delete layer(s) from model and return it</td>
+</tr>
+<tr class="row-even"><td><strong>predict</strong>(data[,&nbsp;text_parms,&nbsp;layer_out,&nbsp;…])</td>
+<td>Evaluate the deep learning model on a specified validation data set</td>
+</tr>
+<tr class="row-odd"><td><strong>print_summary</strong>()</td>
+<td>Display a table that summarizes the model architecture</td>
+</tr>
+<tr class="row-even"><td><strong>save_to_astore</strong>([path])</td>
+<td>Save the model to an astore object, and write it into a file.</td>
+</tr>
+<tr class="row-odd"><td><strong>save_to_onnx</strong>(path[,&nbsp;model_weights])</td>
+<td>Save to ONNX model</td>
+</tr>
+<tr class="row-even"><td><strong>save_to_table</strong>(path)</td>
+<td>Save the model as SAS dataset</td>
+</tr>
+<tr class="row-odd"><td><strong>save_to_table_with_caslibify</strong>(path)</td>
+<td>Save the model as SAS dataset</td>
+</tr>
+<tr class="row-even"><td><strong>save_weights_csv</strong>(path)</td>
+<td>Save model weights table as csv</td>
+</tr>
+<tr class="row-odd"><td><strong>score</strong>(table[,&nbsp;model,&nbsp;init_weights,&nbsp;…])</td>
+<td>Inference of input data with the trained deep learning model</td>
+</tr>
+<tr class="row-even"><td><strong>set_weights</strong>(weight_tbl)</td>
+<td>Assign weights to the Model object</td>
+</tr>
+<tr class="row-odd"><td><strong>set_weights_attr</strong>(attr_tbl[,&nbsp;clear])</td>
+<td>Attach the weights attribute to the model weights</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.sequential.Sequential.switch.html#dlpy.sequential.Sequential.switch" title="dlpy.sequential.Sequential.switch"><strong>switch</strong></a>(loc1,&nbsp;loc2)</td>
+<td>Switch the order of two layers in the model.</td>
+</tr>
+<tr class="row-odd"><td><strong>train</strong>(table[,&nbsp;attributes,&nbsp;inputs,&nbsp;nominals,&nbsp;…])</td>
+<td>Trains a deep learning model</td>
+</tr>
+<tr class="row-even"><td><strong>tune</strong>(data[,&nbsp;inputs,&nbsp;target])</td>
+<td>Tunes hyper parameters for the deep learning model.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.sequential.Sequential.add.html" class="btn btn-neutral float-right" title="dlpy.sequential.Sequential.add" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.model.FeatureMaps.display.html" class="btn btn-neutral" title="dlpy.model.FeatureMaps.display" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

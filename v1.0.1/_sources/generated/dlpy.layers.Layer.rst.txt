@@ -1,0 +1,38 @@
+dlpy.layers.Layer
+=================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Layer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Layer.__init__
+      ~Layer.count_instances
+      ~Layer.format_name
+      ~Layer.get_number_of_instances
+      ~Layer.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Layer.can_be_last_layer
+      ~Layer.number_of_instances
+      ~Layer.rnn_summary
+      ~Layer.summary
+      ~Layer.type
+      ~Layer.type_desc
+      ~Layer.type_label
+   
+   

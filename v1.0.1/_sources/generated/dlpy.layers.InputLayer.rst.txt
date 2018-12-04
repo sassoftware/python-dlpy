@@ -1,0 +1,42 @@
+dlpy.layers.InputLayer
+======================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: InputLayer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InputLayer.__init__
+      ~InputLayer.count_instances
+      ~InputLayer.format_name
+      ~InputLayer.get_number_of_instances
+      ~InputLayer.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InputLayer.can_be_last_layer
+      ~InputLayer.kernel_size
+      ~InputLayer.num_bias
+      ~InputLayer.num_weights
+      ~InputLayer.number_of_instances
+      ~InputLayer.output_size
+      ~InputLayer.rnn_summary
+      ~InputLayer.summary
+      ~InputLayer.type
+      ~InputLayer.type_desc
+      ~InputLayer.type_label
+   
+   

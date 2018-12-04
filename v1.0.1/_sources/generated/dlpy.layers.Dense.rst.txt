@@ -1,0 +1,43 @@
+dlpy.layers.Dense
+=================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Dense
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Dense.__init__
+      ~Dense.count_instances
+      ~Dense.format_name
+      ~Dense.get_number_of_instances
+      ~Dense.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Dense.can_be_last_layer
+      ~Dense.kernel_size
+      ~Dense.num_bias
+      ~Dense.num_features
+      ~Dense.num_weights
+      ~Dense.number_of_instances
+      ~Dense.output_size
+      ~Dense.rnn_summary
+      ~Dense.summary
+      ~Dense.type
+      ~Dense.type_desc
+      ~Dense.type_label
+   
+   

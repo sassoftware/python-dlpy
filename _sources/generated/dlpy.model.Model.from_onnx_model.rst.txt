@@ -1,0 +1,6 @@
+dlpy.model.Model.from\_onnx\_model
+==================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.from_onnx_model

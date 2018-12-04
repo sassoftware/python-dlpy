@@ -1,0 +1,6 @@
+dlpy.timeseries.TimeseriesTable.timeseries\_accumlation
+=======================================================
+
+.. currentmodule:: dlpy.timeseries
+
+.. automethod:: TimeseriesTable.timeseries_accumlation

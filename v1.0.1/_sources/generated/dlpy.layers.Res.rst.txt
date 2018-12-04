@@ -1,0 +1,42 @@
+dlpy.layers.Res
+===============
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Res
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Res.__init__
+      ~Res.count_instances
+      ~Res.format_name
+      ~Res.get_number_of_instances
+      ~Res.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Res.can_be_last_layer
+      ~Res.kernel_size
+      ~Res.num_bias
+      ~Res.num_weights
+      ~Res.number_of_instances
+      ~Res.output_size
+      ~Res.rnn_summary
+      ~Res.summary
+      ~Res.type
+      ~Res.type_desc
+      ~Res.type_label
+   
+   

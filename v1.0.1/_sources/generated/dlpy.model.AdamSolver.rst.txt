@@ -1,0 +1,33 @@
+dlpy.model.AdamSolver
+=====================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: AdamSolver
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AdamSolver.__init__
+      ~AdamSolver.add_parameter
+      ~AdamSolver.clear
+      ~AdamSolver.get
+      ~AdamSolver.items
+      ~AdamSolver.keys
+      ~AdamSolver.pop
+      ~AdamSolver.popitem
+      ~AdamSolver.set_method
+      ~AdamSolver.setdefault
+      ~AdamSolver.update
+      ~AdamSolver.values
+   
+   
+
+   
+   
+   
