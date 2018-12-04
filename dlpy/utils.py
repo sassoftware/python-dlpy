@@ -32,6 +32,7 @@ import string
 import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
+import warnings
 
 
 def random_name(name='ImageData', length=6):
@@ -1025,6 +1026,48 @@ def convert_txt_to_xml(path):
     os.chdir(cwd)
 
 
+def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = None):
+    '''
+    Parse object detection annotation files based on Pascal VOC format and save as txt files.
+
+    Parameters
+    ----------
+    local_path : string
+        Local_path points to the directory where xml files are stored.
+        The generated txt files will be stored under the directory.
+    coord_type : string
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    image_size : integer, optional
+        Specifies the size of images to resize.
+        Default: 416
+    label_files : list, optional
+        Specifies the list of filename with XML extension under local_path to be parsed.
+        If label_files is not specified, all of XML files under local_path will be parsed .
+        Default: None
+
+    '''
+
+    cwd = os.getcwd()
+    os.chdir(local_path)
+    # if label_files = None, that means we call it directly and parse annotation files.
+    if label_files is None:
+        label_files = os.listdir(local_path)
+    label_files = [x for x in label_files if x.endswith('.xml')]
+    if len(label_files) == 0:
+        raise ValueError('Can not find any xml file under data_path')
+    for idx, filename in enumerate(label_files):
+        convert_xml_annotation(filename, coord_type, image_size)
+    os.chdir(cwd)
+
+
 def create_object_detection_table(conn, data_path, coord_type, output,
                                   local_path=None, image_size=416):
     '''
@@ -1053,8 +1096,9 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     local_path : string, optional
         Local_path and data_path point to the same location.
         The parameter local_path will be optional (default=None) if the
-        Python client has the same OS as CAS server. Otherwise, the path that
-        depends on the Python client OS needs to be specified.
+        Python client has the same OS as CAS server or annotation files
+        in TXT format are placed in data_path.
+        Otherwise, the path that depends on the Python client OS needs to be specified.
         For example:
         Windows client with linux CAS server:
         data_path=/path/to/data/path
@@ -1077,10 +1121,11 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     unix_type = server_type.startswith("lin") or server_type.startswith("osx")
     # check if local and server are same type of OS
     # in different os
+    need_to_parse = True
     if (unix_type and local_os_type.startswith('Win')) or not (unix_type or local_os_type.startswith('Win')):
         if local_path is None:
-            raise ValueError('local_path must be specified when your server is on {} OS and local '
-                             'python is on {} OS'.format(server_type.split('.')[0].capitalize(), local_os_type))
+            warnings.warn('The txt files in data_path are used as annotation files.', RuntimeWarning)
+            need_to_parse = False
     else:
         local_path = data_path
 
@@ -1142,24 +1187,21 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     # find all of annotation files under the directory
     a = conn.fileinfo(caslib = caslib, allfiles = True)
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    label_files = [x for x in label_files if x.endswith('.xml') or x.endswith('.json')]
-    if len(label_files) == 0:
-        raise ValueError('Can not find any annotation file under data_path')
+    # label_files = [x for x in label_files if x.endswith('.xml') or x.endswith('.json')]
 
+    # if client and server are on different type of operation system, we assume user parse xml files and put
+    # txt files in data_path folder. So skip get_txt_annotation()
     # parse xml or json files and create txt files
-    cwd = os.getcwd()
-    os.chdir(local_path)
-    for idx, filename in enumerate(label_files):
-        if filename.endswith('.xml'):
-            convert_xml_annotation(filename, coord_type, image_size)
-        # elif filename.endswith('.json'):
-        #     convert_json_annotation(filename)
-    os.chdir(cwd)
+    if need_to_parse:
+        get_txt_annotation(local_path, coord_type, image_size, label_files)
+
     label_tbl_name = random_name('obj_det')
     # load all of txt files into cas server
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
     label_files = [x for x in label_files if x.endswith('.txt')]
-    idjoin_format_length = len(max(label_files, key=len)) - 4 # 4 is lenght of '.txt'
+    if len(label_files) == 0:
+        raise ValueError('Can not find any txt file under data_path.')
+    idjoin_format_length = len(max(label_files, key=len)) - 4  # 4 is length of '.txt'
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
