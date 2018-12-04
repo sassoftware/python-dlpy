@@ -736,11 +736,11 @@ class TestModel(unittest.TestCase):
                                casout = {'name': 'evaluate_obj_det_gt', 'replace': True},
                                path = 'evaluate_obj_det_gt.sashdat')
         yolo_anchors = (5.9838598901098905,
-                         3.4326923076923075,
-                         2.184993862520458,
-                         1.9841448445171848,
-                         1.0261752136752136,
-                         1.2277777777777779)
+                        3.4326923076923075,
+                        2.184993862520458,
+                        1.9841448445171848,
+                        1.0261752136752136,
+                        1.2277777777777779)
         yolo_model = Tiny_YoloV2(self.s, grid_number = 17, scale = 1.0 / 255,
                                  n_classes = 1, height = 544, width = 544,
                                  predictions_per_grid = 3,
@@ -757,6 +757,51 @@ class TestModel(unittest.TestCase):
 
         metrics = yolo_model.evaluate_object_detection(ground_truth = 'evaluate_obj_det_gt', coord_type = 'yolo',
                                                        detection_data = 'evaluate_obj_det_det', iou_thresholds=0.5)
+
+    def test_model29(self):
+        # test specifying output layer in Model.from_onnx_model
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        output_layer = OutputLayer(n=100)
+        model1 = Model.from_onnx_model(conn=self.s,
+                                       onnx_model=m,
+                                       offsets=[1, 1, 1,],
+                                       scale=2,
+                                       std='std',
+                                       output_layer=output_layer)
+
+        self.assertTrue(model1.layers[-1].config['n'] == 100)
+
+    def test_model30(self):
+        # test specifying output layer in Model.from_onnx_model
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        output_layer = OutputLayer(name='test_output', n=50)
+        model1 = Model.from_onnx_model(conn=self.s,
+                                       onnx_model=m,
+                                       offsets=[1, 1, 1,],
+                                       scale=2,
+                                       std='std',
+                                       output_layer=output_layer)
+
+        self.assertTrue(model1.layers[-1].name == 'test_output')
+        self.assertTrue(model1.layers[-1].config['n'] == 50)
 
     def test_imagescaler1(self):
         # test import model with imagescaler
