@@ -60,7 +60,7 @@ class OnnxParseError(ValueError):
     '''
 
 
-def onnx_to_sas(model, model_name=None):
+def onnx_to_sas(model, model_name=None, output_layer=None):
     ''' 
     Generate SAS model from ONNX model 
     
@@ -70,6 +70,10 @@ def onnx_to_sas(model, model_name=None):
         Specifies the loaded ONNX model.
     model_name : string, optional
         Specifies the name of the model.
+    output_layer : Layer object, optional
+        Specifies the output layer of the model. If no output
+        layer is specified, the last layer is automatically set
+        as :class:`OutputLayer` with SOFTMAX activation.
 
     Returns
     -------
@@ -163,7 +167,7 @@ def onnx_to_sas(model, model_name=None):
                     if 'act' in layer.config.keys():
                         layer.config.update(act=_act_map.get(node.op_type))
                     else:
-                        print('Warning: Unable to apply activation for'
+                        print('Warning: Unable to apply activation for '
                               + layer.name + ' layer.')
 
     # apply dropout
@@ -186,19 +190,28 @@ def onnx_to_sas(model, model_name=None):
     write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)  
 
     # add output layer
-    # currently, only SOFTMAX activation in the output layer is supported
-    if dlpy_layers[-1].type == 'fc':
-        last_layer = dlpy_layers.pop()
-        out_layer = OutputLayer(name=last_layer.name,
-                                act='SOFTMAX',
-                                n=last_layer.config['n'],
-                                src_layers=last_layer.src_layers)
-        dlpy_layers.append(out_layer)
+    # if output_layer is not specified, output layer defaults to SOFTMAX
+    if output_layer is None:
+        # if previous layer is fc, we can replace it with output layer
+        if dlpy_layers[-1].type == 'fc':
+            last_layer = dlpy_layers.pop()
+            out_layer = OutputLayer(name=last_layer.name,
+                                    act='SOFTMAX',
+                                    n=last_layer.config['n'],
+                                    src_layers=last_layer.src_layers)
+            dlpy_layers.append(out_layer)
+        # if previous layer is not fc, default to loss layer only
+        else:
+            out_layer = OutputLayer(name='output',
+                                    act='SOFTMAX',
+                                    src_layers=[dlpy_layers[-1]])
+            dlpy_layers.append(out_layer)
     else:
-        out_layer = OutputLayer(name='output',
-                                act='SOFTMAX',
-                                src_layers=[layers[-1]])
-        dlpy_layers.append(out_layer)
+        # connect output_layer to previous layer
+        output_layer.src_layers = [dlpy_layers[-1]]
+        if not output_layer.name:
+            output_layer.name = 'output'
+        dlpy_layers.append(output_layer)
 
     return dlpy_layers
 

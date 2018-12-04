@@ -720,6 +720,51 @@ class TestModel(unittest.TestCase):
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
+    def test_model29(self):
+        # test specifying output layer in Model.from_onnx_model
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        output_layer = OutputLayer(n=100)
+        model1 = Model.from_onnx_model(conn=self.s,
+                                       onnx_model=m,
+                                       offsets=[1, 1, 1,],
+                                       scale=2,
+                                       std='std',
+                                       output_layer=output_layer)
+
+        self.assertTrue(model1.layers[-1].config['n'] == 100)
+
+    def test_model30(self):
+        # test specifying output layer in Model.from_onnx_model
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        output_layer = OutputLayer(name='test_output', n=50)
+        model1 = Model.from_onnx_model(conn=self.s,
+                                       onnx_model=m,
+                                       offsets=[1, 1, 1,],
+                                       scale=2,
+                                       std='std',
+                                       output_layer=output_layer)
+
+        self.assertTrue(model1.layers[-1].name == 'test_output')
+        self.assertTrue(model1.layers[-1].config['n'] == 50)
+
     def test_imagescaler1(self):
         # test import model with imagescaler
         try:
