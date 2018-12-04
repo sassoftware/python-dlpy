@@ -723,15 +723,15 @@ class TestModel(unittest.TestCase):
 
     def test_evaluate_obj_det(self):
 
-        caslib, path = caslibify(self.s, path = self.data_dir + 'evaluate_obj_det_det.sashdat', task = 'load')
-
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path = self.data_dir + 'evaluate_obj_det_det.sashdat', task = 'load')
+
         self.s.table.loadtable(caslib = caslib,
                                casout = {'name': 'evaluate_obj_det_det', 'replace': True},
                                path = path)
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
         self.s.table.loadtable(caslib = caslib,
                                casout = {'name': 'evaluate_obj_det_gt', 'replace': True},
                                path = 'evaluate_obj_det_gt.sashdat')

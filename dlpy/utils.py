@@ -1062,7 +1062,7 @@ def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = N
         label_files = os.listdir(local_path)
     label_files = [x for x in label_files if x.endswith('.xml')]
     if len(label_files) == 0:
-        raise ValueError('Can not find any xml file under data_path')
+        raise DLPyError('Can not find any xml file under data_path')
     for idx, filename in enumerate(label_files):
         convert_xml_annotation(filename, coord_type, image_size)
     os.chdir(cwd)
@@ -1124,7 +1124,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     need_to_parse = True
     if (unix_type and local_os_type.startswith('Win')) or not (unix_type or local_os_type.startswith('Win')):
         if local_path is None:
-            warnings.warn('The txt files in data_path are used as annotation files.', RuntimeWarning)
+            print('The txt files in data_path are used as annotation files.')
             need_to_parse = False
     else:
         local_path = data_path
@@ -1200,7 +1200,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
     label_files = [x for x in label_files if x.endswith('.txt')]
     if len(label_files) == 0:
-        raise ValueError('Can not find any txt file under data_path.')
+        raise DLPyError('Can not find any txt file under data_path.')
     idjoin_format_length = len(max(label_files, key=len)) - 4  # 4 is length of '.txt'
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
