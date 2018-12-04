@@ -31,6 +31,7 @@ from dlpy.sequential import Sequential
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
                          Keypoints, BN, Res, Concat)
 from dlpy.utils import caslibify
+from dlpy.applications import Tiny_YoloV2
 import unittest
 
 
@@ -719,6 +720,43 @@ class TestModel(unittest.TestCase):
         m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
+
+    def test_evaluate_obj_det(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path = self.data_dir + 'evaluate_obj_det_det.sashdat', task = 'load')
+
+        self.s.table.loadtable(caslib = caslib,
+                               casout = {'name': 'evaluate_obj_det_det', 'replace': True},
+                               path = path)
+
+        self.s.table.loadtable(caslib = caslib,
+                               casout = {'name': 'evaluate_obj_det_gt', 'replace': True},
+                               path = 'evaluate_obj_det_gt.sashdat')
+        yolo_anchors = (5.9838598901098905,
+                        3.4326923076923075,
+                        2.184993862520458,
+                        1.9841448445171848,
+                        1.0261752136752136,
+                        1.2277777777777779)
+        yolo_model = Tiny_YoloV2(self.s, grid_number = 17, scale = 1.0 / 255,
+                                 n_classes = 1, height = 544, width = 544,
+                                 predictions_per_grid = 3,
+                                 anchors = yolo_anchors,
+                                 max_boxes = 100,
+                                 coord_type = 'yolo',
+                                 max_label_per_image = 100,
+                                 class_scale = 1.0,
+                                 coord_scale = 2.0,
+                                 prediction_not_a_object_scale = 1,
+                                 object_scale = 5,
+                                 detection_threshold = 0.05,
+                                 iou_threshold = 0.2)
+
+        metrics = yolo_model.evaluate_object_detection(ground_truth = 'evaluate_obj_det_gt', coord_type = 'yolo',
+                                                       detection_data = 'evaluate_obj_det_det', iou_thresholds=0.5)
 
     def test_model29(self):
         # test specifying output layer in Model.from_onnx_model
