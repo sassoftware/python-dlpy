@@ -123,10 +123,10 @@ Finally, add the output layer::
 **Check out** https://github.com/sassoftware/python-dlpy/tree/master/examples **for more examples.**
 
 ## Contributing
-The [Contributor Agreement](/python-dlpy/ContributorAgreement.txt) details the agreement about how contributions can be made. 
+The [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) details the agreement about how contributions can be made. 
 ## Licensing
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
-You may obtain a copy of the License at [LICENSE.txt](/python-dlpy/LICENSE.txt)
+You may obtain a copy of the License at [LICENSE.txt](https://github.com/sassoftware/python-dlpy/blob/master/LICENSE.txt)
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. 
