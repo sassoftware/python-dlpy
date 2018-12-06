@@ -187,7 +187,7 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
                               + layer.name + ' layer')
 
     # write weights hdf5
-    write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)  
+    hdf5_out = write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)
 
     # add output layer
     # if output_layer is not specified, output layer defaults to SOFTMAX
@@ -202,10 +202,17 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
             dlpy_layers.append(out_layer)
         # if previous layer is not fc, default to loss layer only
         else:
+            n = dlpy_layers[-1].output_size[-1]
             out_layer = OutputLayer(name='output',
-                                    act='SOFTMAX',
+                                    act='IDENTITY',
+                                    n=n,
+                                    include_bias=False,
                                     src_layers=[dlpy_layers[-1]])
             dlpy_layers.append(out_layer)
+            identity = np.identity(n).astype(np.float32)
+            f = h5py.File(hdf5_out)
+            f['output/output/kernel:0'] = identity
+            f.close()
     else:
         # connect output_layer to previous layer
         output_layer.src_layers = [dlpy_layers[-1]]
@@ -1217,4 +1224,5 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
     f_out.close()
     print('NOTE: Successfully written weights file as '
           + temp_HDF5)
+    return temp_HDF5
 
