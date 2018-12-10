@@ -898,7 +898,7 @@ def filter_by_image_id(cas_table, image_id, filtered_name=None):
     return filtered
 
 
-def parse_txt(path):
+def _parse_txt(path):
     input_info = {}
     with open(path, "r") as lines:
         for line in lines:
@@ -907,7 +907,7 @@ def parse_txt(path):
     return input_info
 
 
-def convert_yolo(size, box):
+def _convert_yolo(size, box):
     ''' Used to normalize bounding box '''
     dw = 1./size[0]
     dh = 1./size[1]
@@ -922,7 +922,7 @@ def convert_yolo(size, box):
     return (x,y,w,h)
 
 
-def convert_coco(size, box, resize):
+def _convert_coco(size, box, resize):
     w_ratio = float(resize) / size[0]
     h_ratio = float(resize) / size[1]
     x_min = box[0] * w_ratio
@@ -932,9 +932,10 @@ def convert_coco(size, box, resize):
     return (x_min, y_min, x_max, y_max)
 
 
-def convert_xml_annotation(filename, coord_type, resize):
+def _convert_xml_annotation(filename, coord_type, resize):
     in_file = open(filename)
-    out_file = open(filename.split(".")[0]+".txt", 'w')
+    filename, file_extension = os.path.splitext(filename)
+    out_file = open(filename+".txt", 'w')
     tree = ET.parse(in_file)
     root = tree.getroot()
     size = root.find('size')
@@ -946,15 +947,15 @@ def convert_xml_annotation(filename, coord_type, resize):
         boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
         if coord_type == 'yolo':
-            boxes = convert_yolo((width, height), boxes)
+            boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
-            boxes = convert_coco((width, height), boxes, resize)
+            boxes = _convert_coco((width, height), boxes, resize)
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
     in_file.close()
     out_file.close()
 
 
-def convert_json_annotation(filename_w_ext, coord_type, resize):
+def _convert_json_annotation(filename_w_ext, coord_type, resize):
     filename, file_extension = os.path.splitext(filename_w_ext)
     img = Image.open(filename + '.jpg')
     width, height = img.size
@@ -965,15 +966,15 @@ def convert_json_annotation(filename_w_ext, coord_type, resize):
         cls = obj['type']
         boxes = (obj['ax'], obj['ay'], obj['bx'], obj['by'])
         if coord_type == 'yolo':
-            boxes = convert_yolo((width, height), boxes)
+            boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
-            boxes = convert_coco((width, height), boxes, resize)
+            boxes = _convert_coco((width, height), boxes, resize)
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
 
 
 def convert_txt_to_xml(path):
     cwd = os.getcwd()
-    input_info = parse_txt(path)
+    input_info = _parse_txt(path)
     names = []
     with open(input_info['names'], "r") as lines:
         for line in lines:
@@ -1064,7 +1065,7 @@ def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = N
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
     for idx, filename in enumerate(label_files):
-        convert_xml_annotation(filename, coord_type, image_size)
+        _convert_xml_annotation(filename, coord_type, image_size)
     os.chdir(cwd)
 
 
@@ -1201,7 +1202,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     label_files = [x for x in label_files if x.endswith('.txt')]
     if len(label_files) == 0:
         raise DLPyError('Can not find any txt file under data_path.')
-    idjoin_format_length = len(max(label_files, key=len)) - 4  # 4 is length of '.txt'
+    idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
@@ -1212,7 +1213,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             conn.retrieve('partition',
                           table = dict(name = tbl_name,
                                        compvars = ['idjoin'],
-                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length, filename[:-4])),
+                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
+                                                                                          filename[:-len('.txt')])),
                           casout = dict(name = tbl_name, replace = True))
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
@@ -1282,8 +1284,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
 
-    image_sas_code = "length idjoin $ {0};idjoin = inputc(scan(_path_,{1},'./'),'{0}.');".format(filename_col_length,
-                                                len(data_path.split('\\')) - 3)
+    image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
+                                                len(data_path.split('\\')) - 2)
     img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code,
                             vars = [{'name': 'idjoin'}, {'name': '_image_'}])
     # join the image table and label table together

@@ -100,7 +100,9 @@ class TestUtils(unittest.TestCase):
 
             create_object_detection_table(self.s, data_path=self.data_dir+'dlpy_obj_det_test',
                                           coord_type='coco', output='output')
-        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*10)
+        # there are 11 images where all contains 3 instance.
+        # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*11)
 
     def test_create_object_detection_table_2(self):
         # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
@@ -109,7 +111,9 @@ class TestUtils(unittest.TestCase):
         create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
                                       coord_type = 'yolo',
                                       output = 'output')
-        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*10)
+        # there are 11 images where all contains 3 instance.
+        # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*11)
 
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
