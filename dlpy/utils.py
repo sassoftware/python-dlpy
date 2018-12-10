@@ -898,7 +898,7 @@ def filter_by_image_id(cas_table, image_id, filtered_name=None):
     return filtered
 
 
-def parse_txt(path):
+def _parse_txt(path):
     input_info = {}
     with open(path, "r") as lines:
         for line in lines:
@@ -907,7 +907,7 @@ def parse_txt(path):
     return input_info
 
 
-def convert_yolo(size, box):
+def _convert_yolo(size, box):
     ''' Used to normalize bounding box '''
     dw = 1./size[0]
     dh = 1./size[1]
@@ -922,7 +922,7 @@ def convert_yolo(size, box):
     return (x,y,w,h)
 
 
-def convert_coco(size, box, resize):
+def _convert_coco(size, box, resize):
     w_ratio = float(resize) / size[0]
     h_ratio = float(resize) / size[1]
     x_min = box[0] * w_ratio
@@ -932,7 +932,7 @@ def convert_coco(size, box, resize):
     return (x_min, y_min, x_max, y_max)
 
 
-def convert_xml_annotation(filename, coord_type, resize):
+def _convert_xml_annotation(filename, coord_type, resize):
     in_file = open(filename)
     filename, file_extension = os.path.splitext(filename)
     out_file = open(filename+".txt", 'w')
@@ -947,15 +947,15 @@ def convert_xml_annotation(filename, coord_type, resize):
         boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
         if coord_type == 'yolo':
-            boxes = convert_yolo((width, height), boxes)
+            boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
-            boxes = convert_coco((width, height), boxes, resize)
+            boxes = _convert_coco((width, height), boxes, resize)
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
     in_file.close()
     out_file.close()
 
 
-def convert_json_annotation(filename_w_ext, coord_type, resize):
+def _convert_json_annotation(filename_w_ext, coord_type, resize):
     filename, file_extension = os.path.splitext(filename_w_ext)
     img = Image.open(filename + '.jpg')
     width, height = img.size
@@ -966,15 +966,15 @@ def convert_json_annotation(filename_w_ext, coord_type, resize):
         cls = obj['type']
         boxes = (obj['ax'], obj['ay'], obj['bx'], obj['by'])
         if coord_type == 'yolo':
-            boxes = convert_yolo((width, height), boxes)
+            boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
-            boxes = convert_coco((width, height), boxes, resize)
+            boxes = _convert_coco((width, height), boxes, resize)
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
 
 
 def convert_txt_to_xml(path):
     cwd = os.getcwd()
-    input_info = parse_txt(path)
+    input_info = _parse_txt(path)
     names = []
     with open(input_info['names'], "r") as lines:
         for line in lines:
@@ -1065,7 +1065,7 @@ def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = N
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
     for idx, filename in enumerate(label_files):
-        convert_xml_annotation(filename, coord_type, image_size)
+        _convert_xml_annotation(filename, coord_type, image_size)
     os.chdir(cwd)
 
 

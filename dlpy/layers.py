@@ -1267,6 +1267,15 @@ class Detection(Layer):
         Randomizing boxes when loading the bounding box information. Default: False
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
+    max_boxes : int, optional
+        Specifies the maximum number of overall predictions allowed in the detection layer.
+    max_label_pe_image : int, optional
+        The maximum number of labels per image
+    match_anchor_size : bool, optional
+        Whether to force the predicted box match the anchor boxes in sizes for all predictions
+    num_to_force_coord : int, optional
+        The number of leading chunk of images in training when the algorithm forces predicted objects
+        in each grid to be equal to the anchor box sizes, and located at the grid center
 
     Returns
     -------
