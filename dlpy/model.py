@@ -293,7 +293,7 @@ class Model(object):
 
     @classmethod
     def from_onnx_model(cls, conn, onnx_model, output_model_table=None,
-                        offsets=None, scale=None, std=None):
+                        offsets=None, scale=None, std=None, output_layer=None):
         '''
         Generate a Model object from ONNX model.
 
@@ -314,6 +314,10 @@ class Model(object):
         std : string, optional
             Specifies how to standardize the variables in the input layer.
             Valid Values: MIDRANGE, NONE, STD
+        output_layer : Layer object, optional
+            Specifies the output layer of the model. If no output
+            layer is specified, the last layer is automatically set
+            as :class:`OutputLayer` with SOFTMAX activation.
 
         Returns
         -------
@@ -332,7 +336,7 @@ class Model(object):
 
         model_name = model_table_opts['name']
         
-        _layers = onnx_to_sas(onnx_model, model_name)
+        _layers = onnx_to_sas(onnx_model, model_name, output_layer)
         if offsets is not None:
             _layers[0].config.update(offsets=offsets)
         if scale is not None:
@@ -2849,6 +2853,8 @@ def extract_conv_layer(layer_table):
     if 'trunc_fact' in conv_layer_config.keys():
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
+    if conv_layer_config.get('act') == 'Leaky Activation function':
+        conv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
     if dl_numval[layer_table['_DLKey1_'] == 'convopts.no_bias'].any():
@@ -2924,6 +2930,8 @@ def extract_batchnorm_layer(layer_table):
     bn_layer_config = dict()
     bn_layer_config.update(get_str_configs(['act'], 'bnopts', layer_table))
     bn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    if bn_layer_config.get('act') == 'Leaky Activation function':
+        bn_layer_config['act'] = 'Leaky'
 
     layer = BN(**bn_layer_config)
     return layer
@@ -3023,6 +3031,8 @@ def extract_fc_layer(layer_table):
     if 'trunc_fact' in fc_layer_config.keys():
         fc_layer_config['truncation_factor'] = fc_layer_config['trunc_fact']
         del fc_layer_config['trunc_fact']
+    if fc_layer_config.get('act') == 'Leaky Activation function':
+        fc_layer_config['act'] = 'Leaky'
 
     layer = Dense(**fc_layer_config)
     return layer

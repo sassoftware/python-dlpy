@@ -1,41 +1,10 @@
 # DLPy - SAS Deep Learning Python API
-
-## What is DLPy?
-
+## Overview
 DLPy is a high-level Python library for the SAS Deep learning features available in SAS Viya.
 DLPy is designed to provide an efficient way to apply deep learning methods to image, text, and audio data.
 DLPy APIs created following the Keras (https://keras.io/) APIs with a touch of PyTorch (https://pytorch.org/) flavor.
 
-Note that DLPy requires a SAS Viya on the back-end 
-(particularly [Visual Data Mining and Machine 
-Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning.html) 
-product).
-
-## Installing DLPy
-DLPy versions >= 1.0 works with Python 3+ and Viya 3.4
-
-To install DLPy using ``pip``, run the following::
-
-    pip install sas-dlpy
-
-To install DLPy using ``conda``, run the following::
-
-    conda install -c sas-institute sas-dlpy
-
-**Note:** To enable graphic visualizations of the DLPy deep learning models,
-it is recommended that you download and install the open source graph 
-visualization software called Graphviz. Graphviz is available at
-https://www.graphviz.org/download/.
-
-
-## Documentation
-
-The API documentation is located at 
-[sassoftware.github.io/python-dlpy](https://sassoftware.github.io/python-dlpy/).
-
-
-## What's new with DLPy 1.0
-
+#### What's New with DLPy 1.0
 - Text, audio, and time series support in addition to image
 - New APIs for:
   - RNN based tasks: text classification, text generation, and sequence labeling
@@ -45,11 +14,26 @@ The API documentation is located at
 - Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, and Yolo
 - Enhanced data visualization and metadata handling
 
-Note that with DLPy 1.0, we moved to python-style functions and parameters. 
-This might break your old code with camelCase parameters and functions.
+**Note**: With the release of DLPy 1.0, we moved to python-style functions and parameters. This might break your old code with camelCase parameters and functions.
 
+## Prerequisites
+You need Python 3+ and Viya 3.4 to run the current version of DLPy. 
 
-# Getting Started with DLPy
+DLPy requires a SAS Viya on the back-end (particularly [Visual Data Mining and Machine Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning.html) 
+product).
+
+To enable graphic visualizations of the DLPy deep learning models, it is recommended that you download and install the open source graph visualization software called Graphviz. Graphviz is available at https://www.graphviz.org/download/.
+
+## Installation 
+To install DLPy using ``pip``, run the following::
+
+    pip install sas-dlpy
+
+To install DLPy using ``conda``, run the following::
+
+    conda install -c sas-institute sas-dlpy
+
+# Getting Started
 
 Before you can use the DLPy package, you will need a running SAS Viya
 server and the SWAT (SAS Scripting Wrapper for Analytics Transfer) package. 
@@ -138,14 +122,21 @@ Finally, add the output layer::
 
 **Check out** https://github.com/sassoftware/python-dlpy/tree/master/examples **for more examples.**
 
-## Resources
+## Contributing
+The [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) details the agreement about how contributions can be made. 
+## Licensing
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at [LICENSE.txt](https://github.com/sassoftware/python-dlpy/blob/master/LICENSE.txt)
 
-[SAS SWAT for Python](http://github.com/sassoftware/python-swat/)
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. 
 
-[SAS ESPPy](https://github.com/sassoftware/python-esppy)
+## Additional Resources
+- API documentation is located at [sassoftware.github.io/python-dlpy](https://sassoftware.github.io/python-dlpy/).
+- [SAS SWAT for Python](http://github.com/sassoftware/python-swat/)
+- [SAS ESPPy](https://github.com/sassoftware/python-esppy)
+- [SAS Viya](http://www.sas.com/en_us/software/viya.html)
+- [Python](http://www.python.org/)
 
-[SAS Viya](http://www.sas.com/en_us/software/viya.html)
 
-[Python](http://www.python.org/)
-
-Copyright SAS Institute
+Copyright SAS Institute.

@@ -806,6 +806,7 @@ class TestModel(unittest.TestCase):
     def test_imagescaler1(self):
         # test import model with imagescaler
         try:
+            import onnx
             from onnx import helper, TensorProto
         except:
             unittest.TestCase.skipTest(self, 'onnx not found')
