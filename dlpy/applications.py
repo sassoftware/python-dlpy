@@ -2654,7 +2654,7 @@ def YoloV2(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=
     return model
 
 
-def YoloV2_MultiSize(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
+def YoloV2_MultiSize(conn, anchors, model_table='Yolov2_MultiSize', n_channels=3, width=416, height=416, scale=1.0 / 255,
                      act='leaky', coord_type='YOLO', max_label_per_image=30, max_boxes=30, random_mutation='random',
                      n_classes=20, predictions_per_grid=5, grid_number=13, **kwargs):
     '''
