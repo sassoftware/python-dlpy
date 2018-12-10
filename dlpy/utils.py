@@ -934,7 +934,8 @@ def convert_coco(size, box, resize):
 
 def convert_xml_annotation(filename, coord_type, resize):
     in_file = open(filename)
-    out_file = open(filename.split(".")[0]+".txt", 'w')
+    filename, file_extension = os.path.splitext(filename)
+    out_file = open(filename+".txt", 'w')
     tree = ET.parse(in_file)
     root = tree.getroot()
     size = root.find('size')
@@ -1201,7 +1202,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     label_files = [x for x in label_files if x.endswith('.txt')]
     if len(label_files) == 0:
         raise DLPyError('Can not find any txt file under data_path.')
-    idjoin_format_length = len(max(label_files, key=len)) - 4  # 4 is length of '.txt'
+    idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
@@ -1212,7 +1213,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             conn.retrieve('partition',
                           table = dict(name = tbl_name,
                                        compvars = ['idjoin'],
-                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length, filename[:-4])),
+                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
+                                                                                          filename[:-len('.txt')])),
                           casout = dict(name = tbl_name, replace = True))
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
@@ -1282,8 +1284,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
 
-    image_sas_code = "length idjoin $ {0};idjoin = inputc(scan(_path_,{1},'./'),'{0}.');".format(filename_col_length,
-                                                len(data_path.split('\\')) - 3)
+    image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
+                                                len(data_path.split('\\')) - 2)
     img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code,
                             vars = [{'name': 'idjoin'}, {'name': '_image_'}])
     # join the image table and label table together
