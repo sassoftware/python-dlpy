@@ -100,6 +100,20 @@ class TestUtils(unittest.TestCase):
 
             create_object_detection_table(self.s, data_path=self.data_dir+'dlpy_obj_det_test',
                                           coord_type='coco', output='output')
+        # there are 11 images where all contains 3 instance.
+        # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*11)
+
+    def test_create_object_detection_table_2(self):
+        # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type = 'yolo',
+                                      output = 'output')
+        # there are 11 images where all contains 3 instance.
+        # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*11)
 
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
@@ -120,7 +134,7 @@ class TestUtils(unittest.TestCase):
 
         get_anchors(self.s, coord_type='yolo', data='output')
 
-    def test_create_object_detection_table2(self):
-        create_object_detection_table(conn = self.s, data_path = '/dept/cas/weshiz/test_11_19',
-                                      local_path = r'\\sashq\root\dept\cas\weshiz\test_11_19', coord_type = 'yolo',
-                                      output = 'detTbl')
+    def test_get_txt_annotation(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', 416)

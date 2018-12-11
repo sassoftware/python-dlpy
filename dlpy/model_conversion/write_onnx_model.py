@@ -71,10 +71,30 @@ def sas_to_onnx(layers, model_table, model_weights):
             H = int(layer.config['height'])
             W = int(layer.config['width'])
             C = int(layer.config['n_channels'])
-            value_info = helper.make_tensor_value_info(name=layer.name,
+            if layer.config['offsets'] is None:
+                offsets = [0., 0., 0.]
+            else:
+                offsets = [float(i) for i in layer.config['offsets']]
+            if layer.config['scale'] is None:
+                scale = 1.
+            else:
+                scale = float(layer.config['scale'])
+            if offsets != [0., 0., 0.] or scale != 1.:
+                graph_input = layer.name + '_'
+                scale_op = helper.make_node(op_type='ImageScaler',
+                                            inputs=[graph_input],
+                                            outputs=[layer.name],
+                                            bias=offsets,
+                                            scale=scale)
+                nodes.append(scale_op)
+            else:
+                graph_input = layer.name
+
+            value_info = helper.make_tensor_value_info(name=graph_input,
                                                        elem_type=TensorProto.FLOAT,
                                                        shape=[1, C, H, W])
             inputs.append(value_info)
+
         elif layer.type == 'convo':
             H = int(layer.config['height'])
             W = int(layer.config['width'])

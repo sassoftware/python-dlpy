@@ -52,6 +52,7 @@ DLPy enables users to fetch the data from the back end (SAS Viya session) to the
 .. toctree::
    :maxdepth: 3
 
+   whatsnew
    install
    getting-started
    api

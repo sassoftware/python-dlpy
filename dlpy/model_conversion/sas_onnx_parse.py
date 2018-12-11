@@ -33,7 +33,8 @@ from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
 # The supported ONNX ops that can be parsed by this module
 _onnx_ops = ['Conv', 'MaxPool', 'AveragePool', 'GlobalAveragePool',
              'BatchNormalization', 'Concat', 'Gemm', 'MatMul',
-             'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten', 'Constant']
+             'Add', 'Sum', 'Reshape', 'Dropout', 'Flatten', 'Constant',
+             'ImageScaler']
 
 
 # mapping ONNX ops to SAS activations
@@ -59,7 +60,7 @@ class OnnxParseError(ValueError):
     '''
 
 
-def onnx_to_sas(model, model_name=None):
+def onnx_to_sas(model, model_name=None, output_layer=None):
     ''' 
     Generate SAS model from ONNX model 
     
@@ -69,6 +70,10 @@ def onnx_to_sas(model, model_name=None):
         Specifies the loaded ONNX model.
     model_name : string, optional
         Specifies the name of the model.
+    output_layer : Layer object, optional
+        Specifies the output layer of the model. If no output
+        layer is specified, the last layer is automatically set
+        as :class:`OutputLayer` with SOFTMAX activation.
 
     Returns
     -------
@@ -133,7 +138,11 @@ def onnx_to_sas(model, model_name=None):
         # TODO: support multipe input layers
         raise OnnxParseError('Unable to determine input layer.')
     else:
-        input_layer = onnx_input_layer(uninitialized[0])
+        scale_node = None 
+        for node in graph_def.node:
+            if node.op_type == 'ImageScaler':
+                scale_node = node
+        input_layer = onnx_input_layer(uninitialized[0], scale_node)
         dlpy_layers.append(input_layer)
 
     # create SAS layers from the ONNX nodes 
@@ -158,7 +167,7 @@ def onnx_to_sas(model, model_name=None):
                     if 'act' in layer.config.keys():
                         layer.config.update(act=_act_map.get(node.op_type))
                     else:
-                        print('Warning: Unable to apply activation for'
+                        print('Warning: Unable to apply activation for '
                               + layer.name + ' layer.')
 
     # apply dropout
@@ -181,19 +190,28 @@ def onnx_to_sas(model, model_name=None):
     write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)  
 
     # add output layer
-    # currently, only SOFTMAX activation in the output layer is supported
-    if dlpy_layers[-1].type == 'fc':
-        last_layer = dlpy_layers.pop()
-        out_layer = OutputLayer(name=last_layer.name,
-                                act='SOFTMAX',
-                                n=last_layer.config['n'],
-                                src_layers=last_layer.src_layers)
-        dlpy_layers.append(out_layer)
+    # if output_layer is not specified, output layer defaults to SOFTMAX
+    if output_layer is None:
+        # if previous layer is fc, we can replace it with output layer
+        if dlpy_layers[-1].type == 'fc':
+            last_layer = dlpy_layers.pop()
+            out_layer = OutputLayer(name=last_layer.name,
+                                    act='SOFTMAX',
+                                    n=last_layer.config['n'],
+                                    src_layers=last_layer.src_layers)
+            dlpy_layers.append(out_layer)
+        # if previous layer is not fc, default to loss layer only
+        else:
+            out_layer = OutputLayer(name='output',
+                                    act='SOFTMAX',
+                                    src_layers=[dlpy_layers[-1]])
+            dlpy_layers.append(out_layer)
     else:
-        out_layer = OutputLayer(name='output',
-                                act='SOFTMAX',
-                                src_layers=[layers[-1]])
-        dlpy_layers.append(out_layer)
+        # connect output_layer to previous layer
+        output_layer.src_layers = [dlpy_layers[-1]]
+        if not output_layer.name:
+            output_layer.name = 'output'
+        dlpy_layers.append(output_layer)
 
     return dlpy_layers
 
@@ -239,7 +257,7 @@ def onnx_filter_sas_layers(graph):
     return sas_layers
 
 
-def onnx_input_layer(value_info):
+def onnx_input_layer(value_info, image_scaler=None):
     ''' 
     Construct Input Layer 
     
@@ -247,6 +265,8 @@ def onnx_input_layer(value_info):
     ----------
     value_info : ONNX ValueInfoProto
         Specifies a ValueInfoProto object.
+    image_scaler : ONNX NodeProto, optional
+        Specifies an ImageScaler operator, if any. 
 
     Returns
     -------
@@ -256,7 +276,13 @@ def onnx_input_layer(value_info):
     input_layer_name = value_info.name
     _, C, H, W = list(d.dim_value for d in
                       value_info.type.tensor_type.shape.dim)
-    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    scale = None
+    offsets = None
+    if image_scaler:
+        offsets = list(image_scaler.attribute[0].floats)
+        scale = image_scaler.attribute[1].f
+    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name,
+                      scale=scale, offsets=offsets)
 
 
 def onnx_extract_sas_layer(graph, node, layers):

@@ -2504,9 +2504,13 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
     return model
 
 
-def YoloV2(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
-           act='leaky', max_label_per_image=30, max_boxes=30, random_mutation='random', coord_type='YOLO',
-           n_classes=20, predictions_per_grid=5, grid_number=13, **kwargs):
+def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
+           random_mutation='NONE', act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
+           coord_type='YOLO', max_label_per_image=30, max_boxes=30,
+           n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
+           coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
+           detection_threshold=None, iou_threshold=None, random_boxes=False, match_anchor_size=None,
+           num_to_force_coord=None):
     '''
     Generates a deep learning model with the Yolov2 architecture.
 
@@ -2518,19 +2522,6 @@ def YoloV2(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=
         Specifies the anchor box values.
     model_table : string
         Specifies the name of CAS table to store the model.
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model
-        will automatically detect the number of classes based on the
-        training set.
-        Default: 20
-    predictions_per_grid : int, optional
-        Specifies the amount of predictions will be done per grid.
-        Default: 5
-    grid_number : int, optional
-        Specifies the amount of cells to be analyzed for an image. For
-        example, if the value is 5, then the image will be divided into
-        a 5 x 5 grid.
-        Default: 13
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2543,20 +2534,20 @@ def YoloV2(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
         Default: 1.0 / 255
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
     act : string, optional
         Specifies the activation function for the batch normalization layers.
-    max_label_per_image : int, optional
-        Specifies the maximum number of labels per image in the training.
-        Default: 30
-    max_boxes : int, optional
-        Specifies the maximum number of overall predictions allowed in the
-        detection layer.
-        Default: 30
-    random_mutation : string, optional
-        Specifies how to apply data augmentations/mutations to the data in
-        the input layer.
-        Valid Values: 'none', 'random'
-        Default: 'random'
+    act_detection : string, optional
+        Specifies the activation function for the detection layer.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+        Default: AUTO
+    softmax_for_class_prob : bool, optional
+        Specifies whether to perform Softmax on class probability per
+        predicted object.
+        Default: True
     coord_type : string, optional
         Specifies the format of how to represent bounding boxes. For example,
         a bounding box can be represented with the x and y locations of the
@@ -2564,6 +2555,51 @@ def YoloV2(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=
         This format is the 'rect' format. We also support coco and yolo formats.
         Valid Values: 'rect', 'yolo', 'coco'
         Default: 'yolo'
+    max_label_per_image : int, optional
+        Specifies the maximum number of labels per image in the training.
+        Default: 30
+    max_boxes : int, optional
+        Specifies the maximum number of overall predictions allowed in the
+        detection layer.
+        Default: 30
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 20
+    predictions_per_grid : int, optional
+        Specifies the amount of predictions will be done per grid.
+        Default: 5
+    do_sqrt : bool, optional
+        Specifies whether to apply the SQRT function to width and height of
+        the object for the cost function.
+        Default: True
+    grid_number : int, optional
+        Specifies the amount of cells to be analyzed for an image. For example,
+        if the value is 5, then the image will be divided into a 5 x 5 grid.
+        Default: 13
+    coord_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects exist in the grid.
+    object_scale : float, optional
+        Specifies the weight for object detected for the cost function in
+        the detection layer.
+    prediction_not_a_object_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects do not exist in the grid.
+    class_scale : float, optional
+        Specifies the weight for the class of object detected for the cost
+        function in the detection layer.
+    detection_threshold : float, optional
+        Specifies the threshold for object detection.
+    iou_threshold : float, optional
+        Specifies the IOU Threshold of maximum suppression in object detection.
+    random_boxes : bool, optional
+        Randomizing boxes when loading the bounding box information. Default: False
+    match_anchor_size : bool, optional
+        Whether to force the predicted box match the anchor boxes in sizes for all predictions
+    num_to_force_coord : int, optional
+        The number of leading chunk of images in training when the algorithm forces predicted objects
+        in each grid to be equal to the anchor box sizes, and located at the grid center
 
     Returns
     -------
@@ -2647,16 +2683,26 @@ def YoloV2(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(detection_model_type='yolov2', class_number=n_classes, grid_number=grid_number,
-                        predictions_per_grid=predictions_per_grid, anchors=anchors, coord_type=coord_type,
-                        max_label_per_image=max_label_per_image, max_boxes=max_boxes, **kwargs))
+    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
+                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
+                        class_number = n_classes, grid_number = grid_number,
+                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
+                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
+                        class_scale = class_scale, detection_threshold = detection_threshold,
+                        iou_threshold = iou_threshold, random_boxes = random_boxes,
+                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
+                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
 
     return model
 
 
-def YoloV2_MultiSize(conn, anchors, model_table='Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
-                     act='leaky', coord_type='YOLO', max_label_per_image=30, max_boxes=30, random_mutation='random',
-                     n_classes=20, predictions_per_grid=5, grid_number=13, **kwargs):
+def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
+                     random_mutation='NONE', act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
+                     coord_type='YOLO', max_label_per_image=30, max_boxes=30,
+                     n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
+                     coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
+                     detection_threshold=None, iou_threshold=None, random_boxes=False, match_anchor_size=None,
+                     num_to_force_coord=None):
     '''
     Generates a deep learning model with the Yolov2 architecture.
 
@@ -2672,17 +2718,6 @@ def YoloV2_MultiSize(conn, anchors, model_table='Yolov2', n_channels=3, width=41
         Specifies the anchor box values.
     model_table : string
         Specifies the name of CAS table to store the model.
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model will
-        automatically detect the number of classes based on the training set.
-        Default: 20
-    predictions_per_grid : int, optional
-        Specifies the amount of predictions will be done per grid.
-        Default: 5
-    grid_number : int, optional
-        Specifies the amount of cells to be analyzed for an image. For example,
-        if the value is 5, then the image will be divided into a 5 x 5 grid.
-        Default: 13
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2695,20 +2730,21 @@ def YoloV2_MultiSize(conn, anchors, model_table='Yolov2', n_channels=3, width=41
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
         Default: 1.0 / 255
-    act : string, optional
-        Specifies the activation function for the batch normalization layers.
-    max_label_per_image : int, optional
-        Specifies the maximum number of labels per image in the training.
-        Default: 30
-    max_boxes : int, optional
-        Specifies the maximum number of overall predictions allowed in the
-        detection layer.
-        Default: 30
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the
         input layer.
         Valid Values: 'none', 'random'
-        Default: 'random'
+        Default: 'NONE'
+    act : string, optional
+        Specifies the activation function for the batch normalization layers.
+    act_detection : string, optional
+        Specifies the activation function for the detection layer.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+        Default: AUTO
+    softmax_for_class_prob : bool, optional
+        Specifies whether to perform Softmax on class probability per
+        predicted object.
+        Default: True
     coord_type : string, optional
         Specifies the format of how to represent bounding boxes. For example,
         a bounding box can be represented with the x and y locations of the
@@ -2716,6 +2752,51 @@ def YoloV2_MultiSize(conn, anchors, model_table='Yolov2', n_channels=3, width=41
         This format is the 'rect' format. We also support coco and yolo formats.
         Valid Values: 'rect', 'yolo', 'coco'
         Default: 'yolo'
+    max_label_per_image : int, optional
+        Specifies the maximum number of labels per image in the training.
+        Default: 30
+    max_boxes : int, optional
+        Specifies the maximum number of overall predictions allowed in the
+        detection layer.
+        Default: 30
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 20
+    predictions_per_grid : int, optional
+        Specifies the amount of predictions will be done per grid.
+        Default: 5
+    do_sqrt : bool, optional
+        Specifies whether to apply the SQRT function to width and height of
+        the object for the cost function.
+        Default: True
+    grid_number : int, optional
+        Specifies the amount of cells to be analyzed for an image. For example,
+        if the value is 5, then the image will be divided into a 5 x 5 grid.
+        Default: 13
+    coord_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects exist in the grid.
+    object_scale : float, optional
+        Specifies the weight for object detected for the cost function in
+        the detection layer.
+    prediction_not_a_object_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects do not exist in the grid.
+    class_scale : float, optional
+        Specifies the weight for the class of object detected for the cost
+        function in the detection layer.
+    detection_threshold : float, optional
+        Specifies the threshold for object detection.
+    iou_threshold : float, optional
+        Specifies the IOU Threshold of maximum suppression in object detection.
+    random_boxes : bool, optional
+        Randomizing boxes when loading the bounding box information. Default: False
+    match_anchor_size : bool, optional
+        Whether to force the predicted box match the anchor boxes in sizes for all predictions
+    num_to_force_coord : int, optional
+        The number of leading chunk of images in training when the algorithm forces predicted objects
+        in each grid to be equal to the anchor box sizes, and located at the grid center
 
     Returns
     -------
@@ -2818,16 +2899,26 @@ def YoloV2_MultiSize(conn, anchors, model_table='Yolov2', n_channels=3, width=41
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(detection_model_type='yolov2', class_number=n_classes, grid_number=grid_number,
-                        coord_type=coord_type, predictions_per_grid=predictions_per_grid, anchors=anchors,
-                        max_label_per_image=max_label_per_image, max_boxes=max_boxes, **kwargs))
+    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
+                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
+                        class_number = n_classes, grid_number = grid_number,
+                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
+                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
+                        class_scale = class_scale, detection_threshold = detection_threshold,
+                        iou_threshold = iou_threshold, random_boxes = random_boxes,
+                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
+                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
 
     return model
 
 
 def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
-                act='leaky', coord_type='YOLO', max_label_per_image=30, max_boxes=30, random_mutation='random',
-                n_classes=20, predictions_per_grid=5, grid_number=13, **kwargs):
+                random_mutation='NONE', act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
+                coord_type='YOLO', max_label_per_image=30, max_boxes=30,
+                n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
+                coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
+                detection_threshold=None, iou_threshold=None, random_boxes=False, match_anchor_size=None,
+                num_to_force_coord=None):
     '''
     Generate a deep learning model with the Tiny Yolov2 architecture.
 
@@ -2842,17 +2933,6 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
         Specifies the anchor box values.
     model_table : string
         Specifies the name of CAS table to store the model.
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model will
-        automatically detect the number of classes based on the training set.
-        Default: 20
-    predictions_per_grid : int, optional
-        Specifies the amount of predictions will be done per grid.
-        Default: 5
-    grid_number : int, optional
-        Specifies the amount of cells to be analyzed for an image. For example,
-        if the value is 5, then the image will be divided into a 5 x 5 grid.
-        Default: 13
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2865,20 +2945,21 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
         Default: 1.0 / 255
-    act : string, optional
-        Specifies the activation function for the batch normalization layers.
-    max_label_per_image : int, optional
-        Specifies the maximum number of labels per image in the training.
-        Default: 30
-    max_boxes : int, optional
-        Specifies the maximum number of overall predictions allowed in the
-        detection layer.
-        Default: 30
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the
         input layer.
         Valid Values: 'none', 'random'
-        Default: 'random'
+        Default: 'NONE'
+    act : string, optional
+        Specifies the activation function for the batch normalization layers.
+    act_detection : string, optional
+        Specifies the activation function for the detection layer.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+        Default: AUTO
+    softmax_for_class_prob : bool, optional
+        Specifies whether to perform Softmax on class probability per
+        predicted object.
+        Default: True
     coord_type : string, optional
         Specifies the format of how to represent bounding boxes. For example,
         a bounding box can be represented with the x and y locations of the
@@ -2886,6 +2967,51 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
         This format is the 'rect' format. We also support coco and yolo formats.
         Valid Values: 'rect', 'yolo', 'coco'
         Default: 'yolo'
+    max_label_per_image : int, optional
+        Specifies the maximum number of labels per image in the training.
+        Default: 30
+    max_boxes : int, optional
+        Specifies the maximum number of overall predictions allowed in the
+        detection layer.
+        Default: 30
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 20
+    predictions_per_grid : int, optional
+        Specifies the amount of predictions will be done per grid.
+        Default: 5
+    do_sqrt : bool, optional
+        Specifies whether to apply the SQRT function to width and height of
+        the object for the cost function.
+        Default: True
+    grid_number : int, optional
+        Specifies the amount of cells to be analyzed for an image. For example,
+        if the value is 5, then the image will be divided into a 5 x 5 grid.
+        Default: 13
+    coord_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects exist in the grid.
+    object_scale : float, optional
+        Specifies the weight for object detected for the cost function in
+        the detection layer.
+    prediction_not_a_object_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects do not exist in the grid.
+    class_scale : float, optional
+        Specifies the weight for the class of object detected for the cost
+        function in the detection layer.
+    detection_threshold : float, optional
+        Specifies the threshold for object detection.
+    iou_threshold : float, optional
+        Specifies the IOU Threshold of maximum suppression in object detection.
+    random_boxes : bool, optional
+        Randomizing boxes when loading the bounding box information. Default: False
+    match_anchor_size : bool, optional
+        Whether to force the predicted box match the anchor boxes in sizes for all predictions
+    num_to_force_coord : int, optional
+        The number of leading chunk of images in training when the algorithm forces predicted objects
+        in each grid to be equal to the anchor box sizes, and located at the grid center
 
     Returns
     -------
@@ -2934,15 +3060,24 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
 
     model.add(Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(detection_model_type='yolov2', class_number=n_classes, grid_number=grid_number,
-                        coord_type=coord_type, predictions_per_grid=predictions_per_grid, anchors=anchors,
-                        max_label_per_image=max_label_per_image, max_boxes=max_boxes, **kwargs))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
     return model
 
 
 def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255,
-           n_classes=20, random_mutation='random', det_act='identity', act='leaky', dropout=0,
-           predictions_per_grid=2, grid_number=7, **kwargs):
+           random_mutation='NONE', act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
+           coord_type='YOLO', max_label_per_image=30, max_boxes=30,
+           n_classes=20, predictions_per_grid=2, do_sqrt=True, grid_number=7,
+           coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
+           detection_threshold=None, iou_threshold=None, random_boxes=False):
     '''
     Generates a deep learning model with the Yolo V1 architecture.
 
@@ -2952,10 +3087,6 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
         Specifies the connection of the CAS connection.
     model_table : string
         Specifies the name of CAS table to store the model.
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model will
-        automatically detect the number of classes based on the training set.
-        Default: 20
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2972,24 +3103,69 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
         Specifies how to apply data augmentations/mutations to the data in
         the input layer.
         Valid Values: 'none', 'random'
-        Default: 'random'
-    det_act: string, optional
-        Specifies the activation function for the detection layer.
-        Default: 'identity'
+        Default: 'NONE'
     act: String, optional
-        Specifies the activation function to be used in the batch normalization
+        Specifies the activation function to be used in the convolutional layer
         layers and the final convolution layer.
         Default: 'leaky'
     dropout: double, optional
         Specifies the drop out rate.
         Default: 0
-    predictions_per_grid: int, optional
+    act_detection : string, optional
+        Specifies the activation function for the detection layer.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+        Default: AUTO
+    softmax_for_class_prob : bool, optional
+        Specifies whether to perform Softmax on class probability per
+        predicted object.
+        Default: True
+    coord_type : string, optional
+        Specifies the format of how to represent bounding boxes. For example,
+        a bounding box can be represented with the x and y locations of the
+        top-left point as well as width and height of the rectangle.
+        This format is the 'rect' format. We also support coco and yolo formats.
+        Valid Values: 'rect', 'yolo', 'coco'
+        Default: 'yolo'
+    max_label_per_image : int, optional
+        Specifies the maximum number of labels per image in the training.
+        Default: 30
+    max_boxes : int, optional
+        Specifies the maximum number of overall predictions allowed in the
+        detection layer.
+        Default: 30
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 20
+    predictions_per_grid : int, optional
         Specifies the amount of predictions will be done per grid.
         Default: 2
-    grid_number: int, optional
+    do_sqrt : bool, optional
+        Specifies whether to apply the SQRT function to width and height of
+        the object for the cost function.
+        Default: True
+    grid_number : int, optional
         Specifies the amount of cells to be analyzed for an image. For example,
         if the value is 5, then the image will be divided into a 5 x 5 grid.
         Default: 7
+    coord_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects exist in the grid.
+    object_scale : float, optional
+        Specifies the weight for object detected for the cost function in
+        the detection layer.
+    prediction_not_a_object_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects do not exist in the grid.
+    class_scale : float, optional
+        Specifies the weight for the class of object detected for the cost
+        function in the detection layer.
+    detection_threshold : float, optional
+        Specifies the threshold for object detection.
+    iou_threshold : float, optional
+        Specifies the IOU Threshold of maximum suppression in object detection.
+    random_boxes : bool, optional
+        Randomizing boxes when loading the bounding box information. Default: False
 
     Returns
     -------
@@ -3057,41 +3233,38 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
     model.add(Conv2d(1024, width=3, act=act, include_bias=False, stride=1))
     # conv23 7
     model.add(Conv2d(256, width=3, act=act, include_bias=False, stride=1, dropout=dropout))
-    model.add(Dense(n=(n_classes + (5 * predictions_per_grid)) * grid_number * grid_number, act=det_act))
+    model.add(Dense(n=(n_classes + (5 * predictions_per_grid)) * grid_number * grid_number, act='identity'))
 
-    model.add(Detection(detection_model_type='yolov1', class_number=n_classes, grid_number=grid_number,
-                        predictions_per_grid=predictions_per_grid, **kwargs))
+    model.add(Detection(act = act_detection, detection_model_type = 'yolov1',
+                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
+                        class_number = n_classes, grid_number = grid_number,
+                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
+                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
+                        class_scale = class_scale, detection_threshold = detection_threshold,
+                        iou_threshold = iou_threshold, random_boxes = random_boxes,
+                        max_label_per_image = max_label_per_image, max_boxes = max_boxes))
 
     return model
 
 
-def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255, act='leaky',
-                coord_type='YOLO', random_mutation='random', dropout=0, n_classes=10, predictions_per_grid=2,
-                grid_number=7, **kwargs):
+def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255,
+                random_mutation='NONE', act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
+                coord_type='YOLO', max_label_per_image=30, max_boxes=30,
+                n_classes=20, predictions_per_grid=2, do_sqrt=True, grid_number=7,
+                coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
+                detection_threshold=None, iou_threshold=None, random_boxes=False):
     '''
     Generates a deep learning model with the Tiny Yolov1 architecture.
 
     Tiny Yolov1 is a very small model of Yolov1, so that it includes
     fewer numbers of convolutional layer.
 
-    Parameters
-    -----------
+        Parameters
+    ----------
     conn : CAS
         Specifies the connection of the CAS connection.
     model_table : string
         Specifies the name of CAS table to store the model.
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model
-        will automatically detect the number of classes based on the training set.
-        Default: 10
-    predictions_per_grid : int, optional
-        Specifies the amount of predictions will be done per grid.
-        Default: 2
-    grid_number : int, optional
-        Specifies the amount of cells to be analyzed for an image. For
-        example, if the value is 5, then the image will be divided into
-        a 5 x 5 grid.
-        Default: 7
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -3103,15 +3276,27 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
         Default: 448
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
-        Default: 1.0 / 255
-    act : string, optional
-        Specifies the activation function for the convolutional layers.
-        Default: 'leaky'
+        Default: 1
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in
         the input layer.
         Valid Values: 'none', 'random'
-        Default: 'random'
+        Default: 'NONE'
+    act: String, optional
+        Specifies the activation function to be used in the convolutional layer
+        layers and the final convolution layer.
+        Default: 'leaky'
+    dropout: double, optional
+        Specifies the drop out rate.
+        Default: 0
+    act_detection : string, optional
+        Specifies the activation function for the detection layer.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+        Default: AUTO
+    softmax_for_class_prob : bool, optional
+        Specifies whether to perform Softmax on class probability per
+        predicted object.
+        Default: True
     coord_type : string, optional
         Specifies the format of how to represent bounding boxes. For example,
         a bounding box can be represented with the x and y locations of the
@@ -3119,9 +3304,46 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
         This format is the 'rect' format. We also support coco and yolo formats.
         Valid Values: 'rect', 'yolo', 'coco'
         Default: 'yolo'
-    dropout : double, optional
-        Specifies the dropout rate.
-        Default: 0
+    max_label_per_image : int, optional
+        Specifies the maximum number of labels per image in the training.
+        Default: 30
+    max_boxes : int, optional
+        Specifies the maximum number of overall predictions allowed in the
+        detection layer.
+        Default: 30
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 20
+    predictions_per_grid : int, optional
+        Specifies the amount of predictions will be done per grid.
+        Default: 2
+    do_sqrt : bool, optional
+        Specifies whether to apply the SQRT function to width and height of
+        the object for the cost function.
+        Default: True
+    grid_number : int, optional
+        Specifies the amount of cells to be analyzed for an image. For example,
+        if the value is 5, then the image will be divided into a 5 x 5 grid.
+        Default: 7
+    coord_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects exist in the grid.
+    object_scale : float, optional
+        Specifies the weight for object detected for the cost function in
+        the detection layer.
+    prediction_not_a_object_scale : float, optional
+        Specifies the weight for the cost function in the detection layer,
+        when objects do not exist in the grid.
+    class_scale : float, optional
+        Specifies the weight for the class of object detected for the cost
+        function in the detection layer.
+    detection_threshold : float, optional
+        Specifies the threshold for object detection.
+    iou_threshold : float, optional
+        Specifies the IOU Threshold of maximum suppression in object detection.
+    random_boxes : bool, optional
+        Randomizing boxes when loading the bounding box information. Default: False
 
     Returns
     -------
@@ -3163,8 +3385,14 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
 
     model.add(Dense(n=(n_classes + (5 * predictions_per_grid)) * grid_number * grid_number, act='identity'))
 
-    model.add(Detection(detection_model_type='yolov1', class_number=n_classes, grid_number=grid_number,
-                        coord_type=coord_type, predictions_per_grid=predictions_per_grid, **kwargs))
+    model.add(Detection(act = act_detection, detection_model_type = 'yolov1',
+                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
+                        class_number = n_classes, grid_number = grid_number,
+                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
+                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
+                        class_scale = class_scale, detection_threshold = detection_threshold,
+                        iou_threshold = iou_threshold, random_boxes = random_boxes,
+                        max_label_per_image = max_label_per_image, max_boxes = max_boxes))
 
     return model
 

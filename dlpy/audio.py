@@ -102,7 +102,7 @@ class AudioTable(CASTable):
                 for msg in rt4.messages:
                     print(msg)
                 raise DLPyError('cannot load audio files, something is wrong!')
-            cls.running_caslib = find_path_of_caslib(caslib)
+            cls.running_caslib = find_path_of_caslib(conn, caslib)
             return AudioTable(casout['name'])
 
     @classmethod

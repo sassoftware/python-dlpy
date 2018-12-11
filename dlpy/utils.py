@@ -32,6 +32,7 @@ import string
 import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
+import warnings
 import platform
 import collections
 from itertools import repeat
@@ -933,7 +934,7 @@ def filter_by_image_id(cas_table, image_id, filtered_name=None):
     return filtered
 
 
-def parse_txt(path):
+def _parse_txt(path):
     input_info = {}
     with open(path, "r") as lines:
         for line in lines:
@@ -942,7 +943,7 @@ def parse_txt(path):
     return input_info
 
 
-def convert_yolo(size, box):
+def _convert_yolo(size, box):
     ''' Used to normalize bounding box '''
     dw = 1./size[0]
     dh = 1./size[1]
@@ -957,7 +958,7 @@ def convert_yolo(size, box):
     return (x,y,w,h)
 
 
-def convert_coco(size, box, resize):
+def _convert_coco(size, box, resize):
     w_ratio = float(resize) / size[0]
     h_ratio = float(resize) / size[1]
     x_min = box[0] * w_ratio
@@ -967,9 +968,10 @@ def convert_coco(size, box, resize):
     return (x_min, y_min, x_max, y_max)
 
 
-def convert_xml_annotation(filename, coord_type, resize):
+def _convert_xml_annotation(filename, coord_type, resize):
     in_file = open(filename)
-    out_file = open(filename.split(".")[0]+".txt", 'w')
+    filename, file_extension = os.path.splitext(filename)
+    out_file = open(filename+".txt", 'w')
     tree = ET.parse(in_file)
     root = tree.getroot()
     size = root.find('size')
@@ -984,15 +986,15 @@ def convert_xml_annotation(filename, coord_type, resize):
         boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
         if coord_type == 'yolo':
-            boxes = convert_yolo((width, height), boxes)
+            boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
-            boxes = convert_coco((width, height), boxes, resize)
+            boxes = _convert_coco((width, height), boxes, resize)
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
     in_file.close()
     out_file.close()
 
 
-def convert_json_annotation(filename_w_ext, coord_type, resize):
+def _convert_json_annotation(filename_w_ext, coord_type, resize):
     filename, file_extension = os.path.splitext(filename_w_ext)
     img = Image.open(filename + '.jpg')
     width, height = img.size
@@ -1003,15 +1005,15 @@ def convert_json_annotation(filename_w_ext, coord_type, resize):
         cls = obj['type']
         boxes = (obj['ax'], obj['ay'], obj['bx'], obj['by'])
         if coord_type == 'yolo':
-            boxes = convert_yolo((width, height), boxes)
+            boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
-            boxes = convert_coco((width, height), boxes, resize)
+            boxes = _convert_coco((width, height), boxes, resize)
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
 
 
 def convert_txt_to_xml(path):
     cwd = os.getcwd()
-    input_info = parse_txt(path)
+    input_info = _parse_txt(path)
     names = []
     with open(input_info['names'], "r") as lines:
         for line in lines:
@@ -1064,6 +1066,48 @@ def convert_txt_to_xml(path):
     os.chdir(cwd)
 
 
+def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = None):
+    '''
+    Parse object detection annotation files based on Pascal VOC format and save as txt files.
+
+    Parameters
+    ----------
+    local_path : string
+        Local_path points to the directory where xml files are stored.
+        The generated txt files will be stored under the directory.
+    coord_type : string
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    image_size : integer, optional
+        Specifies the size of images to resize.
+        Default: 416
+    label_files : list, optional
+        Specifies the list of filename with XML extension under local_path to be parsed.
+        If label_files is not specified, all of XML files under local_path will be parsed .
+        Default: None
+
+    '''
+
+    cwd = os.getcwd()
+    os.chdir(local_path)
+    # if label_files = None, that means we call it directly and parse annotation files.
+    if label_files is None:
+        label_files = os.listdir(local_path)
+    label_files = [x for x in label_files if x.endswith('.xml')]
+    if len(label_files) == 0:
+        raise DLPyError('Can not find any xml file under data_path')
+    for idx, filename in enumerate(label_files):
+        _convert_xml_annotation(filename, coord_type, image_size)
+    os.chdir(cwd)
+
+
 def create_object_detection_table(conn, data_path, coord_type, output,
                                   local_path=None, image_size=416):
     '''
@@ -1092,8 +1136,9 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     local_path : string, optional
         Local_path and data_path point to the same location.
         The parameter local_path will be optional (default=None) if the
-        Python client has the same OS as CAS server. Otherwise, the path that
-        depends on the Python client OS needs to be specified.
+        Python client has the same OS as CAS server or annotation files
+        in TXT format are placed in data_path.
+        Otherwise, the path that depends on the Python client OS needs to be specified.
         For example:
         Windows client with linux CAS server:
         data_path=/path/to/data/path
@@ -1116,10 +1161,11 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     unix_type = server_type.startswith("lin") or server_type.startswith("osx")
     # check if local and server are same type of OS
     # in different os
+    need_to_parse = True
     if (unix_type and local_os_type.startswith('Win')) or not (unix_type or local_os_type.startswith('Win')):
         if local_path is None:
-            raise ValueError('local_path must be specified when your server is on {} OS and local '
-                             'python is on {} OS'.format(server_type.split('.')[0].capitalize(), local_os_type))
+            print('The txt files in data_path are used as annotation files.')
+            need_to_parse = False
     else:
         local_path = data_path
 
@@ -1187,24 +1233,21 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     # find all of annotation files under the directory
     a = conn.fileinfo(caslib = caslib, allfiles = True)
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    label_files = [x for x in label_files if x.endswith('.xml') or x.endswith('.json')]
-    if len(label_files) == 0:
-        raise ValueError('Can not find any annotation file under data_path')
+    # label_files = [x for x in label_files if x.endswith('.xml') or x.endswith('.json')]
 
+    # if client and server are on different type of operation system, we assume user parse xml files and put
+    # txt files in data_path folder. So skip get_txt_annotation()
     # parse xml or json files and create txt files
-    cwd = os.getcwd()
-    os.chdir(local_path)
-    for idx, filename in enumerate(label_files):
-        if filename.endswith('.xml'):
-            convert_xml_annotation(filename, coord_type, image_size)
-        # elif filename.endswith('.json'):
-        #     convert_json_annotation(filename)
-    os.chdir(cwd)
+    if need_to_parse:
+        get_txt_annotation(local_path, coord_type, image_size, label_files)
+
     label_tbl_name = random_name('obj_det')
     # load all of txt files into cas server
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
     label_files = [x for x in label_files if x.endswith('.txt')]
-    idjoin_format_length = len(max(label_files, key=len)) - 4
+    if len(label_files) == 0:
+        raise DLPyError('Can not find any txt file under data_path.')
+    idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
     with sw.option_context(print_messages = False):
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
@@ -1215,7 +1258,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             conn.retrieve('partition',
                           table = dict(name = tbl_name,
                                        compvars = ['idjoin'],
-                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length, filename[:-4])),
+                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
+                                                                                          filename[:-len('.txt')])),
                           casout = dict(name = tbl_name, replace = True))
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
@@ -1228,6 +1272,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code = fmt_code, _messagelevel = 'error')
     cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
     conn.altertable(name = output, columns = [dict(name = 'Var1', rename = var_name[0]),
                                               dict(name = 'Var2', rename = var_name[1]),
@@ -1284,8 +1329,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
 
-    image_sas_code = "length idjoin $ {0};idjoin = inputc(scan(_path_,{1},'./'),'{0}.');".format(filename_col_length,
-                                                len(data_path.split('\\')) - 3)
+    image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
+                                                len(data_path.split('\\')) - 2)
     img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code,
                             vars = [{'name': 'idjoin'}, {'name': '_image_'}])
     # join the image table and label table together

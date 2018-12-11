@@ -31,6 +31,7 @@ from dlpy.sequential import Sequential
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
                          Keypoints, BN, Res, Concat)
 from dlpy.utils import caslibify
+from dlpy.applications import Tiny_YoloV2
 from dlpy.images import ImageTable
 import unittest
 
@@ -743,6 +744,193 @@ class TestModel(unittest.TestCase):
         m = onnx.load(os.path.join(self.data_dir_local, 'pytorch_net2.onnx'))
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
+
+    def test_evaluate_obj_det(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path = self.data_dir + 'evaluate_obj_det_det.sashdat', task = 'load')
+
+        self.s.table.loadtable(caslib = caslib,
+                               casout = {'name': 'evaluate_obj_det_det', 'replace': True},
+                               path = path)
+
+        self.s.table.loadtable(caslib = caslib,
+                               casout = {'name': 'evaluate_obj_det_gt', 'replace': True},
+                               path = 'evaluate_obj_det_gt.sashdat')
+        yolo_anchors = (5.9838598901098905,
+                        3.4326923076923075,
+                        2.184993862520458,
+                        1.9841448445171848,
+                        1.0261752136752136,
+                        1.2277777777777779)
+        yolo_model = Tiny_YoloV2(self.s, grid_number = 17, scale = 1.0 / 255,
+                                 n_classes = 1, height = 544, width = 544,
+                                 predictions_per_grid = 3,
+                                 anchors = yolo_anchors,
+                                 max_boxes = 100,
+                                 coord_type = 'yolo',
+                                 max_label_per_image = 100,
+                                 class_scale = 1.0,
+                                 coord_scale = 2.0,
+                                 prediction_not_a_object_scale = 1,
+                                 object_scale = 5,
+                                 detection_threshold = 0.05,
+                                 iou_threshold = 0.2)
+
+        metrics = yolo_model.evaluate_object_detection(ground_truth = 'evaluate_obj_det_gt', coord_type = 'yolo',
+                                                       detection_data = 'evaluate_obj_det_det', iou_thresholds=0.5)
+
+    def test_model29(self):
+        # test specifying output layer in Model.from_onnx_model
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        output_layer = OutputLayer(n=100)
+        model1 = Model.from_onnx_model(conn=self.s,
+                                       onnx_model=m,
+                                       offsets=[1, 1, 1,],
+                                       scale=2,
+                                       std='std',
+                                       output_layer=output_layer)
+
+        self.assertTrue(model1.layers[-1].config['n'] == 100)
+
+    def test_model30(self):
+        # test specifying output layer in Model.from_onnx_model
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in "
+                                             "the environment variables")
+
+        m = onnx.load(os.path.join(self.data_dir_local, 'Simple_CNN1.onnx'))
+        output_layer = OutputLayer(name='test_output', n=50)
+        model1 = Model.from_onnx_model(conn=self.s,
+                                       onnx_model=m,
+                                       offsets=[1, 1, 1,],
+                                       scale=2,
+                                       std='std',
+                                       output_layer=output_layer)
+
+        self.assertTrue(model1.layers[-1].name == 'test_output')
+        self.assertTrue(model1.layers[-1].config['n'] == 50)
+
+    def test_imagescaler1(self):
+        # test import model with imagescaler
+        try:
+            import onnx
+            from onnx import helper, TensorProto
+        except:
+            unittest.TestCase.skipTest(self, 'onnx not found')
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR_LOCAL is not set in '
+                                             'the environment variables')
+
+        import numpy as np
+        n1 = helper.make_node('ImageScaler',
+                              ['X'],
+                              ['X1'],
+                              bias=[0., 0., 0.],
+                              scale=1.)
+        n2 = helper.make_node('Conv',
+                              inputs=['X1', 'W1'],
+                              outputs=['X2'],
+                              kernel_shape=[3, 3],
+                              pads=[0, 0, 0, 0])
+        n3 = helper.make_node('MatMul',
+                              inputs=['X2', 'W2'],
+                              outputs=['X3'])
+
+        W1 = np.ones((3, 3, 3)).astype(np.float32)
+        W2 = np.ones((9, 2)).astype(np.float32)
+
+        graph_def = helper.make_graph(
+            [n1, n2, n3],
+            name='test',
+            inputs=[
+                helper.make_tensor_value_info('X',
+                                              TensorProto.FLOAT,
+                                              [1, 3, 10, 10]),
+                helper.make_tensor_value_info('W1',
+                                              TensorProto.FLOAT,
+                                              [3, 3, 3]),
+                helper.make_tensor_value_info('W2',
+                                              TensorProto.FLOAT,
+                                              [9, 2])],
+            outputs=[
+                helper.make_tensor_value_info('X3',
+                                              TensorProto.FLOAT,
+                                              [1, 2])],
+            initializer=[
+                helper.make_tensor('W1',
+                                   TensorProto.FLOAT,
+                                   [3, 3, 3],
+                                   W1.flatten().astype(np.float32)),
+                helper.make_tensor('W2',
+                                   TensorProto.FLOAT,
+                                   [9, 2],
+                                   W2.flatten().astype(np.float32))])
+        onnx_model =  helper.make_model(graph_def)
+
+        model1 = Model.from_onnx_model(self.s, onnx_model)
+
+        l1 = model1.layers[0]
+        self.assertTrue(l1.type == 'input')
+        self.assertTrue(l1.config['offsets'] == [0., 0., 0.])
+        self.assertTrue(l1.config['scale'] == 1.)
+
+    def test_imagescaler2(self):
+        # test export model with imagescaler
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, 'onnx not found')
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR_LOCAL is not set in '
+                                             'the environment variables')
+
+        model1 = Sequential(self.s, model_table='imagescaler2')
+        model1.add(InputLayer(n_channels=3,
+                              width=224,
+                              height=224,
+                              scale=1/255.,
+                              offsets=[0.1, 0.2, 0.3]))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        caslib, path = caslibify(self.s,
+                                 path=self.data_dir+'images.sashdat',
+                                 task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        from dlpy.model_conversion.write_onnx_model import sas_to_onnx
+        onnx_model = sas_to_onnx(model1.layers,
+                                 self.s.CASTable('imagescaler2'),
+                                 self.s.CASTable('imagescaler2_weights'))
+
+        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[0], 0.1)
+        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[1], 0.2)
+        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[2], 0.3)
+        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[1].f, 1/255.)
 
     @classmethod
     def tearDownClass(cls):

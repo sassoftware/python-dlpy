@@ -396,7 +396,7 @@ class ImageTable(CASTable):
 
         else:
             out = self.copy_table()
-            out.crop(x=x, y=x, width=width, height=height)
+            out.crop(x=x, y=y, width=width, height=height)
             return out
 
     def resize(self, width=None, height=None, inplace=True):
