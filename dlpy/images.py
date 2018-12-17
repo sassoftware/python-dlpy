@@ -348,7 +348,7 @@ class ImageTable(CASTable):
             plt.xticks([]), plt.yticks([])
         plt.show()
 
-    def crop(self, x=0, y=0, width=None, height=None, inplace=True):
+    def crop(self, x=0, y=0, width=None, height=None, inplace=True, columns=None):
         '''
         Crop the images in the ImageTable
 
@@ -365,6 +365,9 @@ class ImageTable(CASTable):
             If not specified, height will be set to be equal to width.
         inplace : bool, optional
             Specifies whether to update the original table, or to create a new one.
+        columns : list of str, optional
+            Specifies the extra columns in the image table.
+            Default = None
 
         Returns
         -------
@@ -383,6 +386,7 @@ class ImageTable(CASTable):
         blocksize = image_blocksize(width, height)
 
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
+        column_names = column_names + (columns or [])
 
         if inplace:
             self._retrieve('image.processimages',
@@ -399,7 +403,7 @@ class ImageTable(CASTable):
             out.crop(x=x, y=y, width=width, height=height)
             return out
 
-    def resize(self, width=None, height=None, inplace=True):
+    def resize(self, width=None, height=None, inplace=True, columns=None):
         '''
         Resize the images in the ImageTable
 
@@ -413,6 +417,9 @@ class ImageTable(CASTable):
         inplace : bool, optional
             Specifies whether to update the original table, or to create
             a new one.
+        columns : list of str, optional
+            Specifies the extra columns in the image table.
+            Default = None
 
         Returns
         -------
@@ -430,6 +437,7 @@ class ImageTable(CASTable):
             height = width
         blocksize = image_blocksize(width, height)
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
+        column_names = column_names + (columns or [])
 
         if inplace:
             self._retrieve('image.processimages',
