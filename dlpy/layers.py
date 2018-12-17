@@ -1635,7 +1635,7 @@ class Segmentation(Layer):
     can_be_last_layer = True
     number_of_instances = 0
 
-    def __init__(self, name=None, act=None, error=None, src_layers=None, **kwargs):
+    def __init__(self, name=None, act=None, error=None, target_scale=1, src_layers=None, **kwargs):
         parameters = locals()
         parameters = _unpack_config(parameters)
         # _clean_parameters(parameters)
