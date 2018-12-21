@@ -20,7 +20,7 @@
 
 from __future__ import (print_function, division, absolute_import, unicode_literals)
 from swat.cas.table import CASTable
-from .utils import random_name, get_cas_host_type
+from .utils import random_name, get_cas_host_type, char_to_double, int_to_double
 from dlpy.utils import DLPyError
 from swat.cas import datamsghandlers
 import numpy as np
@@ -652,7 +652,7 @@ class TimeseriesTable(CASTable):
             self.timeseries = [self.timeseries]
         
         if set(self.timeseries).issubset(tbl_colinfo.Column):
-            self.char_to_double(conn, tbl_colinfo, input_tbl_name, 
+            char_to_double(conn, tbl_colinfo, input_tbl_name, 
                                input_tbl_name, self.timeseries)
         else:
             raise ValueError('''One or more variables specified in 'timeseries' 
@@ -773,7 +773,7 @@ class TimeseriesTable(CASTable):
             self.groupby_var = [self.groupby_var]
         
         if set(self.groupby_var).issubset(tbl_colinfo.Column):
-            self.int_to_double(conn, tbl_colinfo, input_tbl_name, 
+            int_to_double(conn, tbl_colinfo, input_tbl_name, 
                                input_tbl_name, self.groupby_var)
         else:
             raise ValueError('''One or more variables specified in 'groupby' 
@@ -918,7 +918,7 @@ class TimeseriesTable(CASTable):
             self.groupby_var = [self.groupby_var]
         
         if set(self.groupby_var).issubset(tbl_colinfo.Column):
-            self.int_to_double(conn, tbl_colinfo, input_tbl_name, 
+            int_to_double(conn, tbl_colinfo, input_tbl_name, 
                                input_tbl_name, self.groupby_var)
         else:
             raise ValueError('''One or more variables specified in 'groupby' 
@@ -1321,77 +1321,5 @@ class TimeseriesTable(CASTable):
         
         return (None, None)
 
-    @staticmethod
-    def int_to_double(conn, tbl_colinfo, input_tbl_name, 
-                      output_tbl_name, varlist, num_fmt='8.'):
-        varlist_lower = [var.lower() for var in varlist]
-    
-        int_list = tbl_colinfo.loc[(
-                (tbl_colinfo.Column.str.lower().isin(varlist_lower)) &
-                 (tbl_colinfo.Type.str.startswith('int'))
-                 ),'Column'].tolist()
-    
-        if len(int_list) > 0:
-            fmt_code = '''
-            data {0};
-            set {1};
-            '''.format(output_tbl_name, input_tbl_name)
 
-            for var in int_list:
-                fmt_code += '''
-                format {0} {1};       
-                '''.format(var, num_fmt)
-                
-            fmt_code += 'run;'    
-        else:
-            fmt_code = '''
-            data {0};
-            set {1};
-            run;
-            '''.format(output_tbl_name, input_tbl_name)            
 
-        conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
-    
-    @staticmethod
-    def char_to_double(conn, tbl_colinfo, input_tbl_name, 
-                       output_tbl_name, varlist, num_fmt='8.'):
-        varlist_lower = [var.lower() for var in varlist]
-        
-        fmt_list = tbl_colinfo.loc[(
-                (tbl_colinfo.Column.str.lower().isin(varlist_lower)) &
-                 (tbl_colinfo.Type != 'double')
-                 ),'Column'].tolist()
-    
-        int_list = tbl_colinfo.loc[(
-                (tbl_colinfo.Column.str.lower().isin(varlist_lower)) &
-                 (tbl_colinfo.Type.str.startswith('int'))
-                 ),'Column'].tolist()
-    
-        char_list = [var for var in fmt_list if var not in int_list]
-    
-        if len(char_list) > 0:
-            fmt_code = '''
-            data {0};
-            set {1}(rename=(
-            '''.format(output_tbl_name, input_tbl_name)
-                      
-            for var in char_list:
-                fmt_code += '{0}=c_{0} '.format(var) #The space is important
-                
-            fmt_code += '));'
-            
-            for var in char_list:
-                fmt_code += '''
-                {0} = input(c_{0},{1});
-                drop c_{0};         
-                '''.format(var, num_fmt)
-                
-            fmt_code += 'run;'          
-        else:
-            fmt_code = '''
-            data {0};
-            set {1};
-            run;
-            '''.format(output_tbl_name, input_tbl_name)            
-        
-        conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)

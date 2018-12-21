@@ -1409,3 +1409,80 @@ def get_mapping_dict():
     with open(full_filename) as f:
         j = json.load(f)
     return j
+
+
+
+def char_to_double(conn, tbl_colinfo, input_tbl_name, 
+                   output_tbl_name, varlist, num_fmt='8.'):
+    varlist_lower = [var.lower() for var in varlist]
+    
+    fmt_list = tbl_colinfo.loc[(
+            (tbl_colinfo.Column.str.lower().isin(varlist_lower)) &
+             (tbl_colinfo.Type != 'double')
+             ),'Column'].tolist()
+
+    int_list = tbl_colinfo.loc[(
+            (tbl_colinfo.Column.str.lower().isin(varlist_lower)) &
+             (tbl_colinfo.Type.str.startswith('int'))
+             ),'Column'].tolist()
+
+    char_list = [var for var in fmt_list if var not in int_list]
+
+    if len(char_list) > 0:
+        fmt_code = '''
+        data {0};
+        set {1}(rename=(
+        '''.format(output_tbl_name, input_tbl_name)
+                  
+        for var in char_list:
+            fmt_code += '{0}=c_{0} '.format(var) #The space is important
+            
+        fmt_code += '));'
+        
+        for var in char_list:
+            fmt_code += '''
+            {0} = input(c_{0},{1});
+            drop c_{0};         
+            '''.format(var, num_fmt)
+            
+        fmt_code += 'run;'          
+    else:
+        fmt_code = '''
+        data {0};
+        set {1};
+        run;
+        '''.format(output_tbl_name, input_tbl_name)            
+    
+    conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
+    
+    
+    
+def int_to_double(conn, tbl_colinfo, input_tbl_name, 
+                  output_tbl_name, varlist, num_fmt='8.'):
+    varlist_lower = [var.lower() for var in varlist]
+
+    int_list = tbl_colinfo.loc[(
+            (tbl_colinfo.Column.str.lower().isin(varlist_lower)) &
+             (tbl_colinfo.Type.str.startswith('int'))
+             ),'Column'].tolist()
+
+    if len(int_list) > 0:
+        fmt_code = '''
+        data {0};
+        set {1};
+        '''.format(output_tbl_name, input_tbl_name)
+
+        for var in int_list:
+            fmt_code += '''
+            format {0} {1};       
+            '''.format(var, num_fmt)
+            
+        fmt_code += 'run;'    
+    else:
+        fmt_code = '''
+        data {0};
+        set {1};
+        run;
+        '''.format(output_tbl_name, input_tbl_name)            
+
+    conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
