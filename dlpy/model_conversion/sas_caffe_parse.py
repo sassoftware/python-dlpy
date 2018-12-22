@@ -19,7 +19,6 @@
 ''' Convert caffe model to sas models '''
 
 import os
-import sys
 
 import caffe
 import caffe.draw

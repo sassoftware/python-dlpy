@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = ${SPHINXDIR}sphinx-build
 PAPER         =
 BUILDDIR      = build
 
@@ -56,8 +56,7 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	mkdir -p $(BUILDDIR)/html/_images/.
 	cp -f _images/* $(BUILDDIR)/html/_images/.
-	find $(BUILDDIR)/html -type f -name '*.html' | xargs perl -0777 -i -pe 's/<\/table>\s*<table[^>]*>\s*<colgroup>\s*<col[^>]*>\s*<col[^>]*>\s*<\/colgroup>//g'
-	find $(BUILDDIR)/html -type f -name '*.html' | xargs perl -0777 -i -pe 's/<p[^>]*>Attributes<\/p>\s*<table[^>]*>\s*(?:\s*<\/?(?:colgroup|col|tbody|tr)[^>]*>\s*|\s*<td[^>]*>.*?<\/td>\s*)+\s*<\/table>\s*(<\/dd>\s*<\/dl>\s*<\/div>)/\1/g'
+	${SPHINXDIR}python post-process-sphinx-html $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 

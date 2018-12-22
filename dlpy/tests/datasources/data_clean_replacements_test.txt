@@ -1,0 +1,25 @@
+#test examples
+
+#---------------------------------------------------
+#invalid rules, less than 5
+#---------------------------------------------------
+=
+=''
+''=
+''=''
+'xxxxx'=
+='yyyyyyyy'
+x=y
+'x'
+x
+
+#---------------------------------------------------
+#valid rules, ***careful if you add/remove some rules
+#might need to be updated
+#---------------------------------------------------
+'<'=''
+'zzz'='XYZ'
+' . '=' '
+'\\'=''	  
+'!EXCLAMATION-POINT'='EXCLAMATION POINT'
+'.POINT'='POINT'

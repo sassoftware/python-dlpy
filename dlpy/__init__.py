@@ -18,10 +18,11 @@
 
 ''' SAS Deep Learning '''
 
-__version__ = '0.6.1'
+__version__ = '1.0.2-dev'
+__dev__ = False
 
-from .model import Model
+from dlpy.model import Model
 from .images import ImageTable
-from .Sequential import Sequential
-from .layers import (Layer, InputLayer, Conv2d, Pooling, Dense, Recurrent,
-                     BN, Res, Concat, Proj, OutputLayer)
+from .timeseries import TimeseriesTable
+from dlpy.sequential import Sequential
+from dlpy.layers import (Layer, InputLayer, Conv2d, Pooling, Dense, Recurrent, BN, Res, Concat, Proj, OutputLayer)

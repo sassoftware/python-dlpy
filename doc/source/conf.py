@@ -72,7 +72,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'DLPy'
-copyright = '2016 SAS Institute Inc. All Rights Reserved.'
+copyright = '2018 SAS Institute Inc. All Rights Reserved.'
 author = 'SAS'
 
 # The version info for the project you're documenting, acts as replacement for

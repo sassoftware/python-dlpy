@@ -7,8 +7,8 @@ Getting Started
 ***************
 
 Before you can use the DLPy package, you will need a running CAS server and the SWAT package.
-The SWAT package can connect to either the binary port or the HTTP port.  If you have the 
-option of either, the binary protocol will give you better performance. 
+The SWAT package can make connections using the binary or HTTP protocol. Between these two options, 
+the binary protocol will give you better performance. 
 
 Other than the CAS host and port, you just need a user name and password to connect. 
 User names and passwords can be implemented in various ways, so you may need to see your
@@ -23,8 +23,8 @@ to create a connection.
    import os
    host = os.environ['CASHOST']
    port = os.environ['CASPORT']
-   userid = None
-   password = None
+   userid = os.environ.get('CASUSER', None)
+   password = os.environ.get('CASPASSWORD', None)
 
 .. ipython:: python
 
@@ -128,10 +128,10 @@ If you do not have Graphviz, skip this instruction.
 .. ipython:: python
    :suppress:
 
-    _.format = 'png'
+    _.format = 'svg'
     _.render('_images/model1_network')
 
-.. image:: _images/model1_network.png
+.. image:: _images/model1_network.svg
 
    
 .. ipython:: python

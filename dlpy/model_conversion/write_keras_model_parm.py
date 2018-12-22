@@ -22,8 +22,10 @@ import sys
 import h5py
 import numpy as np
 from keras import backend as K
-from keras.engine.topology import preprocess_weights_for_loading
-
+try:
+    from keras.engine.topology import preprocess_weights_for_loading
+except ImportError:
+    from keras.engine.saving import preprocess_weights_for_loading
 
 # let Keras read parameters and then transform to format needed for SAS deep learning
 # NOTE: modified version of Keras function load_weights_from_hdf5_group()
@@ -42,27 +44,20 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
 
     '''
     # open input/output files
-    try:
-        f_in = h5py.File(hdf5_in, 'r')
-    except IOError:
-        sys.exit('File ' + hdf5_in + ' does not exist')
-
-    try:
-        f_out = h5py.File(hdf5_out, 'w')
-    except IOError:
-        sys.exit('File ' + hdf5_out + ' could not be created')
+    f_in = h5py.File(hdf5_in, 'r')
+    f_out = h5py.File(hdf5_out, 'w')
 
     if 'keras_version' in f_in.attrs:
         original_keras_version = f_in.attrs['keras_version'].decode('utf8')
     else:
         original_keras_version = '1'
+
     if 'backend' in f_in.attrs:
         original_backend = f_in.attrs['backend'].decode('utf8')
     else:
         original_backend = None
 
     try:
-
         image_data_format = K.image_data_format()
 
         # determine layers with weights
@@ -118,6 +113,7 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
         else:
             perm_index = []
 
+        f_out.attrs['layer_names'] = [l.encode('utf8') for l in layer_names]
             # let Keras read weights, reformat, and write to SAS-compatible file
         for k, name in enumerate(layer_names):
             g_in = f_in[name]
@@ -143,12 +139,32 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
                                  ' weights, but the saved weights have ' +
                                  str(len(weight_values)) +
                                  ' elements.')
-
+            if layer.__class__.__name__.lower() == 'batchnormalization':
+                bn_gamma = np.ones(weight_values[0].shape,
+                                   dtype=weight_values[0].dtype)
+                bn_beta = np.zeros(weight_values[0].shape,
+                                   dtype=weight_values[0].dtype)
+                # if scale = False and center = True
+                if not layer.get_config()['scale'] and layer.get_config()['center']:
+                    weight_values.insert(0, bn_gamma)
+                    weight_names.insert(0, layer.name+'/'+'gamma:0')
+                # if scale = True and center = False
+                elif layer.get_config()['scale'] and not layer.get_config()['center']:
+                    weight_values.insert(1, bn_beta)
+                    weight_names.insert(1, layer.name+'/'+'beta:0')
+                # if scale = False and center = False
+                elif not layer.get_config()['scale'] and not layer.get_config()['center']:
+                    weight_values = [bn_gamma, bn_beta] + weight_values
+                    weight_names = [layer.name+'/'+'gamma:0', 
+                                    layer.name+'/'+'beta:0'] + weight_names
             # read/write weights
             for ii in range(len(weight_names)):
-                tensor_in = np.zeros(weight_values[ii].shape,
-                                     dtype=weight_values[ii].dtype)
-                weight_values[ii].read_direct(tensor_in)
+                if type(weight_values[ii]) == np.ndarray:
+                    tensor_in = weight_values[ii]
+                else:
+                    tensor_in = np.zeros(weight_values[ii].shape,
+                                         dtype=weight_values[ii].dtype)
+                    weight_values[ii].read_direct(tensor_in)
 
                 # permute axes as needed to conform to SAS deep
                 # learning "channels first" format
@@ -212,10 +228,7 @@ def write_keras_hdf5(model, hdf5_out):
 
     '''
     # open output file
-    try:
-        f_out = h5py.File(hdf5_out, 'w')
-    except IOError:
-        sys.exit('File ' + hdf5_out + ' could not be created')
+    f_out = h5py.File(hdf5_out, 'w')
 
     try:
         image_data_format = K.image_data_format()
@@ -328,6 +341,7 @@ def write_keras_hdf5(model, hdf5_out):
 
             # update weight names
             g_out.attrs['weight_names'] = new_weight_names
+
     except ValueError as err_msg:
         print(err_msg)
 
@@ -359,12 +373,7 @@ def generate_dataset_name(layer, index):
     elif (layer_class_name == 'batchnormalization'):
         template_names = ['gamma:0', 'beta:0', 'moving_mean:0', 'moving_variance:0']
     else:
-        sys.exit('Unable to translate layer weight name for layer = ' + layer.name)
+        raise ValueError('Unable to translate layer weight name for layer = ' + layer.name)
 
     dataset_name = layer.name + '/' + template_names[index]
     return dataset_name.encode('utf8')
-
-
-#########################################################################################
-if __name__ == '__main__':
-    sys.exit('ERROR: this module cannot be invoked from the command line')

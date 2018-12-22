@@ -29,8 +29,6 @@ def LeNet_Model(s, model_name='LeNet'):
         Specifies the CAS connection object
     model_name : string, optional
         Specifies the name of CAS table to store the model
-    include_top : boolean, optional
-        Specifies whether to include the top layers of the model.
 
     Returns
     -------
@@ -44,7 +42,7 @@ def LeNet_Model(s, model_name='LeNet'):
 
     # input layer
     s.deepLearn.addLayer(model=model_name, name='mnist',
-                         layer=dict(type='input', n_channels=1, width=28, height=28,
+                         layer=dict(type='input', nchannels=1, width=28, height=28,
                                     scale=0.00392156862745098039))
 
     # conv1: 5*5*20

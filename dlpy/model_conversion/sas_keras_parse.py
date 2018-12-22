@@ -19,18 +19,24 @@
 ''' Convert keras model to sas models '''
 
 import os
-import sys
 
 from keras import backend as K
+from distutils.version import StrictVersion
+import keras
+from dlpy.utils import DLPyError
+if StrictVersion( keras.__version__) < '2.1.3' or StrictVersion( keras.__version__) > '2.1.6':
+    raise DLPyError('This keras version ('+keras.__version__+') is not supported, '
+                                                             'please use a version >= 2.1.3 and <= 2.1.6')
 
 from .write_keras_model_parm import write_keras_hdf5
 from .write_sas_code import (write_input_layer, write_convolution_layer,
                              write_batch_norm_layer, write_pooling_layer,
                              write_residual_layer, write_full_connect_layer,
-                             write_main_entry)
+                             write_concatenate_layer, write_main_entry)
 
 computation_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d',
-                             'dense', 'batchnormalization', 'add']
+                             'dense', 'batchnormalization', 'add', 'concatenate',
+                             'globalaveragepooling2d']
 dropout_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d', 'dense']
 
 
@@ -51,8 +57,7 @@ def keras_to_sas(model, model_name=None):
     for layer in model.layers:
         class_name = layer.__class__.__name__.lower()
         if (class_name in computation_layer_classes):
-            comp_layer_name = find_previous_computation_layer(
-                model, layer.name, computation_layer_classes)
+            comp_layer_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
             source_str = make_source_str(comp_layer_name)
             src_layer.update({layer.name: source_str})
         elif (class_name == 'activation'):
@@ -91,8 +96,9 @@ def keras_to_sas(model, model_name=None):
         else:
             act_func = None
 
-        # average/max pooling
-        if (class_name in ['averagepooling2d', 'maxpooling2d']):
+        # average/max pooling/globalaveragepooling
+        if (class_name in ['averagepooling2d', 'maxpooling2d', 
+                           'globalaveragepooling2d']):
             sas_code = keras_pooling_layer(layer, model_name, class_name,
                                            src_layer, layer_dropout)
         # 2D convolution
@@ -116,6 +122,10 @@ def keras_to_sas(model, model_name=None):
         elif (class_name == 'dense'):
             sas_code = keras_full_connect_layer(layer, model_name, act_func,
                                                 src_layer, layer_dropout)
+        # concatenate
+        elif (class_name == 'concatenate'):
+            sas_code = keras_concatenate_layer(layer, model_name,
+                                               act_func, src_layer)
         else:
             print('WARNING: ' + class_name + ' is an unsupported layer '
                                              'type - your SAS model may be incomplete')
@@ -154,9 +164,22 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
         String value with SAS deep learning pooling layer definition
 
     '''
-    config = layer.get_config()
-    strides = config['strides']
-    pool_size = config['pool_size']
+    if class_name == 'globalaveragepooling2d':
+        strides = (1, 1)
+        padding = 0
+        try:
+            pool_size = int(layer.input.shape[1]), int(layer.input.shape[2])
+        except:
+            raise KerasParseError('Unable to determine dimensions for '
+                                  'global average pooling layer')
+    else:
+        config = layer.get_config()
+        strides = config['strides']
+        pool_size = config['pool_size']
+        if config['padding'] == 'valid':
+            padding = 0
+        else:
+            padding = None
 
     # pooling size
     width, height = pool_size
@@ -169,7 +192,8 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
                               'directions for pooling layer')
 
     # pooling type
-    if (class_name == 'averagepooling2d'):
+    if (class_name == 'averagepooling2d' or 
+        class_name == 'globalaveragepooling2d'):
         type = 'mean'
     elif (class_name == 'maxpooling2d'):
         type = 'max'
@@ -192,7 +216,8 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
 
     return write_pooling_layer(model_name=model_name, layer_name=layer.name,
                                width=str(width), height=str(height), stride=str(step),
-                               type=type, dropout=str(dropout), src_layer=source_str)
+                               type=type, dropout=str(dropout), src_layer=source_str,
+                               padding=str(padding))
 
 
 # create SAS 2D convolution layer
@@ -224,6 +249,10 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
 
     strides = config['strides']
     kernel_size = config['kernel_size']
+    if config['padding'] == 'valid':
+        padding = 0
+    else:
+        padding = None
 
     # activation
     if (act_func):
@@ -269,7 +298,8 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
                                    nfilters=str(nrof_filters), width=str(width),
                                    height=str(height), stride=str(step),
                                    nobias=bias_str, activation=layer_act_func,
-                                   dropout=str(dropout), src_layer=source_str)
+                                   dropout=str(dropout), src_layer=source_str,
+                                   padding=str(padding))
 
 
 # create SAS batch normalization layer
@@ -468,6 +498,50 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
                                     nrof_neurons=str(nrof_neurons), nobias=bias_str,
                                     activation=layer_act_func, type=layer_type,
                                     dropout=str(dropout), src_layer=source_str)
+
+
+# create SAS concatenate layer
+def keras_concatenate_layer(layer, model_name, act_func, src_layer):
+    '''
+    Extract concatenate layer parameters from layer definition object
+
+    Parameters
+    ----------
+    layer : Layer object
+       Concatenate layer
+    model_name : string
+       Deep learning model name
+    act_func : string
+       Keras activation function
+    src_layer : list-of-Layer objects
+       Layer objects corresponding to source layer(s) for
+       residual layer
+
+    Returns
+    -------
+    string
+        String value with SAS deep learning residual layer definition
+
+    '''
+    config = layer.get_config()
+
+    # extract source layer(s)
+    if (layer.name in src_layer.keys()):
+        source_str = src_layer[layer.name]
+    else:
+        raise KerasParseError('Unable to determine source layers for '
+                              'concatenate layer = ' + layer.name)
+
+    # activation
+    if (act_func):
+        layer_act_func = map_keras_activation(layer, act_func)
+    elif ('activation' in config.keys()):
+        layer_act_func = map_keras_activation(layer, config['activation'])
+    else:
+        layer_act_func = 'identity'
+
+    return write_concatenate_layer(model_name=model_name, layer_name=layer.name,
+                                   activation=layer_act_func, src_layer=source_str)
 
 
 def map_keras_activation(layer, act_func):

@@ -18,7 +18,6 @@
 
 ''' Supporting functions for caffe model conversion '''
 
-import sys
 import h5py
 
 
@@ -46,10 +45,7 @@ def write_caffe_hdf5(net, layer_list, file_name):
     '''
 
     # open output file
-    try:
-        fout = h5py.File(file_name, 'w')
-    except IOError:
-        sys.exit('File ' + file_name + ' could not be created')
+    fout = h5py.File(file_name, 'w')
 
     # create base group
     g = fout.create_group('data')
@@ -100,8 +96,3 @@ def write_caffe_hdf5(net, layer_list, file_name):
     finally:
         # close file
         fout.close()
-
-
-#########################################################################################
-if __name__ == '__main__':
-    sys.exit('ERROR: this module cannot be invoked from the command line')

@@ -10,38 +10,6 @@ API Reference
 .. _api.functions:
 
 
-Pre-built models
-----------------
-
-.. currentmodule:: dlpy.applications
-
-.. autosummary::
-   :toctree: generated/
-
-   LeNet5
-   LeNet5_bn
-   VGG11
-   VGG11_bn
-   VGG13
-   VGG13_bn
-   VGG16
-   VGG16_bn
-   VGG19
-   VGG19_bn
-   ResNet18_SAS
-   ResNet18_Caffe
-   ResNet34_SAS
-   ResNet34_Caffe
-   ResNet50_SAS
-   ResNet50_Caffe
-   ResNet101_SAS
-   ResNet101_Caffe
-   ResNet152_SAS
-   ResNet152_Caffe
-   wide_resnet
-   DenseNet_Cifar
-
-
 ImageTable
 ----------
 
@@ -92,7 +60,36 @@ Image Processing
    ImageTable.as_patches
    ImageTable.as_random_patches
 
+Audio
+-----
 
+.. currentmodule:: dlpy.audio
+
+.. autosummary::
+   :toctree: generated/
+       
+   AudioTable
+   AudioTable.create_audio_table
+   
+Timeseries
+----------
+
+.. currentmodule:: dlpy.timeseries
+
+.. autosummary::
+   :toctree: generated/
+   
+   TimeseriesTable
+   TimeseriesTable.from_table
+   TimeseriesTable.from_pandas
+   TimeseriesTable.from_localfile
+   TimeseriesTable.from_serverfile
+   TimeseriesTable.timeseries_formatting
+   TimeseriesTable.timeseries_accumlation
+   TimeseriesTable.prepare_subsequences
+   TimeseriesTable.timeseries_partition
+   plot_timeseries   
+   
 Layers
 ------
 
@@ -102,7 +99,6 @@ Layers
    :toctree: generated/
 
    Layer
-   Layer.to_model_params
 
 .. autosummary::
    :toctree: generated/
@@ -114,8 +110,14 @@ Layers
    Recurrent
    BN
    Res
+   Concat
    Proj
    OutputLayer
+   Keypoints
+   Detection
+   Scale
+   Reshape
+   
 
 
 Models
@@ -128,6 +130,9 @@ Models
 
    Model
    Model.from_table
+   Model.from_keras_model
+   Model.from_caffe_model
+   Model.from_onnx_model
    Model.from_sashdat
    Model.load
    Model.set_weights
@@ -141,7 +146,7 @@ Models
    Model.tune
    Model.plot_training_history
    Model.predict
-   Model.plot_predict_res
+   Model.evaluate
    Model.get_feature_maps
    Model.get_features
    Model.heat_map_analysis
@@ -152,6 +157,19 @@ Models
    Model.count_params
    Model.print_summary
    Model.plot_network
+
+   DataSpec
+   DataSpecNumNomOpts
+   Sequence
+   TextParms
+   Optimizer
+   NatGradSolver
+   LBFGSolver
+   AdamSolver
+   MomentumSolver
+   VanillaSolver
+   Solver
+   Gpu
 
 
 Feature Maps
@@ -166,37 +184,25 @@ Feature Maps
    FeatureMaps.display
 
 
-Functions
----------
+Sequential Model
+----------------
 
-.. currentmodule:: dlpy.model
+.. currentmodule:: dlpy.sequential
 
 .. autosummary::
    :toctree: generated/
 
-   get_num_configs
-   get_str_configs
-   extract_input_layer
-   extract_conv_layer
-   extract_pooling_layer
-   extract_batchnorm_layer
-   extract_residual_layer
-   extract_fc_layer
-   extract_output_layer
-   layer_to_node
-   layer_to_edge
-   model_to_graph
+   Sequential
+   Sequential.add
+   Sequential.pop
+   Sequential.switch
+   Sequential.compile
 
-
+   
 Residual Networks
 -----------------
 
 .. currentmodule:: dlpy.blocks
-
-.. autosummary::
-   :toctree: generated/
-
-   Block
 
 .. autosummary::
    :toctree: generated/
@@ -215,22 +221,55 @@ Residual Networks
 
    ResBlock_Caffe
    ResBlock_Caffe.compile
+   
+   
+Pre-Built Models for Computer Vision Tasks
+------------------------------------------
 
-
-
-Sequential Model
-----------------
-
-.. currentmodule:: dlpy.Sequential
+.. currentmodule:: dlpy.applications
 
 .. autosummary::
    :toctree: generated/
 
-   Sequential
-   Sequential.add
-   Sequential.pop
-   Sequential.switch
-   Sequential.compile
+   LeNet5
+   VGG11
+   VGG13
+   VGG16
+   VGG19
+   ResNet18_SAS
+   ResNet18_Caffe
+   ResNet34_SAS
+   ResNet34_Caffe
+   ResNet50_SAS
+   ResNet50_Caffe
+   ResNet101_SAS
+   ResNet101_Caffe
+   ResNet152_SAS
+   ResNet152_Caffe
+   ResNet_Wide
+   DenseNet
+   DenseNet121
+   Darknet
+   Darknet_Reference
+   InceptionV3
+   YoloV2
+   YoloV2_MultiSize
+   Tiny_YoloV1
+   Tiny_YoloV2
+
+  
+Pre-Built Models for NLP Tasks
+------------------------------
+
+.. currentmodule:: dlpy.applications
+
+.. autosummary::
+   :toctree: generated/
+   
+   TextClassification
+   TextGeneration
+   SequenceLabeling
+   SpeechRecognition
 
 
 Splitting Utilities
@@ -243,4 +282,3 @@ Splitting Utilities
 
    two_way_split
    three_way_split
-

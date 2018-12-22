@@ -1,0 +1,108 @@
+{
+  "inputlayer1": {
+    "layer": {
+      "type": "input"
+    },
+    "name": "input1"
+  },
+  "inputlayer2": {
+    "layer": {
+      "type": "input"
+    },
+    "name": "data"
+  },
+  "inputlayer3":{"name": "data", "layer": {"offsets": [0], "nchannels": 1, "type": "input"}},
+  "inputlayer4":{"name": "data", "layer": {"offsets": [0, 0, 0], "nchannels": 3, "type": "input"}},
+  "inputlayer5":{"name": "data", "layer": {"offsets": [0, 0, 0], "height": 100, "width": 100, "nchannels": 3, "type": "input"}},
+  "inputlayer6":{"name": "data", "layer": {"offsets": [0, 0, 0], "height": 100, "width": 100, "nchannels": 3, "type": "input"}},
+  "inputlayer7":{"name": "data", "layer": {"offsets": [0, 0, 0], "height": 150, "width": 100, "nchannels": 3, "type": "input"}},
+  "convo1":{"name": "convo1", "layer": {"act": "relu", "stride":1, "height": 3, "width": 3, "nfilters": 10, "includebias":true, "type": "convo"}, "srclayers": ["input1"]},
+  "convo2":{"name": "convo2", "layer": {"act": "relu", "height": 7, "stride": 1, "width": 5, "nfilters": 32, "includebias":true, "type": "convo"}, "srclayers": ["input1"]},
+  "pool1": {"name": "pool1", "layer": {"pool": "max", "stride": 2, "height": 2, "width": 2, "type": "pool"}, "srclayers": ["conv"]},
+  "pool2": {"name": "pool2", "layer": {"pool": "max", "stride": 3, "height": 2, "width": 3, "type": "pool"}, "srclayers": ["conv"]},
+  "pool3": {"name": "pool3", "layer": {"pool": "mean", "stride": 1, "height": 2, "width": 3, "type": "pool"}, "srclayers": ["conv"]},
+  "fc1": {"name": "dense", "layer": {"act": "relu", "n": 10, "type": "fc"}, "srclayers": ["pool"]},
+  "fc2": {"name": "dense", "layer": {"act": "relu", "n": 10000, "dropout":0.2, "init":"xavier", "includebias":false, "type": "fc"}, "srclayers": ["pool"]},
+  "rnn1": {"name": "rnn", "layer": {"n": 100, "init":"xavier", "rnntype":"gru", "outputtype":"samelength", "reversed":true, "act":"auto", "type": "recurrent"}, "srclayers": ["data"]},
+  "bn1" : {"name": "bn", "layer": {"type":"batchnorm", "act":"auto"}, "srclayers":["conv"]},
+  "res1" : {"name": "res", "layer": {"type":"residual", "act":"auto"}, "srclayers":["conv"]},
+  "proj1" : {"name": "proj", "layer": {"type":"projection", "alphabetsize":250, "embeddingsize":100}, "srclayers":["data"]},
+  "output1" : {"name": "output", "layer": {"type":"output", "n":100, "act":"softmax"}, "srclayers":["pool"]},
+  "keypoints1" : {"name": "keypoints", "layer": {"type":"keypoints", "n":100, "act":"auto"}, "srclayers":["fc"]},
+  "detection1" : {"name": "detection", "layer": {"type":"detection", "predictionspergrid":7, "act":"auto", "iouthreshold":0.2, "detectionthreshold":0.2}, "srclayers":["pool"]},
+  "scale1" : {"name": "scale", "layer": {"type":"scale", "act":"auto"}, "srclayers":["pool"]},
+  "fcmp1" :  {"name": "fcmp", "layer": {"type":"fcmp", "forwardfunction":"forward", "backwardfunction":"backward", "width":3, "height":3, "depth":3, "nweights":100}, "srclayers":["pool"]},
+  "reshape1" : {"name": "reshape", "layer": {"type":"reshape", "width":1, "height":2, "depth":3, "act":"auto"}, "srclayers":["fc"]},
+  "resblock1" : [
+    {"name": "R1C1", "layer": {"includebias":true, "act":"relu", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["data"]},
+    {"name": "R1C2", "layer": {"includebias":true, "act":"relu", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1C1"]},
+    {"name": "Res1", "layer": {"act": "identity", "type": "residual"}, "srclayers": ["R1C2", "data"]}
+  ],
+  "resblock2" : [
+    {"name": "R1B1", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["data"]},
+    {"name": "R1C1", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1B1"]},
+    {"name": "R1B2", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["R1C1"]},
+    {"name": "R1C2", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1B2"]},
+    {"name": "Res1", "layer": {"act": "identity", "type": "residual"}, "srclayers": ["R1C2", "data"]}
+  ],
+  "resblock3" : [
+    {"name": "R1C1", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["data"]},
+    {"name": "R1B1", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["R1C1"]},
+    {"name": "R1C2", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1B1"]},
+    {"name": "R1B2", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["R1C2"]},
+    {"name": "Res1", "layer": {"act": "relu", "type": "residual"}, "srclayers": ["R1B2", "data"]}
+  ],
+  "resblock4" : [
+    {"name": "R1C0", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": 1, "width": 1, "nfilters": 16, "type": "convo"}, "srclayers": ["data"]},
+    {"name": "R1B0", "layer": {"act": "identity", "type": "batchnorm"}, "srclayers": ["R1C0"]},
+    {"name": "R1C2", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["data"]},
+    {"name": "R1B2", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["R1C2"]},
+    {"name": "R1C3", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1B2"]},
+    {"name": "R1B3", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["R1C3"]},
+    {"name": "Res1", "layer": {"act": "relu", "type": "residual"}, "srclayers": ["R1B3", "R1B0"]}
+  ],
+  "resblock5" : [
+    {"name": "Res1", "layer": {"act": "identity", "type": "residual"}, "srclayers": ["data", "data"]},
+    {"name": "R1B1", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["Res1"]},
+    {"name": "R1C1", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1B1"]},
+    {"name": "R1B2", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["R1C1"]},
+    {"name": "R1C2", "layer": {"includebias": false, "act": "identity", "stride": 1, "height": [3], "width": [3], "nfilters": 16, "type": "convo"}, "srclayers": ["R1B2"]}
+  ],
+  "denseblock1": [
+    {"name": "D1B1", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["data"]},
+    {"name": "D1C1", "layer": {"includebias": false, "act": "relu", "stride": 1, "height": 3, "width": 3, "nfilters": 12, "type": "convo"}, "srclayers": ["D1B1"]},
+    {"name": "D1Concat1", "layer": {"act": "identity", "type": "concat"}, "srclayers": ["D1C1", "data"]}
+  ],
+  "denseblock2": [
+    {"name": "D1B1", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["data"]},
+    {"name": "D1C1", "layer": {"includebias": false, "act": "relu", "stride": 1, "height": 3, "width": 3, "nfilters": 12, "type": "convo"}, "srclayers": ["D1B1"]},
+    {"name": "D1Concat1", "layer": {"act": "identity", "type": "concat"}, "srclayers": ["D1C1", "data"]},
+    {"name": "D1B2", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["D1Concat1"]},
+    {"name": "D1C2", "layer": {"includebias": false, "act": "relu", "stride": 1, "height": 3, "width": 3, "nfilters": 12, "type": "convo"}, "srclayers": ["D1B2"]},
+    {"name": "D1Concat2", "layer": {"act": "identity", "type": "concat"}, "srclayers": ["D1C2", "D1Concat1"]},
+    {"name": "D1B3", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["D1Concat2"]},
+    {"name": "D1C3", "layer": {"includebias": false, "act": "relu", "stride": 1, "height": 3, "width": 3, "nfilters": 12, "type": "convo"}, "srclayers": ["D1B3"]},
+    {"name": "D1Concat3", "layer": {"act": "identity", "type": "concat"}, "srclayers": ["D1C3", "D1Concat2"]},
+    {"name": "D1B4", "layer": {"act": "relu", "type": "batchnorm"}, "srclayers": ["D1Concat3"]},
+    {"name": "D1C4", "layer": {"includebias": false, "act": "relu", "stride": 1, "height": 3, "width": 3, "nfilters": 12, "type": "convo"}, "srclayers": ["D1B4"]},
+    {"name": "D1Concat4", "layer": {"act": "identity", "type": "concat"}, "srclayers": ["D1C4", "D1Concat3"]}
+  ],
+  "bidirectional1": [
+	{"name": "input_layer_to_bidirectional_rnn", "layer":{"type":"input"}},
+    {"name": "RNN0B1", "layer": {"dropout": 0.2, "reversed": true, "outputtype": "samelength", "rnntype": "gru", "n": 30, "type": "recurrent", "act":"auto"}, "srclayers": ["input_layer_to_bidirectional_rnn"]},
+    {"name": "RNN1B1", "layer": {"dropout": 0.2, "reversed": false, "outputtype": "samelength", "rnntype": "gru", "n": 30, "type": "recurrent", "act":"auto"}, "srclayers": ["input_layer_to_bidirectional_rnn"]}
+  ],
+  "bidirectional2":[
+    {"name": "RNN1B0", "layer": {"dropout": 0.2, "reversed": true, "outputtype": "samelength", "rnntype": "gru", "n": 100, "type": "recurrent"}, "srclayers": ["data1", "data2"]},
+    {"name": "RNN1B1", "layer": {"dropout": 0.2, "reversed": false, "outputtype": "samelength", "rnntype": "gru", "n": 100, "type": "recurrent"}, "srclayers": ["data1", "data2"]}
+  ],
+  "bidirectional3":[
+	{"name": "input_layer_to_bidirectional_rnn", "layer":{"type":"input"}},
+    {"name": "RNN0B1", "layer": {"dropout": 0.2, "reversed": true, "outputtype": "samelength", "rnntype": "gru", "n": 10, "type": "recurrent", "act":"auto"}, "srclayers": ["input_layer_to_bidirectional_rnn"]},
+    {"name": "RNN1B1", "layer": {"dropout": 0.2, "reversed": false, "outputtype": "samelength", "rnntype": "gru", "n": 10, "type": "recurrent", "act":"auto"}, "srclayers": ["input_layer_to_bidirectional_rnn"]},
+    {"name": "RNN0B2", "layer": {"dropout": 0.2, "reversed": true, "outputtype": "samelength", "rnntype": "gru", "n": 20, "type": "recurrent", "act":"auto"}, "srclayers": ["RNN0B1", "RNN1B1"]},
+    {"name": "RNN1B2", "layer": {"dropout": 0.2, "reversed": false, "outputtype": "samelength", "rnntype": "gru", "n": 20, "type": "recurrent", "act":"auto"}, "srclayers": ["RNN0B1", "RNN1B1"]},
+    {"name": "RNN0B3", "layer": {"dropout": 0.2, "reversed": true, "outputtype": "samelength", "rnntype": "gru", "n": 30, "type": "recurrent", "act":"auto"}, "srclayers": ["RNN0B2", "RNN1B2"]},
+    {"name": "RNN1B3", "layer": {"dropout": 0.2, "reversed": false, "outputtype": "samelength", "rnntype": "gru", "n": 30, "type": "recurrent", "act":"auto"}, "srclayers": ["RNN0B2", "RNN1B2"]}
+  ]
+}

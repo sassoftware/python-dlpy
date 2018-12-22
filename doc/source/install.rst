@@ -7,6 +7,10 @@ DLPy can be installed using ``pip`` as follows::
 
     pip install sas-dlpy
 
+If you use the Anaconda distribution of Python, you can also use::
+
+    conda install -c sas-institute sas-dlpy
+
 Releases can also be found on GitHub at https://github.com/sassoftware/python-dlpy/releases.
 
 
