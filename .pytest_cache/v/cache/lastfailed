@@ -1,0 +1,15 @@
+{
+  "dlpy/tests/test_applications.py::TestApplications::test_pretrained": true,
+  "dlpy/tests/test_imagetable.py::TestImageTable::test_from_table": true,
+  "dlpy/tests/test_imagetable.py::TestImageTable::test_from_table2": true,
+  "dlpy/tests/test_imagetable.py::TestImageTable::test_two_way_split2": true,
+  "dlpy/tests/test_lr_scheduler.py::TestLRScheduler": true,
+  "dlpy/tests/test_model.py::TestModel::test_data_specs2": true,
+  "dlpy/tests/test_model.py::TestModel::test_data_specs_dict2": true,
+  "dlpy/tests/test_model.py::TestModel::test_evaluate2": true,
+  "dlpy/tests/test_model.py::TestModel::test_find_lr": true,
+  "dlpy/tests/test_model.py::TestModel::test_get_feature_maps": true,
+  "dlpy/tests/test_model.py::TestModel::test_heat_map_analysis2": true,
+  "dlpy/tests/test_model.py::TestModel::test_image_table2": true,
+  "dlpy/tests/test_utils.py::TestUtils": true
+}

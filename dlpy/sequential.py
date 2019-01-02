@@ -161,6 +161,7 @@ class Sequential(Model):
         detect_num = 1
         output_num = 1
         keypoints_num = 1
+        seg_num = 1
 
         block_num = 1
         compiled_layers = []
@@ -257,10 +258,31 @@ class Sequential(Model):
                             if layer.name is None:
                                 layer.format_name(local_count=detect_num)
                                 detect_num += 1
+                        elif layer.type == 'transconvo':
+                            if layer.name is None:
+                                layer.format_name()
+                                block_num += 1
+                                conv_num = 1
+                                bn_num = 1
+                                concat_num = 1
+                                scale_num = 1
+                                reshape_num = 1
+                            output_size = layer.config['output_size']
+                            # TODO Support non-square feature map and non-square kernel size
+                            if output_size is not None:
+                                layer.calculate_output_padding()
+                            del layer.config['output_size']
+                        elif layer.type == 'segmentation':
+                            if layer.name is None:
+                                layer.format_name(local_count=seg_num)
+                                seg_num += 1
                         else:
                             if layer.name is None:
                                 layer.format_name()
                         '''
+                        if layer.type == 'transconvo':
+                            layer.calculate_output_padding()
+                            del layer.config['output_size']
                         if layer.name is None:
                             layer.format_name(local_count=layer_counts[layer.type])
                 else:
