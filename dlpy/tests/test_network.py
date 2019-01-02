@@ -41,7 +41,7 @@ class TestNetwork(tm.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS('dlgrd009', 13314)
+        cls.s = swat.CAS()
         cls.server_type = tm.get_cas_host_type(cls.s)
 
     def test_option_type(self):
@@ -132,92 +132,18 @@ class TestNetwork(tm.TestCase):
         model1.compile()
         model1.print_summary()
 
-    def test_unet(self):
-        inputs = InputLayer(3, 512, 512, scale = 1.0 / 255)
-        conv1 = Conv2d(8, 3, act = 'relu')(inputs)
-        conv1 = Conv2d(8, 3, act = 'relu')(conv1)
-        pool1 = Pooling(2)(conv1)
-        # 256
-        conv2 = Conv2d(16, 3, act = 'relu')(pool1)
-        conv2 = Conv2d(16, 3, act = 'relu')(conv2)
-        pool2 = Pooling(2)(conv2)
-        # 128
-        conv3 = Conv2d(32, 3, act = 'relu')(pool2)
-        conv3 = Conv2d(32, 3, act = 'relu')(conv3)
-        pool3 = Pooling(2)(conv3)
-        # 64
-        conv4 = Conv2d(64, 3, act = 'relu')(pool3)  # 64
-
-        tconv1 = Transconvo(32, 3, stride = 2, padding = 1, output_size = (128, 128, 32))(conv4)  # 128
-        merge1 = Concat(src_layers = [conv3, tconv1])
-        conv5 = Conv2d(32, 3, act = 'relu')(merge1)
-        conv5 = Conv2d(32, 3, act = 'relu')(conv5)
-
-        tconv2 = Transconvo(32, 3, stride = 2, padding = 1, output_size = (256, 256, 32))(conv5)  # 256
-        merge2 = Concat(src_layers = [conv2, tconv2])
-        conv6 = Conv2d(16, 3, act = 'relu')(merge2)
-        conv6 = Conv2d(16, 3, act = 'relu')(conv6)
-
-        tconv3 = Transconvo(32, stride = 2, padding = 1, output_size = (512, 512, 32))(conv6)  # 512
-        merge3 = Concat(src_layers = [conv1, tconv3])
-        conv7 = Conv2d(8, 3, act = 'relu')(merge3)
-        conv7 = Conv2d(8, 3, act = 'relu')(conv7)
-
-        conv8 = Conv2d(2, 3, act = 'relu')(conv7)
-
-        seg1 = Segmentation()(conv8)
-        model = Network(self.s, inputs = inputs, outputs = seg1)
-        model.compile()
-        model.print_summary()
-
-    def test_network_transpose_conv(self):
-        inputs = InputLayer(3, 128, 64, scale = 0.004, name = 'input1')
-        tconv1 = Transconvo(32, height = 5, width = 3, stride = 2, padding_height = 2,
-                            padding_width = 1, output_size = (256, 128, 32), name = 'trans1')(inputs)
-        seg1 = Segmentation(name = 'seg1')(tconv1)
-        model = Network(self.s, inputs = inputs, outputs = seg1)
-        model.compile()
-        model.print_summary()
-
     def test_given_name(self):
         inputs = InputLayer(3, 512, 512, scale = 1.0 / 255, name = 'input1')
         conv1 = Conv2d(8, 3, act = 'relu')(inputs)
         conv2 = Conv2d(8, 3, act = 'relu')(inputs)
         merge3 = Concat(src_layers = [conv1, conv2])
         conv3 = Conv2d(3, 3, act = 'relu')(merge3)
-        seg1 = Segmentation(name = 'seg1')(conv3)
-        model = Network(self.s, inputs = inputs, outputs = seg1)
+        output1 = OutputLayer(name = 'output1')(conv3)
+        model = Network(self.s, inputs = inputs, outputs = output1)
         model.compile()
         self.assertTrue(inputs.name == 'input1')
-        self.assertTrue(seg1.name == 'seg1')
+        self.assertTrue(output1.name == 'output1')
         model.print_summary()
-
-    def test_super_resolution(self):
-        def conv_block(x, filters, size, stride = 1, mode = 'same', act = True):
-            x = Conv2d(filters, size, size, act = 'identity', include_bias = False, stride = stride)(x)
-            x = BN(act = 'relu' if act else 'identity')(x)
-            return x
-
-        def res_block(ip, nf = 64):
-            x = conv_block(ip, nf, 3, 1)
-            x = conv_block(x, nf, 3, 1, act = False)
-            return Concat(src_layers = [x, ip])
-
-        def deconv_block(x, filters, size, shape, stride = 2):
-            x = Transconvo(filters, size, size, act = 'identity', padding=1, include_bias = False, stride = stride,
-                           output_size = shape)(x)
-            x = BN(act = 'relu')(x)
-            return x
-
-        inp = InputLayer(1, 32, 32, scale = 1.0 / 255, name = 'InputLayer_1')
-        x = conv_block(inp, 64, 9, 1)
-        for i in range(4): x = res_block(x)
-        x = deconv_block(x, 64, 3, (64, 64, 64))
-        x = deconv_block(x, 64, 3, (128, 128, 64))
-        x = Conv2d(3, 9, 9, act = 'tanh')(x)
-        seg = Segmentation(name = 'Segmentation_1', act = 'auto')(x)
-        model = Network(self.s, inputs = inp, outputs = seg)
-        model.compile()
 
     def test_multi_src_layer_fc(self):
         inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
@@ -236,7 +162,7 @@ class TestNetwork(tm.TestCase):
         model = Network(self.s, inputs = inputs, outputs = output1)
         model.compile()
 
-    def test_dulplicated_src_layers_call(self):
+    def test_duplicated_src_layers_call(self):
         inputs = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_1')
         fc1 = Dense(n = 128, src_layers = inputs)(inputs)
         fc2 = Dense(n = 64)(fc1)

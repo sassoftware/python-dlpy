@@ -29,8 +29,7 @@ import sys
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
 from .utils import filter_by_image_id, filter_by_filename
-from dlpy.utils import DLPyError, Box, DLPyDict
-from dlpy.lr_scheduler import _LRScheduler, FixedLR, StepLR, FCMPLR
+from dlpy.utils import DLPyError, Box
 
 
 class Model(object):
@@ -148,8 +147,6 @@ class Model(object):
                 model.layers.append(extract_concatenate_layer(layer_table=layer_table))
             elif layer_type == 11:
                 model.layers.append(extract_detection_layer(layer_table=layer_table))
-            elif layer_type == 11:
-                model.layers.append(extract_fcmp_layer(layer_table=layer_table))
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
         layer_id_list = conn_mat['_DLLayerID_'].tolist()
@@ -158,13 +155,10 @@ class Model(object):
         for row_id in range(conn_mat.shape[0]):
             layer_id = int(layer_id_list[row_id])
             src_layer_id = int(src_layer_id_list[row_id])
-            try:
-                if model.layers[layer_id].src_layers is None:
-                    model.layers[layer_id].src_layers = [model.layers[src_layer_id]]
-                else:
-                    model.layers[layer_id].src_layers.append(model.layers[src_layer_id])
-            except:
-                raise
+            if model.layers[layer_id].src_layers is None:
+                model.layers[layer_id].src_layers = [model.layers[src_layer_id]]
+            else:
+                model.layers[layer_id].src_layers.append(model.layers[src_layer_id])
 
         return model
 
@@ -775,67 +769,6 @@ class Model(object):
         '''
         return self._retrieve_('deeplearn.modelinfo', modelTable=self.model_table)
 
-    def find_lr(self, start_lr=1e-7, end_lr=1.0, num_iteration=100, **kwargs):
-        # TODO: need to polish, add test cases, support user define fcmplearningrate finding funcion
-        from parse import parse, search
-        if start_lr >= end_lr:
-            raise ValueError('start_lr should be smaller than end_lr')
-        if not self.conn.has_actionset('fcmp'):
-            self.conn.loadactionset(actionSet = 'fcmp', _messagelevel = 'error')
-        self.conn.addRoutines(
-            routineCode = f'''
-            function annealing_exp(rate, initRate, batch);
-                lrmin = {start_lr};
-                lrmax = {end_lr};
-                prt = batch / {num_iteration};
-                rate = min(lrmin*(lrmax/lrmin)**prt, lrmax);
-                return(rate);
-            endsub;
-            ''',
-            package = 'pkg',
-            funcTable = dict(name = 'annealing_exp', replace = 1)
-        )
-        if 'optimizer' not in kwargs:
-            optimizer = Optimizer(algorithm=VanillaSolver(lr_scheduler=FCMPLR(self.conn,
-                                                                              fcmp_learning_rate='annealing_exp',
-                                                                              learning_rate=start_lr)),
-                                  mini_batch_size=4, max_epochs=1, log_level=3)
-            kwargs['optimizer'] = optimizer
-        else:
-            if not isinstance(kwargs['optimizer'], Optimizer):
-                raise DLPyError('optimizer should be an Optimizer object')
-            kwargs['optimizer'].algorithm.add_parameter('fcmp_learning_rate', 'annealing_exp')
-            kwargs['optimizer']['log_level'] = 3
-            kwargs['optimizer']['max_epochs'] = 1
-            kwargs['optimizer'].algorithm['learning_rate'] = start_lr
-
-        res = self.fit(**kwargs)
-        lrs = []
-        loss = []
-        record_begin = False
-        for idx, line in enumerate(res.messages):
-            if not record_begin:
-                if search('NOTE:  Batch', line) is not None:
-                    record_begin = True
-                    continue
-                else:
-                    continue
-            if search('NOTE:  Epoch', line):
-                break
-            parse_result = parse('NOTE: {:^} {:^} {:^} {:^} {:^}', line)
-            lrs = lrs + [float(parse_result[2])]
-            loss = loss + [float(parse_result[3])]
-            if float(parse_result[2]) == end_lr:
-                break
-        min_loss, min_loss_idx = min((loss[i], i) for i in range(len(loss)))
-        min_loss_lr = lrs[min_loss_idx]
-        found_lr = min_loss_lr / 10.0
-        plt.ylabel("Loss")
-        plt.xlabel("Learning rate (log scale)")
-        plt.plot(lrs, loss)
-        plt.xscale('log')
-        return found_lr
-
     def fit(self, data, inputs=None, target=None, data_specs=None, mini_batch_size=1, max_epochs=5, log_level=3,
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
             valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
@@ -976,7 +909,7 @@ class Model(object):
                 raise DLPyError('either dataspecs or inputs need to be non-None')
 
         if optimizer is None:
-            optimizer = Optimizer(algorithm=VanillaSolver(FixedLR(learning_rate=lr)),  mini_batch_size=mini_batch_size,
+            optimizer = Optimizer(algorithm=VanillaSolver(learning_rate=lr),  mini_batch_size=mini_batch_size,
                                   max_epochs=max_epochs, log_level=log_level)
         else:
             if not isinstance(optimizer, Optimizer):
@@ -3203,7 +3136,6 @@ def layer_to_edge(layer):
     -------
     dict
         Options that can be passed to graph configuration.
-        Options that can be passed to graph configuration.
 
     '''
     gv_params = []
@@ -3260,6 +3192,39 @@ def model_to_graph(model):
     return model_graph
 
 
+class DLPyDict(collections.MutableMapping):
+    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
+
+    def __init__(self, *args, **kwargs):
+        for k in kwargs:
+            self.__setitem__(k, kwargs[k])
+
+    def __getitem__(self, key):
+        return self.__dict__[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        if value is not None:
+            self.__dict__[self.__keytransform__(key)] = value
+        else:
+            if key in self.__dict__:
+                self.__delitem__[key]
+
+    def __delitem__(self, key):
+        del self.__dict__[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __keytransform__(self, key):
+        return key.lower().replace("_", "")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 class Solver(DLPyDict):
     '''
     Solver object
@@ -3293,21 +3258,17 @@ class Solver(DLPyDict):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
-    fcmp_learning_rate : string, optional
-        specifies the FCMP learning rate function.
 
     Returns
     -------
     :class:`Solver`
 
     '''
-    def __init__(self, lr_scheduler, use_locking=True, clip_grad_max=None, clip_grad_min=None):
-        if not isinstance(lr_scheduler, _LRScheduler):
-            raise TypeError('{} is not an LRScheduler'.format(type(lr_scheduler).__name__))
-        DLPyDict.__init__(self, use_locking=use_locking, clip_grad_max=clip_grad_max, clip_grad_min=clip_grad_min)
-        lr_scheduler = lr_scheduler or FixedLR()
-        for key, value in lr_scheduler.items():
-            self.__setitem__(key, value)
+    def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+        DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy, gamma=gamma,
+                          step_size=step_size, power=power, use_locking=use_locking, clip_grad_max=clip_grad_max,
+                          clip_grad_min=clip_grad_min, steps=steps)
 
     def set_method(self, method):
         '''
@@ -3371,16 +3332,16 @@ class VanillaSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
-    fcmp_learning_rate : string, optional
-        specifies the FCMP learning rate function.
 
     Returns
     -------
     :class:`VanillaSolver`
 
     '''
-    def __init__(self, lr_scheduler, use_locking=True, clip_grad_max=None, clip_grad_min=None):
-        Solver.__init__(self, lr_scheduler, use_locking, clip_grad_max, clip_grad_min)
+    def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
+                        clip_grad_max, clip_grad_min, steps)
         self.set_method('vanilla')
 
 
@@ -3419,16 +3380,16 @@ class MomentumSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth,
         ninth, and thirteenth epochs.
-    fcmp_learning_rate : string, optional
-        specifies the FCMP learning rate function.
 
     Returns
     -------
     :class:`MomentumSolver`
 
     '''
-    def __init__(self, lr_scheduler, use_locking=True, clip_grad_max=None, clip_grad_min=None, momentum=0.9):
-        Solver.__init__(self, lr_scheduler, use_locking, clip_grad_max, clip_grad_min)
+    def __init__(self, momentum=0.9, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10,
+                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
+                        clip_grad_max, clip_grad_min, steps)
         self.set_method('momentum')
         self.add_parameter('momentum', momentum)
 
@@ -3472,16 +3433,16 @@ class AdamSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
-    fcmp_learning_rate : string, optional
-        specifies the FCMP learning rate function.
 
     Returns
     -------
     :class:`AdamSolver`
 
     '''
-    def __init__(self, lr_scheduler, beta1=0.9, beta2=0.999, use_locking=True, clip_grad_max=None, clip_grad_min=None):
-        Solver.__init__(self, lr_scheduler, use_locking, clip_grad_max, clip_grad_min)
+    def __init__(self, beta1=0.9, beta2=0.999, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
+                        clip_grad_max, clip_grad_min, steps)
         self.set_method('adam')
         self.add_parameter('beta1', beta1)
         self.add_parameter('beta2', beta2)
@@ -3535,17 +3496,17 @@ class LBFGSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
-    fcmp_learning_rate : string, optional
-        specifies the FCMP learning rate function.
 
     Returns
     -------
     :class:`LBFGSolver`
 
     '''
-    def __init__(self, lr_scheduler, m, max_line_search_iters, max_iters, backtrack_ratio, use_locking=True,
-                 clip_grad_max=None, clip_grad_min=None):
-        Solver.__init__(self, lr_scheduler, use_locking, clip_grad_max, clip_grad_min)
+    def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, learning_rate=0.001,
+                 learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75, use_locking=True,
+                 clip_grad_max=None, clip_grad_min=None, steps=None):
+        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
+                        clip_grad_max, clip_grad_min, steps)
         self.set_method('lbfg')
         self.add_parameters('m', m)
         self.add_parameters('maxlinesearchiters', max_line_search_iters)
@@ -3588,16 +3549,16 @@ class NatGradSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
-    fcmp_learning_rate : string, optional
-        specifies the FCMP learning rate function.
 
     Returns
     -------
     :class:`NatGradSolver`
 
     '''
-    def __init__(self, lr_scheduler, approximation_type=1, use_locking=True, clip_grad_max=None, clip_grad_min=None):
-        Solver.__init__(self, lr_scheduler, use_locking, clip_grad_max, clip_grad_min)
+    def __init__(self, approximation_type=1, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
+                        clip_grad_max, clip_grad_min, steps)
         self.set_method('natgrad')
         self.add_parameter('approximationtype', approximation_type)
 
@@ -3721,7 +3682,7 @@ class Optimizer(DLPyDict):
     :class:`Optimizer`
 
     '''
-    def __init__(self, algorithm=VanillaSolver(StepLR()), mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
+    def __init__(self, algorithm=VanillaSolver(), mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
                  dropout=0, dropout_input=0, dropout_type='standard', stagnation=0, threshold=0.00000001, f_conv=0,
                  snapshot_freq=0, log_level=0, bn_src_layer_warnings=True, freeze_layers_to=None, flush_weights=False,
                  total_mini_batch_size=None, mini_batch_buf_size=None):

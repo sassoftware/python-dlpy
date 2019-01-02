@@ -33,9 +33,6 @@ import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
 import warnings
-import platform
-import collections
-from itertools import repeat
 
 
 def random_name(name='ImageData', length=6):
@@ -528,39 +525,6 @@ def get_cas_host_type(conn):
         return ostype + '.' + stype
 
 
-class DLPyDict(collections.MutableMapping):
-    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
-
-    def __init__(self, *args, **kwargs):
-        for k in kwargs:
-            self.__setitem__(k, kwargs[k])
-
-    def __getitem__(self, key):
-        return self.__dict__[self.__keytransform__(key)]
-
-    def __setitem__(self, key, value):
-        if value is not None:
-            self.__dict__[self.__keytransform__(key)] = value
-        else:
-            if key in self.__dict__:
-                self.__delitem__[key]
-
-    def __delitem__(self, key):
-        del self.__dict__[self.__keytransform__(key)]
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __keytransform__(self, key):
-        return key.lower().replace("_", "")
-
-    def __str__(self):
-        return str(self.__dict__)
-
-
 class DLPyError(Exception):
     pass
 
@@ -979,9 +943,6 @@ def _convert_xml_annotation(filename, coord_type, resize):
     height = int(size.find('height').text)
     for obj in root.iter('object'):
         cls = obj.find('name').text
-        # remove ignore class which is reserved in segmentation tool
-        if cls == 'ignore':
-            continue
         xmlbox = obj.find('bndbox')
         boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
@@ -1186,16 +1147,10 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     det_img_table = random_name('DET_IMG')
 
-    caslib = find_caslib(conn, data_path)
-    if caslib is None:
-        caslib = random_name('Caslib', 6)
-        rt = conn.retrieve('addcaslib', _messagelevel = 'error', name = caslib, path = data_path,
-                           activeonadd = False, subdirectories = True, datasource = {'srctype': 'path'})
-        if rt.severity > 1:
-            raise DLPyError('something went wrong while adding the caslib for the specified path.')
+    caslib, path_after_caslib = caslibify(conn, data_path, task='load')
 
     with sw.option_context(print_messages=False):
-        res = conn.image.loadImages(path='',
+        res = conn.image.loadImages(path=path_after_caslib,
                                     recurse=False,
                                     labelLevels=-1,
                                     caslib=caslib,
@@ -1454,29 +1409,3 @@ def get_mapping_dict():
     with open(full_filename) as f:
         j = json.load(f)
     return j
-
-
-def _ntuple(n):
-    def parse(x):
-        if isinstance(x, collections.Iterable):
-            return x
-        return tuple(repeat(x, n))
-    return parse
-
-
-_pair = _ntuple(2)
-_triple = _ntuple(3)
-
-
-def parameter_2d(param1, param2, param3, default_value):
-    if param1 is not None:
-        return _pair(param1)
-    elif not any([param2, param3]):
-        return default_value
-    else:
-        if param2 is None:
-            return (default_value[0], param3)
-        if param3 is None:
-            return (param2, default_value[1])
-        else:
-            return (param2, param3)

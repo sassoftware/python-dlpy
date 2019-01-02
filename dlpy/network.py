@@ -52,12 +52,9 @@ class Network(Model):
         """propagate all of layers"""
         def build_map(start):
             self.layers.append(start)
-            try:
-                if start.name is None:
-                    start.count_instances()
-                    start.name = str(start.__class__.__name__) + '_' + str(type(start).number_of_instances)
-            except:
-                raise
+            if start.name is None:
+                start.count_instances()
+                start.name = str(start.__class__.__name__) + '_' + str(type(start).number_of_instances)
             if start in inputs:
                 return
             for layer in start.src_layers:

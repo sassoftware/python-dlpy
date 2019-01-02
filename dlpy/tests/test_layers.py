@@ -22,7 +22,7 @@ import json
 import os
 
 from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, Recurrent, BN, Res, Proj, OutputLayer, \
-                        Keypoints, Detection, Scale, Reshape, Transconvo
+                        Keypoints, Detection, Scale, Reshape
 from dlpy.blocks import ResBlock, ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
 from dlpy.utils import DLPyError, get_mapping_dict
 from dlpy import __dev__
@@ -308,20 +308,6 @@ class TestLayers(unittest.TestCase):
     def test_bidirectional_block4(self):
         list1 = Bidirectional(n=[10, 20, 30], n_blocks=3).compile()
         self.assertTrue(self.sample_syntax['bidirectional3'] == list1)
-
-    def test_transpose_conv1(self):
-        trans1 = Transconvo(n_filters=30, stride_horizontal = 2)
-        self.assertTrue(trans1.padding == (0, 0))
-        self.assertTrue(trans1.stride == (1, 2))
-        self.assertTrue(trans1.output_padding == (0, 0))
-
-        trans2 = Transconvo(n_filters = 30, padding_width = 3, stride = 10, output_padding = 2)
-        self.assertTrue(trans2.padding == (0, 3))
-        self.assertTrue(trans2.stride == (10, 10))
-        self.assertTrue(trans2.output_padding == (2, 2))
-
-        trans3 = Transconvo(n_filters = 30, padding_width = 3, stride = 10, output_padding_width = 2)
-        self.assertTrue(trans3.output_padding == (0, 2))
 
     def test_mapping_dict(self):
         mapping = get_mapping_dict()
