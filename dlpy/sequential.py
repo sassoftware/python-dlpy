@@ -46,7 +46,7 @@ class Sequential(Model):
     '''
 
     def __init__(self, conn, layers=None, model_table=None):
-        Model.__init__(self, conn, model_table=model_table)
+        super(Sequential, self).__init__(conn=conn, model_table=model_table)
 
         self.layers_dict = {}
         if layers is None:
