@@ -98,6 +98,18 @@ class TestApplications(unittest.TestCase):
 
         model.print_summary()
 
+    def test_resnet50_layerid(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        model = ResNet50_Caffe(self.s)
+        model.print_summary()
+        model.print_summary()
+
+
+
+
     def test_lenet5(self):
         from dlpy.applications import LeNet5
         model = LeNet5(self.s)

@@ -2614,9 +2614,29 @@ class Model(object):
         else:
             return pd.concat([x.rnn_summary for x in self.layers], ignore_index=True)
 
+    def __load_layer_ids(self):
+        if len(self.layers) > 0 and self.layers[0].layer_id is None:
+            try:
+                model_table_rows = self.conn.table.fetch(self.model_table, maxrows=1000000, to=1000000).Fetch
+            except:
+                model_table_rows = None
+
+            if model_table_rows is not None:
+                layer_ids = {}
+                import math
+                for index, row in model_table_rows.iterrows():
+                    if not math.isnan(row['_DLLayerID_']):
+                        layer_ids[row['_DLKey0_']] = int(row['_DLLayerID_'])
+
+                for l in self.layers:
+                    l.layer_id = layer_ids[l.name.lower()]
+
     def print_summary(self):
         ''' Display a table that summarizes the model architecture '''
         try:
+            if len(self.layers) > 0 and self.layers[0].layer_id is None:
+                self.__load_layer_ids()
+
             from IPython.display import display
 
             if self.model_type == 'CNN':
@@ -2627,9 +2647,9 @@ class Model(object):
                     if l.num_bias is not None:
                         total_number_of_parameters += l.num_bias
 
-                total = pd.DataFrame([['', '', '', '', '', '', total_number_of_parameters]],
-                                     columns=['Layer', 'Type', 'Kernel Size', 'Stride', 'Activation', 'Output Size',
-                                              'Number of Parameters'])
+                total = pd.DataFrame([['', '', '', '', '', '', '', total_number_of_parameters]],
+                                     columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride', 'Activation',
+                                              'Output Size', 'Number of Parameters'])
                 display(pd.concat([self.summary, total], ignore_index=True))
             else:
                 display(self.summary)
