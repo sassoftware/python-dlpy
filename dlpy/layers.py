@@ -185,8 +185,13 @@ class Layer(object):
     @property
     def summary(self):
         ''' Return a DataFrame containing the layer information '''
-        return pd.DataFrame([[self.name, self.type, self.kernel_size,
-                              self.config.get('stride', None), self.activation,
+        if self.kernel_size is None:
+            kernel_size_ = ''
+        else:
+            kernel_size_ = self.kernel_size
+
+        return pd.DataFrame([[self.name, self.type, kernel_size_,
+                              self.config.get('stride', ''), self.activation,
                               self.output_size, (self.num_weights, self.num_bias)]],
                             columns=['Layer', 'Type', 'Kernel Size', 'Stride',
                                      'Activation', 'Output Size',
