@@ -107,9 +107,6 @@ class TestApplications(unittest.TestCase):
         model.print_summary()
         model.print_summary()
 
-
-
-
     def test_lenet5(self):
         from dlpy.applications import LeNet5
         model = LeNet5(self.s)

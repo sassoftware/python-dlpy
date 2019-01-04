@@ -2615,21 +2615,20 @@ class Model(object):
             return pd.concat([x.rnn_summary for x in self.layers], ignore_index=True)
 
     def __load_layer_ids(self):
-        if len(self.layers) > 0 and self.layers[0].layer_id is None:
-            try:
-                model_table_rows = self.conn.table.fetch(self.model_table, maxrows=1000000, to=1000000).Fetch
-            except:
-                model_table_rows = None
+        try:
+            model_table_rows = self.conn.table.fetch(self.model_table, maxrows=1000000, to=1000000).Fetch
+        except:
+            model_table_rows = None
 
-            if model_table_rows is not None:
-                layer_ids = {}
-                import math
-                for index, row in model_table_rows.iterrows():
-                    if not math.isnan(row['_DLLayerID_']):
-                        layer_ids[row['_DLKey0_']] = int(row['_DLLayerID_'])
+        if model_table_rows is not None:
+            layer_ids = {}
+            import math
+            for index, row in model_table_rows.iterrows():
+                if not math.isnan(row['_DLLayerID_']):
+                    layer_ids[row['_DLKey0_']] = int(row['_DLLayerID_'])
 
-                for l in self.layers:
-                    l.layer_id = layer_ids[l.name.lower()]
+            for l in self.layers:
+                l.layer_id = layer_ids[l.name.lower()]
 
     def print_summary(self):
         ''' Display a table that summarizes the model architecture '''
