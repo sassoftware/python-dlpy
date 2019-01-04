@@ -439,6 +439,7 @@ def caslibify(conn, path, task='save'):
             new_caslib = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
                                activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
+
             if rt.severity > 1:
                 raise DLPyError('something went wrong while adding the caslib for the specified path.')
             else:
@@ -460,11 +461,15 @@ def caslibify(conn, path, task='save'):
                                    activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
 
                 if rt.severity > 1:
-                    raise DLPyError('something went wrong while adding the caslib for the specified path.')
+                    print('Something went wrong. Most likely, one of the subpaths of the provided path'
+                          'is part of an existing caslib. A workaround is to put the file under that subpath or'
+                          'move to a different location. It sounds and is inconvenient but it is to protect '
+                          'your privacy granted by your system admin.')
+                    return None, None
                 else:
                     return caslib, path_split[1]
         else:
-            raise DLPyError('we need more than one level of directies. e.g., /dir1/dir2 ')
+            raise DLPyError('we need more than one level of directories. e.g., /dir1/dir2 ')
 
 
 def find_path_of_caslib(conn, caslib):
@@ -1116,7 +1121,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     A list of variables that are the labels of the object detection table
 
     '''
-    with sw.option_context(print_messages = False):
+    with sw.option_context(print_messages=False):
         server_type = get_cas_host_type(conn).lower()
     local_os_type = platform.system()
     unix_type = server_type.startswith("lin") or server_type.startswith("osx")
@@ -1148,6 +1153,9 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     det_img_table = random_name('DET_IMG')
 
     caslib, path_after_caslib = caslibify(conn, data_path, task='load')
+    if caslib is None and path_after_caslib is None:
+        print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+              'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
     with sw.option_context(print_messages=False):
         res = conn.image.loadImages(path=path_after_caslib,
@@ -1166,7 +1174,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                                                         'height': image_size,
                                                         'width': image_size}}
                                        ],
-                                       casout= {'name': det_img_table, 'replace': True})
+                                       casout={'name': det_img_table, 'replace': True})
 
         if res.severity > 0:
             for msg in res.messages:
@@ -1174,7 +1182,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         else:
             print("NOTE: Images are processed.")
 
-    conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
+    if caslib is not None:
+        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
     with sw.option_context(print_messages = False):
         caslib = find_caslib(conn, data_path)

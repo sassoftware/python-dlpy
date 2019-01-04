@@ -721,6 +721,7 @@ class TestModel(unittest.TestCase):
         model1 = Model.from_onnx_model(self.s, m, offsets=[1, 1, 1,], scale=2, std='std')
         model1.print_summary()
 
+
     def test_evaluate_obj_det(self):
 
         if self.data_dir is None:

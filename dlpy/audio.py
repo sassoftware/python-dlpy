@@ -20,7 +20,7 @@
 
 from swat.cas.table import CASTable
 from .data_clean import DataClean
-from .utils import random_name, find_caslib, get_cas_host_type, find_path_of_caslib, caslibify
+from .utils import random_name, find_caslib, get_cas_host_type, find_path_of_caslib
 from dlpy.utils import DLPyError
 
 

@@ -441,6 +441,9 @@ class Model(object):
         #name=cas_lib_name, path=dir_name,
         #activeOnAdd=False, dataSource=dict(srcType='DNFS'))
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        if cas_lib_name is None and file_name is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -530,6 +533,9 @@ class Model(object):
                 self.set_weights_attr(self.model_name + '_weights_attr')
         #if not flag:
         #    self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
+
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level='error', caslib=cas_lib_name)
 
     def set_weights(self, weight_tbl):
         '''
@@ -630,14 +636,20 @@ class Model(object):
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        if cas_lib_name is None and file_name is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
         self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                        modelWeights=dict(replace=True,
-                                          name=self.model_name + '_weights'),
+                        modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                         formatType=format_type, weightFilePath=file_name,
                         caslib=cas_lib_name)
 
         self.set_weights(self.model_name + '_weights')
+
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level='error', caslib=cas_lib_name)
+
 
     def load_weights_from_file_with_labels(self, path, format_type='KERAS'):
         '''
@@ -653,6 +665,9 @@ class Model(object):
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        if cas_lib_name is None and file_name is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
         from dlpy.utils import get_imagenet_labels_table
         label_table = get_imagenet_labels_table(self.conn)
@@ -663,6 +678,9 @@ class Model(object):
                         labelTable=label_table);
 
         self.set_weights(self.model_name + '_weights')
+
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level='error', caslib=cas_lib_name)
 
     def load_weights_from_table(self, path):
         '''
@@ -676,6 +694,9 @@ class Model(object):
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        if cas_lib_name is None and file_name is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -702,6 +723,9 @@ class Model(object):
             self.set_weights_attr(self.model_name + '_weights_attr')
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
+
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level='error', caslib=cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
         '''
@@ -2385,6 +2409,9 @@ class Model(object):
         #    path = path[:-1]
 
         caslib, path_remaining = caslibify(self.conn, path, task='save')
+        if caslib is None and path_remaining is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.sashdat'
@@ -2426,6 +2453,9 @@ class Model(object):
 
         print('NOTE: Model table saved successfully.')
 
+        if caslib is not None:
+            self._retrieve_('table.dropcaslib', message_level='error', caslib=caslib)
+
     def save_weights_csv(self, path):
         '''
         Save model weights table as csv
@@ -2446,6 +2476,10 @@ class Model(object):
                                         replace=True))
         
         caslib, path_remaining = caslibify(self.conn, path, task='save')
+        if caslib is None and path_remaining is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.csv'
         weights_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
@@ -2457,6 +2491,8 @@ class Model(object):
             raise DLPyError('something is wrong while saving the the model to a table!')
         
         print('NOTE: Model weights csv saved successfully.')
+        if caslib is not None:
+            self._retrieve_('table.dropcaslib', message_level='error', caslib=caslib)
 
     def save_to_onnx(self, path, model_weights=None):
         '''
