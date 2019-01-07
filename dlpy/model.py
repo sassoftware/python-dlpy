@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-''' The `Model` class adds training, evaluation, tuning and feature analysis routines to a `Network` '''
+''' The Model class adds training, evaluation, tuning and feature analysis routines to a Network '''
 
 import os
 

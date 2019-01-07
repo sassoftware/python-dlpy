@@ -77,26 +77,26 @@ class TestApplications(unittest.TestCase):
                                random_crop='unique')
         model.print_summary()
 
-    # def test_resnet50_caffe_caslib_msg(self):
-    #
-    #     if self.data_dir is None:
-    #         unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-    #
-    #     model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-    #                            pre_trained_weights_file=self.data_dir+'data/ResNet-50-model.caffemodel.h5',
-    #                            pre_trained_weights=True,
-    #                            include_top=False,
-    #                            n_classes=120,
-    #                            random_crop='unique')
-    #
-    #     model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-    #                            pre_trained_weights_file=self.data_dir+'ResNet-50-model.caffemodel.h5',
-    #                            pre_trained_weights=True,
-    #                            include_top=False,
-    #                            n_classes=120,
-    #                            random_crop='unique')
-    #
-    #     model.print_summary()
+    def test_resnet50_caffe_caslib_msg(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'data/ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='unique')
+
+        model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='unique')
+
+        model.print_summary()
 
     def test_resnet50_layerid(self):
 

@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-''' A `Network` is way to compose layers: the topological form of a `Model' '''
+''' A Network is way to compose layers: the topological form of a Model '''
 
 import os
 

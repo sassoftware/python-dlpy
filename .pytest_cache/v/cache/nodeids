@@ -1,3 +1,0 @@
-[
-  "dlpy/tests/test_lr_scheduler.py::TestLRScheduler::test_CyclicLR"
-]
