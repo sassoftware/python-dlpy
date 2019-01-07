@@ -110,6 +110,7 @@ class Layer(object):
     type_desc = 'Base layer'
     can_be_last_layer = False
     number_of_instances = 0
+    layer_id = None
 
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
@@ -215,18 +216,23 @@ class Layer(object):
     @property
     def summary(self):
         ''' Return a DataFrame containing the layer information '''
-        return pd.DataFrame([[self.name, self.type, self.kernel_size,
-                              self.config.get('stride', None), self.activation,
+        if self.kernel_size is None:
+            kernel_size_ = ''
+        else:
+            kernel_size_ = self.kernel_size
+
+        return pd.DataFrame([[self.layer_id, self.name, self.type, kernel_size_,
+                              self.config.get('stride', ''), self.activation,
                               self.output_size, (self.num_weights, self.num_bias)]],
-                            columns=['Layer', 'Type', 'Kernel Size', 'Stride',
+                            columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                      'Activation', 'Output Size',
                                      'Number of Parameters'])
 
     @property
     def rnn_summary(self):
         ''' Return a DataFrame containing the layer information for rnn models'''
-        return pd.DataFrame([[self.name, self.type, self.activation, self.output_size]],
-                            columns=['Layer', 'Type', 'Activation', 'Output Size'])
+        return pd.DataFrame([[self.layer_id, self.name, self.type, self.activation, self.output_size]],
+                            columns=['Layer Id', 'Layer', 'Type', 'Activation', 'Output Size'])
 
 
 class InputLayer(Layer):
