@@ -21,28 +21,51 @@
 import os
 
 from dlpy.layers import Layer
-from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify
+from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection
 import collections
 import pandas as pd
-import warnings
 
 
 class Network(Layer):
 
-    def __init__(self, *args, **kwargs):
-        init_model_args = kwargs.copy()
-        if 'inputs' in kwargs:
-            del init_model_args['inputs']
-        if 'outputs' in kwargs:
-            del init_model_args['outputs']
-        self._init_model(*args, **init_model_args)
-        if 'inputs' in kwargs and 'outputs' in kwargs:
-            self._map_graph_network(kwargs['inputs'], kwargs['outputs'])
+    '''
+    Network
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    inputs: iter-of-Layers, optional
+        Specifies some input layer(s) to instantiate a Network
+    outputs: iter-of-Layers, optional
+        Specifies some output layer(s) to instantiate a Network
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+        Default: None
+    model_weights : CASTable or string or dict, optional
+        Specifies the CASTable containing weights of the deep learning model.
+        If not specified, random initial will be used.
+        Default: None
+    Returns
+    -------
+    :class:`Model`
+
+    '''
+
+    def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
+        if model_table is not None and any(i is not None for i in [inputs, outputs]):
+            raise DLPyError('Parameter model_table and inputs or outputs can not be specified simultaneously')
+        self._init_model(conn, model_table, model_weights)
+        if all(i is None for i in [inputs, outputs, model_table]):
+            return
+        if self.__class__.__name__ == 'Model':
+            if None in [inputs, outputs]:
+                raise DLPyError('Parameter inputs and outputs are required.')
+            self._map_graph_network(inputs, outputs)
 
     def _init_model(self, conn, model_table=None, model_weights=None):
-        if not conn.queryactionset('deepLearn')['deepLearn']:
-            conn.loadactionset(actionSet='deeplearn', _messagelevel='error')
+        conn.loadactionset(actionSet='deeplearn', _messagelevel='error')
 
         self.conn = conn
 
@@ -66,6 +89,7 @@ class Network(Layer):
         self.model_type = 'CNN'
         self.best_weights = None
         self.target = None
+        self.num_params = None
 
     def _map_graph_network(self, inputs, outputs):
         """propagate all of layers"""
@@ -101,11 +125,8 @@ class Network(Layer):
 
         return
 
-    '''
-    compile the network
-    parse the network node and process CAS Action
-    '''
     def compile(self):
+        ''' parse the network nodes and process CAS Action '''
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
 
@@ -114,16 +135,11 @@ class Network(Layer):
         sorted_layers = sorted(self.layers, key = lambda Layer: Layer.depth)
 
         for layer in sorted_layers:
-            if layer.type == 'block':
-                # TODO support block
-                DLPyError("Block is not supported in network")
-            if layer.type == 'transconvo':
-                layer.calculate_output_padding()
-                del layer.config['output_size']
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
             if rt.severity > 1:
                 raise DLPyError('there seems to be an error while adding the ' + layer.name + '.')
+        self.num_params = self.count_params()
         print('NOTE: Model compiled successfully.')
 
     def _retrieve_(self, _name_, message_level='error', **kwargs):
@@ -441,14 +457,15 @@ class Network(Layer):
             from IPython.display import display
 
             if self.model_type == 'CNN':
-                total_number_of_parameters = 0
-                for l in self.layers:
-                    if l.num_weights is not None:
-                        total_number_of_parameters += l.num_weights
-                    if l.num_bias is not None:
-                        total_number_of_parameters += l.num_bias
+                if self.num_params is None:
+                    self.num_params = 0
+                    for l in self.layers:
+                        if l.num_weights is not None:
+                            self.num_params += l.num_weights
+                        if l.num_bias is not None:
+                            self.num_params += l.num_bias
 
-                total = pd.DataFrame([['', '', '', '', '', '', '', total_number_of_parameters]],
+                total = pd.DataFrame([['', '', '', '', '', '', '', self.num_params]],
                                      columns = ['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride', 'Activation',
                                                 'Output Size', 'Number of Parameters'])
                 display(pd.concat([self.summary, total], ignore_index = True))
@@ -609,6 +626,9 @@ class Network(Layer):
         #if not flag:
         #    self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
 
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
+
     def load_weights(self, path, labels=False):
         '''
         Load the weights form a data file specified by ‘path’
@@ -635,9 +655,9 @@ class Network(Layer):
         elif file_name.lower().endswith('onnxmodel.h5'):
             self.load_weights_from_keras(path, labels=labels)
         else:
-            warnings.warn('Weights file must be one of the follow types:\n'
-                          'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
-                          'Weights load failed.', RuntimeWarning)
+            raise DLPyError('Weights file must be one of the follow types:\n'
+                            'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
+                            'Weights load failed.')
 
     def load_weights_from_caffe(self, path, labels=False):
         '''
@@ -696,6 +716,9 @@ class Network(Layer):
 
         self.set_weights(self.model_name + '_weights')
 
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
+
     def load_weights_from_file_with_labels(self, path, format_type='KERAS'):
         '''
         Load the model weights from a HDF5 file
@@ -720,6 +743,9 @@ class Network(Layer):
                         labelTable=label_table);
 
         self.set_weights(self.model_name + '_weights')
+
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights_from_table(self, path):
         '''
@@ -759,6 +785,9 @@ class Network(Layer):
             self.set_weights_attr(self.model_name + '_weights_attr')
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
+
+        if cas_lib_name is not None:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
         '''
@@ -826,8 +855,7 @@ class Network(Layer):
             The path format should be consistent with the system of the client.
 
         """
-        if not self.conn.queryactionset('astore')['astore']:
-            self.conn.loadactionset('astore', _messagelevel = 'error')
+        self.conn.loadactionset('astore', _messagelevel = 'error')
 
         CAS_tbl_name = self.model_name + '_astore'
 
@@ -960,6 +988,9 @@ class Network(Layer):
 
         print('NOTE: Model table saved successfully.')
 
+        if caslib is not None:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+
     def save_weights_csv(self, path):
         '''
         Save model weights table as csv
@@ -991,6 +1022,9 @@ class Network(Layer):
             raise DLPyError('something is wrong while saving the the model to a table!')
 
         print('NOTE: Model weights csv saved successfully.')
+
+        if caslib is not None:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def save_to_onnx(self, path, model_weights = None):
         '''

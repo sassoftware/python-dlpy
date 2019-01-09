@@ -133,15 +133,15 @@ class Layer(object):
 
     def __call__(self, inputs, **kwargs):
         layer_type = self.__class__.__name__
-        if isinstance(inputs, list) and len(inputs) > 1:
-            if layer_type not in ['Concat', 'Res', 'Scale', 'Dense']:
-                raise DLPyError('The input of {layer_type} should have only one layer.')
+        if isinstance(inputs, list):
+            if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'Dense']:
+                raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
         self.src_layers = self.src_layers or []
         self.src_layers = self.src_layers + inputs
 
-        '''give the layer a name'''
+        # give the layer a name
         self.count_instances()
         self.name = self.name or str(layer_type) + '_' + str(type(self).number_of_instances)
 
