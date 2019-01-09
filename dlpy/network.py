@@ -133,13 +133,23 @@ class Network(Layer):
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
         sorted_layers = sorted(self.layers, key = lambda Layer: Layer.depth)
-
+        self.num_params = 0
         for layer in sorted_layers:
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
             if rt.severity > 1:
                 raise DLPyError('there seems to be an error while adding the ' + layer.name + '.')
-        self.num_params = self.count_params()
+            if layer.num_weights is None:
+                num_weights = 0
+            else:
+                num_weights = layer.num_weights
+
+            if layer.num_bias is None:
+                num_bias = 0
+            else:
+                num_bias = layer.num_bias
+
+            self.num_params += num_weights + num_bias
         print('NOTE: Model compiled successfully.')
 
     def _retrieve_(self, _name_, message_level='error', **kwargs):
@@ -525,16 +535,7 @@ class Network(Layer):
             Specifies whether to print the note when generating the model table.
 
         '''
-        #dir_name, file_name = os.path.split(path)
 
-        #try:
-        #    flag, cas_lib_name = check_caslib(self.conn, dir_name)
-        #except:
-        #flag = False
-        #cas_lib_name = random_name('Caslib', 6)
-        #self._retrieve_('table.addcaslib',
-        #name=cas_lib_name, path=dir_name,
-        #activeOnAdd=False, dataSource=dict(srcType='DNFS'))
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
 
         self._retrieve_('table.loadtable',
@@ -623,8 +624,6 @@ class Network(Layer):
                                 casout=dict(replace=True,
                                             name=self.model_name + '_weights_attr'))
                 self.set_weights_attr(self.model_name + '_weights_attr')
-        #if not flag:
-        #    self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
 
         if cas_lib_name is not None:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
@@ -896,42 +895,6 @@ class Network(Layer):
 
         """
         self.save_to_table_with_caslibify(path)
-        """dir_name, file_name = os.path.split(path)
-
-        try:
-            flag, cas_lib_name = check_caslib(self.conn, dir_name)
-        except:
-            flag = False
-            cas_lib_name = random_name('CASLIB')
-            self._retrieve_('table.addcaslib',
-                            activeonadd=False, datasource=dict(srcType='DNFS'),
-                            name=cas_lib_name, path=path)
-
-        _file_name_ = self.model_name.replace(' ', '_')
-        _extension_ = '.sashdat'
-        model_tbl_file = _file_name_ + _extension_
-        weight_tbl_file = _file_name_ + '_weights' + _extension_
-        attr_tbl_file = _file_name_ + '_weights_attr' + _extension_
-
-        self._retrieve_('table.save',
-                        table=self.model_table,
-                        name=model_tbl_file,
-                        replace=True, caslib=cas_lib_name)
-        self._retrieve_('table.save',
-                        table=self.model_weights,
-                        name=weight_tbl_file,
-                        replace=True, caslib=cas_lib_name)
-        CAS_tbl_name = random_name('Attr_Tbl')
-        self._retrieve_('table.attribute',
-                        task='convert', attrtable=CAS_tbl_name,
-                        **self.model_weights.to_table_params())
-        self._retrieve_('table.save',
-                        table=CAS_tbl_name,
-                        name=attr_tbl_file,
-                        replace=True, caslib=cas_lib_name)
-        if not flag:
-            self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
-        print('NOTE: Model table saved successfully.')"""
 
     def save_to_table_with_caslibify(self, path):
         """
