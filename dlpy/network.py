@@ -645,7 +645,9 @@ class Network(Layer):
 
         '''
 
-        dir_name, file_name = os.path.split(path)
+        server_sep = get_server_path_sep(self.conn)
+
+        dir_name, file_name = path.rsplit(server_sep, 1)
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         elif file_name.lower().endswith('caffemodel.h5'):
@@ -823,7 +825,8 @@ class Network(Layer):
             contains the weight attribute table.
 
         '''
-        dir_name, file_name = os.path.split(path)
+        server_sep = get_server_path_sep(self.conn)
+        dir_name, file_name = path.rsplit(server_sep, 1)
         try:
             flag, cas_lib_name = check_caslib(self.conn, dir_name)
         except:
