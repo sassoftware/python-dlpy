@@ -60,8 +60,7 @@ def _create_classification_table(nclass, nrow, alpha=None, seed=1234,
     return pd.DataFrame(classification_matrix, columns=colnames)
 
 
-def _create_regression_table(nrow, seed=1234, 
-                             true_label='target', pred_label='p_target'):
+def _create_regression_table(nrow, seed=1234, true_label='target', pred_label='p_target'):
     
     nr.seed(seed)
     mean_value = nr.normal(loc=10, scale=2, size=(nrow, 1))
@@ -98,14 +97,11 @@ class TestMetrics(unittest.TestCase):
         pandas_regression_table1 = _create_regression_table(500)
         
         self.class_table1 = self.conn.upload_frame(pandas_class_table1, 
-                                                   casout=dict(name=random_name(name='class1_'),
-                                                               replace=True))
+                                                   casout=dict(name=random_name(name='class1_'), replace=True))
         self.class_table2 = self.conn.upload_frame(pandas_class_table2, 
-                                                   casout=dict(name=random_name(name='class2_'),
-                                                               replace=True))
-        self.reg_table1 = self.conn.upload_frame(pandas_regression_table1, 
-                                                   casout=dict(name=random_name(name='reg1_'),
-                                                               replace=True))
+                                                   casout=dict(name=random_name(name='class2_'), replace=True))
+        self.reg_table1 = self.conn.upload_frame(pandas_regression_table1,
+                                                 casout=dict(name=random_name(name='reg1_'), replace=True))
 
     def tearDown(self):
         # tear down tests
@@ -151,11 +147,11 @@ class TestMetrics(unittest.TestCase):
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
         local_class1 = self.class_table1.to_frame()
-        skcm_matrix1  = skcm(local_class1.target, local_class1.p_target)
-        skcm_matrix2  = skcm(local_class1.target, local_class1.p_target, labels=[1,3,4])
+        skcm_matrix1 = skcm(local_class1.target, local_class1.p_target)
+        skcm_matrix2 = skcm(local_class1.target, local_class1.p_target, labels=[1, 3, 4])
         
         dlpycm_matrix1 = confusion_matrix(self.class_table1, 'target', 'p_target')
-        dlpycm_matrix2 = confusion_matrix(self.class_table1, 'target', 'p_target', labels=[1,3,4])
+        dlpycm_matrix2 = confusion_matrix(self.class_table1, 'target', 'p_target', labels=[1, 3, 4])
         
         self.assertTrue(np.array_equal(skcm_matrix1, dlpycm_matrix1.values))
         self.assertTrue(np.array_equal(skcm_matrix2, dlpycm_matrix2.values))
@@ -196,7 +192,7 @@ class TestMetrics(unittest.TestCase):
         local_class2 = self.class_table2.to_frame()
         skaps_score = skaps(local_class2.target, local_class2.p_1, pos_label=1)       
         dlpyaps_score = average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1) 
-        dlpyaps_score2 =  average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1, 
+        dlpyaps_score2 = average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1,
                                                   interpolate=True)
         self.assertAlmostEqual(skaps_score, dlpyaps_score, places=4)
         
