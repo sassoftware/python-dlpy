@@ -387,6 +387,28 @@ def get_imagenet_labels_table(conn):
     return conn.CASTable(temp_name)
 
 
+def get_server_path_sep(conn):
+    '''
+    Get the directory separator of server.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+
+    Returns
+    -------
+    string
+        Directory separator
+
+    '''
+    server_type = get_cas_host_type(conn).lower()
+    sep = '\\'
+    if server_type.startswith("lin") or server_type.startswith("osx"):
+        sep = '/'
+    return sep
+
+
 def caslibify(conn, path, task='save'):
     '''
     This is a utility function to find or create a caslib for a given path and for a given task.
@@ -405,10 +427,7 @@ def caslibify(conn, path, task='save'):
     '''
     if task == 'save':
 
-        server_type = get_cas_host_type(conn).lower()
-        sep = '\\'
-        if server_type.startswith("lin") or server_type.startswith("osx"):
-            sep = '/'
+        sep = get_server_path_sep(conn)
 
         if path.endswith(sep):
             path = path[:-1]

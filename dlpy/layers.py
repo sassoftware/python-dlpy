@@ -23,6 +23,7 @@ import six
 from dlpy.utils import multiply_elements, DLPyError, camelcase_to_underscore, underscore_to_camelcase
 from . import __dev__
 import warnings
+import collections
 
 PALETTES = dict(
     original={
@@ -114,16 +115,45 @@ class Layer(object):
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
         self.config = config
+        self.depth = None
 
         if src_layers is None:
             self.src_layers = None
         else:
-            self.src_layers = list(src_layers)
+            # to be compatible with network
+            if isinstance(src_layers, collections.Iterable):
+                self.src_layers = list(src_layers)
+            else:
+                self.src_layers = [src_layers]
 
         if 'act' in self.config.keys() and self.config['act'] is not None:
             self.activation = self.config['act'].title()
         else:
             self.activation = None
+
+    def __call__(self, inputs, **kwargs):
+        layer_type = self.__class__.__name__
+        if isinstance(inputs, list):
+            if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'Dense']:
+                raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
+        else:
+            inputs = [inputs]
+        self.src_layers = self.src_layers or []
+        self.src_layers = self.src_layers + inputs
+
+        # give the layer a name
+        self.count_instances()
+        self.name = self.name or str(layer_type) + '_' + str(type(self).number_of_instances)
+
+        # remove duplicated src_layers
+        if len(self.src_layers) != len(set(self.src_layers)):
+            self.src_layers = list(set(self.src_layers))
+            warnings.warn('You have duplicated src_layers in Layer {} '
+                          'and the duplicated layers have been removed.'.format(self.name))
+        return self
+
+    def __lt__(self, other):
+        return self.depth < other.depth
 
     @classmethod
     def count_instances(cls):

@@ -71,7 +71,7 @@ class TestSequential(tm.TestCase):
         Sequential(self.s, layers=layers, model_table='table2')
 
     def test_22(self):
-        layers = [InputLayer(), Conv2d(8, 7), BN(), Dense(n=32), OutputLayer()]
+        layers = [InputLayer(3, 4), Conv2d(8, 7), BN(), Dense(n=32), OutputLayer()]
         Sequential(self.s, layers=layers, model_table='table22')
 
     def test_3(self):
