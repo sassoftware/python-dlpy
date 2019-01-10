@@ -52,6 +52,8 @@ def accuracy_score(castable, y_true, y_pred, normalize=True):
     
     conn = castable.get_connection()
     
+    # check whether matched_colname is already in the castable, 
+    # to avoid duplication or overwrite when creating computedvars. 
     while matched_colname in castable.columns:
         matched_colname = random_name(name='matched_')  
         
@@ -126,8 +128,7 @@ def confusion_matrix(castable, y_true, y_pred, labels=None):
         return conf_mat.loc[labels, labels]
     
 def plot_roc(castable, y_true, y_score, pos_label, cutstep=0.001, 
-             figsize=(8, 8), 
-             fontsize_spec=None, linewidth=1):
+             figsize=(8, 8), fontsize_spec=None, linewidth=1):
     
     '''
     Plot the receiver operating characteristic (ROC) curve for binary classification 
@@ -443,6 +444,8 @@ def explained_variance_score(castable, y_true, y_pred):
     
     conn = castable.get_connection()
     
+    # check whether error_colname is already in the castable, 
+    # to avoid duplication or overwrite when creating computedvars. 
     while error_colname in castable.columns:
         error_colname = random_name(name='err_')  
         
@@ -481,7 +484,9 @@ def mean_absolute_error(castable, y_true, y_pred):
     error_colname = 'abserr'
     
     conn = castable.get_connection()
-    
+
+    # check whether error_colname is already in the castable, 
+    # to avoid duplication or overwrite when creating computedvars.     
     while error_colname in castable.columns:
         error_colname = random_name(name='abserr_')  
         
@@ -517,7 +522,9 @@ def mean_squared_error(castable, y_true, y_pred):
     error_colname = 'err2'
     
     conn = castable.get_connection()
-    
+
+    # check whether error_colname is already in the castable, 
+    # to avoid duplication or overwrite when creating computedvars.     
     while error_colname in castable.columns:
         error_colname = random_name(name='err2_')  
         
@@ -553,7 +560,9 @@ def mean_squared_log_error(castable, y_true, y_pred):
     error_colname = 'logerr2'
     
     conn = castable.get_connection()
-    
+
+    # check whether error_colname is already in the castable, 
+    # to avoid duplication or overwrite when creating computedvars.     
     while error_colname in castable.columns:
         error_colname = random_name(name='logerr2_')  
         

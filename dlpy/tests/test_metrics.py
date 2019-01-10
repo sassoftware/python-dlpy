@@ -30,7 +30,7 @@ import numpy.random as nr
 import pandas as pd
 import unittest
 from dlpy.metrics import *
-from dlpy.utils import random_name
+from dlpy.utils import random_name, get_server_path_sep
 from sklearn.metrics import roc_auc_score as skroc
 from sklearn.metrics import f1_score as skf1
 from sklearn.metrics import average_precision_score as skaps
@@ -84,7 +84,6 @@ def _create_regression_table(nrow, seed=1234,
 
 class TestMetrics(unittest.TestCase):
     # Create a class attribute to hold the cas host type
-    server_type = None
     conn = None
     server_sep = '/'
     data_dir = None
@@ -95,18 +94,13 @@ class TestMetrics(unittest.TestCase):
         swat.options.interactive_mode = False
 
         self.conn = swat.CAS()
-        self.server_type = tm.get_cas_host_type(self.conn)
-        self.server_sep = '\\'
-        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
-            self.server_sep = '/'
+        self.server_sep = get_server_path_sep(self.conn)
 
         if 'DLPY_DATA_DIR' in os.environ:
             self.data_dir = os.environ.get('DLPY_DATA_DIR')
             if self.data_dir.endswith(self.server_sep):
                 self.data_dir = self.data_dir[:-1]
             self.data_dir += self.server_sep
-
-        self.srcLib = tm.get_casout_lib(self.server_type)
         
         pandas_class_table1 = _create_classification_table(5, 500)
         pandas_class_table2 = _create_classification_table(2, 500)
@@ -121,14 +115,6 @@ class TestMetrics(unittest.TestCase):
         self.reg_table1 = self.conn.upload_frame(pandas_regression_table1, 
                                                    casout=dict(name=random_name(name='reg1_'),
                                                                replace=True))
-
-        self.assertNotEqual(self.class_table1.name, None)
-        self.assertNotEqual(self.class_table2.name, None)
-        self.assertNotEqual(self.reg_table1.name, None)
-        
-        self.assertEqual(self.class_table1.shape, (500,7))
-        self.assertEqual(self.class_table2.shape, (500,4))
-        self.assertEqual(self.reg_table1.shape, (500,2))
 
     def tearDown(self):
         # tear down tests
