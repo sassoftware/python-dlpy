@@ -203,7 +203,7 @@ class ImageTable(CASTable):
                       recurse=True, labellevels=-1,
                       path=path, caslib=caslib, **kwargs)
 
-        code = []
+        code=[]
         code.append('length _filename_0 varchar(*);')
         code.append('_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),\'/\')+2;')
         code.append('_filename_0 = SUBSTR(_path_,_loc1);')

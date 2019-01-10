@@ -24,23 +24,12 @@
 
 import os
 import swat
-import swat.utils.testing as tm
-import numpy as np
 import numpy.random as nr
 import pandas as pd
 import unittest
 from dlpy.metrics import *
 from dlpy.utils import random_name, get_server_path_sep
-from sklearn.metrics import roc_auc_score as skroc
-from sklearn.metrics import f1_score as skf1
-from sklearn.metrics import average_precision_score as skaps
-from sklearn.metrics import confusion_matrix as skcm
-from sklearn.metrics import accuracy_score as skas
-from sklearn.metrics import explained_variance_score as skevs
-from sklearn.metrics import mean_absolute_error as skmae
-from sklearn.metrics import mean_squared_error as skmse
-from sklearn.metrics import r2_score as skr2sc
-from sklearn.metrics import mean_squared_log_error as skmsle
+
 
 def _random_weighted_select(prob_matrix, item=None, axis=1):
     prob_cumsum = prob_matrix.cumsum(axis=axis)
@@ -53,7 +42,8 @@ def _random_weighted_select(prob_matrix, item=None, axis=1):
         return item[select_idx]
     else:
         return select_idx
-    
+
+
 def _create_classification_table(nclass, nrow, alpha=None, seed=1234,
                                  true_label='target', pred_label='p_target'):
     
@@ -68,6 +58,7 @@ def _create_classification_table(nclass, nrow, alpha=None, seed=1234,
     colnames = ['p_' + str(i) for i in range(nclass)] + [true_label, pred_label]
     
     return pd.DataFrame(classification_matrix, columns=colnames)
+
 
 def _create_regression_table(nrow, seed=1234, 
                              true_label='target', pred_label='p_target'):
@@ -126,9 +117,14 @@ class TestMetrics(unittest.TestCase):
         swat.reset_option()
         
     def test_accuracy_score(self):
-        
+
+        try:
+            from sklearn.metrics import accuracy_score as skas
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_class1 = self.class_table1.to_frame()
-        skas_score1  = skas(local_class1.target, local_class1.p_target, normalize=False)
+        skas_score1 = skas(local_class1.target, local_class1.p_target, normalize=False)
         skas_score1_norm = skas(local_class1.target, local_class1.p_target, normalize=True)
         
         dlpyas_score1 = accuracy_score(self.class_table1, 'target', 'p_target', normalize=False)
@@ -138,7 +134,7 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(skas_score1_norm, dlpyas_score1_norm)
         
         local_class2 = self.class_table2.to_frame()
-        skas_score2  = skas(local_class2.target, local_class2.p_target, normalize=False)
+        skas_score2 = skas(local_class2.target, local_class2.p_target, normalize=False)
         skas_score2_norm = skas(local_class2.target, local_class2.p_target, normalize=True)
         
         dlpyas_score2 = accuracy_score(self.class_table2, 'target', 'p_target', normalize=False)
@@ -148,7 +144,12 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(skas_score2_norm, dlpyas_score2_norm)
         
     def test_confusion_matrix(self):
-        
+
+        try:
+            from sklearn.metrics import confusion_matrix as skcm
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_class1 = self.class_table1.to_frame()
         skcm_matrix1  = skcm(local_class1.target, local_class1.p_target)
         skcm_matrix2  = skcm(local_class1.target, local_class1.p_target, labels=[1,3,4])
@@ -158,8 +159,7 @@ class TestMetrics(unittest.TestCase):
         
         self.assertTrue(np.array_equal(skcm_matrix1, dlpycm_matrix1.values))
         self.assertTrue(np.array_equal(skcm_matrix2, dlpycm_matrix2.values))
-   
-        
+
     def test_plot_roc(self):        
         ax1 = plot_roc(self.class_table2, 'target', 'p_1', pos_label=1)
         ax2 = plot_roc(self.class_table2, 'target', 'p_0', pos_label=0)
@@ -175,14 +175,24 @@ class TestMetrics(unittest.TestCase):
         ax4 = plot_precision_recall(self.class_table1, 'target', 'p_3', pos_label=3)
         
     def test_roc_auc_score(self):
-        
+
+        try:
+            from sklearn.metrics import roc_auc_score as skroc
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_class2 = self.class_table2.to_frame()
         skauc_score = skroc(local_class2.target, local_class2.p_1)       
         dlpyauc_score = roc_auc_score(self.class_table2, 'target', 'p_1', pos_label=1)        
         self.assertAlmostEqual(skauc_score, dlpyauc_score, places=4)
         
     def test_average_precision_score(self):
-        
+
+        try:
+            from sklearn.metrics import average_precision_score as skaps
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_class2 = self.class_table2.to_frame()
         skaps_score = skaps(local_class2.target, local_class2.p_1, pos_label=1)       
         dlpyaps_score = average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1) 
@@ -192,6 +202,11 @@ class TestMetrics(unittest.TestCase):
         
     def test_f1_score(self):
 
+        try:
+            from sklearn.metrics import f1_score as skf1
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_class2 = self.class_table2.to_frame()
         skf1_score1 = skf1(local_class2.target, local_class2.p_target, pos_label=1)    
         dlpyf1_score1 = f1_score(self.class_table2, 'target', 'p_target', pos_label=1)
@@ -199,6 +214,11 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(skf1_score1, dlpyf1_score1)
         
     def test_explained_variance_score(self):
+
+        try:
+            from sklearn.metrics import explained_variance_score as skevs
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
         
         local_reg1 = self.reg_table1.to_frame()
         skevs_score1 = skevs(local_reg1.target, local_reg1.p_target)    
@@ -207,6 +227,11 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(skevs_score1, dlpyevs_score1)        
         
     def test_mean_absolute_error(self):
+
+        try:
+            from sklearn.metrics import mean_absolute_error as skmae
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
         
         local_reg1 = self.reg_table1.to_frame()
         skmae_score1 = skmae(local_reg1.target, local_reg1.p_target)    
@@ -215,6 +240,11 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(skmae_score1, dlpymae_score1)
         
     def test_mean_squared_error(self):
+
+        try:
+            from sklearn.metrics import mean_squared_error as skmse
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
         
         local_reg1 = self.reg_table1.to_frame()
         skmse_score1 = skmse(local_reg1.target, local_reg1.p_target)    
@@ -223,7 +253,12 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(skmse_score1, dlpymse_score1)
         
     def test_mean_squared_log_error(self):
-        
+
+        try:
+            from sklearn.metrics import mean_squared_log_error as skmsle
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_reg1 = self.reg_table1.to_frame()
         skmsle_score1 = skmsle(local_reg1.target, local_reg1.p_target)    
         dlpymsle_score1 = mean_squared_log_error(self.reg_table1, 'target', 'p_target')
@@ -231,14 +266,14 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(skmsle_score1, dlpymsle_score1)
         
     def test_r2_score(self):
-        
+
+        try:
+            from sklearn.metrics import r2_score as skr2sc
+        except:
+            unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
         local_reg1 = self.reg_table1.to_frame()
         skr2sc_score1 = skr2sc(local_reg1.target, local_reg1.p_target)    
         dlpyr2sc_score1 = r2_score(self.reg_table1, 'target', 'p_target')
         
-        self.assertAlmostEqual(skr2sc_score1, dlpyr2sc_score1)    
-        
-        
-        
-        
-        
+        self.assertAlmostEqual(skr2sc_score1, dlpyr2sc_score1)
