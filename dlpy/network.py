@@ -55,7 +55,11 @@ class Network(Layer):
 
     def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
         if model_table is not None and any(i is not None for i in [inputs, outputs]):
-            raise DLPyError('Parameter model_table and inputs or outputs can not be specified simultaneously')
+            raise DLPyError('Either parameter model_table or inputs and outputs needs to be set.\n'
+                            'The following cases are valid.\n'
+                            '1. model_table = "your_model_table"; inputs = None; outputs = None.\n'
+                            '2. model_table = None; inputs = input_layer(s); outputs = output_layer.'
+                            )
         self._init_model(conn, model_table, model_weights)
         if all(i is None for i in [inputs, outputs, model_table]):
             return
