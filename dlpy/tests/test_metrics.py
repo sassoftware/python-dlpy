@@ -166,8 +166,7 @@ class TestMetrics(unittest.TestCase):
     def test_plot_precision_recall(self):        
         ax1 = plot_precision_recall(self.class_table2, 'target', 'p_1', pos_label=1)
         ax2 = plot_precision_recall(self.class_table2, 'target', 'p_0', pos_label=0)
-        ax3 = plot_precision_recall(self.class_table2, 'target', 'p_0', pos_label=0,
-                               fontsize_spec={'xlabel':20})
+        ax3 = plot_precision_recall(self.class_table2, 'target', 'p_0', pos_label=0, fontsize_spec={'xlabel':20})
         ax4 = plot_precision_recall(self.class_table1, 'target', 'p_3', pos_label=3)
         
     def test_roc_auc_score(self):
@@ -192,8 +191,7 @@ class TestMetrics(unittest.TestCase):
         local_class2 = self.class_table2.to_frame()
         skaps_score = skaps(local_class2.target, local_class2.p_1, pos_label=1)       
         dlpyaps_score = average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1) 
-        dlpyaps_score2 = average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1,
-                                                  interpolate=True)
+        dlpyaps_score2 = average_precision_score(self.class_table2, 'target', 'p_1', pos_label=1, interpolate=True)
         self.assertAlmostEqual(skaps_score, dlpyaps_score, places=4)
         
     def test_f1_score(self):
