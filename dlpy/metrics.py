@@ -271,8 +271,8 @@ def plot_precision_recall(castable, y_true, y_score, pos_label, cutstep=0.001,
         
     fig, ax = plt.subplots(1, 1, figsize=figsize)
     ax.plot(recall, precision, linestyle='-', linewidth=linewidth)
-    ax.set_ylim([0, 1])
-    ax.set_xlim([0, 1])
+    ax.set_ylim([-0.01, 1.01])
+    ax.set_xlim([-0.01, 1.01])
     ax.set_xlabel('Recall', fontsize=fontsize['xlabel'])
     ax.set_ylabel('Precision', fontsize=fontsize['ylabel'])
     ax.get_xaxis().set_tick_params(direction='out', labelsize=fontsize['xtick'])
