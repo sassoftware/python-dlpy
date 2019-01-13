@@ -98,17 +98,19 @@ class Network(Layer):
     def _map_graph_network(self, inputs, outputs):
         """propagate all of layers"""
         def build_map(start):
-            self.layers.append(start)
             if start.name is None:
                 start.count_instances()
                 start.name = str(start.__class__.__name__) + '_' + str(type(start).number_of_instances)
-            if start in inputs:
+            """if the node is visited, continue; the layer is a input layer and not added"""
+            if start in inputs or start in self.layers:
+                if start not in self.layers:
+                    self.layers.append(start)
                 return
             for layer in start.src_layers:
-                """if the node is visited, continue"""
-                if layer in self.layers:
-                    continue
                 build_map(layer)
+                ''' if all of src_layer of layer is in layers list, add it in layers list'''
+                if all(i in self.layers for i in start.src_layers):
+                    self.layers.append(start)
                 # set the layer's depth
                 layer.depth = 0 if str(layer.__class__.__name__) == 'InputLayer' \
                     else max([i.depth for i in layer.src_layers]) + 1
@@ -136,9 +138,8 @@ class Network(Layer):
 
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
-        sorted_layers = sorted(self.layers, key = lambda Layer: Layer.depth)
         self.num_params = 0
-        for layer in sorted_layers:
+        for layer in self.layers:
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
             if rt.severity > 1:
