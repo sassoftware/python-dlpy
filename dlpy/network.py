@@ -21,8 +21,8 @@
 import os
 
 from dlpy.layers import Layer
-from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep
-from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection
+from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
+from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
 import collections
 import pandas as pd
 
@@ -98,17 +98,21 @@ class Network(Layer):
     def _map_graph_network(self, inputs, outputs):
         """propagate all of layers"""
         def build_map(start):
-            self.layers.append(start)
             if start.name is None:
                 start.count_instances()
                 start.name = str(start.__class__.__name__) + '_' + str(type(start).number_of_instances)
+            # if the node is visited, continue
+            if start in self.layers:
+                return
+            # if the node is an input layer, add it and return
             if start in inputs:
+                self.layers.append(start)
                 return
             for layer in start.src_layers:
-                """if the node is visited, continue"""
-                if layer in self.layers:
-                    continue
                 build_map(layer)
+                # if all of src_layer of layer is in layers list, add it in layers list
+                if all(i in self.layers for i in start.src_layers):
+                    self.layers.append(start)
                 # set the layer's depth
                 layer.depth = 0 if str(layer.__class__.__name__) == 'InputLayer' \
                     else max([i.depth for i in layer.src_layers]) + 1
@@ -136,9 +140,8 @@ class Network(Layer):
 
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
-        sorted_layers = sorted(self.layers, key = lambda Layer: Layer.depth)
         self.num_params = 0
-        for layer in sorted_layers:
+        for layer in self.layers:
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
             if rt.severity > 1:
@@ -216,6 +219,13 @@ class Network(Layer):
                 model.layers.append(extract_concatenate_layer(layer_table = layer_table))
             elif layer_type == 11:
                 model.layers.append(extract_detection_layer(layer_table = layer_table))
+            elif layer_type == 12:
+                model.layers.append(extract_scale_layer(layer_table=layer_table))
+            elif layer_type == 13:
+                model.layers.append(extract_keypoints_layer(layer_table = layer_table))
+            elif layer_type == 14:
+                model.layers.append(extract_reshape_layer(layer_table = layer_table))
+
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
         layer_id_list = conn_mat['_DLLayerID_'].tolist()
@@ -589,6 +599,12 @@ class Network(Layer):
                 self.layers.append(extract_concatenate_layer(layer_table=layer_table))
             elif layer_type == 11:
                 self.layers.append(extract_detection_layer(layer_table=layer_table))
+            elif layer_type == 12:
+                self.layers.append(extract_scale_layer(layer_table=layer_table))
+            elif layer_type == 13:
+                self.layers.append(extract_keypoints_layer(layer_table = layer_table))
+            elif layer_type == 14:
+                self.layers.append(extract_reshape_layer(layer_table = layer_table))
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -1509,7 +1525,52 @@ def extract_concatenate_layer(layer_table):
 
 
 def extract_detection_layer(layer_table):
+    '''
+    Extract layer configuration from a detection layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+
+    num_keys = ['num_to_force_coord', 'softmax_for_class_prob', 'detection_threshold',
+                'force_coord_scale', 'prediction_not_a_object_scale', 'coord_scale', 'predictions_per_grid',
+                'object_scale', 'iou_threshold', 'class_scale', 'max_label_per_image', 'max_boxes', 'match_anchor_size',
+                'do_sqrt', 'class_number', 'coord_type', 'grid_number']
+    str_keys = ['act', 'init']
+
     detection_layer_config = dict()
+    for key in num_keys:
+        try:
+            detection_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'detectionopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+
+    for key in str_keys:
+        try:
+            detection_layer_config[key] = layer_table['_DLChrVal_'][
+                layer_table['_DLKey1_'] == 'detectionopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+
+    detection_layer_config['detection_model_type'] = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                                            'detectionopts.yoloVersion'].tolist()[0]
+
+    predictions_per_grid = detection_layer_config['predictions_per_grid']
+    detection_layer_config['anchors'] = []
+    for i in range(int(predictions_per_grid*2)):
+        detection_layer_config['anchors'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                          'detectionopts.anchors.{}'.format(i)].tolist()[0])
 
     detection_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
@@ -1595,9 +1656,91 @@ def extract_output_layer(layer_table):
     return layer
 
 
+def extract_scale_layer(layer_table):
+    '''
+    Extract layer configuration from a scale layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+
+    num_keys = ['scale']
+    str_keys = ['act']
+    scale_layer_config = dict()
+    scale_layer_config.update(get_num_configs(num_keys, 'scaleopts', layer_table))
+    scale_layer_config.update(get_str_configs(str_keys, 'scaleopts', layer_table))
+    scale_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    layer = Scale(**scale_layer_config)
+    return layer
+
+
 def extract_keypoints_layer(layer_table):
-    # TODO
+    '''
+    Extract layer configuration from a keypoints layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+
+    num_keys = ['n', 'std', 'mean', 'init_bias', 'truncation_factor', 'init_b', 'trunc_fact']
+    str_keys = ['act', 'error']
     keypoints_layer_config = dict()
+    keypoints_layer_config.update(get_num_configs(num_keys, 'keypointsopts', layer_table))
+    keypoints_layer_config.update(get_str_configs(str_keys, 'keypointsopts', layer_table))
     keypoints_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
     layer = Keypoints(**keypoints_layer_config)
+
+    if layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'keypointsopts.no_bias'].any():
+        keypoints_layer_config['include_bias'] = False
+    else:
+        keypoints_layer_config['include_bias'] = True
+
+    if 'trunc_fact' in keypoints_layer_config.keys():
+        keypoints_layer_config['truncation_factor'] = keypoints_layer_config['trunc_fact']
+        del keypoints_layer_config['trunc_fact']
+    return layer
+
+
+def extract_reshape_layer(layer_table):
+    '''
+    Extract layer configuration from a reshape layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+
+    num_keys = ['n', 'width', 'height', 'depth']
+    str_keys = ['act']
+    reshape_layer_config = dict()
+    reshape_layer_config.update(get_num_configs(num_keys, 'reshapeopts', layer_table))
+    reshape_layer_config.update(get_str_configs(str_keys, 'reshapeopts', layer_table))
+    reshape_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    layer = Reshape(**reshape_layer_config)
     return layer

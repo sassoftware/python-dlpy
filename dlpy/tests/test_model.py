@@ -908,6 +908,19 @@ class TestModel(unittest.TestCase):
         self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[2], 0.3)
         self.assertAlmostEqual(onnx_model.graph.node[0].attribute[1].f, 1/255.)
 
+    def test_load_reshape_detection(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        yolo_model = Model(self.s)
+        yolo_model.load(self.data_dir + 'YOLOV2_MULTISIZE.sashdat')
+        model_df = self.s.fetch(table = dict(name = yolo_model.model_name,
+                                             where = '_DLKey0_ eq "detection1" or _DLKey0_ eq "reshape1"'), to = 50).Fetch
+        anchors_5 = model_df['_DLNumVal_'][model_df['_DLKey1_'] == 'detectionopts.anchors.8'].tolist()[0]
+        self.assertAlmostEqual(anchors_5, 1.0907, 4)
+        depth = model_df['_DLNumVal_'][model_df['_DLKey1_'] == 'reshapeopts.depth'].tolist()[0]
+        self.assertEqual(depth, 256)
+
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests
