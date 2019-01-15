@@ -1305,13 +1305,16 @@ class Detection(Layer):
         Specifies the layers directed to this layer.
     max_boxes : int, optional
         Specifies the maximum number of overall predictions allowed in the detection layer.
-    max_label_pe_image : int, optional
+    max_label_per_image : int, optional
         The maximum number of labels per image
     match_anchor_size : bool, optional
         Whether to force the predicted box match the anchor boxes in sizes for all predictions
     num_to_force_coord : int, optional
         The number of leading chunk of images in training when the algorithm forces predicted objects
         in each grid to be equal to the anchor box sizes, and located at the grid center
+    force_coord_scale: float, optional
+        The scale for location error during the training period while forcing the predicted boxes
+        to have default sizes/locations
 
     Returns
     -------
@@ -1328,7 +1331,8 @@ class Detection(Layer):
                  coord_type=None, class_number=None, grid_number=None, predictions_per_grid=None, do_sqrt=None,
                  coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
                  detection_threshold=None, iou_threshold=None, random_boxes=None, src_layers=None, max_boxes=None,
-                 max_label_per_image=None, match_anchor_size=None, num_to_force_coord=None, **kwargs):
+                 max_label_per_image=None, match_anchor_size=None, num_to_force_coord=None, force_coord_scale=None,
+                 **kwargs):
 
         if not __dev__ and len(kwargs) > 0:
             raise DLPyError('**kwargs can be used only in development mode.')
