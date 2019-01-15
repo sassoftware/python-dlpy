@@ -1526,20 +1526,20 @@ def extract_concatenate_layer(layer_table):
 
 def extract_detection_layer(layer_table):
     '''
-        Extract layer configuration from a detection layer table
+    Extract layer configuration from a detection layer table
 
-        Parameters
-        ----------
-        layer_table : table
-            Specifies the selection of table containing the information
-            for the layer.
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
 
-        Returns
-        -------
-        dict
-            Options that can be passed to layer definition
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
 
-        '''
+    '''
 
     num_keys = ['num_to_force_coord', 'softmax_for_class_prob', 'detection_threshold',
                 'force_coord_scale', 'prediction_not_a_object_scale', 'coord_scale', 'predictions_per_grid',
