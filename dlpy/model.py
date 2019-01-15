@@ -1612,6 +1612,7 @@ class Model(Network):
         plt.show()
 
 
+
 class FeatureMaps(object):
     '''
     Feature Maps object

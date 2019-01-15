@@ -490,11 +490,12 @@ class Network(Layer):
                             self.num_params += l.num_bias
 
                 total = pd.DataFrame([['', '', '', '', '', '', '', self.num_params]],
-                                     columns = ['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride', 'Activation',
-                                                'Output Size', 'Number of Parameters'])
+                                     columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride', 'Activation',
+                                              'Output Size', 'Number of Parameters'])
                 display(pd.concat([self.summary, total], ignore_index = True))
             else:
                 display(self.summary)
+
 
         except ImportError:
             print(self.summary)

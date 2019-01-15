@@ -225,8 +225,7 @@ class Layer(object):
                               self.config.get('stride', ''), self.activation,
                               self.output_size, (self.num_weights, self.num_bias)]],
                             columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
-                                     'Activation', 'Output Size',
-                                     'Number of Parameters'])
+                                     'Activation', 'Output Size', 'Number of Parameters'])
 
     @property
     def rnn_summary(self):
