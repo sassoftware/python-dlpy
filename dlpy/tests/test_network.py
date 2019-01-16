@@ -158,6 +158,7 @@ class TestNetwork(tm.TestCase):
         output1 = OutputLayer(n=10, name='OutputLayer_1', src_layers=[fc1, fc2])
         model = Model(self.s, inputs=inputs, outputs=output1)
         model.compile()
+        model.print_summary()
         self.assertTrue(model.count_params() == 109834)
 
     def test_duplicated_src_layers_call(self):
