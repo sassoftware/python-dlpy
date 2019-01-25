@@ -199,6 +199,21 @@ class TestNetwork(tm.TestCase):
             model = Model(self.s, outputs=output1)
             model.compile()
 
+    def test_sub_network(self):
+        inputs1 = InputLayer(1, 53, 53, scale=1.0 / 255, name='InputLayer_1')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense1 = Dense(10)
+        dense2 = Dense(12)(dense1)
+        dense3 = Dense(n=128)(dense2)
+        model_dense = Model(self.s, inputs=dense1, outputs= dense3)
+
+        node1 = model_dense(inputs1)
+        concat1 = Dense(20, src_layers = [node1])
+        output1 = OutputLayer(n=10, name='OutputLayer_1', src_layers=concat1)
+        model = Model(self.s, inputs=[inputs1], outputs=output1)
+        model.compile()
+        model.print_summary()
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

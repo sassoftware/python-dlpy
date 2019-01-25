@@ -25,6 +25,7 @@ from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, 
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
 import collections
 import pandas as pd
+from copy import deepcopy
 
 
 class Network(Layer):
@@ -52,6 +53,14 @@ class Network(Layer):
     :class:`Model`
 
     '''
+
+    type = 'model'
+    type_label = 'Model'
+    type_desc = 'Model'
+    can_be_last_layer = True
+    number_of_instances = 0
+    src_layers = []
+    name = 'model' + str(number_of_instances)
 
     def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
         if model_table is not None and any(i is not None for i in [inputs, outputs]):
@@ -111,22 +120,34 @@ class Network(Layer):
             for layer in start.src_layers:
                 build_map(layer)
                 # if all of src_layer of layer is in layers list, add it in layers list
-                if all(i in self.layers for i in start.src_layers):
+                layer.depth = 0 if layer in self.inputs \
+                    else max([i.depth for i in layer.src_layers]) + 1
+                if layer.type == 'model':
+                    # recalculate depth of layers in a model
+                    temp_model = deepcopy(layer)
+                    for model_layer in temp_model.layers:
+                        model_layer.depth += layer.depth
+                    start.src_layers = temp_model.outputs
+                    for i in temp_model.inputs:
+                        i.src_layers = temp_model.src_layers
+                    self.layers += temp_model.layers
+                if start.type != 'model' and all(i in self.layers for i in start.src_layers):
                     self.layers.append(start)
                 # set the layer's depth
-                layer.depth = 0 if str(layer.__class__.__name__) == 'InputLayer' \
-                    else max([i.depth for i in layer.src_layers]) + 1
+                # layer.depth = 0 if layer in self.inputs \
+                #     else max([i.depth for i in layer.src_layers]) + 1
             return
 
         if not isinstance(inputs, collections.Iterable):
             inputs = [inputs]
-        if any(x.__class__.__name__ != 'InputLayer' for x in inputs):
-            raise DLPyError('Input layers should be input layer type.')
+        # if any(x.__class__.__name__ != 'InputLayer' for x in inputs):
+        #     raise DLPyError('Input layers should be input layer type.')
         if not isinstance(outputs, collections.Iterable):
             outputs = [outputs]
-        if not all(x.can_be_last_layer for x in outputs):
-            raise DLPyError('Output layers can only be {}'\
-                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
+
+        self.inputs = inputs
+        self.outputs = outputs
+
         for layer in outputs:
             build_map(layer)
             layer.depth = max([i.depth for i in layer.src_layers]) + 1
@@ -137,6 +158,10 @@ class Network(Layer):
         ''' parse the network nodes and process CAS Action '''
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
+
+        if not all(x.can_be_last_layer for x in self.outputs):
+            raise DLPyError('Output layers can only be {}' \
+                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
 
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
@@ -158,6 +183,16 @@ class Network(Layer):
 
             self.num_params += num_weights + num_bias
         print('NOTE: Model compiled successfully.')
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'conn':
+                continue
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         ''' Call a CAS action '''
