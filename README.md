@@ -19,10 +19,11 @@
 </div>
 
 ### Prerequisites
+- Python version 3 or greater is required
 - Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
+- Install SAS [Scripting Wrapper for Analytics Transfer (SWAT)](https://github.com/sassoftware/python-swat) for Python using `pip install swat` or `conda install -c sas-institute swat`
 - Access to a SAS Viya 3.4 environment with [Visual Data Mining and Machine Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning.html) (VDMML) is required
 - A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
-- Python version 3 or greater is required
 - It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
 
 ### Getting Started
