@@ -28,8 +28,9 @@
 ### Getting Started
 
 To connect to a SAS Viya server, import SWAT and use the swat.CAS class to
-create a connection::
-Note: The default CAS port is 5570
+create a connection:
+
+Note: The default CAS port is 5570.
 
     >>> import swat
     >>> sess = swat.CAS('mycloud.example.com', 5570)
