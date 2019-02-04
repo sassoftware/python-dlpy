@@ -18,13 +18,30 @@
   
 </div>
 
+### Overview
+DLPy is a high-level Python library for the SAS Deep learning features 
+available in SAS Viya. DLPy is designed to provide an efficient way to 
+apply deep learning methods to image, text, and audio data. DLPy APIs 
+created following the [Keras](https://keras.io/) APIs with a touch 
+of [PyTorch](https://pytorch.org/) flavor.
+
+### What's Recently Added
+* Text, audio, and time series support in addition to image
+* New APIs for:
+   * RNN based tasks: text classification, text generation, and sequence labeling
+   * Object detection
+   * Time series processing and modeling
+* Processing audio files and creating speech recognition models
+* Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, and Yolo
+* Enhanced data visualization and metadata handling
+
 ### Prerequisites
 - Python version 3 or greater is required
-- Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
 - Install SAS [Scripting Wrapper for Analytics Transfer (SWAT)](https://github.com/sassoftware/python-swat) for Python using `pip install swat` or `conda install -c sas-institute swat`
 - Access to a SAS Viya 3.4 environment with [Visual Data Mining and Machine Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning.html) (VDMML) is required
 - A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
 - It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
+- Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
 
 ### Getting Started
 
@@ -109,16 +126,18 @@ Finally, add the output layer:
 - DLPy examples: https://github.com/sassoftware/python-dlpy/tree/master/examples
 - DLPy API documentation [sassoftware.github.io/python-dlpy](https://sassoftware.github.io/python-dlpy/).
 - [SAS SWAT for Python](http://github.com/sassoftware/python-swat/)
+- [SAS ESPPy](https://github.com/sassoftware/python-esppy)
 
 ### Contributing
 Have something cool to share? SAS gladly accepts pull requests on GitHub! See the [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) for details.
 
-### Copyright
-
-Copyright SAS Institute.
-
+### Licensing 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at [LICENSE.txt](https://github.com/sassoftware/python-dlpy/blob/master/LICENSE.txt)
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. 
+
+
+
+Copyright SAS Institute.
