@@ -649,7 +649,7 @@ class Network(Layer):
         if cas_lib_name is not None:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights(self, path, labels=False):
+    def load_weights(self, path, labels=False, data_spec=None, label_file_name=None):
         '''
         Load the weights form a data file specified by ‘path’
 
@@ -658,6 +658,13 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the file that
             contains the weight table.
+        labels: bool
+            Specifies whether to apply user-defined classification labels
+        data_spec: list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)
+        label_file_name: string, optional
+            Fully qualified path to CSV file containing user-defined 
+            classification labels.  If not specified, ImageNet labels assumed.
 
         Notes
         -----
@@ -671,17 +678,17 @@ class Network(Layer):
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         elif file_name.lower().endswith('caffemodel.h5'):
-            self.load_weights_from_caffe(path, labels=labels)
+            self.load_weights_from_caffe(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
         elif file_name.lower().endswith('kerasmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels)
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
         elif file_name.lower().endswith('onnxmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels)
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)            
         else:
             raise DLPyError('Weights file must be one of the follow types:\n'
                             'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
                             'Weights load failed.')
 
-    def load_weights_from_caffe(self, path, labels=False):
+    def load_weights_from_caffe(self, path, labels=False, data_spec=None, label_file_name=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -690,16 +697,21 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
-        labels : CASTable, optional
-            Specifies the table that contains the imagenet1k labels.
+        labels: bool
+            Specifies whether to use ImageNet classification labels
+        data_spec: list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)            
+        label_file_name: string, optional
+            Fully qualified path to CSV file containing user-defined 
+            classification labels.  If not specified, ImageNet labels assumed.
 
         '''
         if labels:
-            self.load_weights_from_file_with_labels(path=path, format_type='CAFFE')
+            self.load_weights_from_file_with_labels(path=path, format_type='CAFFE', data_spec=data_spec, label_file_name=label_file_name)
         else:
-            self.load_weights_from_file(path=path, format_type='CAFFE')
+            self.load_weights_from_file(path=path, format_type='CAFFE', data_spec=data_spec)
 
-    def load_weights_from_keras(self, path, labels=False):
+    def load_weights_from_keras(self, path, labels=False, data_spec=None, label_file_name=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -708,14 +720,21 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
+        labels: bool
+            Specifies whether to use ImageNet classification labels
+        data_spec: list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)            
+        label_file_name: string, optional
+            Fully qualified path to CSV file containing user-defined 
+            classification labels.  If not specified, ImageNet labels assumed.
 
         '''
         if labels:
-            self.load_weights_from_file_with_labels(path=path, format_type='KERAS')
+            self.load_weights_from_file_with_labels(path=path, format_type='KERAS', data_spec=data_spec, label_file_name=label_file_name)
         else:
-            self.load_weights_from_file(path=path, format_type='KERAS')
+            self.load_weights_from_file(path=path, format_type='KERAS', data_spec=data_spec)
 
-    def load_weights_from_file(self, path, format_type='KERAS'):
+    def load_weights_from_file(self, path, format_type='KERAS', data_spec=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -726,22 +745,68 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
+        data_spec: list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)            
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
 
-        self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                        modelWeights=dict(replace=True,
-                                          name=self.model_name + '_weights'),
-                        formatType=format_type, weightFilePath=file_name,
-                        caslib=cas_lib_name)
+        if (data_spec):
+            from io import StringIO
+            import sys
+
+            # redirect stderr
+            old_stderr = sys.stderr
+            sys.stderr = stderr = StringIO()
+
+            # run action with dataSpec option
+            rt = self._retrieve_('deeplearn.dlimportmodelweights', 
+                                message_level='NONE',
+                                model=self.model_table,
+                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                dataSpecs=data_spec,
+                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
+                                );
+            
+            # restore stderr
+            sys.stderr = old_stderr                
+                                
+            # if error, no dataspec support
+            if rt.severity > 1:
+                rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                    modelWeights=dict(replace=True,
+                                                      name=self.model_name + '_weights'),
+                                    formatType=format_type, weightFilePath=file_name,
+                                    caslib=cas_lib_name, 
+                                    #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
+                                    )
+            
+                # handle error or create necessary attributes
+                if rt.severity > 1:
+                    for msg in rt.messages:
+                        print(msg)
+                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                else:
+                    from dlpy.attribute_utils import create_extended_attributes       
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
+
+        else:
+            print("NOTE: no dataspec(s) provided - creating image classification model.")
+            self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                            modelWeights=dict(replace=True,
+                                              name=self.model_name + '_weights'),
+                            formatType=format_type, weightFilePath=file_name,
+                            caslib=cas_lib_name, 
+                            #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
+                            )        
 
         self.set_weights(self.model_name + '_weights')
 
         if cas_lib_name is not None:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights_from_file_with_labels(self, path, format_type='KERAS'):
+    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -752,18 +817,72 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
+        data_spec: list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)            
+        label_file_name: string, optional
+            Fully qualified path to CSV file containing user-defined 
+            classification labels.  If not specified, ImageNet labels assumed.
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
 
-        from dlpy.utils import get_imagenet_labels_table
-        label_table = get_imagenet_labels_table(self.conn)
+        if (label_file_name):
+            from dlpy.utils import get_user_defined_labels_table
+            label_table = get_user_defined_labels_table(self.conn, label_file_name)
+        else:
+            from dlpy.utils import get_imagenet_labels_table
+            label_table = get_imagenet_labels_table(self.conn)
+            
+        if (data_spec):
+            # see if dataspecs supported by action
+            from io import StringIO
+            import sys
 
-        self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                        modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                        formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                        labelTable=label_table);
+            # redirect stderr
+            old_stderr = sys.stderr
+            sys.stderr = stderr = StringIO()
 
+            # run action with dataSpec option
+            rt = self._retrieve_('deeplearn.dlimportmodelweights', 
+                                message_level='NONE',
+                                model=self.model_table,
+                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                dataSpecs=data_spec,
+                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                labelTable=label_table,
+                                #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
+                                );
+            
+            # restore stderr
+            sys.stderr = old_stderr                
+                                            
+            # if error, no dataspec support
+            if rt.severity > 1:
+                rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    labelTable=label_table,
+                                    #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
+                                    );
+                                    
+                # handle error or create necessary attributes with Python function
+                if rt.severity > 1:
+                    for msg in rt.messages:
+                        print(msg)
+                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                else:
+                    from dlpy.attribute_utils import create_extended_attributes       
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec, label_file_name)                                    
+                                
+        else:
+            print("NOTE: no dataspec(s) provided - creating image classification model.")
+            self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                            labelTable=label_table,
+                            #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
+                            );
+        
         self.set_weights(self.model_name + '_weights')
 
         if cas_lib_name is not None:
@@ -1571,7 +1690,7 @@ def extract_detection_layer(layer_table):
         detection_layer_config['anchors'].append(
             layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
                                           'detectionopts.anchors.{}'.format(i)].tolist()[0])
-
+    
     detection_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
     layer = Detection(**detection_layer_config)

@@ -387,6 +387,20 @@ def get_imagenet_labels_table(conn):
     return conn.CASTable(temp_name)
 
 
+def get_user_defined_labels_table(conn, label_file_name):
+    temp_name = random_name('new_label_table', 6)
+
+    full_filename = label_file_name
+
+    labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False)
+    conn.upload_frame(labels, casout=dict(name=temp_name, replace=True),
+                      importoptions={'vars':[
+                          {'name': 'label_id', 'type': 'int64'},
+                          {'name': 'label', 'type': 'char', 'length': 200}]})
+
+    return conn.CASTable(temp_name)
+
+    
 def get_server_path_sep(conn):
     '''
     Get the directory separator of server.
