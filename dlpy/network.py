@@ -25,6 +25,7 @@ from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, 
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
 import collections
 import pandas as pd
+import swat as sw
 
 
 class Network(Layer):
@@ -751,26 +752,17 @@ class Network(Layer):
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
 
-        if (data_spec):
-            from io import StringIO
-            import sys
-
-            # redirect stderr
-            old_stderr = sys.stderr
-            sys.stderr = stderr = StringIO()
+        if data_spec:
 
             # run action with dataSpec option
-            rt = self._retrieve_('deeplearn.dlimportmodelweights', 
-                                message_level='NONE',
-                                model=self.model_table,
-                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                dataSpecs=data_spec,
-                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
-                                );
-            
-            # restore stderr
-            sys.stderr = old_stderr                
+            with sw.option_context(print_messages = False):
+                rt = self._retrieve_('deeplearn.dlimportmodelweights', 
+                                    message_level='NONE',
+                                    model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    dataSpecs=data_spec,
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    );
                                 
             # if error, no dataspec support
             if rt.severity > 1:
@@ -779,7 +771,6 @@ class Network(Layer):
                                                       name=self.model_name + '_weights'),
                                     formatType=format_type, weightFilePath=file_name,
                                     caslib=cas_lib_name, 
-                                    #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
                                     )
             
                 # handle error or create necessary attributes
@@ -798,7 +789,6 @@ class Network(Layer):
                                               name=self.model_name + '_weights'),
                             formatType=format_type, weightFilePath=file_name,
                             caslib=cas_lib_name, 
-                            #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
                             )        
 
         self.set_weights(self.model_name + '_weights')
@@ -834,35 +824,24 @@ class Network(Layer):
             label_table = get_imagenet_labels_table(self.conn)
             
         if (data_spec):
-            # see if dataspecs supported by action
-            from io import StringIO
-            import sys
-
-            # redirect stderr
-            old_stderr = sys.stderr
-            sys.stderr = stderr = StringIO()
 
             # run action with dataSpec option
-            rt = self._retrieve_('deeplearn.dlimportmodelweights', 
-                                message_level='NONE',
-                                model=self.model_table,
-                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                dataSpecs=data_spec,
-                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                labelTable=label_table,
-                                #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
-                                );
+            with sw.option_context(print_messages = False):
+                rt = self._retrieve_('deeplearn.dlimportmodelweights', 
+                                    message_level='NONE',
+                                    model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    dataSpecs=data_spec,
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    labelTable=label_table,
+                                    );
             
-            # restore stderr
-            sys.stderr = old_stderr                
-                                            
             # if error, no dataspec support
             if rt.severity > 1:
                 rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                     labelTable=label_table,
-                                    #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
                                     );
                                     
                 # handle error or create necessary attributes with Python function
@@ -880,7 +859,6 @@ class Network(Layer):
                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                             labelTable=label_table,
-                            #_debug = dict(nodes="all",ranks='-1',roles="all",display="d7a752.na.sas.com:0")
                             );
         
         self.set_weights(self.model_name + '_weights')
