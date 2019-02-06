@@ -445,7 +445,7 @@ class Model(Network):
                             **kwargs)
         return r
 
-    def plot_training_history(self, items=('Loss', 'FitError'), fig_size=(12, 5)):
+    def plot_training_history(self, items=('Loss', 'FitError'), fig_size=(12, 5), tick_frequency=1):
         '''
         Display the training iteration history.
 
@@ -457,15 +457,22 @@ class Model(Network):
         fig_size : tuple, optional
             Specifies the size of the figure.
             Default : (12, 5)
-
+        tick_frequency : int, optional
+            Specifies the frequency of the ticks visable on xaxis.
+            Default : 1
         '''
         items_not_in_results = [x for x in items if x not in self.training_history.columns]
         if items_not_in_results:
             raise DLPyError('Columns {} are not in results'.format(items_not_in_results))
+
         if self.training_history is not None:
-            self.training_history.plot(x='Epoch', y=list(items),
-                                       xticks=self.training_history.Epoch,
-                                       figsize=fig_size)
+            if tick_frequency > 1:
+                x_ticks = [1] + list(range(tick_frequency, len(self.training_history.Epoch) + 1, tick_frequency))
+            else:
+                x_ticks = self.training_history.Epoch
+            self.training_history.plot(x='Epoch', y=list(('Loss', 'FitError')), 
+                                         figsize=(12, 5),
+                                         xticks=x_ticks)
         else:
             raise DLPyError('model.fit should be run before calling plot_training_history')
 
