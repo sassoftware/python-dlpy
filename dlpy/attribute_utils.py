@@ -56,7 +56,7 @@ def create_extended_attributes(conn, model_name, layers, data_spec, label_file_n
     '''
 
     # read user-supplied labels
-    if (label_file_name is None):
+    if label_file_name is None:
         labels = None
     else:
         all_label_info = pd.read_csv(label_file_name, skipinitialspace=True, index_col=False)
@@ -114,8 +114,8 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
     ds_layer_type = []
     for spec in data_spec:
         for layer in layers:
-            if (spec['layer'] == layer.name):
-                if (layer.type == 'input'):
+            if spec['layer'] == layer.name:
+                if layer.type == 'input':
                     input_data_spec.append(spec)
                     ds_layer_type.append('input')
                 else:
@@ -170,8 +170,8 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
         data_type = data_type + struct.pack('@q',data_info['ds_type'])
 
         # token size (int64)
-        if ("numeric_nominal_parms" in spec):
-            if ("token_size" in spec["numeric_nominal_parms"]):
+        if "numeric_nominal_parms" in spec:
+            if "token_size" in spec["numeric_nominal_parms"]:
                 token_size = token_size + \
                              struct.pack('@q',spec["numeric_nominal_parms"]["token_size"])
             else:
@@ -185,7 +185,7 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
         n_vars = n_vars + struct.pack('@i',len(spec['data']))
 
         # number of nominal variables
-        if ("nominals" in spec):
+        if "nominals" in spec:
             n_nominal_vars = n_nominal_vars + struct.pack('@i',len(spec['nominals']))
         else:
             n_nominal_vars = n_nominal_vars + struct.pack('@i',0)
@@ -214,11 +214,11 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
             all_vars['levels'].append(0)
             
         # update the number of input variables
-        if (layer_type == 'input'):
+        if layer_type == 'input':
             n_input_vars = n_input_vars + len(spec['data'])
             
         # all nominal variable names
-        if ("nominals" in spec):
+        if "nominals" in spec:
             for var in spec['nominals']:
                 try:
                     index = all_vars['name'].index(var.encode('utf-8'))
@@ -229,8 +229,8 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
                                     'not exist in the variable list.')
                     
         # length variable names (RNN only)
-        if ("numeric_nominal_parms" in spec):
-            if ("length" in spec["numeric_nominal_parms"]):
+        if "numeric_nominal_parms" in spec:
+            if "length" in spec["numeric_nominal_parms"]:
                 barray = bytearray(spec["numeric_nominal_parms"]["length"], 
                                    encoding = 'utf-8')
                 len_var_names = len_var_names + barray
@@ -249,7 +249,7 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
                 all_vars['fmt_datalen'].append(numnom_info['fmt_datalen'])
                 all_vars['levels'].append(0)
                 # update the number of input variables
-                if (layer_type == 'input'):
+                if layer_type == 'input':
                     n_input_vars = n_input_vars + 1
                 
             else:
@@ -435,17 +435,17 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
     for spec in ds_info['spec_list']:
         # determine layer type
         for layer in layers:
-            if (spec['layer'] == layer.name):
+            if spec['layer'] == layer.name:
                 break
     
-        if ("nominals" in spec):
+        if "nominals" in spec:
             n_nom_var = len(spec['nominals'])
-            if (n_nom_var > 0):
-                if (layer.type == 'input'):
+            if n_nom_var > 0:
+                if layer.type == 'input':
                     raise DLPyError('Setting attributes for non-numeric input layer variables\n'
                                     'is not supported.\n')
                                     
-                elif (layer.type == 'output'):
+                elif layer.type == 'output':
                     if layer.config['n'] is None:
                         raise DLPyError('You must specify the number of neurons for the output\n'
                                         'layer variables when setting attributes.\n')
@@ -453,7 +453,7 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
                     n_levels = layer.config['n']
                     task_type = '0x8'
                     
-                elif (layer.type == 'detection'):
+                elif layer.type == 'detection':
                     if layer.config['class_number'] is None:
                         raise DLPyError('You must specify the number of classes for the object\n'
                                         'detection when setting attributes.\n')
@@ -464,18 +464,18 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
                     
                     # create needed labels for nominal variables
                     ljust_labels = []
-                    if (labels is None):
+                    if labels is None:
                         # strictly numeric labels (e.g. 0, 1, ...)
                         for ii in range(n_levels):
                             ljust_labels.append(str(ii).ljust(12))
                     else:
                         # user-supplied labels
-                        if (n_levels != len(labels)):
+                        if n_levels != len(labels):
                             raise DLPyError('The number of class labels does not match\n'
                                             'the number of class levels for object detection.\n')
                         else:
                             for lval in labels:
-                                if (len(lval) > 12):
+                                if len(lval) > 12:
                                     ljust_labels.append(lval[:12])
                                 else:
                                     ljust_labels.append(lval.ljust(12))
@@ -497,7 +497,7 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
             task_type = '0x10'
                 
     # update level names/lengths if any nominal variables
-    if (len(level_name)):
+    if len(level_name):
         # level name
         update_attr(conn, model_name, level_name, set_name, "level_name", "binary")
     
@@ -555,7 +555,7 @@ def create_inputparm_attributes(conn, model_name, layers, ds_info):
     update_attr(conn, model_name, target_var_list, set_name, "target", "binary")
     
     # generate nominal variable list attributes
-    if (len(ds_info['nom_vars']) > 0):
+    if len(ds_info['nom_vars']) > 0:
         nominal_var_list = bytearray()
         for ii in range(len(ds_info['nom_vars']['name'])):
             barray = bytearray(ds_info['nom_vars']['name'][ii])
@@ -602,7 +602,7 @@ def sas_var_info(var_type):
         
     '''
 
-    if (var_type.lower() in ["numericnominal", "numnom"]):
+    if var_type.lower() in ["numericnominal", "numnom"]:
         var_info = {"ds_type" : 1,
                     "rtype" : 1,
                     "rawlen" : 8,
@@ -610,9 +610,9 @@ def sas_var_info(var_type):
                     "fmt_nfl" : 12,
                     "fmt_nfd" : 0,
                     "fmt_datalen" : 12}
-    elif (var_type.lower() == "text"):
+    elif var_type.lower() == "text":
         raise DLPyError('Attribute updating not supported for text variable(s).')
-    elif (var_type.lower() == "image"):
+    elif var_type.lower() == "image":
         var_info = {"ds_type" : 3,
                     "rtype" : 0,
                     "rawlen" : 1000000,
@@ -620,7 +620,7 @@ def sas_var_info(var_type):
                     "fmt_nfl" : 0,
                     "fmt_nfd" : 0,
                     "fmt_datalen" : 1}
-    elif (var_type.lower() == "objectdetection"):
+    elif var_type.lower() == "objectdetection":
         var_info = {"ds_type" : 4,
                     "rtype" : 1,
                     "rawlen" : 8,
@@ -659,11 +659,11 @@ def update_attr(conn, model_name, attr_value, attr_set, attr_key, attr_type):
 
     '''
  
-    if (attr_type.lower() in ['double', 'int64', 'int', 'char', 'binary']):
-        if (attr_type.lower() == 'char'):
+    if attr_type.lower() in ['double', 'int64', 'int', 'char', 'binary']:
+        if attr_type.lower() == 'char':
             attr_helper(conn, model_name, attr_set, attr_key, attr_value)
         else:
-            if (len(attr_value) > 1):
+            if len(attr_value) > 1:
                       
                 # create binary blob using SWAT 
                 attr_blob = sw.blob(attr_value)
@@ -758,6 +758,6 @@ def export_attr_xml(conn, model_name, file_name):
         raise DLPyError('Cannot export model attributes, there seems to be a problem.')
 
     ascii_text = rt['xmlblob'].decode('utf8')
-    myfile = open(file_name, "w")  
-    myfile.write(ascii_text)
+    with open(file_name, "w") as myfile:
+        myfile.write(ascii_text)
     myfile.close()                                                  
