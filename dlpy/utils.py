@@ -378,13 +378,7 @@ def get_imagenet_labels_table(conn):
     project_path = os.path.dirname(os.path.abspath(__file__))
     full_filename = os.path.join(project_path, filename)
 
-    labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False)
-    conn.upload_frame(labels, casout=dict(name=temp_name, replace=True),
-                      importoptions={'vars':[
-                          {'name': 'label_id', 'type': 'int64'},
-                          {'name': 'label', 'type': 'char', 'length': 200}]})
-
-    return conn.CASTable(temp_name)
+    return get_user_defined_labels_table(conn, full_filename)
 
 
 def get_user_defined_labels_table(conn, label_file_name):
