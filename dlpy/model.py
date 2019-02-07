@@ -230,8 +230,11 @@ class Model(Network):
         input_table = self.conn.CASTable(**input_tbl_opts)
 
         if data_specs is None and inputs is None:
-            if '_image_' in input_table.columns.tolist():
-                print('NOTE: Either dataspecs or inputs need to be non-None, therefore inputs=_image_ is used')
+            from dlpy.images import ImageTable
+            if isinstance(input_table, ImageTable):
+                inputs = input_table.running_image_column
+            elif '_image_' in input_table.columns.tolist():
+                print('NOTE: Inputs=_image_ is used')
                 inputs = '_image_'
             else:
                 raise DLPyError('either dataspecs or inputs need to be non-None')
