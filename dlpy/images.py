@@ -303,7 +303,7 @@ class ImageTable(CASTable):
 
         return out
 
-    def show(self, nimages=5, ncol=8, randomize=False, figsize=None):
+    def show(self, nimages=5, ncol=8, randomize=False, figsize=None, image_column='_image_'):
         '''
         Display a grid of images
 
@@ -320,6 +320,11 @@ class ImageTable(CASTable):
             columns in the plots.
         randomize : bool, optional
             Specifies whether to randomly choose the images for display.
+        figsize: int, optional
+            Specifies the size of the fig that contains the image.
+        image_column: str, optional
+            Specifies the name of the column that contains the image data. By default it is '_image_',
+            however, it can be overridden if table has other columns holding image data.
 
         '''
         nimages = min(nimages, len(self))
@@ -332,9 +337,10 @@ class ImageTable(CASTable):
                                                              'random_index='
                                                              'rand("UNIFORM");',
                                          **self.to_table_params()),
+                                     image=image_column,
                                      sortby='random_index', to=nimages)
         else:
-            temp_tbl = self._retrieve('image.fetchimages', to=nimages)
+            temp_tbl = self._retrieve('image.fetchimages', to=nimages, image=image_column)
 
         if nimages > ncol:
             nrow = nimages // ncol + 1
