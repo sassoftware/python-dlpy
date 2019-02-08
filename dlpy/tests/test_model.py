@@ -943,65 +943,28 @@ class TestModel(unittest.TestCase):
         r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=5)
         
         # Test default tick_frequency value of 1
-        tick_frequency = 1
         ax = model1.plot_training_history()
-        self.assertEqual(len(ax), model1.n_epochs)
-        for idx, tick in enumerate(ax):
-            self.assertEqual(tick.get_position()[0], idx + 1)
+        self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs)
 
         # Test even
         tick_frequency = 2
         ax = model1.plot_training_history(tick_frequency=tick_frequency)
-        self.assertEqual(len(ax), model1.n_epochs // tick_frequency + 1)
-        for idx, tick in enumerate(ax):
-            if idx == 0:
-                self.assertEqual(tick.get_position()[0], idx + 1)
-            else:
-                self.assertEqual(tick.get_position()[0], idx * tick_frequency)
+        self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs // tick_frequency + 1)
 
         # Test odd
         tick_frequency = 3
         ax = model1.plot_training_history(tick_frequency=tick_frequency)
-        self.assertEqual(len(ax), model1.n_epochs // tick_frequency + 1)
-        for idx, tick in enumerate(ax):
-            if idx == 0:
-                self.assertEqual(tick.get_position()[0], idx + 1)
-            else:
-                self.assertEqual(tick.get_position()[0], idx * tick_frequency)
+        self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs // tick_frequency + 1)
 
         # Test max
         tick_frequency = model1.n_epochs
         ax = model1.plot_training_history(tick_frequency=tick_frequency)
-        self.assertEqual(len(ax), model1.n_epochs // tick_frequency + 1)
-        for idx, tick in enumerate(ax):
-            if idx == 0:
-                self.assertEqual(tick.get_position()[0], idx + 1)
-            else:
-                self.assertEqual(tick.get_position()[0], idx * tick_frequency)
+        self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs // tick_frequency + 1)
         
         # Test 0 
         tick_frequency = 0
         ax = model1.plot_training_history(tick_frequency=tick_frequency)
-        self.assertEqual(len(ax), model1.n_epochs)
-        for idx, tick in enumerate(ax):
-            self.assertEqual(tick.get_position()[0], idx + 1)
-
-        # Test exception 
-        model2 = Sequential(self.s, model_table='Simple_CNN1')
-        model2.add(InputLayer(3, 224, 224))
-        model2.add(Conv2d(8, 7))
-        model2.add(Pooling(2))
-        model2.add(Conv2d(8, 7))
-        model2.add(Pooling(2))
-        model2.add(Dense(16))
-        model2.add(OutputLayer(act='softmax', n=2))
-
-        with self.assetRaises(DLPyError) as cm:
-            model2.plot_training_history()
-
-        the_exception = cm.exception
-        self.assertEqual(str(the_exception), 
-            'model.fit should be run before calling plot_training_history')
+        self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs)
 
     @classmethod
     def tearDownClass(cls):
