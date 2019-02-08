@@ -548,11 +548,15 @@ class Model(Network):
             else:
                 lo = dict(replace=True, name=layer_out)
 
+        en = True
+        if self.model_type == 'RNN':
+            en = False
+
         if use_best_weights and self.best_weights is not None:
             print('NOTE: Using the weights providing the smallest loss error.')
             res = self.score(table=input_table, model=self.model_table, init_weights=self.best_weights,
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl),
-                             encode_name=True, text_parms=text_parms, layer_out=lo,
+                             encode_name=en, text_parms=text_parms, layer_out=lo,
                              layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
                              top_probs=top_probs, buffer_size=buffer_size)
         else:
@@ -561,7 +565,7 @@ class Model(Network):
             else:
                 res = self.score(table=input_table, model=self.model_table, init_weights=self.model_weights,
                                  copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl),
-                                 encode_name=True, text_parms=text_parms, layer_out=lo,
+                                 encode_name=en, text_parms=text_parms, layer_out=lo,
                                  layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
                                  buffer_size=buffer_size, top_probs=top_probs)
 
@@ -857,10 +861,14 @@ class Model(Network):
         if layer_out is not None:
             lo = dict(replace=True, name=layer_out)
 
+        en = True
+        if self.model_type == 'RNN':
+            en = False
+
         if use_best_weights and self.best_weights is not None:
             print('NOTE: Using the weights providing the smallest loss error.')
             res = self.score(table=input_table, model=self.model_table, init_weights=self.best_weights,
-                             copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=True,
+                             copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
                              n_threads=n_threads)
@@ -868,7 +876,7 @@ class Model(Network):
             return res
         else:
             res = self.score(table=input_table, model=self.model_table, init_weights=self.model_weights,
-                             copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=True,
+                             copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
                              n_threads=n_threads)
