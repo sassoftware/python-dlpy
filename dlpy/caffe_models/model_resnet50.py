@@ -62,8 +62,8 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
 
     if random_crop is None:
         random_crop = 'none'
-    elif random_crop.lower() not in ['none', 'unique']:
-        raise ValueError('random_crop can only be "none" or "unique"')
+    #elif random_crop.lower() not in ['none', 'unique']:
+    #    raise ValueError('random_crop can only be "none" or "unique"')
 
     if offsets is None:
         offsets = [103.939, 116.779, 123.68]
