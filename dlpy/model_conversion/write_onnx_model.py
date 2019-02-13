@@ -336,7 +336,36 @@ def sas_to_onnx(layers, model_table, model_weights):
                 nodes.append(dropout_op)
 
         elif layer.type == 'output':
+            # output layer is a loss layer
             if layer.config['full_connect'] == False:
+                # get output layer activation
+                act = layer.config['act']
+                if act in [None, 'AUTO']:
+                    act = 'SOFTMAX'
+
+                # create graph output
+                if act.lower() == 'identity':
+                    output_name = nodes[-1].output[0]
+                else:
+                    act_input = list(nodes[-1].output)
+                    act_output = [layer.name]
+                    output_name = layer.name
+                    act_op = make_onnx_activation(act, act_input, act_output)
+                    nodes.append(act_op)
+
+                # get output dimensions
+                dim = layer.src_layers[0].output_size
+                if isinstance(dim, int):
+                    output_size = [1, dim]
+                else:
+                    out_w, out_h, out_c = dim
+                    output_size = [1, out_c, out_h, out_w]
+                # add value info to graph output
+                outputs.append(
+                    helper.make_tensor_value_info(name=output_name,
+                                                  elem_type=TensorProto.FLOAT,
+                                                  shape=output_size)
+                )
                 continue
 
             n = int(layer.config['n'])
@@ -544,7 +573,14 @@ def sas_to_onnx(layers, model_table, model_weights):
                 nodes.append(act_op)
 
         elif layer.type == 'detection':
-            continue
+            # get output dimensions
+            out_w, out_h, out_c = layer.src_layers[0].output_size
+            # add value info to graph output
+            outputs.append(
+                helper.make_tensor_value_info(name=nodes[-1].output[0],
+                                              elem_type=TensorProto.FLOAT,
+                                              shape=[1, out_c, out_h, out_w])
+            )
 
         else:
             layer_type = layer.type
