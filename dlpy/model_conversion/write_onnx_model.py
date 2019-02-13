@@ -146,10 +146,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                act_op = helper.make_node(op_type=onnx_act,
-                                          inputs=act_input,
-                                          outputs=act_output)
+                act_op = make_onnx_activation(act, act_input, act_output)
                 nodes.append(act_op)
 
             # dropout op
@@ -248,10 +245,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                act_op = helper.make_node(op_type=onnx_act,
-                                          inputs=act_input,
-                                          outputs=act_output)
+                act_op = make_onnx_activation(act, act_input, act_output)
                 nodes.append(act_op)
 
             # dropout op
@@ -389,10 +383,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                act_op = helper.make_node(op_type=onnx_act,
-                                          inputs=act_input,
-                                          outputs=act_output)
+                act_op = make_onnx_activation(act, act_input, act_output)
                 nodes.append(act_op)
 
             # add output
@@ -488,10 +479,8 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                nodes.append(helper.make_node(op_type=onnx_act,
-                                              inputs=act_input,
-                                              outputs=act_output))
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         elif layer.type == 'residual':
             act = layer.config['act']
@@ -514,10 +503,8 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                nodes.append(helper.make_node(op_type=onnx_act,
-                                              inputs=act_input,
-                                              outputs=act_output))
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         elif layer.type == 'concat':
             act = layer.config['act']
@@ -552,10 +539,8 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                nodes.append(helper.make_node(op_type=onnx_act,
-                                              inputs=act_input,
-                                              outputs=act_output))
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         elif layer.type == 'detection':
             continue
@@ -667,6 +652,20 @@ def sas_to_onnx_activation(activation):
         print('WARNING: Unsupported activation: '
               + str(activation) + '. Using identity.')
         return 'Identity'
+
+
+def make_onnx_activation(activation, act_input, act_output):
+    ''' Make onnx activation op '''
+    onnx_act = sas_to_onnx_activation(activation)
+    if onnx_act == 'LeakyRelu':
+        return helper.make_node(op_type=onnx_act,
+                                inputs=act_input,
+                                outputs=act_output,
+                                alpha=0.1)
+    else:
+        return helper.make_node(op_type=onnx_act,
+                                inputs=act_input,
+                                outputs=act_output)
 
 
 def get_padding(layer):
