@@ -551,7 +551,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity == 0)
 
         model1.save_weights_csv(self.data_dir)
-        weights_path = os.path.join(self.data_dir_local, 'Simple_CNN1_weights.csv')
+        weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
         model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
 
     def test_model21(self):
