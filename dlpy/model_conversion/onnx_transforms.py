@@ -27,6 +27,23 @@ from dlpy.model_conversion.onnx_graph import OnnxNode
 
 
 class OpTypePattern(object):
+    '''
+    A tree pattern of operators to match in an ONNX graph
+
+    Parameters
+    ----------
+    op_type : str
+        Specifies the op type.
+    name : str, optional
+        Specifies a name for the node.
+    outputs : list of :class:`OpTypePattern` objects, optional
+        Specifies the output nodes.
+
+    Returns
+    -------
+    :class:`OpTypePattern` object
+
+    '''
     def __init__(self, op_type, name=None, outputs=None):
         self._op_type = op_type
         self._name = name
@@ -51,10 +68,39 @@ class OpTypePattern(object):
 
     
 class Transformer(object):
+    '''
+    Transforms an OnnxGraph
+
+    Parameters
+    ----------
+    pattern : :class:`OpTypePattern` object, optional
+        The pattern to match.
+
+    Returns
+    -------
+    :class:`Transformer` object
+
+    '''
     def __init__(self, pattern=None):
         self.pattern = pattern
 
     def match(self, node, pattern=None):
+        '''
+        Checks if a subgraph rooted at `node` matches pattern.
+        If there is a match, returns True.  If not, returns False.
+
+        Parameters
+        ----------
+        node : :class:`OnnxNode` object
+            The root node to be checked.
+        pattern : :class:`OpTypePattern` object, optional
+            The pattern to match.  If None, defaults to self.pattern.
+
+        Returns
+        -------
+        boolean
+
+        '''
         if pattern is None:
             if self.pattern is None:
                 raise ValueError('No pattern to match.')
@@ -72,6 +118,23 @@ class Transformer(object):
             return all(ret)
 
     def get_mapping(self, node, pattern=None):
+        '''
+        Given that `node` is the root of a matched subgraph, returns a dict
+        mapping names of the OpTypePatterns to their matched OnnxNodes
+
+        Parameters
+        ----------
+        node : :class:`OnnxNode` object
+            The root node of a matching subgraph.
+        pattern : :class:`OpTypePattern` object, optional
+            The matching pattern.  If None, defaults to self.pattern.
+
+        Returns
+        -------
+        dict
+            key, value of OpTypePattern name and OnnxNode
+
+        '''
         if pattern is None:
             if self.pattern is None:
                 raise ValueError('No pattern to match.')
@@ -90,12 +153,58 @@ class Transformer(object):
         return _mapping(node, pattern, mapping_dict)
 
     def is_eligible(self, graph, node):
+        '''
+        Checks whether subgraph rooted at node is eligible for the transform.
+        Each subclass should implement this.
+
+        Parameters
+        ----------
+        graph : :class:`OnnxGraph` object
+            The graph to be transformed.
+        node : :class:`OnnxNode` object
+            The root node of the subgraph to be transformed.
+
+        Returns
+        -------
+        boolean
+
+        '''
         return True
 
     def run_transform(self, graph, node):
+        '''
+        Define the transform for a single subgraph. Implemented by subclass.
+
+        Parameters
+        ----------
+        graph : :class:`OnnxGraph` object
+            The graph to be transformed.
+        node : :class:`OnnxNode` object
+            The root node of the subgraph to be transformed.
+
+        Returns
+        -------
+        :class:`OnnxGraph` object
+            The transformed graph
+
+        '''
         return graph
     
     def __call__(self, graph):
+        '''
+        Call on `graph` to execute the transform on all eligible subgraphs
+
+        Parameters
+        ----------
+        graph : :class:`OnnxGraph` object
+            The graph to be transformed.
+
+        Returns
+        -------
+        :class:`OnnxGraph` object
+            The transformed graph
+
+        '''
         matches = filter(lambda x: self.match(x), graph.node)
         ops = filter(lambda x: self.is_eligible(graph, x), matches)
         for op in ops:
@@ -105,7 +214,7 @@ class Transformer(object):
 
 
 class ConstToInitializer(Transformer):
-    ''' Remove constant ops '''
+    ''' Remove constant ops and add tensor to initializer'''
     def __init__(self):
         pattern = OpTypePattern('Constant')
         super(ConstToInitializer, self).__init__(pattern)
@@ -121,7 +230,7 @@ class ConstToInitializer(Transformer):
 
 
 class InitReshape(Transformer):
-    ''' Remove reshape ops '''
+    ''' Remove reshape ops and add reshaped tensor to initializer'''
     def __init__(self):
         pattern = OpTypePattern('Reshape')
         super(InitReshape, self).__init__(pattern)
@@ -149,7 +258,7 @@ class InitReshape(Transformer):
 
 
 class InitUnsqueeze(Transformer):
-    ''' Remove unsqueeze ops '''
+    ''' Remove unsqueeze ops and add unsqueezed tensor to initializer'''
     def __init__(self):
         pattern = OpTypePattern('Unsqueeze')
         super(InitUnsqueeze, self).__init__(pattern)
@@ -160,6 +269,7 @@ class InitUnsqueeze(Transformer):
         return False
     
     def _unsqueeze(self, tensor, axes):
+        ''' unsqueeze tensor by specifying axes to be inserted '''
         _shape = list(tensor.shape)
         new_dim = len(tensor.shape) + len(axes)
         unsqueezed_shape = [1] * new_dim 
@@ -192,8 +302,10 @@ class FuseMulAddBN(Transformer):
         mapping = self.get_mapping(node)
         bn, mul, add = mapping['bn'], mapping['mul'], mapping['add']
 
+        # only spatial batchnorm is supported
         if bn.attrs.get('spatial') is not None and bn.attrs['spatial'] != 1:
             return False
+        # mul and add must be initialized by some tensor
         if (mul.input[0] not in graph.tensor_dict and
             mul.input[1] not in graph.tensor_dict):
             return False
@@ -209,10 +321,12 @@ class FuseMulAddBN(Transformer):
         _add_tensor = t.get(add.input[0], t[add.input[1]])
         add_tensor = np.squeeze(_add_tensor)
 
+        # check mul is broadcastable
         if mul_tensor.shape != scale.shape or mul_tensor.shape != bias.shape:
             if mul_tensor.shape != (1,) and mul_tensor.shape != ():
                 return False
         
+        # check add is broadcastable
         if add_tensor.shape != bias.shape:
             if add_tensor.shape != (1,) and add_tensor.shape != ():
                 return False

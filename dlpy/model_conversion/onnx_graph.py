@@ -16,7 +16,7 @@
 #  limitations under the License.
 #
 
-''' Helpers for ONNX graph and node protobufs '''
+''' Classes to hold ONNX graph and node protobufs '''
 
 import onnx
 from onnx import helper, numpy_helper, mapping
@@ -52,8 +52,19 @@ class OnnxNode(object):
     Reimplementation of NodeProto from ONNX, but in a form
     more convenient to work with from Python.
     ''' 
-
     def __init__(self, node):
+        '''
+        Create OnnxNode from NodeProto
+
+        Parameters
+        ----------
+        node : NodeProto
+
+        Returns
+        -------
+        :class:`OnnxNode` object
+
+        '''
         self.name = str(node.name)
         self.op_type = str(node.op_type)
         self.domain = str(node.domain)
@@ -68,6 +79,14 @@ class OnnxNode(object):
         self.tensors = {}
 
     def add_child(self, child):
+        '''
+        Add child node
+
+        Parameters
+        ----------
+        child : :class:`OnnxNode` object
+
+        '''
         if not isinstance(child, (tuple, list)):
             child = [child]
         child = list(filter(lambda x: x not in self.children, child))
@@ -78,6 +97,14 @@ class OnnxNode(object):
                 c.add_parent(self)
 
     def add_parent(self, parent):
+        '''
+        Add OnnxNode parent
+
+        Parameters
+        ----------
+        parent : :class:`OnnxNode` object
+
+        '''
         if not isinstance(parent, (tuple, list)):
             parent = [parent]
         parent = list(filter(lambda x: x not in self.parents, parent))
@@ -91,6 +118,15 @@ class OnnxNode(object):
 class OnnxGraph(object):
     '''
     Helper class for holding ONNX graph
+
+    Parameters
+    ----------
+    graph_def : GraphProto
+
+    Returns
+    -------
+    :class:`OnnxGraph` object
+
     '''
     def __init__(self, graph_def):
         self.name = graph_def.name
@@ -105,66 +141,190 @@ class OnnxGraph(object):
                               if i.name not in self.tensor_dict]
     
     def get_node(self, name):
+        '''
+        Get node by name
+
+        Parameters
+        ----------
+        name : str
+            Name of the node.
+
+        Returns
+        -------
+        :class:`OnnxNode` object if node is in graph, otherwise None
+
+        '''
         for n in self.node:
             if n.name == name:
                 return n
         return None
 
     def get_node_index(self, name):
+        '''
+        Get index of node
+
+        Parameters
+        ----------
+        name : str
+            Name of the node.
+
+        Returns
+        -------
+        int if node is in graph, otherwise None
+
+        '''
         for idx, n in enumerate(self.node):
             if n.name == name:
                 return idx
         return None
     
     def remove_node(self, name):
+        '''
+        Remove node from graph
+
+        Parameters
+        ----------
+        name : str
+            Name of node to be removed.
+
+        '''
         self.node = list(filter(lambda x: x.name != name, self.node))
         self.connect_nodes()
 
     def replace_node(self, name, node):
+        '''
+        Replace node in graph
+
+        Parameters
+        ----------
+        name : str
+            Name of node to be replaced.
+        node : :class:`OnnxNode` object
+            The replacement node.
+
+        '''
         idx = self.get_node_index(name)
         if idx is not None:
             self.node[idx] = node
         self.connect_nodes()
     
     def insert_node(self, name, node):
+        '''
+        Insert node in graph after named node
+
+        Parameters
+        ----------
+        name : str
+            Name of the node to insert `node` after.
+        node : :class:`OnnxNode` object
+            The node to insert.
+
+        '''
         idx = self.get_node_index(name)
         if idx is not None:
             self.node.insert(idx+1, node)
         self.connect_nodes()
     
     def get_input(self, name):
+        '''
+        Get graph input ValueInfoProto
+
+        Parameters
+        ----------
+        name : str
+            Name of the ValueInfoProto.
+
+        Returns
+        -------
+        :class:`ValueInfoProto` object, or None if not present.
+
+        '''
         for i in self.input:
             if i.name == name:
                 return i
         return None
 
     def add_input(self, value_info):
+        '''
+        Add new graph input ValueInfoProto
+
+        Parameters
+        ----------
+        value_info : :class:`ValueInfoProto` object
+            ValueInfoProto to add to graph input.
+
+        '''
         if not isinstance(value_info, (list, tuple)):
             value_info = [value_info] 
         self.input.extend(value_info)
 
     def replace_input(self, name, value_info):
+        '''
+        Replace a graph input ValueInfoProto
+
+        Parameters
+        ----------
+        name : str
+            Name of ValueInfoProto to be replaced.
+        value_info : :class:`ValueInfoProto` object
+            The replacement ValueInfoProto.
+
+        '''
         for idx, proto in enumerate(self.input):
             if proto.name == name:
                 self.input[idx] = value_info
 
     def get_initializer(self, name):
+        '''
+        Get TensorProto from initializer
+
+        Parameters
+        ----------
+        name : str
+            Name of the TensorProto.
+
+        Returns
+        -------
+        :class:`TensorProto` object, or None if not present.
+
+        '''
         for i in self.initializer:
             if i.name == name:
                 return i
         return None
 
     def add_initializer(self, init):
+        '''
+        Add TensorProto to initializer
+
+        Parameters
+        ----------
+        init : :class:`TensorProto` object
+            TensorProto to add to initializer.
+
+        '''
         if not isinstance(init, (list, tuple)):
             init = [init]
         self.initializer.extend(init)
 
     def replace_initializer(self, name, init):
+        '''
+        Replace TensorProto in initializer
+
+        Parameters
+        ----------
+        name : str
+            Name of TensorProto to be replaced.
+        init : :class:`TensorProto` object
+            The replacement TensorProto.
+
+        '''
         for idx, proto in enumerate(self.initializer):
             if proto.name == name:
                 self.initializer[idx] = init
 
     def clean_init(self):
+        ''' Remove inputs, initializers which are not part of graph '''
         all_inputs = [i for n in self.node for i in n.input]
         self.input = list(filter(lambda x: x.name in all_inputs,
                                  self.input))
@@ -174,6 +334,7 @@ class OnnxGraph(object):
                                 if k in all_inputs}
 
     def connect_nodes(self):
+        ''' Add parents and children for each node '''
         # mapping from input to nodes
         input_to_node = {}
         for node in self.node:
@@ -193,6 +354,7 @@ class OnnxGraph(object):
                 node.add_child(input_to_node[output_])
     
     def make_onnx(self):
+        ''' Generate ONNX model from current graph '''
         self.clean_init()
         nodes = []
         for node in self.node:
@@ -232,7 +394,9 @@ class OnnxGraph(object):
 
     @classmethod
     def from_onnx(cls, graph):
+        ''' Create a OnnxGraph object from ONNX GraphProto '''
         graph_ = cls(graph)
+        # generate names for nodes
         for idx, node in enumerate(graph_.node):
             if not node.name:
                 node.name = '{}_{}'.format(node.op_type, idx)
