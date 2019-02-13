@@ -72,14 +72,15 @@ def sas_to_onnx(layers, model_table, model_weights):
             W = int(layer.config['width'])
             C = int(layer.config['n_channels'])
             if layer.config['offsets'] is None:
-                offsets = [0., 0., 0.]
+                offsets = [0.] * C
             else:
                 offsets = [float(i) for i in layer.config['offsets']]
             if layer.config['scale'] is None:
                 scale = 1.
             else:
                 scale = float(layer.config['scale'])
-            if offsets != [0., 0., 0.] or scale != 1.:
+
+            if offsets != [0.] * C or scale != 1.:
                 graph_input = layer.name + '_'
                 scale_op = helper.make_node(op_type='ImageScaler',
                                             inputs=[graph_input],
