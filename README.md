@@ -133,6 +133,8 @@ Finally, add the output layer:
   * [Object detection using TinyYOLOv2](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747750001)
   * [Import and export deep learning models with ONNX](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001743770001)
   * [Text classification and text generation using RNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001746471001)
+  * [Time series forecasting using RNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747359001)
+
 
 ### Contributing
 Have something cool to share? SAS gladly accepts pull requests on GitHub! See the [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) for details.
