@@ -757,21 +757,29 @@ class Network(Layer):
             # run action with dataSpec option
             with sw.option_context(print_messages = False):
                 rt = self._retrieve_('deeplearn.dlimportmodelweights', 
-                                    message_level='NONE',
                                     model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     dataSpecs=data_spec,
                                     formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                     );
                                 
-            # if error, no dataspec support
+            # if error, may not support dataspec
             if rt.severity > 1:
-                rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                    modelWeights=dict(replace=True,
-                                                      name=self.model_name + '_weights'),
-                                    formatType=format_type, weightFilePath=file_name,
-                                    caslib=cas_lib_name, 
-                                    )
+            
+                # check for error containing "dataSpecs"
+                data_spec_missing = False
+                for msg in rt.messages:
+                    if ('ERROR' in msg) and ('dataSpecs' in msg):
+                        data_spec_missing = True
+            
+                if data_spec_missing:
+                    with sw.option_context(print_messages = False):                
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True,
+                                                              name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name,
+                                            caslib=cas_lib_name, 
+                                            )
             
                 # handle error or create necessary attributes
                 if rt.severity > 1:
@@ -828,7 +836,6 @@ class Network(Layer):
             # run action with dataSpec option
             with sw.option_context(print_messages = False):
                 rt = self._retrieve_('deeplearn.dlimportmodelweights', 
-                                    message_level='NONE',
                                     model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     dataSpecs=data_spec,
@@ -836,13 +843,22 @@ class Network(Layer):
                                     labelTable=label_table,
                                     );
             
-            # if error, no dataspec support
+            # if error, may not support dataspec
             if rt.severity > 1:
-                rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                    labelTable=label_table,
-                                    );
+            
+                # check for error containing "dataSpecs"
+                data_spec_missing = False
+                for msg in rt.messages:
+                    if ('ERROR' in msg) and ('dataSpecs' in msg):
+                        data_spec_missing = True
+            
+                if data_spec_missing:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            labelTable=label_table,
+                                            );
                                     
                 # handle error or create necessary attributes with Python function
                 if rt.severity > 1:
