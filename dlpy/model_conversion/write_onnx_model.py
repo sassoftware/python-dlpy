@@ -582,6 +582,45 @@ def sas_to_onnx(layers, model_table, model_weights):
                                               shape=[1, out_c, out_h, out_w])
             )
 
+        elif layer.type == 'reshape':
+            act = layer.config['act']
+            if act in [None, 'AUTO']:
+                act = 'IDENTITY'
+
+            C = int(layer.config.get('depth'))
+            W = int(layer.config.get('width'))
+            H = int(layer.config.get('height'))
+
+            reshape_input = [l.name for l in layer.src_layers]
+
+            if act.lower() != 'identity':
+                reshape_output = [layer.name + '_reshape_out']
+                act_input = reshape_output
+                act_output = [layer.name]
+            else:
+                reshape_output = [layer.name]
+
+            shape = np.array([-1, C, H, W], dtype=np.int64)
+            shape_name = layer.name + '_shape'
+            shape_init = numpy_helper.from_array(shape,
+                                                 name=shape_name)
+            initializer.append(shape_init)
+            # add value info to inputs
+            inputs.append(
+                helper.make_tensor_value_info(name=shape_name,
+                                              elem_type=TensorProto.INT64,
+                                              shape=[4]))
+
+            nodes.append(
+                helper.make_node(op_type='Reshape',
+                                 inputs=reshape_input+[shape_name],
+                                 outputs=reshape_output))
+
+            # activation op
+            if act.lower() != 'identity':
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
+
         else:
             layer_type = layer.type
             raise OnnxWriteError(str(layer_type) + ' is not supported.')
