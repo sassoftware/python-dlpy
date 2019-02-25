@@ -1186,7 +1186,7 @@ class Network(Layer):
         DLPy supports ONNX version >= 1.3.0, and Opset version 8.
 
         For ONNX format, currently supported layers are convo, pool,
-        fc, batchnorm, residual, concat, and detection.
+        fc, batchnorm, residual, concat, reshape, and detection.
 
         If dropout is specified in the model, train the model using
         inverted dropout, which can be specified in :class:`Optimizer`.
