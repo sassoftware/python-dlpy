@@ -115,7 +115,7 @@ class Network(Layer):
             if start in self.layers:
                 return
             # if the node is an input layer, add it and return
-            if start in inputs:
+            if start in inputs and start.type != 'model':
                 self.layers.append(start)
                 return
             for layer in start.src_layers:
@@ -128,10 +128,24 @@ class Network(Layer):
                     temp_model = deepcopy(layer)
                     for model_layer in temp_model.layers:
                         model_layer.depth += layer.depth
-                    start.src_layers = temp_model.outputs
-                    for i in temp_model.inputs:
-                        i.src_layers = temp_model.src_layers
-                    self.layers += temp_model.layers
+                    # start.src_layers = temp_model.outputs
+
+                    start.src_layers[start.src_layers.index(layer)] = temp_model.outputs[temp_model.hook]
+                    temp_model.hook += 1
+                    # if the model is end
+                    if not temp_model.src_layers:
+                        self.layers += temp_model.layers
+                    else:
+                        self.layers += [layer for layer in temp_model.layers if layer not in temp_model.inputs]
+                        for temp_model_input, src in zip(temp_model.inputs, temp_model.src_layers):
+                            layers_after_input = []
+                            for temp_layer in temp_model.layers:
+                                if temp_layer.type != 'input':
+                                    if temp_model_input in temp_layer.src_layers:
+                                        layers_after_input.append(temp_layer)
+                            for layer_after_input in layers_after_input:
+                                layer_after_input.src_layers[layer_after_input.src_layers.index(temp_model_input)] = src
+
                 if start.type != 'model' and all(i in self.layers for i in start.src_layers):
                     self.layers.append(start)
                 # set the layer's depth
@@ -141,17 +155,19 @@ class Network(Layer):
 
         if not isinstance(inputs, collections.Iterable):
             inputs = [inputs]
-        # if any(x.__class__.__name__ != 'InputLayer' for x in inputs):
-        #     raise DLPyError('Input layers should be input layer type.')
+        if any(x.__class__.__name__ not in  ['InputLayer', 'Model'] for x in inputs):
+            raise DLPyError('Input layers should be input layer type.')
         if not isinstance(outputs, collections.Iterable):
             outputs = [outputs]
 
         self.inputs = inputs
         self.outputs = outputs
+        self.hook = 0
 
         for layer in outputs:
             build_map(layer)
             layer.depth = max([i.depth for i in layer.src_layers]) + 1
+        self.hook = 0
 
         return
 
@@ -792,21 +808,29 @@ class Network(Layer):
             # run action with dataSpec option
             with sw.option_context(print_messages = False):
                 rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                    message_level='NONE',
                                     model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     dataSpecs=data_spec,
                                     formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                     );
 
-            # if error, no dataspec support
+            # if error, may not support dataspec
             if rt.severity > 1:
-                rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                    modelWeights=dict(replace=True,
-                                                      name=self.model_name + '_weights'),
-                                    formatType=format_type, weightFilePath=file_name,
-                                    caslib=cas_lib_name,
-                                    )
+
+                # check for error containing "dataSpecs"
+                data_spec_missing = False
+                for msg in rt.messages:
+                    if ('ERROR' in msg) and ('dataSpecs' in msg):
+                        data_spec_missing = True
+
+                if data_spec_missing:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True,
+                                                              name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name,
+                                            caslib=cas_lib_name,
+                                            )
 
                 # handle error or create necessary attributes
                 if rt.severity > 1:
@@ -863,7 +887,6 @@ class Network(Layer):
             # run action with dataSpec option
             with sw.option_context(print_messages = False):
                 rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                    message_level='NONE',
                                     model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     dataSpecs=data_spec,
@@ -871,13 +894,22 @@ class Network(Layer):
                                     labelTable=label_table,
                                     );
 
-            # if error, no dataspec support
+            # if error, may not support dataspec
             if rt.severity > 1:
-                rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                    labelTable=label_table,
-                                    );
+
+                # check for error containing "dataSpecs"
+                data_spec_missing = False
+                for msg in rt.messages:
+                    if ('ERROR' in msg) and ('dataSpecs' in msg):
+                        data_spec_missing = True
+
+                if data_spec_missing:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            labelTable=label_table,
+                                            );
 
                 # handle error or create necessary attributes with Python function
                 if rt.severity > 1:
@@ -1221,7 +1253,7 @@ class Network(Layer):
         DLPy supports ONNX version >= 1.3.0, and Opset version 8.
 
         For ONNX format, currently supported layers are convo, pool,
-        fc, batchnorm, residual, concat, and detection.
+        fc, batchnorm, residual, concat, reshape, and detection.
 
         If dropout is specified in the model, train the model using
         inverted dropout, which can be specified in :class:`Optimizer`.

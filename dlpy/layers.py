@@ -134,7 +134,7 @@ class Layer(object):
     def __call__(self, inputs, **kwargs):
         layer_type = self.__class__.__name__
         if isinstance(inputs, list):
-            if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'Dense']:
+            if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'Dense', 'Model']:
                 raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
@@ -154,6 +154,9 @@ class Layer(object):
 
     def __lt__(self, other):
         return self.depth < other.depth
+
+    def __str__(self):
+        return self.name
 
     @classmethod
     def count_instances(cls):

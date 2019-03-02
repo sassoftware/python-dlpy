@@ -127,6 +127,14 @@ Finally, add the output layer:
 - DLPy API documentation [sassoftware.github.io/python-dlpy](https://sassoftware.github.io/python-dlpy/).
 - [SAS SWAT for Python](http://github.com/sassoftware/python-swat/)
 - [SAS ESPPy](https://github.com/sassoftware/python-esppy)
+- A series of Videos on DLPy examples:
+  * [Introduction to the series](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001746946001)
+  * [Image classification using CNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747449001)
+  * [Object detection using TinyYOLOv2](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747750001)
+  * [Import and export deep learning models with ONNX](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001743770001)
+  * [Text classification and text generation using RNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001746471001)
+  * [Time series forecasting using RNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747359001)
+
 
 ### Contributing
 Have something cool to share? SAS gladly accepts pull requests on GitHub! See the [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) for details.
@@ -137,7 +145,3 @@ You may obtain a copy of the License at [LICENSE.txt](https://github.com/sassoft
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. 
-
-
-
-Copyright SAS Institute.

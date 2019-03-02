@@ -29,7 +29,7 @@ import swat.utils.testing as tm
 from dlpy.model import Model
 from dlpy.sequential import Sequential
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
-                         Keypoints, BN, Res, Concat)
+                         Keypoints, BN, Res, Concat, Reshape)
 from dlpy.utils import caslibify
 from dlpy.applications import Tiny_YoloV2
 import unittest
@@ -551,7 +551,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity == 0)
 
         model1.save_weights_csv(self.data_dir)
-        weights_path = os.path.join(self.data_dir_local, 'Simple_CNN1_weights.csv')
+        weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
         model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
 
     def test_model21(self):
@@ -619,6 +619,41 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity == 0)
 
         model1.deploy(self.data_dir, output_format='onnx')
+
+    def test_model22_1(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+        from onnx import numpy_helper
+        import numpy as np
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(Reshape(height=448, width=448, depth=2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir_local, output_format='onnx')
+
+        model_path = os.path.join(self.data_dir_local, 'Simple_CNN1.onnx')
+        m = onnx.load(model_path)
+        self.assertEqual(m.graph.node[1].op_type, 'Reshape')
+        init = numpy_helper.to_array(m.graph.initializer[1])
+        self.assertTrue(np.array_equal(init, [ -1,  2, 448, 448]))
 
     def test_model23(self):
         try:

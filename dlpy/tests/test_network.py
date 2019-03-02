@@ -199,18 +199,108 @@ class TestNetwork(tm.TestCase):
             model = Model(self.s, outputs=output1)
             model.compile()
 
-    def test_sub_network(self):
+    def test_submodel_as_input_network(self):
         inputs1 = InputLayer(1, 53, 53, scale=1.0 / 255, name='InputLayer_1')
         # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
-        dense1 = Dense(10)
+        dense1 = Dense(10)(inputs1)
         dense2 = Dense(12)(dense1)
         dense3 = Dense(n=128)(dense2)
-        model_dense = Model(self.s, inputs=dense1, outputs= dense3)
+        model_dense = Model(self.s, inputs=inputs1, outputs= dense3)
 
-        node1 = model_dense(inputs1)
-        concat1 = Dense(20, src_layers = [node1])
+        concat1 = Dense(20, src_layers = [model_dense])
         output1 = OutputLayer(n=10, name='OutputLayer_1', src_layers=concat1)
+        model = Model(self.s, inputs=[model_dense], outputs=output1)
+        model.compile()
+        model.print_summary()
+        self.assertTrue(model.count_params() == 32516)
+
+    def test_submodel_as_inputs_network(self):
+        inputs1 = InputLayer(1, 53, 53, scale=1.0 / 255, name='InputLayer_1')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense1 = Dense(10, name = 'd1')(inputs1)
+        dense2 = Dense(12, name = 'd2')(dense1)
+        dense3 = Dense(n=128, name = 'd3')(dense2)
+        model_dense = Model(self.s, inputs=inputs1, outputs= dense3)
+
+        inputs2 = InputLayer(1, 53, 53, scale = 1.0 / 255, name = 'InputLayer_2')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense4 = Dense(10, name = 'd4')(inputs2)
+        dense5 = Dense(12, name = 'd5')(dense4)
+        dense6 = Dense(n = 128, name = 'd6')(dense5)
+        model_dense2 = Model(self.s, inputs = inputs2, outputs = dense6)
+
+        concat1 = Dense(20, name = 'd7', src_layers = [model_dense, model_dense2])
+        output1 = OutputLayer(n=10, name='OutputLayer_1', src_layers=concat1)
+        model = Model(self.s, inputs=[model_dense, model_dense2], outputs=output1)
+        model.compile()
+        model.print_summary()
+        self.assertTrue(model.count_params() == 62262)
+
+    def test_submodel_in_middle_network(self):
+        inputs1 = InputLayer(1, 53, 53, scale=1.0 / 255, name='InputLayer_1')
+        inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense1 = Dense(10, name = 'd1')(inputs2)
+        dense2 = Dense(12, name = 'd2')(dense1)
+        dense3 = Dense(n=128, name = 'd3')(dense2)
+        model_dense = Model(self.s, inputs=inputs2, outputs= dense3)
+
+        fore = model_dense(inputs1)
+
+        concat1 = Dense(20, name = 'd7')(fore)
+        output1 = OutputLayer(n = 10, name = 'OutputLayer_1', src_layers = concat1)
+
         model = Model(self.s, inputs=[inputs1], outputs=output1)
+        model.compile()
+        model.print_summary()
+        self.assertTrue(model.count_params() == 32516)
+
+    def test_submodel_multiple_inputs_network(self):
+        inputs1 = InputLayer(1, 53, 53, scale=1.0 / 255, name='InputLayer_1')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense1 = Dense(10, name = 'd1')(inputs1)
+        dense2 = Dense(12, name = 'd2')(dense1)
+        dense3 = Dense(n=128, name = 'd3')(dense2)
+        # model_dense = Model(self.s, inputs=inputs1, outputs= dense3)
+
+        inputs2 = InputLayer(1, 53, 53, scale = 1.0 / 255, name = 'InputLayer_2')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense4 = Dense(10, name = 'd4')(inputs2)
+        dense5 = Dense(12, name = 'd5')(dense4)
+        dense6 = Dense(n = 128, name = 'd6')(dense5)
+        dense7 = Dense(n =190, name = 'cat1')([dense3, dense6])
+        model_dense = Model(self.s, inputs = [inputs1, inputs2], outputs = [dense7])
+
+        dense7 = Dense(20, name = 'd7', src_layers = [model_dense])
+        output1 = OutputLayer(n=10, name='OutputLayer_1', src_layers=dense7)
+        model = Model(self.s, inputs=[model_dense], outputs=output1)
+        model.compile()
+        model.print_summary()
+        # self.assertTrue(model.count_params() == 62262)
+
+    def test_submodel_multiple_inputs_in_middle_network(self):
+        inputs3 = InputLayer(1, 53, 53, scale = 1.0 / 255, name = 'InputLayer_3')
+        inputs4 = InputLayer(1, 53, 53, scale = 1.0 / 255, name = 'InputLayer_4')
+
+        inputs1 = InputLayer(1, 53, 53, scale=1.0 / 255, name='InputLayer_1')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense1 = Dense(10, name = 'd1')(inputs1)
+        dense2 = Dense(12, name = 'd2')(dense1)
+        dense3 = Dense(n=128, name = 'd3')(dense2)
+        # model_dense = Model(self.s, inputs=inputs1, outputs= dense3)
+
+        inputs2 = InputLayer(1, 53, 53, scale = 1.0 / 255, name = 'InputLayer_2')
+        # inputs2 = InputLayer(1, 28, 28, scale = 1.0 / 255, name = 'InputLayer_2')
+        dense4 = Dense(10, name = 'd4')(inputs2)
+        dense5 = Dense(12, name = 'd5')(dense4)
+        dense6 = Dense(n = 128, name = 'd6')(dense5)
+        dense7 = Dense(n =190, name = 'cat1')([dense3, dense6])
+
+        model_dense = Model(self.s, inputs = [inputs1, inputs2], outputs = [dense7])
+        sub_model = model_dense([inputs3, inputs4])
+
+        dense7 = Dense(20, name = 'd7', src_layers = [sub_model])
+        output1 = OutputLayer(n=10, name='OutputLayer_1', src_layers=dense7)
+        model = Model(self.s, inputs=[inputs3, inputs4], outputs=output1)
         model.compile()
         model.print_summary()
 

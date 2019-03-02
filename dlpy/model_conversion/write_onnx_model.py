@@ -72,14 +72,15 @@ def sas_to_onnx(layers, model_table, model_weights):
             W = int(layer.config['width'])
             C = int(layer.config['n_channels'])
             if layer.config['offsets'] is None:
-                offsets = [0., 0., 0.]
+                offsets = [0.] * C
             else:
                 offsets = [float(i) for i in layer.config['offsets']]
             if layer.config['scale'] is None:
                 scale = 1.
             else:
                 scale = float(layer.config['scale'])
-            if offsets != [0., 0., 0.] or scale != 1.:
+
+            if offsets != [0.] * C or scale != 1.:
                 graph_input = layer.name + '_'
                 scale_op = helper.make_node(op_type='ImageScaler',
                                             inputs=[graph_input],
@@ -146,10 +147,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                act_op = helper.make_node(op_type=onnx_act,
-                                          inputs=act_input,
-                                          outputs=act_output)
+                act_op = make_onnx_activation(act, act_input, act_output)
                 nodes.append(act_op)
 
             # dropout op
@@ -248,10 +246,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                act_op = helper.make_node(op_type=onnx_act,
-                                          inputs=act_input,
-                                          outputs=act_output)
+                act_op = make_onnx_activation(act, act_input, act_output)
                 nodes.append(act_op)
 
             # dropout op
@@ -341,7 +336,36 @@ def sas_to_onnx(layers, model_table, model_weights):
                 nodes.append(dropout_op)
 
         elif layer.type == 'output':
+            # output layer is a loss layer
             if layer.config['full_connect'] == False:
+                # get output layer activation
+                act = layer.config['act']
+                if act in [None, 'AUTO']:
+                    act = 'SOFTMAX'
+
+                # create graph output
+                if act.lower() == 'identity':
+                    output_name = nodes[-1].output[0]
+                else:
+                    act_input = list(nodes[-1].output)
+                    act_output = [layer.name]
+                    output_name = layer.name
+                    act_op = make_onnx_activation(act, act_input, act_output)
+                    nodes.append(act_op)
+
+                # get output dimensions
+                dim = layer.src_layers[0].output_size
+                if isinstance(dim, int):
+                    output_size = [1, dim]
+                else:
+                    out_w, out_h, out_c = dim
+                    output_size = [1, out_c, out_h, out_w]
+                # add value info to graph output
+                outputs.append(
+                    helper.make_tensor_value_info(name=output_name,
+                                                  elem_type=TensorProto.FLOAT,
+                                                  shape=output_size)
+                )
                 continue
 
             n = int(layer.config['n'])
@@ -389,10 +413,7 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                act_op = helper.make_node(op_type=onnx_act,
-                                          inputs=act_input,
-                                          outputs=act_output)
+                act_op = make_onnx_activation(act, act_input, act_output)
                 nodes.append(act_op)
 
             # add output
@@ -488,10 +509,8 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                nodes.append(helper.make_node(op_type=onnx_act,
-                                              inputs=act_input,
-                                              outputs=act_output))
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         elif layer.type == 'residual':
             act = layer.config['act']
@@ -514,10 +533,8 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                nodes.append(helper.make_node(op_type=onnx_act,
-                                              inputs=act_input,
-                                              outputs=act_output))
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         elif layer.type == 'concat':
             act = layer.config['act']
@@ -552,13 +569,57 @@ def sas_to_onnx(layers, model_table, model_weights):
 
             # activation op
             if act.lower() != 'identity':
-                onnx_act = sas_to_onnx_activation(act)
-                nodes.append(helper.make_node(op_type=onnx_act,
-                                              inputs=act_input,
-                                              outputs=act_output))
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         elif layer.type == 'detection':
-            continue
+            # get output dimensions
+            out_w, out_h, out_c = layer.src_layers[0].output_size
+            # add value info to graph output
+            outputs.append(
+                helper.make_tensor_value_info(name=nodes[-1].output[0],
+                                              elem_type=TensorProto.FLOAT,
+                                              shape=[1, out_c, out_h, out_w])
+            )
+
+        elif layer.type == 'reshape':
+            act = layer.config['act']
+            if act in [None, 'AUTO']:
+                act = 'IDENTITY'
+
+            C = int(layer.config.get('depth'))
+            W = int(layer.config.get('width'))
+            H = int(layer.config.get('height'))
+
+            reshape_input = [l.name for l in layer.src_layers]
+
+            if act.lower() != 'identity':
+                reshape_output = [layer.name + '_reshape_out']
+                act_input = reshape_output
+                act_output = [layer.name]
+            else:
+                reshape_output = [layer.name]
+
+            shape = np.array([-1, C, H, W], dtype=np.int64)
+            shape_name = layer.name + '_shape'
+            shape_init = numpy_helper.from_array(shape,
+                                                 name=shape_name)
+            initializer.append(shape_init)
+            # add value info to inputs
+            inputs.append(
+                helper.make_tensor_value_info(name=shape_name,
+                                              elem_type=TensorProto.INT64,
+                                              shape=[4]))
+
+            nodes.append(
+                helper.make_node(op_type='Reshape',
+                                 inputs=reshape_input+[shape_name],
+                                 outputs=reshape_output))
+
+            # activation op
+            if act.lower() != 'identity':
+                act_op = make_onnx_activation(act, act_input, act_output)
+                nodes.append(act_op)
 
         else:
             layer_type = layer.type
@@ -667,6 +728,20 @@ def sas_to_onnx_activation(activation):
         print('WARNING: Unsupported activation: '
               + str(activation) + '. Using identity.')
         return 'Identity'
+
+
+def make_onnx_activation(activation, act_input, act_output):
+    ''' Make onnx activation op '''
+    onnx_act = sas_to_onnx_activation(activation)
+    if onnx_act == 'LeakyRelu':
+        return helper.make_node(op_type=onnx_act,
+                                inputs=act_input,
+                                outputs=act_output,
+                                alpha=0.1)
+    else:
+        return helper.make_node(op_type=onnx_act,
+                                inputs=act_input,
+                                outputs=act_output)
 
 
 def get_padding(layer):

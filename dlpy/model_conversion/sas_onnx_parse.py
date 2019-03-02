@@ -28,7 +28,10 @@ from onnx.shape_inference import infer_shapes
 
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
                          BN, Concat, Res)
-
+from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+from dlpy.model_conversion.onnx_transforms import (ConstToInitializer,
+                                                   InitReshape, InitUnsqueeze,
+                                                   FuseMulAddBN)
 
 # The supported ONNX ops that can be parsed by this module
 _onnx_ops = ['Conv', 'MaxPool', 'AveragePool', 'GlobalAveragePool',
@@ -81,7 +84,19 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
         List of Layers 
 
     '''
-    
+    # run transforms
+    graph_ = OnnxGraph.from_onnx(model.graph)
+    transforms = [
+        ConstToInitializer(),
+        InitReshape(),
+        InitUnsqueeze(),
+        FuseMulAddBN()
+    ]
+
+    for transform in transforms:
+        transform(graph_)
+    model = graph_.make_onnx()
+
     # verify model ops are supported 
     for n in model.graph.node:
         if n.op_type not in _onnx_ops + list(_act_map.keys()):
@@ -94,11 +109,6 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
 
     if model_name is None:
         model_name = graph_def.name
-
-    # create name if node doesn't have a name
-    for idx, node in enumerate(graph_def.node):
-        if not node.name:
-            node.name = '{}_{}'.format(node.op_type, idx)
 
     # nodes that correspond to sas deeplearn layers 
     sas_computation_nodes = onnx_filter_sas_layers(graph_def)
@@ -113,20 +123,6 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
         initialized = []
 
     tensor_dict = dict(init_tensors)
-
-    # check reshape ops following initialized tensor
-    # if present, reshape and add to tensor_dict
-    for node in graph_def.node:
-        if node.op_type != 'Reshape':
-            continue
-        # data tensor, shape tensor
-        data_name = node.input[0]
-        shape_name = node.input[1]
-        out_name = node.output[0]
-        if data_name in initialized and shape_name in initialized:
-            reshape_tensor = tensor_dict[shape_name].flatten().tolist()
-            data_tensor = tensor_dict[data_name]
-            tensor_dict[out_name] = data_tensor.reshape(tuple(reshape_tensor))
 
     # determine SAS input layers from uninitialized input ValueInfo
     uninitialized = [value_info for value_info in graph_def.input
@@ -187,7 +183,7 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
                               + layer.name + ' layer')
 
     # write weights hdf5
-    write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)  
+    hdf5_out = write_weights_hdf5(dlpy_layers, graph_def, tensor_dict, model_name)
 
     # add output layer
     # if output_layer is not specified, output layer defaults to SOFTMAX
@@ -202,10 +198,17 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
             dlpy_layers.append(out_layer)
         # if previous layer is not fc, default to loss layer only
         else:
+            n = dlpy_layers[-1].output_size[-1]
             out_layer = OutputLayer(name='output',
-                                    act='SOFTMAX',
+                                    act='IDENTITY',
+                                    n=n,
+                                    include_bias=False,
                                     src_layers=[dlpy_layers[-1]])
             dlpy_layers.append(out_layer)
+            identity = np.identity(n).astype(np.float32)
+            f = h5py.File(hdf5_out)
+            f['output/output/kernel:0'] = identity
+            f.close()
     else:
         # connect output_layer to previous layer
         output_layer.src_layers = [dlpy_layers[-1]]
@@ -1217,4 +1220,5 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
     f_out.close()
     print('NOTE: Successfully written weights file as '
           + temp_HDF5)
+    return temp_HDF5
 
