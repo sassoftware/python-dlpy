@@ -23,6 +23,7 @@ import os
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
+import dlpy.model
 import collections
 import pandas as pd
 import swat as sw
@@ -106,7 +107,13 @@ class Network(Layer):
         self.num_params = None
 
     def _map_graph_network(self, inputs, outputs):
-        """propagate all of layers"""
+        '''
+        Propagate all of layers
+
+        inputs : iter-of-Tensors
+        outputs : iter-of-Tensors
+
+        '''
         def build_map(start):
             if start.name is None:
                 start.count_instances()
@@ -115,59 +122,34 @@ class Network(Layer):
             if start in self.layers:
                 return
             # if the node is an input layer, add it and return
-            if start in inputs and start.type != 'model':
+            if start in self.input_layers and start.type != 'model':
                 self.layers.append(start)
                 return
-            for layer in start.src_layers:
-                build_map(layer)
-                # if all of src_layer of layer is in layers list, add it in layers list
-                layer.depth = 0 if layer in self.inputs \
-                    else max([i.depth for i in layer.src_layers]) + 1
-                if layer.type == 'model':
-                    # recalculate depth of layers in a model
-                    temp_model = deepcopy(layer)
-                    for model_layer in temp_model.layers:
-                        model_layer.depth += layer.depth
-                    # start.src_layers = temp_model.outputs
+            for src_layer in start.src_layers:
+                build_map(src_layer)
+                # if all of src_layer of layer is input layer type, add it in layers list
+                src_layer.depth = 0 if src_layer.type == 'input' \
+                    else max([i.depth for i in src_layer.src_layers]) + 1
 
-                    start.src_layers[start.src_layers.index(layer)] = temp_model.outputs[temp_model.hook]
-                    temp_model.hook += 1
-                    # if the model is end
-                    if not temp_model.src_layers:
-                        self.layers += temp_model.layers
-                    else:
-                        self.layers += [layer for layer in temp_model.layers if layer not in temp_model.inputs]
-                        for temp_model_input, src in zip(temp_model.inputs, temp_model.src_layers):
-                            layers_after_input = []
-                            for temp_layer in temp_model.layers:
-                                if temp_layer.type != 'input':
-                                    if temp_model_input in temp_layer.src_layers:
-                                        layers_after_input.append(temp_layer)
-                            for layer_after_input in layers_after_input:
-                                layer_after_input.src_layers[layer_after_input.src_layers.index(temp_model_input)] = src
-
-                if start.type != 'model' and all(i in self.layers for i in start.src_layers):
+                if all(i in self.layers for i in start.src_layers) and start not in self.layers:
                     self.layers.append(start)
-                # set the layer's depth
-                # layer.depth = 0 if layer in self.inputs \
-                #     else max([i.depth for i in layer.src_layers]) + 1
             return
 
         if not isinstance(inputs, collections.Iterable):
             inputs = [inputs]
-        if any(x.__class__.__name__ not in  ['InputLayer', 'Model'] for x in inputs):
-            raise DLPyError('Input layers should be input layer type.')
+        if any(x.__class__.__name__ != 'Tensor' for x in inputs):
+            raise DLPyError('All inputs should be tensors.')
         if not isinstance(outputs, collections.Iterable):
             outputs = [outputs]
 
         self.inputs = inputs
         self.outputs = outputs
-        self.hook = 0
+        self.output_layers = [output._op for output in outputs]
+        self.input_layers = [input._op for input in inputs]
 
-        for layer in outputs:
+        for layer in self.output_layers:
             build_map(layer)
             layer.depth = max([i.depth for i in layer.src_layers]) + 1
-        self.hook = 0
 
         return
 
@@ -176,7 +158,7 @@ class Network(Layer):
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
 
-        if not all(x.can_be_last_layer for x in self.outputs):
+        if not all(x.can_be_last_layer for x in self.output_layers):
             raise DLPyError('Output layers can only be {}' \
                             .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
 
@@ -200,6 +182,51 @@ class Network(Layer):
 
             self.num_params += num_weights + num_bias
         print('NOTE: Model compiled successfully.')
+
+    def to_functional_model(self, stop_layers=None):
+        '''
+        Convert a Sequential into a functional model and return the functional model.
+
+        stop_layers : iter-of-Layer or Layer
+            stop_layers refers to the layers that stop traverse the graph.
+            All of layers followed by the stop_layers are removed from the functional model.
+            The argument is useful when you want to get a subset of network.
+            For example:
+                Given a ResNet50 model, only generate the feature extraction network of ResNet50.
+                feature_extractor = resnet50_model.to_functional_model(stop_layers=resnet50_model.layers[-1])
+
+        Returns
+        -------
+        :class:`Model`
+
+        '''
+        stop_layers = stop_layers or []
+        if not isinstance(stop_layers, collections.Iterable):
+            stop_layers = [stop_layers]
+        input_tensors = []
+        output_tensors = []
+        for idx, layer in enumerate(self.layers):
+            layer_type = layer.__class__.__name__
+            if layer_type == 'InputLayer':
+                input_tensors.append(layer.tensor)
+                continue
+            # find layer's outbound layer
+            for outbound_layer in self.layers[idx:]:
+                if outbound_layer.__class__.__name__ == 'InputLayer':
+                    continue
+                # if all source layers of outbound_layer are visited(all in self.layers[:idx])
+                if all(src_layer in self.layers[:idx] for src_layer in outbound_layer.src_layers):
+                    # skip if stop_layers are visited and add its src_layers's output tensors
+                    if outbound_layer in stop_layers:
+                        for src_layer in outbound_layer.src_layers:
+                            output_tensors.append(src_layer.tensor)
+                        continue
+                    # initialize tensor of the outbound_layer
+                    outbound_layer([l.tensor for l in outbound_layer.src_layers])
+                    if outbound_layer.can_be_last_layer:
+                        output_tensors.append(outbound_layer.tensor)
+
+        return dlpy.model.Model(self.conn, input_tensors, output_tensors)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
