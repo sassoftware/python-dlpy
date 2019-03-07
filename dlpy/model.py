@@ -43,6 +43,8 @@ class Model(Network):
     model_explain_table = None
     valid_res_tbl = None
     model_ever_trained = False
+    train_tbl = None
+    valid_tbl = None
     score_message_level = 'note'
     
 
@@ -905,9 +907,9 @@ class Model(Network):
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res    
         
-    def forecast(self, data=None, horizon=1, layer_out=None, layers=None, gpu=None, buffer_size=10,
-                mini_batch_buf_size=None, use_best_weights=False, n_threads=None, 
-                casout=None):
+    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None, 
+                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None, 
+                 use_best_weights=False, n_threads=None, casout=None):
         """
         Make forecasts based on deep learning models trained on `TimeseriesTable`.
 
@@ -920,29 +922,34 @@ class Model(Network):
         
         Parameters
         ----------
-        data : string or :class:`CASTable`, optional
-            Specifies the input data. If `data=None`, the model cannot have 
+        test_table : string or :class:`CASTable`, optional
+            Specifies the test table. If `test_table=None`, the model cannot have 
             additional static covariates or predictor timeseries, and can only 
             be a autoregressive model. In this case, the forecast extends the 
             timeseries from the last timestamp found in the training/validation set. 
             If the model contains additional static covariates or predictor 
             timeseries (that are available for predicting the target timeseries), 
-            the input data has to be provided, and the forecast starts from the 
-            first timestamp in the input data. If the model is autoregressive, and 
-            the input data columns do not include all the required preceeding 
+            the test table has to be provided, and the forecast starts from the 
+            first timestamp in the test data. If the model is autoregressive, and 
+            the test data columns do not include all the required preceeding 
             time points of the target series (the lagged target variables), 
             the forecast will be extended from the last time timestamp in 
             training/validation set and only use the static covariates or 
-            predictor timeseries information from the input data if they are 
+            predictor timeseries information from the test data if they are 
             available for the corresponding time points. 
             Default : `None`
         horizon : int, optional.
-            Specifies the forecasting horizon. If `horizon=1` and input data 
-            is provided it will make one-step-ahead forecasts for all timestamps 
-            in the input data.(given the input data has all the columns required 
+            Specifies the forecasting horizon. If `horizon=1` and test data 
+            is provided, it will make one-step-ahead forecasts for all timestamps 
+            in the test data.(given the test data has all the columns required 
             to make prediction.) Otherwise, it will only make one forecasted series 
             per by-group, with the length specified by the `horizon` parameter. 
             Default : 1 
+        train_table : :class:`TimeseriesTable`, optional.
+            If model has been fitted with a TimeseriesTable, this argument is ignored. 
+            Otherwise, this argument is required, and reference to the TimeseriesTable 
+            used for model training, as it contains information regarding when to 
+            extend the forecast from, and sequence length etc. 
         layer_out : string, optional
             Specifies the settings for an output table that includes
             layer output values. By default, all layers are included.
@@ -991,17 +998,28 @@ class Model(Network):
         :class:`CASTable`
 
         """
-        
-        if not isinstance(self.train_tbl, TimeseriesTable):
-            raise RuntimeError('The model is not fitted with TimeseriesTable,'+
-                               'consider preprocessing data with TimeseriesTable and refitting' + 
-                               ' or using predict function directly')
             
         if horizon > 1:
             self.score_message_level = 'error' #prevent multiple notes in multistep forecast
+
+         
+        if self.train_tbl is None:
+            self.train_tbl = train_table
             
-        if data is None:
-            print('NOTE: Input data is None, extending forecast from training/validation data')
+        if not isinstance(self.train_tbl, TimeseriesTable):
+            raise RuntimeError('If the model is not fitted with a TimeseriesTable '+
+                               '(such as being imported from other sources), '+
+                               'please consider use the train_table argument ' + 
+                               'to pass a reference to the TimeseriesTable used for training, '+
+                               'since model.forecast requires information '+
+                               'including the last timestamp to extend from and subsequence length etc, '+
+                               'which is stored in preprocessed TimeseriesTable. '+
+                               'If this information is not available, consider using model.predict '+
+                               'for non-timeseries prediction.')
+            
+        if test_table is None:
+            print('NOTE: test_table is None, extending forecast from training/validation data')
+                
             if isinstance(self.valid_tbl, str):
                 self.valid_tbl = self.conn.CASTable(self.valid_tbl)
             
@@ -1047,13 +1065,13 @@ class Model(Network):
                 else:
                     output_tbl = _combine_table(output_tbl, cur_results, casout=output_tbl)
         else:
-            if isinstance(data, str):
-                data = self.conn.CASTable(data)
+            if isinstance(test_table, str):
+                test_table = self.conn.CASTable(test_table)
                 
-            if set(self.train_tbl.autoregressive_sequence).issubset(data.columns.tolist()):
+            if set(self.train_tbl.autoregressive_sequence).issubset(test_table.columns.tolist()):
                 
                 if horizon == 1:
-                    self.predict(data, layer_out=layer_out, layers=layers, 
+                    self.predict(test_table, layer_out=layer_out, layers=layers, 
                              gpu=gpu, buffer_size=buffer_size,
                              mini_batch_buf_size=mini_batch_buf_size, 
                              use_best_weights=use_best_weights, 
@@ -1067,7 +1085,7 @@ class Model(Network):
                     # Use _combine_table here to serve as a renaming
                     output_tbl = _combine_table(output_tbl,  casout=casout)                
                 else:                    
-                    cur_input = _get_first_obs(data, self.train_tbl.timeid, 
+                    cur_input = _get_first_obs(test_table, self.train_tbl.timeid, 
                              groupby=self.train_tbl.groupby_var)
                     
                     for i in range(horizon):
@@ -1078,7 +1096,7 @@ class Model(Network):
                                                             timeid_interval=self.train_tbl.acc_interval, 
                                                             autoregressive_series=autoregressive_series, 
                                                             sequence_opt=self.train_tbl.sequence_opt, 
-                                                            covar_tbl = data, 
+                                                            covar_tbl = test_table, 
                                                             groupby=self.train_tbl.groupby_var)
                         
                         self.predict(cur_input, layer_out=layer_out, layers=layers, 
@@ -1122,7 +1140,7 @@ class Model(Network):
                                                     timeid_interval=self.train_tbl.acc_interval, 
                                                     autoregressive_series=autoregressive_series, 
                                                     sequence_opt=self.train_tbl.sequence_opt, 
-                                                    covar_tbl = data, 
+                                                    covar_tbl = test_table, 
                                                     groupby=self.train_tbl.groupby_var)
 
                     if i == 0:
