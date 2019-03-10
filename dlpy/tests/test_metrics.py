@@ -27,6 +27,7 @@ import swat
 import numpy.random as nr
 import numpy as np
 import pandas as pd
+import itertools
 import unittest
 from dlpy.metrics import *
 from dlpy.utils import random_name, get_server_path_sep
@@ -43,9 +44,22 @@ def _random_weighted_select(prob_matrix, item=None, axis=1):
         return item[select_idx]
     else:
         return select_idx
+    
+
+def _create_id_matrix(nrow, ncol, seed=1234):
+    
+    uniq_per_col = np.ceil(np.power(nrow, 1/ncol)).astype(np.int64)
+    
+    id_matrix = np.array([x for x in itertools.product(range(uniq_per_col), repeat=ncol)])
+    
+    np.random.seed(seed=seed)
+    if id_matrix.shape[0]>nrow:
+        id_matrix = id_matrix[np.random.choice(id_matrix.shape[0], nrow, replace=False), :]
+        
+    return id_matrix
 
 
-def _create_classification_table(nclass, nrow, alpha=None, seed=1234,
+def _create_classification_table(nclass, nrow, idvars=None, alpha=None, seed=1234,
                                  true_label='target', pred_label='p_target'):
     
     if alpha is None:
@@ -58,10 +72,19 @@ def _create_classification_table(nclass, nrow, alpha=None, seed=1234,
     classification_matrix = np.hstack((prob_matrix, target, p_target))
     colnames = ['p_' + str(i) for i in range(nclass)] + [true_label, pred_label]
     
+    if idvars is not None:
+        if not isinstance(idvars, list):
+            idvars = [idvars]
+        ncol = len(idvars)
+        id_matrix = _create_id_matrix(nrow, ncol)
+        classification_matrix = np.hstack((classification_matrix, id_matrix))
+        colnames = colnames + idvars
+        
+    
     return pd.DataFrame(classification_matrix, columns=colnames)
 
 
-def _create_regression_table(nrow, seed=1234, true_label='target', pred_label='p_target'):
+def _create_regression_table(nrow, idvars=None, seed=1234, true_label='target', pred_label='p_target'):
     
     nr.seed(seed)
     mean_value = nr.normal(loc=10, scale=2, size=(nrow, 1))
@@ -69,8 +92,17 @@ def _create_regression_table(nrow, seed=1234, true_label='target', pred_label='p
     true_value = mean_value + error
     regression_matrix = np.hstack((true_value, mean_value))
     regression_matrix = np.abs(regression_matrix)
+    colnames = [true_label, pred_label]
+    
+    if idvars is not None:
+        if not isinstance(idvars, list):
+            idvars = [idvars]
+        ncol = len(idvars)
+        id_matrix = _create_id_matrix(nrow, ncol)
+        regression_matrix = np.hstack((regression_matrix, id_matrix))
+        colnames = colnames + idvars
 
-    return pd.DataFrame(regression_matrix, columns=[true_label, pred_label])
+    return pd.DataFrame(regression_matrix, columns=colnames)
 
 
 class TestMetrics(unittest.TestCase):
@@ -93,24 +125,31 @@ class TestMetrics(unittest.TestCase):
                 self.data_dir = self.data_dir[:-1]
             self.data_dir += self.server_sep
         
-        pandas_class_table1 = _create_classification_table(5, 500, seed=1234)
-        pandas_class_table2 = _create_classification_table(5, 500, seed=34)
-        pandas_class_table3 = _create_classification_table(2, 500, seed=1234)
-        pandas_class_table4 = _create_classification_table(2, 500, seed=34)
-        pandas_regression_table1 = _create_regression_table(500, seed=12)
-        pandas_regression_table2 = _create_regression_table(500, seed=34)
+        self.local_class1 = _create_classification_table(5, 500, seed=1234, idvars=['id1', 'id2'])
+        self.local_class2 = _create_classification_table(5, 500, seed=34, idvars=['id1', 'id2'])
+        self.local_class3 = _create_classification_table(2, 500, seed=1234, idvars=['id1', 'id2'])
+        self.local_class4 = _create_classification_table(2, 500, seed=34, idvars=['id1', 'id2'])
+        self.local_class1.sort_values(by=['id1', 'id2'], inplace=True)
+        self.local_class2.sort_values(by=['id1', 'id2'], inplace=True)
+        self.local_class3.sort_values(by=['id1', 'id2'], inplace=True)
+        self.local_class4.sort_values(by=['id1', 'id2'], inplace=True)
         
-        self.class_table1 = self.conn.upload_frame(pandas_class_table1, 
+        self.local_reg1 = _create_regression_table(500, seed=12, idvars='id1')
+        self.local_reg2 = _create_regression_table(500, seed=34, idvars='id1')
+        self.local_reg1.sort_values(by='id1', inplace=True)
+        self.local_reg2.sort_values(by='id1', inplace=True)
+        
+        self.class_table1 = self.conn.upload_frame(self.local_class1, 
                                                    casout=dict(name=random_name(name='class1_'), replace=True))
-        self.class_table2 = self.conn.upload_frame(pandas_class_table2, 
+        self.class_table2 = self.conn.upload_frame(self.local_class2, 
                                                    casout=dict(name=random_name(name='class2_'), replace=True))
-        self.class_table3 = self.conn.upload_frame(pandas_class_table3, 
+        self.class_table3 = self.conn.upload_frame(self.local_class3, 
                                                    casout=dict(name=random_name(name='class3_'), replace=True))
-        self.class_table4 = self.conn.upload_frame(pandas_class_table4, 
+        self.class_table4 = self.conn.upload_frame(self.local_class4, 
                                                    casout=dict(name=random_name(name='class4_'), replace=True))
-        self.reg_table1 = self.conn.upload_frame(pandas_regression_table1,
+        self.reg_table1 = self.conn.upload_frame(self.local_reg1,
                                                  casout=dict(name=random_name(name='reg1_'), replace=True))
-        self.reg_table2 = self.conn.upload_frame(pandas_regression_table2,
+        self.reg_table2 = self.conn.upload_frame(self.local_reg2,
                                                  casout=dict(name=random_name(name='reg2_'), replace=True))
 
     def tearDown(self):
@@ -129,9 +168,8 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_class1 = self.class_table1.to_frame()
-        skas_score1 = skas(local_class1.target, local_class1.p_target, normalize=False)
-        skas_score1_norm = skas(local_class1.target, local_class1.p_target, normalize=True)
+        skas_score1 = skas(self.local_class1.target, self.local_class1.p_target, normalize=False)
+        skas_score1_norm = skas(self.local_class1.target, self.local_class1.p_target, normalize=True)
         
         dlpyas_score1 = accuracy_score('target', 'p_target', self.class_table1, normalize=False)
         dlpyas_score1_norm = accuracy_score('target', 'p_target', self.class_table1, normalize=True)
@@ -139,19 +177,19 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(skas_score1, dlpyas_score1)
         self.assertEqual(skas_score1_norm, dlpyas_score1_norm)
         
-        local_class2 = self.class_table2.to_frame()
-        skas_score2 = skas(local_class2.target, local_class1.p_target, normalize=False)
-        skas_score2_norm = skas(local_class2.target, local_class1.p_target, normalize=True)
+        skas_score2 = skas(self.local_class2.target, self.local_class1.p_target, normalize=False)
+        skas_score2_norm = skas(self.local_class2.target, self.local_class1.p_target, normalize=True)
         
-        dlpyas_score2 = accuracy_score(self.class_table2.target, self.class_table1.p_target, normalize=False)
-        dlpyas_score2_norm = accuracy_score(self.class_table2.target, self.class_table1.p_target, normalize=True)
+        dlpyas_score2 = accuracy_score(self.class_table2.target, self.class_table1.p_target, 
+                                       normalize=False, idvars=['id1', 'id2'])
+        dlpyas_score2_norm = accuracy_score(self.class_table2.target, self.class_table1.p_target,
+                                            normalize=True, idvars=['id1', 'id2'])
         
         self.assertEqual(skas_score2, dlpyas_score2)
         self.assertEqual(skas_score2_norm, dlpyas_score2_norm)
         
-        local_class3 = self.class_table3.to_frame()
-        skas_score3 = skas(local_class3.target, local_class3.p_target, normalize=False)
-        skas_score3_norm = skas(local_class3.target, local_class3.p_target, normalize=True)
+        skas_score3 = skas(self.local_class3.target, self.local_class3.p_target, normalize=False)
+        skas_score3_norm = skas(self.local_class3.target, self.local_class3.p_target, normalize=True)
         
         dlpyas_score3 = accuracy_score(self.class_table3.target, self.class_table3.p_target, normalize=False)
         dlpyas_score3_norm = accuracy_score(self.class_table3.target, self.class_table3.p_target, normalize=True)
@@ -166,9 +204,9 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_class1 = self.class_table1.to_frame()
-        skcm_matrix1 = skcm(local_class1.target, local_class1.p_target)
-        skcm_matrix2 = skcm(local_class1.target, local_class1.p_target, labels=[1, 3, 4])
+
+        skcm_matrix1 = skcm(self.local_class1.target, self.local_class1.p_target)
+        skcm_matrix2 = skcm(self.local_class1.target, self.local_class1.p_target, labels=[1, 3, 4])
         
         dlpycm_matrix1 = confusion_matrix(self.class_table1.target, self.class_table1.p_target)
         dlpycm_matrix2 = confusion_matrix(self.class_table1.target, self.class_table1.p_target, labels=[1, 3, 4])
@@ -176,12 +214,13 @@ class TestMetrics(unittest.TestCase):
         self.assertTrue(np.array_equal(skcm_matrix1, dlpycm_matrix1.values))
         self.assertTrue(np.array_equal(skcm_matrix2, dlpycm_matrix2.values))
         
-        local_class2 = self.class_table2.to_frame()
-        skcm_matrix3 = skcm(local_class1.target, local_class2.p_target)
-        skcm_matrix4 = skcm(local_class1.target, local_class2.p_target, labels=[1, 3, 4])
+        skcm_matrix3 = skcm(self.local_class1.target, self.local_class2.p_target)
+        skcm_matrix4 = skcm(self.local_class1.target, self.local_class2.p_target, labels=[1, 3, 4])
         
-        dlpycm_matrix3 = confusion_matrix(self.class_table1.target, self.class_table2.p_target)
-        dlpycm_matrix4 = confusion_matrix(self.class_table1.target, self.class_table2.p_target, labels=[1, 3, 4])
+        dlpycm_matrix3 = confusion_matrix(self.class_table1.target, self.class_table2.p_target,
+                                          idvars=['id1', 'id2'])
+        dlpycm_matrix4 = confusion_matrix(self.class_table1.target, self.class_table2.p_target, 
+                                          labels=[1, 3, 4], idvars=['id1', 'id2'])
         
         self.assertTrue(np.array_equal(skcm_matrix3, dlpycm_matrix3.values))
         self.assertTrue(np.array_equal(skcm_matrix4, dlpycm_matrix4.values))
@@ -198,13 +237,14 @@ class TestMetrics(unittest.TestCase):
         ax3 = plot_roc('target', 'p_0', pos_label=0, castable=self.class_table3, 
                        fontsize_spec={'xlabel':20})
         ax4 = plot_roc(self.class_table1.target, self.class_table1.p_3, pos_label=3)
-        ax5 = plot_roc(self.class_table1.target, self.class_table2.p_3, pos_label=3)
+        ax5 = plot_roc(self.class_table1.target, self.class_table2.p_3, 
+                       pos_label=3, idvars=['id1', 'id2'])
         
     def test_plot_precision_recall(self):        
         ax1 = plot_precision_recall('target', 'p_1', pos_label=1, castable=self.class_table3)
         ax2 = plot_precision_recall('target', 'p_0', pos_label=0, castable=self.class_table3)
         ax3 = plot_precision_recall(self.class_table3.target, self.class_table4.p_0, pos_label=0, 
-                                    fontsize_spec={'xlabel':20})
+                                    fontsize_spec={'xlabel':20}, idvars=['id1', 'id2'])
         ax4 = plot_precision_recall('target', 'p_3', pos_label=3, castable=self.class_table1)
         
     def test_roc_auc_score(self):
@@ -214,14 +254,13 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_class3 = self.class_table3.to_frame()
-        skauc_score1 = skroc(local_class3.target, local_class3.p_1)       
+        skauc_score1 = skroc(self.local_class3.target, self.local_class3.p_1)       
         dlpyauc_score1 = roc_auc_score(self.class_table3.target, self.class_table3.p_1, pos_label=1)        
         self.assertAlmostEqual(skauc_score1, dlpyauc_score1, places=4)
         
-        local_class4 = self.class_table4.to_frame()
-        skauc_score2 = skroc(local_class3.target, local_class4.p_1)       
-        dlpyauc_score2 = roc_auc_score(self.class_table3.target, self.class_table4.p_1, pos_label=1)        
+        skauc_score2 = skroc(self.local_class3.target, self.local_class4.p_1)       
+        dlpyauc_score2 = roc_auc_score(self.class_table3.target, self.class_table4.p_1, pos_label=1, 
+                                       idvars=['id1', 'id2'])        
         self.assertAlmostEqual(skauc_score2, dlpyauc_score2, places=4)
         
     def test_average_precision_score(self):
@@ -231,12 +270,18 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_class3 = self.class_table3.to_frame()
-        skaps_score1 = skaps(local_class3.target, local_class3.p_1, pos_label=1)       
-        dlpyaps_score1 = average_precision_score('target', 'p_1', pos_label=1, castable=self.class_table3) 
+        skaps_score1 = skaps(self.local_class3.target, self.local_class3.p_1, pos_label=1)       
+        dlpyaps_score1 = average_precision_score('target', 'p_1', pos_label=1, castable=self.class_table3, 
+                                                 cutstep=0.0001) 
         dlpyaps_score1_inter = average_precision_score(self.class_table3.target,self.class_table3.p_1,
                                                        pos_label=1, interpolate=True)
         self.assertAlmostEqual(skaps_score1, dlpyaps_score1, places=4)
+        
+        skaps_score2 = skaps(self.local_class3.target, self.local_class4.p_1, pos_label=1)       
+        dlpyaps_score2 = average_precision_score(self.class_table3.target,self.class_table4.p_1, pos_label=1, 
+                                                 cutstep=0.0001, idvars=['id1', 'id2']) 
+        
+        self.assertAlmostEqual(skaps_score2, dlpyaps_score2, places=4)        
         
     def test_f1_score(self):
 
@@ -245,13 +290,18 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_class3 = self.class_table3.to_frame()
-        skf1_score1 = skf1(local_class3.target, local_class3.p_target, pos_label=1)    
+        skf1_score1 = skf1(self.local_class3.target, self.local_class3.p_target, pos_label=1)    
         dlpyf1_score1 = f1_score(self.class_table3.target, self.class_table3.p_target, pos_label=1)
-        dlpyf1_score2 = f1_score('target', 'p_target', pos_label=1, castable=self.class_table3)
+        dlpyf1_score1_1 = f1_score('target', 'p_target', pos_label=1, castable=self.class_table3)
         
         self.assertAlmostEqual(skf1_score1, dlpyf1_score1)
-        self.assertAlmostEqual(dlpyf1_score1, dlpyf1_score2)
+        self.assertAlmostEqual(dlpyf1_score1, dlpyf1_score1_1)
+        
+        skf1_score2 = skf1(self.local_class3.target, self.local_class4.p_target, pos_label=1)    
+        dlpyf1_score2 = f1_score(self.class_table3.target, self.class_table4.p_target, pos_label=1,
+                                 idvars=['id1', 'id2'])
+        
+        self.assertAlmostEqual(skf1_score2, dlpyf1_score2)
         
     def test_explained_variance_score(self):
 
@@ -260,15 +310,14 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
         
-        local_reg1 = self.reg_table1.to_frame()
-        skevs_score1 = skevs(local_reg1.target, local_reg1.p_target)    
+        skevs_score1 = skevs(self.local_reg1.target, self.local_reg1.p_target)    
         dlpyevs_score1 = explained_variance_score('target', 'p_target', castable=self.reg_table1)
         
         self.assertAlmostEqual(skevs_score1, dlpyevs_score1)  
         
-        local_reg2 = self.reg_table2.to_frame()
-        skevs_score2 = skevs(local_reg1.target, local_reg2.p_target)    
-        dlpyevs_score2 = explained_variance_score(self.reg_table1.target, self.reg_table2.p_target)
+        skevs_score2 = skevs(self.local_reg1.target, self.local_reg2.p_target)    
+        dlpyevs_score2 = explained_variance_score(self.reg_table1.target, self.reg_table2.p_target, 
+                                                  idvars='id1')
         
         self.assertAlmostEqual(skevs_score2, dlpyevs_score2)
         
@@ -279,15 +328,14 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
         
-        local_reg1 = self.reg_table1.to_frame()
-        skmae_score1 = skmae(local_reg1.target, local_reg1.p_target)    
+        skmae_score1 = skmae(self.local_reg1.target, self.local_reg1.p_target)    
         dlpymae_score1 = mean_absolute_error('target', 'p_target', castable=self.reg_table1)
         
         self.assertAlmostEqual(skmae_score1, dlpymae_score1)
         
-        local_reg2 = self.reg_table2.to_frame()
-        skmae_score2 = skmae(local_reg1.target, local_reg2.p_target)    
-        dlpymae_score2 = mean_absolute_error(self.reg_table1.target, self.reg_table2.p_target)
+        skmae_score2 = skmae(self.local_reg1.target, self.local_reg2.p_target)    
+        dlpymae_score2 = mean_absolute_error(self.reg_table1.target, self.reg_table2.p_target,
+                                             idvars='id1')
         
         self.assertAlmostEqual(skmae_score2, dlpymae_score2)
         
@@ -298,15 +346,14 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
         
-        local_reg1 = self.reg_table1.to_frame()
-        skmse_score1 = skmse(local_reg1.target, local_reg1.p_target)    
+        skmse_score1 = skmse(self.local_reg1.target, self.local_reg1.p_target)    
         dlpymse_score1 = mean_squared_error('target', 'p_target', castable=self.reg_table1)
         
         self.assertAlmostEqual(skmse_score1, dlpymse_score1)
         
-        local_reg2 = self.reg_table2.to_frame()
-        skmse_score2 = skmse(local_reg1.target, local_reg2.p_target)    
-        dlpymse_score2 = mean_squared_error(self.reg_table1.target,self.reg_table2.p_target)
+        skmse_score2 = skmse(self.local_reg1.target, self.local_reg2.p_target)    
+        dlpymse_score2 = mean_squared_error(self.reg_table1.target,self.reg_table2.p_target,
+                                            idvars='id1')
         
         self.assertAlmostEqual(skmse_score2, dlpymse_score2)
         
@@ -317,15 +364,15 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_reg1 = self.reg_table1.to_frame()
-        skmsle_score1 = skmsle(local_reg1.target, local_reg1.p_target)    
+        skmsle_score1 = skmsle(self.local_reg1.target, self.local_reg1.p_target)    
         dlpymsle_score1 = mean_squared_log_error('target', 'p_target', castable=self.reg_table1)
         
         self.assertAlmostEqual(skmsle_score1, dlpymsle_score1)
         
-        local_reg2 = self.reg_table2.to_frame()
-        skmsle_score2 = skmsle(local_reg1.target, local_reg2.p_target)    
-        dlpymsle_score2 = mean_squared_log_error(self.reg_table1.target, self.reg_table2.p_target)
+        skmsle_score2 = skmsle(self.local_reg1.target, self.local_reg2.p_target)    
+        dlpymsle_score2 = mean_squared_log_error(self.reg_table1.target, self.reg_table2.p_target,
+                                                 idvars='id1')
+        dlpymsle_score2_1 = mean_squared_log_error(self.reg_table1.target, self.reg_table2.p_target)
         
         self.assertAlmostEqual(skmsle_score2, dlpymsle_score2)
         
@@ -336,14 +383,14 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-        local_reg1 = self.reg_table1.to_frame()
-        skr2sc_score1 = skr2sc(local_reg1.target, local_reg1.p_target)    
+        skr2sc_score1 = skr2sc(self.local_reg1.target, self.local_reg1.p_target)    
         dlpyr2sc_score1 = r2_score('target', 'p_target', castable=self.reg_table1)
         
         self.assertAlmostEqual(skr2sc_score1, dlpyr2sc_score1)
         
-        local_reg2 = self.reg_table2.to_frame()
-        skr2sc_score2 = skr2sc(local_reg1.target, local_reg2.p_target)    
-        dlpyr2sc_score2 = r2_score(self.reg_table1.target, self.reg_table2.p_target)
+        skr2sc_score2 = skr2sc(self.local_reg1.target, self.local_reg2.p_target)    
+        dlpyr2sc_score2 = r2_score(self.reg_table1.target, self.reg_table2.p_target,
+                                   idvars='id1')
+        dlpyr2sc_score2_1 = r2_score(self.reg_table1.target, self.reg_table2.p_target)
         
         self.assertAlmostEqual(skr2sc_score2, dlpyr2sc_score2)
