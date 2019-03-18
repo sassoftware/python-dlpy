@@ -1002,7 +1002,6 @@ class Model(Network):
         if horizon > 1:
             self.score_message_level = 'error' #prevent multiple notes in multistep forecast
 
-         
         if self.train_tbl is None:
             self.train_tbl = train_table
             
