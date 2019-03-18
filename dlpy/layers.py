@@ -109,7 +109,7 @@ class Tensor(object):
     @property
     def shape(self):
         # TODO: check shape
-        NotImplemented
+        raise NotImplementedError
 
 
 class Node(object):
