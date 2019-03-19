@@ -737,8 +737,6 @@ class Model(Network):
         nrof_classes = len(classes)
 
         classes_not_detected = [x for x in classes_gt if x not in classes]
-        if len([x for x in classes if x not in classes_gt]) > 0:
-            raise DLPyError('Detection data contains classes that are not in ground truth')
 
         if not isinstance(iou_thresholds, collections.Iterable):
             iou_thresholds = [iou_thresholds]
@@ -746,6 +744,9 @@ class Model(Network):
         for iou_threshold in iou_thresholds:
             results_iou = []
             for i, cls in enumerate(classes):
+                if cls not in classes_gt:
+                    print('Predictions contain the class, {}, that is not in ground truth'.format(cls))
+                    continue
                 det_bb_cls_list = []
                 [det_bb_cls_list.append(bb) for bb in det_bb_list if bb.class_type == cls]  # all of detections of the class
                 gt_bb_cls_list = []

@@ -23,9 +23,11 @@ import os
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
+import dlpy.model
 import collections
 import pandas as pd
 import swat as sw
+from copy import deepcopy
 
 
 class Network(Layer):
@@ -53,6 +55,14 @@ class Network(Layer):
     :class:`Model`
 
     '''
+
+    type = 'model'
+    type_label = 'Model'
+    type_desc = 'Model'
+    can_be_last_layer = True
+    number_of_instances = 0
+    src_layers = []
+    name = 'model' + str(number_of_instances)
 
     def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
         if model_table is not None and any(i is not None for i in [inputs, outputs]):
@@ -97,7 +107,13 @@ class Network(Layer):
         self.num_params = None
 
     def _map_graph_network(self, inputs, outputs):
-        """propagate all of layers"""
+        '''
+        Propagate all of layers
+
+        inputs : iter-of-Tensors
+        outputs : iter-of-Tensors
+
+        '''
         def build_map(start):
             if start.name is None:
                 start.count_instances()
@@ -106,29 +122,32 @@ class Network(Layer):
             if start in self.layers:
                 return
             # if the node is an input layer, add it and return
-            if start in inputs:
+            if start in self.input_layers and start.type != 'model':
                 self.layers.append(start)
                 return
-            for layer in start.src_layers:
-                build_map(layer)
-                # if all of src_layer of layer is in layers list, add it in layers list
-                if all(i in self.layers for i in start.src_layers):
+            for src_layer in start.src_layers:
+                build_map(src_layer)
+                # if all of src_layer of layer is input layer type, add it in layers list
+                src_layer.depth = 0 if src_layer.type == 'input' \
+                    else max([i.depth for i in src_layer.src_layers]) + 1
+
+                if all(i in self.layers for i in start.src_layers) and start not in self.layers:
                     self.layers.append(start)
-                # set the layer's depth
-                layer.depth = 0 if str(layer.__class__.__name__) == 'InputLayer' \
-                    else max([i.depth for i in layer.src_layers]) + 1
             return
 
         if not isinstance(inputs, collections.Iterable):
             inputs = [inputs]
-        if any(x.__class__.__name__ != 'InputLayer' for x in inputs):
-            raise DLPyError('Input layers should be input layer type.')
+        if any(x.__class__.__name__ != 'Tensor' for x in inputs):
+            raise DLPyError('All inputs should be tensors.')
         if not isinstance(outputs, collections.Iterable):
             outputs = [outputs]
-        if not all(x.can_be_last_layer for x in outputs):
-            raise DLPyError('Output layers can only be {}'\
-                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
-        for layer in outputs:
+
+        self.inputs = inputs
+        self.outputs = outputs
+        self.output_layers = [output._op for output in outputs]
+        self.input_layers = [input._op for input in inputs]
+
+        for layer in self.output_layers:
             build_map(layer)
             layer.depth = max([i.depth for i in layer.src_layers]) + 1
 
@@ -138,6 +157,10 @@ class Network(Layer):
         ''' parse the network nodes and process CAS Action '''
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
+
+        if not all(x.can_be_last_layer for x in self.output_layers):
+            raise DLPyError('Output layers can only be {}' \
+                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
 
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
@@ -159,6 +182,61 @@ class Network(Layer):
 
             self.num_params += num_weights + num_bias
         print('NOTE: Model compiled successfully.')
+
+    def to_functional_model(self, stop_layers=None):
+        '''
+        Convert a Sequential into a functional model and return the functional model.
+
+        stop_layers : iter-of-Layer or Layer
+            stop_layers refers to the layers that stop traverse the graph.
+            All of layers followed by the stop_layers are removed from the functional model.
+            The argument is useful when you want to get a subset of network.
+            For example:
+                Given a ResNet50 model, only generate the feature extraction network of ResNet50.
+                feature_extractor = resnet50_model.to_functional_model(stop_layers=resnet50_model.layers[-1])
+
+        Returns
+        -------
+        :class:`Model`
+
+        '''
+        stop_layers = stop_layers or []
+        if not isinstance(stop_layers, collections.Iterable):
+            stop_layers = [stop_layers]
+        input_tensors = []
+        output_tensors = []
+        for idx, layer in enumerate(self.layers):
+            layer_type = layer.__class__.__name__
+            if layer_type == 'InputLayer':
+                input_tensors.append(layer.tensor)
+                continue
+            # find layer's outbound layer
+            for outbound_layer in self.layers[idx:]:
+                if outbound_layer.__class__.__name__ == 'InputLayer':
+                    continue
+                # if all source layers of outbound_layer are visited(all in self.layers[:idx])
+                if all(src_layer in self.layers[:idx] for src_layer in outbound_layer.src_layers):
+                    # skip if stop_layers are visited and add its src_layers's output tensors
+                    if outbound_layer in stop_layers:
+                        for src_layer in outbound_layer.src_layers:
+                            output_tensors.append(src_layer.tensor)
+                        continue
+                    # initialize tensor of the outbound_layer
+                    outbound_layer([l.tensor for l in outbound_layer.src_layers])
+                    if outbound_layer.can_be_last_layer:
+                        output_tensors.append(outbound_layer.tensor)
+
+        return dlpy.model.Model(self.conn, input_tensors, output_tensors)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'conn':
+                continue
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         ''' Call a CAS action '''
@@ -664,7 +742,7 @@ class Network(Layer):
         data_spec: list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
         label_file_name: string, optional
-            Fully qualified path to CSV file containing user-defined 
+            Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
 
         Notes
@@ -683,7 +761,7 @@ class Network(Layer):
         elif file_name.lower().endswith('kerasmodel.h5'):
             self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
         elif file_name.lower().endswith('onnxmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)            
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
         else:
             raise DLPyError('Weights file must be one of the follow types:\n'
                             'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
@@ -701,9 +779,9 @@ class Network(Layer):
         labels: bool
             Specifies whether to use ImageNet classification labels
         data_spec: list of :class:`DataSpec`, optional
-            data specification for input and output layer(s)            
+            data specification for input and output layer(s)
         label_file_name: string, optional
-            Fully qualified path to CSV file containing user-defined 
+            Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
 
         '''
@@ -724,9 +802,9 @@ class Network(Layer):
         labels: bool
             Specifies whether to use ImageNet classification labels
         data_spec: list of :class:`DataSpec`, optional
-            data specification for input and output layer(s)            
+            data specification for input and output layer(s)
         label_file_name: string, optional
-            Fully qualified path to CSV file containing user-defined 
+            Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
 
         '''
@@ -747,7 +825,7 @@ class Network(Layer):
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
         data_spec: list of :class:`DataSpec`, optional
-            data specification for input and output layer(s)            
+            data specification for input and output layer(s)
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
@@ -756,38 +834,38 @@ class Network(Layer):
 
             # run action with dataSpec option
             with sw.option_context(print_messages = False):
-                rt = self._retrieve_('deeplearn.dlimportmodelweights', 
+                rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                     model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     dataSpecs=data_spec,
                                     formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                     );
-                                
+
             # if error, may not support dataspec
             if rt.severity > 1:
-            
+
                 # check for error containing "dataSpecs"
                 data_spec_missing = False
                 for msg in rt.messages:
                     if ('ERROR' in msg) and ('dataSpecs' in msg):
                         data_spec_missing = True
-            
+
                 if data_spec_missing:
-                    with sw.option_context(print_messages = False):                
+                    with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                                             modelWeights=dict(replace=True,
                                                               name=self.model_name + '_weights'),
                                             formatType=format_type, weightFilePath=file_name,
-                                            caslib=cas_lib_name, 
+                                            caslib=cas_lib_name,
                                             )
-            
+
                 # handle error or create necessary attributes
                 if rt.severity > 1:
                     for msg in rt.messages:
                         print(msg)
                     raise DLPyError('Cannot import model weights, there seems to be a problem.')
                 else:
-                    from dlpy.attribute_utils import create_extended_attributes       
+                    from dlpy.attribute_utils import create_extended_attributes
                     create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
 
         else:
@@ -796,8 +874,8 @@ class Network(Layer):
                             modelWeights=dict(replace=True,
                                               name=self.model_name + '_weights'),
                             formatType=format_type, weightFilePath=file_name,
-                            caslib=cas_lib_name, 
-                            )        
+                            caslib=cas_lib_name,
+                            )
 
         self.set_weights(self.model_name + '_weights')
 
@@ -816,9 +894,9 @@ class Network(Layer):
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
         data_spec: list of :class:`DataSpec`, optional
-            data specification for input and output layer(s)            
+            data specification for input and output layer(s)
         label_file_name: string, optional
-            Fully qualified path to CSV file containing user-defined 
+            Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
 
         '''
@@ -830,28 +908,28 @@ class Network(Layer):
         else:
             from dlpy.utils import get_imagenet_labels_table
             label_table = get_imagenet_labels_table(self.conn)
-            
+
         if (data_spec):
 
             # run action with dataSpec option
             with sw.option_context(print_messages = False):
-                rt = self._retrieve_('deeplearn.dlimportmodelweights', 
+                rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                     model=self.model_table,
                                     modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                     dataSpecs=data_spec,
                                     formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                     labelTable=label_table,
                                     );
-            
+
             # if error, may not support dataspec
             if rt.severity > 1:
-            
+
                 # check for error containing "dataSpecs"
                 data_spec_missing = False
                 for msg in rt.messages:
                     if ('ERROR' in msg) and ('dataSpecs' in msg):
                         data_spec_missing = True
-            
+
                 if data_spec_missing:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
@@ -859,16 +937,16 @@ class Network(Layer):
                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                             labelTable=label_table,
                                             );
-                                    
+
                 # handle error or create necessary attributes with Python function
                 if rt.severity > 1:
                     for msg in rt.messages:
                         print(msg)
                     raise DLPyError('Cannot import model weights, there seems to be a problem.')
                 else:
-                    from dlpy.attribute_utils import create_extended_attributes       
-                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec, label_file_name)                                    
-                                
+                    from dlpy.attribute_utils import create_extended_attributes
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec, label_file_name)
+
         else:
             print("NOTE: no dataspec(s) provided - creating image classification model.")
             self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
@@ -876,7 +954,7 @@ class Network(Layer):
                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                             labelTable=label_table,
                             );
-        
+
         self.set_weights(self.model_name + '_weights')
 
         if cas_lib_name is not None:
@@ -1684,7 +1762,7 @@ def extract_detection_layer(layer_table):
         detection_layer_config['anchors'].append(
             layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
                                           'detectionopts.anchors.{}'.format(i)].tolist()[0])
-    
+
     detection_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
     layer = Detection(**detection_layer_config)
