@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import warnings
 
-def accuracy_score(y_true, y_pred, castable=None, normalize=True, idvars=None):
+def accuracy_score(y_true, y_pred, castable=None, normalize=True, id_vars=None):
     '''
     Computes the classification accuracy score.
 
@@ -51,7 +51,7 @@ def accuracy_score(y_true, y_pred, castable=None, normalize=True, idvars=None):
         If ``False``, return the number of correctly classified samples.
         Otherwise, return the fraction of correctly classified samples.
         Default = True
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -68,7 +68,7 @@ def accuracy_score(y_true, y_pred, castable=None, normalize=True, idvars=None):
 
     
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -98,7 +98,7 @@ def accuracy_score(y_true, y_pred, castable=None, normalize=True, idvars=None):
     return score
 
 
-def confusion_matrix(y_true, y_pred, castable=None, labels=None, idvars=None):
+def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
     '''
     Computes the confusion matrix of a classification task.
 
@@ -124,7 +124,7 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, idvars=None):
         select the subset of the labels. If ``labels=None``, 
         all labels are included.
         Default=None
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -141,7 +141,7 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, idvars=None):
     '''
     
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=True, idvars=idvars)
+                                  return_target_dtype=True, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -179,7 +179,7 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, idvars=None):
         return conf_mat.loc[labels, labels]
     
 def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001, 
-             figsize=(8, 8), fontsize_spec=None, linewidth=1, idvars=None):
+             figsize=(8, 8), fontsize_spec=None, linewidth=1, id_vars=None):
     
     '''
     Plot the receiver operating characteristic (ROC) curve for binary classification 
@@ -219,7 +219,7 @@ def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001,
     linewidth : float, optional
         It specify the line width for the ROC curve. 
         Default=1. 
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_score if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_score appropriately, since observation 
@@ -245,7 +245,7 @@ def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001,
         pos_label = str(pos_label)
         
     check_results = _check_inputs(y_true, y_score, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_score = check_results[1]
     castable = check_results[2]
@@ -281,7 +281,7 @@ def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001,
     return ax
     
 def plot_precision_recall(y_true, y_score, pos_label, castable=None, cutstep=0.001, 
-                          figsize=(8, 8), fontsize_spec=None, linewidth=1, idvars=None):
+                          figsize=(8, 8), fontsize_spec=None, linewidth=1, id_vars=None):
     '''
     Plot the precision recall(PR) curve for binary classification 
     tasks.
@@ -320,7 +320,7 @@ def plot_precision_recall(y_true, y_score, pos_label, castable=None, cutstep=0.0
     linewidth : float, optional
         It specify the line width for the ROC curve. 
         Default=1.  
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_score if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_score appropriately, since observation 
@@ -345,7 +345,7 @@ def plot_precision_recall(y_true, y_score, pos_label, castable=None, cutstep=0.0
         pos_label = str(pos_label)
 
     check_results = _check_inputs(y_true, y_score, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_score = check_results[1]
     castable = check_results[2]
@@ -382,7 +382,7 @@ def plot_precision_recall(y_true, y_score, pos_label, castable=None, cutstep=0.0
     return ax
 
 
-def roc_auc_score(y_true, y_score, pos_label, castable=None, cutstep=0.001, idvars=None):
+def roc_auc_score(y_true, y_score, pos_label, castable=None, cutstep=0.001, id_vars=None):
     '''
     Compute the area under the receiver operating characteristic (ROC) curve for binary classification 
     tasks.
@@ -409,7 +409,7 @@ def roc_auc_score(y_true, y_score, pos_label, castable=None, cutstep=0.001, idva
     cutstep : float > 0 and < 1, optional
         The stepsize of threshold cutoffs. 
         Default=0.001. 
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_score if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_score appropriately, since observation 
@@ -427,7 +427,7 @@ def roc_auc_score(y_true, y_score, pos_label, castable=None, cutstep=0.001, idva
         pos_label = str(pos_label)
 
     check_results = _check_inputs(y_true, y_score, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_score = check_results[1]
     castable = check_results[2]
@@ -451,7 +451,7 @@ def roc_auc_score(y_true, y_score, pos_label, castable=None, cutstep=0.001, idva
     return auc_score
 
 def average_precision_score(y_true, y_score, pos_label, castable=None, cutstep=0.001, 
-                            interpolate=False, idvars=None):
+                            interpolate=False, id_vars=None):
     '''
     Compute the average precision score for binary classification 
     tasks. 
@@ -482,7 +482,7 @@ def average_precision_score(y_true, y_score, pos_label, castable=None, cutstep=0
         If ``interpolate=True``, it is the area under the precision recall 
         curve with linear interpolation. Otherwise, it is defined as 
         https://scikit-learn.org/stable/modules/generated/sklearn.metrics.average_precision_score.html
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_score if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_score appropriately, since observation 
@@ -500,7 +500,7 @@ def average_precision_score(y_true, y_score, pos_label, castable=None, cutstep=0
         pos_label = str(pos_label)
 
     check_results = _check_inputs(y_true, y_score, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_score = check_results[1]
     castable = check_results[2]
@@ -536,7 +536,7 @@ def average_precision_score(y_true, y_score, pos_label, castable=None, cutstep=0
     
     return ap    
 
-def f1_score(y_true, y_pred, pos_label, castable=None, idvars=None):
+def f1_score(y_true, y_pred, pos_label, castable=None, id_vars=None):
     '''
     Compute the f1 score of the binary classification task. f1 score is defined as
     :math:`\frac{2PR}{P+R}`, where :math:`P` is the precision and :math:`R` is 
@@ -561,7 +561,7 @@ def f1_score(y_true, y_pred, pos_label, castable=None, idvars=None):
     castable : :class:`CASTable`, optional
         The CASTable object to use as the source if the y_pred and y_true are strings.
         Default = None 
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -576,7 +576,7 @@ def f1_score(y_true, y_pred, pos_label, castable=None, idvars=None):
 
     '''
     
-    conf_mat = confusion_matrix(y_true, y_pred, castable=castable, idvars=idvars)
+    conf_mat = confusion_matrix(y_true, y_pred, castable=castable, id_vars=id_vars)
     
     recall = conf_mat.loc[pos_label, pos_label]/conf_mat.loc[pos_label, :].sum()
     
@@ -587,7 +587,7 @@ def f1_score(y_true, y_pred, pos_label, castable=None, idvars=None):
     return f1
 
 
-def explained_variance_score(y_true, y_pred, castable=None, idvars=None):
+def explained_variance_score(y_true, y_pred, castable=None, id_vars=None):
     '''
     Compute the explained variance score for a regression task. It is the 
     fraction of the target variable variance that is explained by the model.
@@ -609,7 +609,7 @@ def explained_variance_score(y_true, y_pred, castable=None, idvars=None):
     castable : :class:`CASTable`, optional
         The CASTable object to use as the source if the y_pred and y_true are strings.
         Default = None
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -623,7 +623,7 @@ def explained_variance_score(y_true, y_pred, castable=None, idvars=None):
     '''
     
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -652,7 +652,7 @@ def explained_variance_score(y_true, y_pred, castable=None, idvars=None):
 
     return expl_var    
 
-def mean_absolute_error(y_true, y_pred, castable=None, idvars=None):
+def mean_absolute_error(y_true, y_pred, castable=None, id_vars=None):
     '''
     Compute the mean absolute error of a regression task.
 
@@ -673,7 +673,7 @@ def mean_absolute_error(y_true, y_pred, castable=None, idvars=None):
     castable : :class:`CASTable`, optional
         The CASTable object to use as the source if the y_pred and y_true are strings.
         Default = None
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -687,7 +687,7 @@ def mean_absolute_error(y_true, y_pred, castable=None, idvars=None):
     '''
   
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -713,7 +713,7 @@ def mean_absolute_error(y_true, y_pred, castable=None, idvars=None):
 
     return mae   
 
-def mean_squared_error(y_true, y_pred, castable=None, idvars=None):
+def mean_squared_error(y_true, y_pred, castable=None, id_vars=None):
     '''
     Compute the mean squared error of a regression task.
 
@@ -734,7 +734,7 @@ def mean_squared_error(y_true, y_pred, castable=None, idvars=None):
     castable : :class:`CASTable`, optional
         The CASTable object to use as the source if the y_pred and y_true are strings.
         Default = None
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -748,7 +748,7 @@ def mean_squared_error(y_true, y_pred, castable=None, idvars=None):
     '''
    
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -774,7 +774,7 @@ def mean_squared_error(y_true, y_pred, castable=None, idvars=None):
 
     return mse   
 
-def mean_squared_log_error(y_true, y_pred, castable=None, idvars=None):
+def mean_squared_log_error(y_true, y_pred, castable=None, id_vars=None):
     '''
     Compute the mean squared logarithmic error of the regression tasks.
 
@@ -795,7 +795,7 @@ def mean_squared_log_error(y_true, y_pred, castable=None, idvars=None):
     castable : :class:`CASTable`, optional
         The CASTable object to use as the source if the y_pred and y_true are strings.
         Default = None
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -809,7 +809,7 @@ def mean_squared_log_error(y_true, y_pred, castable=None, idvars=None):
     '''
     
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -836,7 +836,7 @@ def mean_squared_log_error(y_true, y_pred, castable=None, idvars=None):
     return logerr2 
 
 
-def r2_score(y_true, y_pred, castable=None, idvars=None):
+def r2_score(y_true, y_pred, castable=None, id_vars=None):
     '''
     Compute the :math:`R^2` (coefficient of determination) regression score. 
 
@@ -857,7 +857,7 @@ def r2_score(y_true, y_pred, castable=None, idvars=None):
     castable : :class:`CASTable`, optional
         The CASTable object to use as the source if the y_pred and y_true are strings.
         Default = None
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -870,10 +870,10 @@ def r2_score(y_true, y_pred, castable=None, idvars=None):
 
     '''
     
-    mse = mean_squared_error(y_true, y_pred, castable=castable, idvars=idvars)
+    mse = mean_squared_error(y_true, y_pred, castable=castable, id_vars=id_vars)
 
     check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, idvars=idvars)
+                                  return_target_dtype=False, id_vars=id_vars)
     y_true = check_results[0]
     y_pred = check_results[1]
     castable = check_results[2]
@@ -894,7 +894,7 @@ def r2_score(y_true, y_pred, castable=None, idvars=None):
     return r2  
 
 
-def _check_inputs(y_true, y_pred, castable=None, return_target_dtype=False, idvars=None):
+def _check_inputs(y_true, y_pred, castable=None, return_target_dtype=False, id_vars=None):
     '''
     Check the input argument y_true, y_pred, and return their names if they are CASColumn.
     If y_true, and y_pred is in the form of CASColumn and from different CASTables, 
@@ -920,7 +920,7 @@ def _check_inputs(y_true, y_pred, castable=None, return_target_dtype=False, idva
     return_target_dtype : boolean, optional
         If True, return the data type of y_true in the CASTable.
         Default = False
-    idvars : string or list of strings, optional
+    id_vars : string or list of strings, optional
         Column names that serve as unique id for y_true and y_pred if they are 
         from different CASTables. The column names need to appear in both CASTables, 
         and they serve to match y_true and y_pred appropriately, since observation 
@@ -965,10 +965,10 @@ def _check_inputs(y_true, y_pred, castable=None, return_target_dtype=False, idva
         y_pred = y_pred.name
         if y_true_tblname != y_pred_tblname:
             tmp_table_name = random_name('metric_tmp',6)
-            if idvars is None:
+            if id_vars is None:
                 warnings.warn('{} and {} are from different CASTables, '.format(y_true, y_pred) + 
                               'and their appropriate matching may not be guaranteed '+
-                              'unless idvars argument is provided.')
+                              'unless id_vars argument is provided.')
                 sascode = '''
                 data {};
                 merge {}(keep={}) {}(keep={});
@@ -977,11 +977,11 @@ def _check_inputs(y_true, y_pred, castable=None, return_target_dtype=False, idva
                 
                 conn.retrieve('dataStep.runCode', _messagelevel='error', code=sascode, single='Yes')
             else:
-                if not isinstance(idvars, list):
-                    idvars = [idvars]
-                y_true_keep = ' '.join([y_true]+idvars)
-                y_pred_keep = ' '.join([y_pred]+idvars)
-                by_var = ' '.join(idvars)
+                if not isinstance(id_vars, list):
+                    id_vars = [id_vars]
+                y_true_keep = ' '.join([y_true]+id_vars)
+                y_pred_keep = ' '.join([y_pred]+id_vars)
+                by_var = ' '.join(id_vars)
                 sascode = '''
                 data {};
                 merge {}(keep={}) {}(keep={});
