@@ -709,6 +709,10 @@ class Model(Network):
             gt_tbl.drop(['_image_'], axis=1, inplace=1)
 
         freq_variable = []
+        max_num_gt = int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])
+        if max_num_gt == 0:
+            print('NOTE: Cannot find any object in ground_truth.')
+            return
         for i in range(int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])):
             freq_variable.append('_Object{}_'.format(i))
         classes_gt = set(self.conn.freq(gt_tbl, inputs = freq_variable).Frequency['FmtVar'])
