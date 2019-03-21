@@ -16,14 +16,18 @@
 #  limitations under the License.
 #
 
-import os
 import unittest
 import numpy as np
-from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+
 
 class TestGraph(unittest.TestCase):
     def _generate_graph1(self):
-        from onnx import helper, numpy_helper, TensorProto
+        try:
+            from onnx import helper, numpy_helper, TensorProto
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+        except:
+            unittest.TestCase.skipTest(self, 'onnx package not found')
+
         input0 = helper.make_tensor_value_info('data0',
                                                TensorProto.FLOAT,
                                                [1, 3, 224, 224])
@@ -60,6 +64,7 @@ class TestGraph(unittest.TestCase):
     def test_graph1(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -87,10 +92,11 @@ class TestGraph(unittest.TestCase):
     def test_graph_connection(self):
         try:
             import onnx
+            from onnx import helper, numpy_helper, TensorProto
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-        
-        from onnx import helper, numpy_helper, TensorProto
+
         input0 = helper.make_tensor_value_info('data0',
                                                TensorProto.FLOAT,
                                                [1, 3, 224, 224])
@@ -145,6 +151,7 @@ class TestGraph(unittest.TestCase):
     def test_get_node(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -159,6 +166,7 @@ class TestGraph(unittest.TestCase):
     def test_remove_node(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -171,6 +179,7 @@ class TestGraph(unittest.TestCase):
     def test_remove_node1(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -183,10 +192,12 @@ class TestGraph(unittest.TestCase):
     def test_replace_node(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper
+
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -204,10 +215,12 @@ class TestGraph(unittest.TestCase):
     def test_replace_node1(self):
         try:
             import onnx
+            from onnx import helper
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper
+
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -225,10 +238,12 @@ class TestGraph(unittest.TestCase):
     def test_insert_node(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper
+
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -245,10 +260,12 @@ class TestGraph(unittest.TestCase):
     def test_insert_node1(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper
+
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -265,6 +282,7 @@ class TestGraph(unittest.TestCase):
     def test_get_input(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -279,6 +297,7 @@ class TestGraph(unittest.TestCase):
     def test_get_input1(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -291,10 +310,12 @@ class TestGraph(unittest.TestCase):
     def test_add_input(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import helper, TensorProto
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper, TensorProto
+
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -308,10 +329,11 @@ class TestGraph(unittest.TestCase):
     def test_replace_input(self):
         try:
             import onnx
+            from onnx import helper, TensorProto
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper, TensorProto
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -325,10 +347,11 @@ class TestGraph(unittest.TestCase):
     def test_get_initializer(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import numpy_helper
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -341,6 +364,7 @@ class TestGraph(unittest.TestCase):
     def test_get_initializer1(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -353,10 +377,11 @@ class TestGraph(unittest.TestCase):
     def test_add_initializer(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import numpy_helper
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -371,10 +396,11 @@ class TestGraph(unittest.TestCase):
     def test_replace_initializer(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
+            from onnx import numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import numpy_helper
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)
 
@@ -389,6 +415,7 @@ class TestGraph(unittest.TestCase):
     def test_clean_init(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
@@ -405,6 +432,7 @@ class TestGraph(unittest.TestCase):
     def test_make_model(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 

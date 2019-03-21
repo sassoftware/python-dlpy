@@ -16,23 +16,23 @@
 #  limitations under the License.
 #
 
-import os
 import unittest
 import numpy as np
-from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
-                                                   ConstToInitializer, 
-                                                   InitReshape, InitUnsqueeze,
-                                                   FuseMulAddBN)
-from dlpy.model_conversion.onnx_graph import OnnxGraph
+
 
 class TestTransformer(unittest.TestCase):
     def test_transformer1(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper, numpy_helper
         node1 = helper.make_node(
             'Identity',
             inputs=['in'],
@@ -56,10 +56,14 @@ class TestTransformer(unittest.TestCase):
     def test_transformer2(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-
-        from onnx import helper, numpy_helper
 
         nodes = [
             helper.make_node('Unsqueeze',
@@ -98,10 +102,14 @@ class TestTransformer(unittest.TestCase):
     def test_transformer3(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-
-        from onnx import helper, numpy_helper
 
         nodes = [
             helper.make_node('Unsqueeze',
@@ -146,10 +154,15 @@ class TestTransformer(unittest.TestCase):
     def test_init_unsqueeze(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-        
-        from onnx import helper, numpy_helper
+
         unsqueeze_1 = helper.make_node(
             'Unsqueeze',
             inputs=['unsqueeze_in'],
@@ -179,10 +192,15 @@ class TestTransformer(unittest.TestCase):
     def test_init_reshape(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-        
-        from onnx import helper, numpy_helper
+
         reshape_1 = helper.make_node(
             'Reshape',
             inputs=['reshape_in', 'shape'],
@@ -212,10 +230,15 @@ class TestTransformer(unittest.TestCase):
     def test_const_to_initializer(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-        
-        from onnx import helper
+
         values = np.random.randn(5, 5).astype(np.float32)
         const_1 = helper.make_node(
             'Constant',
@@ -248,10 +271,15 @@ class TestTransformer(unittest.TestCase):
     def test_fuse_mul_add_bn(self):
         try:
             import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
 
-        from onnx import helper, numpy_helper
         nodes = [
             helper.make_node('BatchNormalization',
                 inputs=['data', 'bn_scale', 'bn_bias', 'bn_mean', 'bn_var'],
