@@ -1083,6 +1083,7 @@ class Network(Layer):
                         modelTable = self.model_table,
                         randomCrop = 'none',
                         randomFlip = 'none',
+                        randomMutation = 'none',
                         **kwargs)
 
         model_astore = self._retrieve_('astore.download',
