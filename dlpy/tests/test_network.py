@@ -389,6 +389,15 @@ class TestNetwork(tm.TestCase):
         func_model_keypoints.compile()
         func_model_keypoints.print_summary()
 
+    def test_from_model(self):
+        from dlpy.applications import ResNet18_Caffe, VGG11
+        vgg11 = VGG11(self.s)
+        backbone1 = vgg11.to_functional_model(vgg11.layers[-2])
+        self.assertEqual(backbone1.layers[-1].__class__.__name__, 'Dense')
+        model_resnet18 = ResNet18_Caffe(self.s, n_classes = 6, random_crop = 'none', width = 400, height = 400)
+        backbone2 = model_resnet18.to_functional_model(model_resnet18.layers[-3])
+        self.assertEqual(backbone2.layers[-1].__class__.__name__, 'BN')
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

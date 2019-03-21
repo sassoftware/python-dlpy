@@ -222,7 +222,11 @@ class Network(Layer):
                             output_tensors.append(src_layer.tensor)
                         continue
                     # initialize tensor of the outbound_layer
-                    outbound_layer([l.tensor for l in outbound_layer.src_layers])
+                    # if any of tensor doesn't exit, stop calling the layer
+                    try:
+                        outbound_layer([l.tensor for l in outbound_layer.src_layers])
+                    except AttributeError:
+                        continue
                     if outbound_layer.can_be_last_layer:
                         output_tensors.append(outbound_layer.tensor)
 
