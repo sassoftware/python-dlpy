@@ -1,0 +1,192 @@
+dlpy.timeseries.TimeseriesTable
+===============================
+
+.. currentmodule:: dlpy.timeseries
+
+.. autoclass:: TimeseriesTable
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TimeseriesTable.__init__
+      ~TimeseriesTable.abs
+      ~TimeseriesTable.all
+      ~TimeseriesTable.any
+      ~TimeseriesTable.append
+      ~TimeseriesTable.append_columns
+      ~TimeseriesTable.append_computed_columns
+      ~TimeseriesTable.append_computedvars
+      ~TimeseriesTable.append_computedvarsprogram
+      ~TimeseriesTable.append_groupby
+      ~TimeseriesTable.append_orderby
+      ~TimeseriesTable.append_where
+      ~TimeseriesTable.as_matrix
+      ~TimeseriesTable.boxplot
+      ~TimeseriesTable.clip
+      ~TimeseriesTable.clip_lower
+      ~TimeseriesTable.clip_upper
+      ~TimeseriesTable.convert_to_sas_time_format
+      ~TimeseriesTable.copy
+      ~TimeseriesTable.corr
+      ~TimeseriesTable.count
+      ~TimeseriesTable.create_lags
+      ~TimeseriesTable.css
+      ~TimeseriesTable.cv
+      ~TimeseriesTable.datastep
+      ~TimeseriesTable.del_action_params
+      ~TimeseriesTable.del_param
+      ~TimeseriesTable.del_params
+      ~TimeseriesTable.describe
+      ~TimeseriesTable.drop
+      ~TimeseriesTable.dropna
+      ~TimeseriesTable.eval
+      ~TimeseriesTable.exists
+      ~TimeseriesTable.fillna
+      ~TimeseriesTable.find_file_caslib
+      ~TimeseriesTable.from_csv
+      ~TimeseriesTable.from_dict
+      ~TimeseriesTable.from_items
+      ~TimeseriesTable.from_localfile
+      ~TimeseriesTable.from_pandas
+      ~TimeseriesTable.from_records
+      ~TimeseriesTable.from_serverfile
+      ~TimeseriesTable.from_table
+      ~TimeseriesTable.generate_splitting_code
+      ~TimeseriesTable.get_action_names
+      ~TimeseriesTable.get_action_params
+      ~TimeseriesTable.get_actionset_names
+      ~TimeseriesTable.get_connection
+      ~TimeseriesTable.get_dtype_counts
+      ~TimeseriesTable.get_fetch_params
+      ~TimeseriesTable.get_ftype_counts
+      ~TimeseriesTable.get_groupby_vars
+      ~TimeseriesTable.get_inputs_param
+      ~TimeseriesTable.get_param
+      ~TimeseriesTable.get_params
+      ~TimeseriesTable.get_value
+      ~TimeseriesTable.groupby
+      ~TimeseriesTable.has_groupby_vars
+      ~TimeseriesTable.has_param
+      ~TimeseriesTable.has_params
+      ~TimeseriesTable.head
+      ~TimeseriesTable.hist
+      ~TimeseriesTable.identify_coltype
+      ~TimeseriesTable.info
+      ~TimeseriesTable.invoke
+      ~TimeseriesTable.iteritems
+      ~TimeseriesTable.iterrows
+      ~TimeseriesTable.itertuples
+      ~TimeseriesTable.kurt
+      ~TimeseriesTable.kurtosis
+      ~TimeseriesTable.lookup
+      ~TimeseriesTable.max
+      ~TimeseriesTable.mean
+      ~TimeseriesTable.median
+      ~TimeseriesTable.merge
+      ~TimeseriesTable.min
+      ~TimeseriesTable.mode
+      ~TimeseriesTable.next
+      ~TimeseriesTable.nlargest
+      ~TimeseriesTable.nmiss
+      ~TimeseriesTable.nsmallest
+      ~TimeseriesTable.nth
+      ~TimeseriesTable.pop
+      ~TimeseriesTable.prepare_subsequences
+      ~TimeseriesTable.probt
+      ~TimeseriesTable.quantile
+      ~TimeseriesTable.query
+      ~TimeseriesTable.replace
+      ~TimeseriesTable.reset_index
+      ~TimeseriesTable.retrieve
+      ~TimeseriesTable.sample
+      ~TimeseriesTable.select_dtypes
+      ~TimeseriesTable.set_action_params
+      ~TimeseriesTable.set_connection
+      ~TimeseriesTable.set_param
+      ~TimeseriesTable.set_params
+      ~TimeseriesTable.skew
+      ~TimeseriesTable.skewness
+      ~TimeseriesTable.slice
+      ~TimeseriesTable.sort
+      ~TimeseriesTable.sort_values
+      ~TimeseriesTable.std
+      ~TimeseriesTable.stderr
+      ~TimeseriesTable.sum
+      ~TimeseriesTable.tail
+      ~TimeseriesTable.timeseries_accumlation
+      ~TimeseriesTable.timeseries_formatting
+      ~TimeseriesTable.timeseries_partition
+      ~TimeseriesTable.to_clipboard
+      ~TimeseriesTable.to_csv
+      ~TimeseriesTable.to_datastep_params
+      ~TimeseriesTable.to_dense
+      ~TimeseriesTable.to_dict
+      ~TimeseriesTable.to_excel
+      ~TimeseriesTable.to_frame
+      ~TimeseriesTable.to_gbq
+      ~TimeseriesTable.to_hdf
+      ~TimeseriesTable.to_html
+      ~TimeseriesTable.to_input_datastep_params
+      ~TimeseriesTable.to_json
+      ~TimeseriesTable.to_latex
+      ~TimeseriesTable.to_msgpack
+      ~TimeseriesTable.to_outtable
+      ~TimeseriesTable.to_outtable_params
+      ~TimeseriesTable.to_params
+      ~TimeseriesTable.to_pickle
+      ~TimeseriesTable.to_records
+      ~TimeseriesTable.to_sparse
+      ~TimeseriesTable.to_sql
+      ~TimeseriesTable.to_stata
+      ~TimeseriesTable.to_string
+      ~TimeseriesTable.to_table
+      ~TimeseriesTable.to_table_name
+      ~TimeseriesTable.to_table_params
+      ~TimeseriesTable.to_view
+      ~TimeseriesTable.to_xarray
+      ~TimeseriesTable.tvalue
+      ~TimeseriesTable.uss
+      ~TimeseriesTable.var
+      ~TimeseriesTable.with_params
+      ~TimeseriesTable.xs
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TimeseriesTable.all_params
+      ~TimeseriesTable.at
+      ~TimeseriesTable.axes
+      ~TimeseriesTable.columns
+      ~TimeseriesTable.created_date
+      ~TimeseriesTable.dtypes
+      ~TimeseriesTable.ftypes
+      ~TimeseriesTable.getdoc
+      ~TimeseriesTable.iat
+      ~TimeseriesTable.iloc
+      ~TimeseriesTable.index
+      ~TimeseriesTable.ix
+      ~TimeseriesTable.last_accessed_date
+      ~TimeseriesTable.last_modified_date
+      ~TimeseriesTable.loc
+      ~TimeseriesTable.ndim
+      ~TimeseriesTable.outtable_params
+      ~TimeseriesTable.param_names
+      ~TimeseriesTable.plot
+      ~TimeseriesTable.running_caslib
+      ~TimeseriesTable.shape
+      ~TimeseriesTable.size
+      ~TimeseriesTable.table_params
+      ~TimeseriesTable.timeid_type
+      ~TimeseriesTable.values
+   
+   

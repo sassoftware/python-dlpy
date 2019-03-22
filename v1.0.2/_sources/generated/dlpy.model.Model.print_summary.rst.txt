@@ -1,0 +1,6 @@
+dlpy.model.Model.print\_summary
+===============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.print_summary

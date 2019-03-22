@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SAS Deep Learning Python Interface &mdash; DLPy 1.0.2 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="#"/>
+        <link rel="next" title="What’s New" href="whatsnew.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="#" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="#">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="#">Docs</a> &raquo;</li>
+      
+    <li>SAS Deep Learning Python Interface</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-dlpy">
+<span id="sas-deep-learning-python-interface"></span><h1>SAS Deep Learning Python Interface<a class="headerlink" href="#module-dlpy" title="Permalink to this headline">¶</a></h1>
+<p><strong>Date</strong>: Mar 22, 2019 <strong>Version</strong>: 1.0.2</p>
+<p><strong>Installers:</strong> <a class="reference external" href="https://github.com/sassoftware/python-dlpy/releases">https://github.com/sassoftware/python-dlpy/releases</a></p>
+<p><strong>Source Repository:</strong> <a class="reference external" href="https://github.com/sassoftware/python-dlpy">https://github.com/sassoftware/python-dlpy</a></p>
+<p><strong>Issues &amp; Ideas:</strong> <a class="reference external" href="https://github.com/sassoftware/python-dlpy/issues">https://github.com/sassoftware/python-dlpy/issues</a></p>
+<p>DLPy is a high-level package for the Python APIs created for the SAS Viya 3.3 (and newer) Deep Learning back end. It provides a convenient way to apply deep learning functionalities to solve the computer vision, NLP, forecasting, and speech processing problems.</p>
+<div class="section" id="key-features">
+<h2>Key Features<a class="headerlink" href="#key-features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="user-friendly-api">
+<h3>User friendly API<a class="headerlink" href="#user-friendly-api" title="Permalink to this headline">¶</a></h3>
+<p>We design DLPy API to be similar to existing packages (e.g., Keras). It is a blend of the familiar easy and lazy Keras flavor and a pinch of PyTorch flavor for more advanced users.</p>
+</div>
+<div class="section" id="built-in-networks">
+<h3>Built-in Networks<a class="headerlink" href="#built-in-networks" title="Permalink to this headline">¶</a></h3>
+<p>DLPy provides many prebuilt models, including VGG and ResNet. The pretrained weights using ImageNet data are also provided for those models. This would give you a warm start on your favourite task via transfer learning.</p>
+</div>
+<div class="section" id="built-in-model-analysis-tools">
+<h3>Built-in Model Analysis Tools<a class="headerlink" href="#built-in-model-analysis-tools" title="Permalink to this headline">¶</a></h3>
+<p>Users can conduct a heatmap analysis for deep learning models to reveal the mystery of the black boxes in the computer vision problems.</p>
+</div>
+<div class="section" id="supporting-functions">
+<h3>Supporting Functions<a class="headerlink" href="#supporting-functions" title="Permalink to this headline">¶</a></h3>
+<p>We provide multiple supporting functions for deep learning related tasks, include the visualization of the networks, feature maps and prediction results, data splitting, data augmentation, model deployment, and so on.</p>
+</div>
+<div class="section" id="easy-model-creation-for-specific-tasks">
+<h3>Easy Model Creation For Specific Tasks<a class="headerlink" href="#easy-model-creation-for-specific-tasks" title="Permalink to this headline">¶</a></h3>
+<p>Every deep learning package requires a lot of tricks to define models for different tasks. We are doing our best to remove this burden and therefore we created predefined models for specific tasks that takes care of knowing the magic syntax.</p>
+</div>
+<div class="section" id="easy-interaction-with-open-source-packages">
+<h3>Easy Interaction With Open Source Packages<a class="headerlink" href="#easy-interaction-with-open-source-packages" title="Permalink to this headline">¶</a></h3>
+<p>DLPy enables users to fetch the data from the back end (SAS Viya session) to the local client and convert it to a popular data format such as numpy array or DataFrame. The converted data can be smoothly fed into models in other open source packages such as scikit-learn.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="whatsnew.html#v1-0-2-march-22-2019">v1.0.2 (March 22, 2019)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="install.html#prerequisites">Prerequisites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="install.html#swat">SWAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="install.html#graphviz">Graphviz</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#imagetable">ImageTable</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api.html#constructors">Constructors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#saving">Saving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#utilities">Utilities</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api.html#image-processing">Image Processing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#audio">Audio</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.audio.AudioTable.html">dlpy.audio.AudioTable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.audio.AudioTable.create_audio_table.html">dlpy.audio.AudioTable.create_audio_table</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#timeseries">Timeseries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.html">dlpy.timeseries.TimeseriesTable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.from_table.html">dlpy.timeseries.TimeseriesTable.from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.from_pandas.html">dlpy.timeseries.TimeseriesTable.from_pandas</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.from_localfile.html">dlpy.timeseries.TimeseriesTable.from_localfile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.from_serverfile.html">dlpy.timeseries.TimeseriesTable.from_serverfile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.timeseries_formatting.html">dlpy.timeseries.TimeseriesTable.timeseries_formatting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.timeseries_accumlation.html">dlpy.timeseries.TimeseriesTable.timeseries_accumlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.prepare_subsequences.html">dlpy.timeseries.TimeseriesTable.prepare_subsequences</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.TimeseriesTable.timeseries_partition.html">dlpy.timeseries.TimeseriesTable.timeseries_partition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.timeseries.plot_timeseries.html">dlpy.timeseries.plot_timeseries</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#layers">Layers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Layer.html">dlpy.layers.Layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.InputLayer.html">dlpy.layers.InputLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Conv2d.html">dlpy.layers.Conv2d</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Pooling.html">dlpy.layers.Pooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Dense.html">dlpy.layers.Dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Recurrent.html">dlpy.layers.Recurrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.BN.html">dlpy.layers.BN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Res.html">dlpy.layers.Res</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Concat.html">dlpy.layers.Concat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Proj.html">dlpy.layers.Proj</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.OutputLayer.html">dlpy.layers.OutputLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Keypoints.html">dlpy.layers.Keypoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Detection.html">dlpy.layers.Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Scale.html">dlpy.layers.Scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.layers.Reshape.html">dlpy.layers.Reshape</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#models">Models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.html">dlpy.model.Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_table.html">dlpy.model.Model.from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_keras_model.html">dlpy.model.Model.from_keras_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_caffe_model.html">dlpy.model.Model.from_caffe_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_onnx_model.html">dlpy.model.Model.from_onnx_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.from_sashdat.html">dlpy.model.Model.from_sashdat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load.html">dlpy.model.Model.load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.set_weights.html">dlpy.model.Model.set_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights.html">dlpy.model.Model.load_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_caffe.html">dlpy.model.Model.load_weights_from_caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_keras.html">dlpy.model.Model.load_weights_from_keras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_from_table.html">dlpy.model.Model.load_weights_from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.set_weights_attr.html">dlpy.model.Model.set_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.load_weights_attr.html">dlpy.model.Model.load_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.fit.html">dlpy.model.Model.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.tune.html">dlpy.model.Model.tune</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_training_history.html">dlpy.model.Model.plot_training_history</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.predict.html">dlpy.model.Model.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.evaluate.html">dlpy.model.Model.evaluate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.get_feature_maps.html">dlpy.model.Model.get_feature_maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.get_features.html">dlpy.model.Model.get_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.heat_map_analysis.html">dlpy.model.Model.heat_map_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_heat_map.html">dlpy.model.Model.plot_heat_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.save_to_astore.html">dlpy.model.Model.save_to_astore</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.save_to_table.html">dlpy.model.Model.save_to_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.deploy.html">dlpy.model.Model.deploy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.count_params.html">dlpy.model.Model.count_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.print_summary.html">dlpy.model.Model.print_summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Model.plot_network.html">dlpy.model.Model.plot_network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.DataSpec.html">dlpy.model.DataSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.DataSpecNumNomOpts.html">dlpy.model.DataSpecNumNomOpts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Sequence.html">dlpy.model.Sequence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.TextParms.html">dlpy.model.TextParms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Optimizer.html">dlpy.model.Optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.NatGradSolver.html">dlpy.model.NatGradSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.LBFGSolver.html">dlpy.model.LBFGSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.AdamSolver.html">dlpy.model.AdamSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.MomentumSolver.html">dlpy.model.MomentumSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.VanillaSolver.html">dlpy.model.VanillaSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Solver.html">dlpy.model.Solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.Gpu.html">dlpy.model.Gpu</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#feature-maps">Feature Maps</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.FeatureMaps.html">dlpy.model.FeatureMaps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.model.FeatureMaps.display.html">dlpy.model.FeatureMaps.display</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#sequential-model">Sequential Model</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.sequential.Sequential.html">dlpy.sequential.Sequential</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.sequential.Sequential.add.html">dlpy.sequential.Sequential.add</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.sequential.Sequential.pop.html">dlpy.sequential.Sequential.pop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.sequential.Sequential.switch.html">dlpy.sequential.Sequential.switch</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.sequential.Sequential.compile.html">dlpy.sequential.Sequential.compile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#residual-networks">Residual Networks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock.html">dlpy.blocks.ResBlock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock.compile.html">dlpy.blocks.ResBlock.compile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlockBN.html">dlpy.blocks.ResBlockBN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlockBN.compile.html">dlpy.blocks.ResBlockBN.compile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock_Caffe.html">dlpy.blocks.ResBlock_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.blocks.ResBlock_Caffe.compile.html">dlpy.blocks.ResBlock_Caffe.compile</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.LeNet5.html">dlpy.applications.LeNet5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG11.html">dlpy.applications.VGG11</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG13.html">dlpy.applications.VGG13</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG16.html">dlpy.applications.VGG16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.VGG19.html">dlpy.applications.VGG19</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet18_SAS.html">dlpy.applications.ResNet18_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet18_Caffe.html">dlpy.applications.ResNet18_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet34_SAS.html">dlpy.applications.ResNet34_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet34_Caffe.html">dlpy.applications.ResNet34_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet50_SAS.html">dlpy.applications.ResNet50_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet50_Caffe.html">dlpy.applications.ResNet50_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet101_SAS.html">dlpy.applications.ResNet101_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet101_Caffe.html">dlpy.applications.ResNet101_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet152_SAS.html">dlpy.applications.ResNet152_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet152_Caffe.html">dlpy.applications.ResNet152_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.ResNet_Wide.html">dlpy.applications.ResNet_Wide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.DenseNet.html">dlpy.applications.DenseNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.DenseNet121.html">dlpy.applications.DenseNet121</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.Darknet.html">dlpy.applications.Darknet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.Darknet_Reference.html">dlpy.applications.Darknet_Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.InceptionV3.html">dlpy.applications.InceptionV3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.YoloV2.html">dlpy.applications.YoloV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.YoloV2_MultiSize.html">dlpy.applications.YoloV2_MultiSize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.Tiny_YoloV1.html">dlpy.applications.Tiny_YoloV1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.Tiny_YoloV2.html">dlpy.applications.Tiny_YoloV2</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.TextClassification.html">dlpy.applications.TextClassification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.TextGeneration.html">dlpy.applications.TextGeneration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.SequenceLabeling.html">dlpy.applications.SequenceLabeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.applications.SpeechRecognition.html">dlpy.applications.SpeechRecognition</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#splitting-utilities">Splitting Utilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.splitting.two_way_split.html">dlpy.splitting.two_way_split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generated/dlpy.splitting.three_way_split.html">dlpy.splitting.three_way_split</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="index">
+<h2>Index<a class="headerlink" href="#index" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="whatsnew.html" class="btn btn-neutral float-right" title="What’s New" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

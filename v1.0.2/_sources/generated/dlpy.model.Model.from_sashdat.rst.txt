@@ -1,0 +1,6 @@
+dlpy.model.Model.from\_sashdat
+==============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.from_sashdat

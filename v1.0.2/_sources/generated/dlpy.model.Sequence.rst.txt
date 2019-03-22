@@ -1,0 +1,31 @@
+dlpy.model.Sequence
+===================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: Sequence
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Sequence.__init__
+      ~Sequence.clear
+      ~Sequence.get
+      ~Sequence.items
+      ~Sequence.keys
+      ~Sequence.pop
+      ~Sequence.popitem
+      ~Sequence.setdefault
+      ~Sequence.update
+      ~Sequence.values
+   
+   
+
+   
+   
+   

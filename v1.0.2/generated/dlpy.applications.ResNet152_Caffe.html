@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.applications.ResNet152_Caffe &mdash; DLPy 1.0.2 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.applications.ResNet_Wide" href="dlpy.applications.ResNet_Wide.html"/>
+        <link rel="prev" title="dlpy.applications.ResNet152_SAS" href="dlpy.applications.ResNet152_SAS.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audio">Audio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#models">Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.LeNet5.html">dlpy.applications.LeNet5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.VGG11.html">dlpy.applications.VGG11</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.VGG13.html">dlpy.applications.VGG13</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.VGG16.html">dlpy.applications.VGG16</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.VGG19.html">dlpy.applications.VGG19</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet18_SAS.html">dlpy.applications.ResNet18_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet18_Caffe.html">dlpy.applications.ResNet18_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet34_SAS.html">dlpy.applications.ResNet34_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet34_Caffe.html">dlpy.applications.ResNet34_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet50_SAS.html">dlpy.applications.ResNet50_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet50_Caffe.html">dlpy.applications.ResNet50_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet101_SAS.html">dlpy.applications.ResNet101_SAS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet101_Caffe.html">dlpy.applications.ResNet101_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet152_SAS.html">dlpy.applications.ResNet152_SAS</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.applications.ResNet152_Caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.ResNet_Wide.html">dlpy.applications.ResNet_Wide</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.DenseNet.html">dlpy.applications.DenseNet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.DenseNet121.html">dlpy.applications.DenseNet121</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.Darknet.html">dlpy.applications.Darknet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.Darknet_Reference.html">dlpy.applications.Darknet_Reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.InceptionV3.html">dlpy.applications.InceptionV3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.YoloV2.html">dlpy.applications.YoloV2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.YoloV2_MultiSize.html">dlpy.applications.YoloV2_MultiSize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.Tiny_YoloV1.html">dlpy.applications.Tiny_YoloV1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.applications.Tiny_YoloV2.html">dlpy.applications.Tiny_YoloV2</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.applications.ResNet152_Caffe</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.applications.ResNet152_Caffe.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-applications-resnet152-caffe">
+<h1>dlpy.applications.ResNet152_Caffe<a class="headerlink" href="#dlpy-applications-resnet152-caffe" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="dlpy.applications.ResNet152_Caffe">
+<code class="descclassname">dlpy.applications.</code><code class="descname">ResNet152_Caffe</code><span class="sig-paren">(</span><em>conn</em>, <em>model_table='RESNET152_CAFFE'</em>, <em>n_classes=1000</em>, <em>n_channels=3</em>, <em>width=224</em>, <em>height=224</em>, <em>scale=1</em>, <em>batch_norm_first=False</em>, <em>random_flip='none'</em>, <em>random_crop='none'</em>, <em>offsets=(103.939</em>, <em>116.779</em>, <em>123.68)</em>, <em>pre_trained_weights=False</em>, <em>pre_trained_weights_file=None</em>, <em>include_top=False</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.applications.ResNet152_Caffe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a deep learning model with the ResNet152 architecture with convolution shortcut</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>conn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">CAS</span></dt>
+<dd><p class="first last">Specifies the CAS connection object.</p>
+</dd>
+<dt><strong>model_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or dict or CAS table</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the CAS table to store the deep learning model.</p>
+</dd>
+<dt><strong>batch_norm_first</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to have batch normalization layer before the
+convolution layer in the residual block.  For a detailed discussion
+about this, please refer to this paper: He, Kaiming, et al. “Identity
+mappings in deep residual networks.” European Conference on Computer
+Vision. Springer International Publishing, 2016.
+<br/><strong class="param-meta">Default:</strong> False</p>
+</dd>
+<dt><strong>n_classes</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of classes. If None is assigned, the model will
+automatically detect the number of classes based on the training set.
+<br/><strong class="param-meta">Default:</strong> 1000</p>
+</dd>
+<dt><strong>n_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of the channels (i.e., depth) of the input layer.
+<br/><strong class="param-meta">Default:</strong> 3</p>
+</dd>
+<dt><strong>width</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the width of the input layer.
+<br/><strong class="param-meta">Default:</strong> 224</p>
+</dd>
+<dt><strong>height</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the height of the input layer.
+<br/><strong class="param-meta">Default:</strong> 224</p>
+</dd>
+<dt><strong>scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">double</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies a scaling factor to be applied to each pixel intensity values.
+<br/><strong class="param-meta">Default:</strong> 1</p>
+</dd>
+<dt><strong>random_flip</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies how to flip the data in the input layer when image data is
+used. Approximately half of the input data is subject to flipping.
+<br/><strong class="param-meta">Valid Values:</strong> ‘h’, ‘hv’, ‘v’, ‘none’
+<br/><strong class="param-meta">Default:</strong> ‘none’</p>
+</dd>
+<dt><strong>random_crop</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies how to crop the data in the input layer when image data is
+used. Images are cropped to the values that are specified in the width
+and height parameters. Only the images with one or both dimensions
+that are larger than those sizes are cropped.
+<br/><strong class="param-meta">Valid Values:</strong> ‘none’, ‘unique’
+<br/><strong class="param-meta">Default:</strong> ‘none’</p>
+</dd>
+<dt><strong>offsets</strong> <span class="classifier-delimiter">:</span> <span class="classifier">double or iter-of-doubles</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies an offset for each channel in the input data. The final input
+data is set after applying scaling and subtracting the specified offsets.
+<br/><strong class="param-meta">Default:</strong> (103.939, 116.779, 123.68)</p>
+</dd>
+<dt><strong>pre_trained_weights</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to use the pre-trained weights trained on the ImageNet data set.
+<br/><strong class="param-meta">Default:</strong> False</p>
+</dd>
+<dt><strong>pre_trained_weights_file</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the file name for the pre-trained weights.
+Must be a fully qualified file name of SAS-compatible file (e.g., <a href="#id1"><span class="problematic" id="id2">*</span></a>.caffemodel.h5)
+<br/><strong class="param-meta">Note:</strong> Required when pre_trained_weights=True.</p>
+</dd>
+<dt><strong>include_top</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to include pre-trained weights of the top layers,
+i.e. the last layer for classification.
+<br/><strong class="param-meta">Default:</strong> False</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong><a href="dlpy.sequential.Sequential.html">Sequential</a></strong></dt>
+<dd><p class="first last">If <cite>pre_trained_weights</cite> is <cite>False</cite></p>
+</dd>
+<dt><strong><a href="dlpy.model.Model.html">Model</a></strong></dt>
+<dd><p class="first last">If <cite>pre_trained_weights</cite> is <cite>True</cite></p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://arxiv.org/pdf/1512.03385.pdf">https://arxiv.org/pdf/1512.03385.pdf</a></p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.applications.ResNet_Wide.html" class="btn btn-neutral float-right" title="dlpy.applications.ResNet_Wide" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.applications.ResNet152_SAS.html" class="btn btn-neutral" title="dlpy.applications.ResNet152_SAS" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

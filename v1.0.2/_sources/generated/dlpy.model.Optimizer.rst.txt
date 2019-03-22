@@ -1,0 +1,32 @@
+dlpy.model.Optimizer
+====================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: Optimizer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Optimizer.__init__
+      ~Optimizer.add_optimizer_mode
+      ~Optimizer.clear
+      ~Optimizer.get
+      ~Optimizer.items
+      ~Optimizer.keys
+      ~Optimizer.pop
+      ~Optimizer.popitem
+      ~Optimizer.setdefault
+      ~Optimizer.update
+      ~Optimizer.values
+   
+   
+
+   
+   
+   

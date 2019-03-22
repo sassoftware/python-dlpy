@@ -1,0 +1,6 @@
+dlpy.model.Model.from\_keras\_model
+===================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.from_keras_model

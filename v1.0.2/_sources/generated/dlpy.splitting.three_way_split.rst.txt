@@ -1,0 +1,6 @@
+dlpy.splitting.three\_way\_split
+================================
+
+.. currentmodule:: dlpy.splitting
+
+.. autofunction:: three_way_split

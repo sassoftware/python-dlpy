@@ -1,0 +1,31 @@
+dlpy.model.DataSpec
+===================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: DataSpec
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataSpec.__init__
+      ~DataSpec.clear
+      ~DataSpec.get
+      ~DataSpec.items
+      ~DataSpec.keys
+      ~DataSpec.pop
+      ~DataSpec.popitem
+      ~DataSpec.setdefault
+      ~DataSpec.update
+      ~DataSpec.values
+   
+   
+
+   
+   
+   

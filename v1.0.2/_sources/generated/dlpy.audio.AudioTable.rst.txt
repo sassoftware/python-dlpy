@@ -1,0 +1,184 @@
+dlpy.audio.AudioTable
+=====================
+
+.. currentmodule:: dlpy.audio
+
+.. autoclass:: AudioTable
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AudioTable.__init__
+      ~AudioTable.abs
+      ~AudioTable.all
+      ~AudioTable.any
+      ~AudioTable.append
+      ~AudioTable.append_columns
+      ~AudioTable.append_computed_columns
+      ~AudioTable.append_computedvars
+      ~AudioTable.append_computedvarsprogram
+      ~AudioTable.append_groupby
+      ~AudioTable.append_orderby
+      ~AudioTable.append_where
+      ~AudioTable.as_matrix
+      ~AudioTable.boxplot
+      ~AudioTable.clip
+      ~AudioTable.clip_lower
+      ~AudioTable.clip_upper
+      ~AudioTable.copy
+      ~AudioTable.corr
+      ~AudioTable.count
+      ~AudioTable.create_audio_table
+      ~AudioTable.create_audio_table_speechrecognition
+      ~AudioTable.css
+      ~AudioTable.cv
+      ~AudioTable.datastep
+      ~AudioTable.del_action_params
+      ~AudioTable.del_param
+      ~AudioTable.del_params
+      ~AudioTable.describe
+      ~AudioTable.drop
+      ~AudioTable.dropna
+      ~AudioTable.eval
+      ~AudioTable.exists
+      ~AudioTable.extract_audio_features
+      ~AudioTable.fillna
+      ~AudioTable.from_csv
+      ~AudioTable.from_dict
+      ~AudioTable.from_items
+      ~AudioTable.from_records
+      ~AudioTable.get_action_names
+      ~AudioTable.get_action_params
+      ~AudioTable.get_actionset_names
+      ~AudioTable.get_connection
+      ~AudioTable.get_dtype_counts
+      ~AudioTable.get_fetch_params
+      ~AudioTable.get_ftype_counts
+      ~AudioTable.get_groupby_vars
+      ~AudioTable.get_inputs_param
+      ~AudioTable.get_param
+      ~AudioTable.get_params
+      ~AudioTable.get_value
+      ~AudioTable.groupby
+      ~AudioTable.has_groupby_vars
+      ~AudioTable.has_param
+      ~AudioTable.has_params
+      ~AudioTable.head
+      ~AudioTable.hist
+      ~AudioTable.info
+      ~AudioTable.invoke
+      ~AudioTable.iteritems
+      ~AudioTable.iterrows
+      ~AudioTable.itertuples
+      ~AudioTable.kurt
+      ~AudioTable.kurtosis
+      ~AudioTable.load_audio_files
+      ~AudioTable.load_audio_metadata
+      ~AudioTable.load_audio_metadata_speechrecognition
+      ~AudioTable.lookup
+      ~AudioTable.max
+      ~AudioTable.mean
+      ~AudioTable.median
+      ~AudioTable.merge
+      ~AudioTable.min
+      ~AudioTable.mode
+      ~AudioTable.next
+      ~AudioTable.nlargest
+      ~AudioTable.nmiss
+      ~AudioTable.nsmallest
+      ~AudioTable.nth
+      ~AudioTable.pop
+      ~AudioTable.probt
+      ~AudioTable.quantile
+      ~AudioTable.query
+      ~AudioTable.replace
+      ~AudioTable.reset_index
+      ~AudioTable.retrieve
+      ~AudioTable.sample
+      ~AudioTable.select_dtypes
+      ~AudioTable.set_action_params
+      ~AudioTable.set_connection
+      ~AudioTable.set_param
+      ~AudioTable.set_params
+      ~AudioTable.skew
+      ~AudioTable.skewness
+      ~AudioTable.slice
+      ~AudioTable.sort
+      ~AudioTable.sort_values
+      ~AudioTable.std
+      ~AudioTable.stderr
+      ~AudioTable.sum
+      ~AudioTable.tail
+      ~AudioTable.to_clipboard
+      ~AudioTable.to_csv
+      ~AudioTable.to_datastep_params
+      ~AudioTable.to_dense
+      ~AudioTable.to_dict
+      ~AudioTable.to_excel
+      ~AudioTable.to_frame
+      ~AudioTable.to_gbq
+      ~AudioTable.to_hdf
+      ~AudioTable.to_html
+      ~AudioTable.to_input_datastep_params
+      ~AudioTable.to_json
+      ~AudioTable.to_latex
+      ~AudioTable.to_msgpack
+      ~AudioTable.to_outtable
+      ~AudioTable.to_outtable_params
+      ~AudioTable.to_params
+      ~AudioTable.to_pickle
+      ~AudioTable.to_records
+      ~AudioTable.to_sparse
+      ~AudioTable.to_sql
+      ~AudioTable.to_stata
+      ~AudioTable.to_string
+      ~AudioTable.to_table
+      ~AudioTable.to_table_name
+      ~AudioTable.to_table_params
+      ~AudioTable.to_view
+      ~AudioTable.to_xarray
+      ~AudioTable.tvalue
+      ~AudioTable.uss
+      ~AudioTable.var
+      ~AudioTable.with_params
+      ~AudioTable.xs
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AudioTable.all_params
+      ~AudioTable.at
+      ~AudioTable.axes
+      ~AudioTable.columns
+      ~AudioTable.created_date
+      ~AudioTable.dtypes
+      ~AudioTable.ftypes
+      ~AudioTable.getdoc
+      ~AudioTable.iat
+      ~AudioTable.iloc
+      ~AudioTable.index
+      ~AudioTable.ix
+      ~AudioTable.last_accessed_date
+      ~AudioTable.last_modified_date
+      ~AudioTable.loc
+      ~AudioTable.ndim
+      ~AudioTable.outtable_params
+      ~AudioTable.param_names
+      ~AudioTable.plot
+      ~AudioTable.running_caslib
+      ~AudioTable.shape
+      ~AudioTable.size
+      ~AudioTable.table_params
+      ~AudioTable.values
+   
+   

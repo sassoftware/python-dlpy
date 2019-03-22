@@ -1,0 +1,44 @@
+dlpy.layers.Recurrent
+=====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Recurrent
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Recurrent.__init__
+      ~Recurrent.count_instances
+      ~Recurrent.format_name
+      ~Recurrent.get_number_of_instances
+      ~Recurrent.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Recurrent.can_be_last_layer
+      ~Recurrent.kernel_size
+      ~Recurrent.layer_id
+      ~Recurrent.num_bias
+      ~Recurrent.num_features
+      ~Recurrent.num_weights
+      ~Recurrent.number_of_instances
+      ~Recurrent.output_size
+      ~Recurrent.rnn_summary
+      ~Recurrent.summary
+      ~Recurrent.type
+      ~Recurrent.type_desc
+      ~Recurrent.type_label
+   
+   

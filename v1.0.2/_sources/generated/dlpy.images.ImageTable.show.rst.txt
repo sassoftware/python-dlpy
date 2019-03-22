@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.show
+===========================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.show

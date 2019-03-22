@@ -1,0 +1,6 @@
+dlpy.model.Model.predict
+========================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.predict

@@ -1,0 +1,6 @@
+dlpy.applications.ResNet18\_SAS
+===============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: ResNet18_SAS

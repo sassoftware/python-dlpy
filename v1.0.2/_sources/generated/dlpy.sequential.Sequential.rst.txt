@@ -1,0 +1,98 @@
+dlpy.sequential.Sequential
+==========================
+
+.. currentmodule:: dlpy.sequential
+
+.. autoclass:: Sequential
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Sequential.__init__
+      ~Sequential.add
+      ~Sequential.change_labels
+      ~Sequential.compile
+      ~Sequential.count_instances
+      ~Sequential.count_params
+      ~Sequential.deploy
+      ~Sequential.evaluate
+      ~Sequential.evaluate_object_detection
+      ~Sequential.fit
+      ~Sequential.forecast
+      ~Sequential.format_name
+      ~Sequential.from_caffe_model
+      ~Sequential.from_keras_model
+      ~Sequential.from_onnx_model
+      ~Sequential.from_sashdat
+      ~Sequential.from_table
+      ~Sequential.get_feature_maps
+      ~Sequential.get_features
+      ~Sequential.get_model_info
+      ~Sequential.get_number_of_instances
+      ~Sequential.heat_map_analysis
+      ~Sequential.load
+      ~Sequential.load_weights
+      ~Sequential.load_weights_attr
+      ~Sequential.load_weights_from_caffe
+      ~Sequential.load_weights_from_file
+      ~Sequential.load_weights_from_file_with_labels
+      ~Sequential.load_weights_from_keras
+      ~Sequential.load_weights_from_table
+      ~Sequential.plot_evaluate_res
+      ~Sequential.plot_heat_map
+      ~Sequential.plot_network
+      ~Sequential.plot_training_history
+      ~Sequential.pop
+      ~Sequential.predict
+      ~Sequential.print_summary
+      ~Sequential.save_to_astore
+      ~Sequential.save_to_onnx
+      ~Sequential.save_to_table
+      ~Sequential.save_to_table_with_caslibify
+      ~Sequential.save_weights_csv
+      ~Sequential.score
+      ~Sequential.set_weights
+      ~Sequential.set_weights_attr
+      ~Sequential.switch
+      ~Sequential.to_functional_model
+      ~Sequential.to_model_params
+      ~Sequential.train
+      ~Sequential.tune
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Sequential.can_be_last_layer
+      ~Sequential.feature_maps
+      ~Sequential.layer_id
+      ~Sequential.model_ever_trained
+      ~Sequential.model_explain_table
+      ~Sequential.n_epochs
+      ~Sequential.name
+      ~Sequential.number_of_instances
+      ~Sequential.rnn_summary
+      ~Sequential.score_message_level
+      ~Sequential.src_layers
+      ~Sequential.summary
+      ~Sequential.train_tbl
+      ~Sequential.training_history
+      ~Sequential.type
+      ~Sequential.type_desc
+      ~Sequential.type_label
+      ~Sequential.valid_conf_mat
+      ~Sequential.valid_res
+      ~Sequential.valid_res_tbl
+      ~Sequential.valid_score
+      ~Sequential.valid_tbl
+   
+   

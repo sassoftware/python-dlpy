@@ -1,0 +1,43 @@
+dlpy.layers.Reshape
+===================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Reshape
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Reshape.__init__
+      ~Reshape.count_instances
+      ~Reshape.format_name
+      ~Reshape.get_number_of_instances
+      ~Reshape.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Reshape.can_be_last_layer
+      ~Reshape.kernel_size
+      ~Reshape.layer_id
+      ~Reshape.num_bias
+      ~Reshape.num_weights
+      ~Reshape.number_of_instances
+      ~Reshape.output_size
+      ~Reshape.rnn_summary
+      ~Reshape.summary
+      ~Reshape.type
+      ~Reshape.type_desc
+      ~Reshape.type_label
+   
+   

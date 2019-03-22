@@ -1,0 +1,6 @@
+dlpy.timeseries.TimeseriesTable.from\_table
+===========================================
+
+.. currentmodule:: dlpy.timeseries
+
+.. automethod:: TimeseriesTable.from_table

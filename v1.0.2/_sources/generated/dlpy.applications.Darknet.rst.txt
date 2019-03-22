@@ -1,0 +1,6 @@
+dlpy.applications.Darknet
+=========================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: Darknet

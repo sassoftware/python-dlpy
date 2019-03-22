@@ -1,0 +1,6 @@
+dlpy.applications.ResNet\_Wide
+==============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: ResNet_Wide

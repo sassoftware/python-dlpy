@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.model.Model.save_to_table &mdash; DLPy 1.0.2 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.model.Model.deploy" href="dlpy.model.Model.deploy.html"/>
+        <link rel="prev" title="dlpy.model.Model.save_to_astore" href="dlpy.model.Model.save_to_astore.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0.2
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audio">Audio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#models">Models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.html">dlpy.model.Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_table.html">dlpy.model.Model.from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_keras_model.html">dlpy.model.Model.from_keras_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_caffe_model.html">dlpy.model.Model.from_caffe_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_onnx_model.html">dlpy.model.Model.from_onnx_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.from_sashdat.html">dlpy.model.Model.from_sashdat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load.html">dlpy.model.Model.load</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.set_weights.html">dlpy.model.Model.set_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights.html">dlpy.model.Model.load_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_from_caffe.html">dlpy.model.Model.load_weights_from_caffe</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_from_keras.html">dlpy.model.Model.load_weights_from_keras</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_from_table.html">dlpy.model.Model.load_weights_from_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.set_weights_attr.html">dlpy.model.Model.set_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.load_weights_attr.html">dlpy.model.Model.load_weights_attr</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.fit.html">dlpy.model.Model.fit</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.tune.html">dlpy.model.Model.tune</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_training_history.html">dlpy.model.Model.plot_training_history</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.predict.html">dlpy.model.Model.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.evaluate.html">dlpy.model.Model.evaluate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.get_feature_maps.html">dlpy.model.Model.get_feature_maps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.get_features.html">dlpy.model.Model.get_features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.heat_map_analysis.html">dlpy.model.Model.heat_map_analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_heat_map.html">dlpy.model.Model.plot_heat_map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.save_to_astore.html">dlpy.model.Model.save_to_astore</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.model.Model.save_to_table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.deploy.html">dlpy.model.Model.deploy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.count_params.html">dlpy.model.Model.count_params</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.print_summary.html">dlpy.model.Model.print_summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Model.plot_network.html">dlpy.model.Model.plot_network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.DataSpec.html">dlpy.model.DataSpec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.DataSpecNumNomOpts.html">dlpy.model.DataSpecNumNomOpts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Sequence.html">dlpy.model.Sequence</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.TextParms.html">dlpy.model.TextParms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Optimizer.html">dlpy.model.Optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.NatGradSolver.html">dlpy.model.NatGradSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.LBFGSolver.html">dlpy.model.LBFGSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.AdamSolver.html">dlpy.model.AdamSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.MomentumSolver.html">dlpy.model.MomentumSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.VanillaSolver.html">dlpy.model.VanillaSolver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Solver.html">dlpy.model.Solver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.model.Gpu.html">dlpy.model.Gpu</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.model.Model.save_to_table</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.model.Model.save_to_table.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-model-model-save-to-table">
+<h1>dlpy.model.Model.save_to_table<a class="headerlink" href="#dlpy-model-model-save-to-table" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="dlpy.model.Model.save_to_table">
+<code class="descclassname">Model.</code><code class="descname">save_to_table</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model.save_to_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the model as SAS dataset</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>path</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
+<dd><p class="first last">Specifies the server-side path to store the model tables.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.model.Model.deploy.html" class="btn btn-neutral float-right" title="dlpy.model.Model.deploy" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.model.Model.save_to_astore.html" class="btn btn-neutral" title="dlpy.model.Model.save_to_astore" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.0.2',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

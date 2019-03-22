@@ -1,0 +1,6 @@
+dlpy.model.Model.from\_caffe\_model
+===================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.from_caffe_model

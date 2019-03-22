@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.crop
+===========================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.crop

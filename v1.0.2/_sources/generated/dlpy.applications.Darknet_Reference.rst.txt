@@ -1,0 +1,6 @@
+dlpy.applications.Darknet\_Reference
+====================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: Darknet_Reference

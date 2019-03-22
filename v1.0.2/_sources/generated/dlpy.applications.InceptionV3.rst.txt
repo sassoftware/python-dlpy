@@ -1,0 +1,6 @@
+dlpy.applications.InceptionV3
+=============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: InceptionV3

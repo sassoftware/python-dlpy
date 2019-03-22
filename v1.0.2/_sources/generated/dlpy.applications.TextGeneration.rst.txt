@@ -1,0 +1,6 @@
+dlpy.applications.TextGeneration
+================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: TextGeneration

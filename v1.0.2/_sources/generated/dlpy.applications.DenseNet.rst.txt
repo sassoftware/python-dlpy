@@ -1,0 +1,6 @@
+dlpy.applications.DenseNet
+==========================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: DenseNet
