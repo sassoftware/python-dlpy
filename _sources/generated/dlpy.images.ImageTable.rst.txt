@@ -183,6 +183,7 @@ dlpy.images.ImageTable
       ~ImageTable.outtable_params
       ~ImageTable.param_names
       ~ImageTable.plot
+      ~ImageTable.running_image_column
       ~ImageTable.shape
       ~ImageTable.size
       ~ImageTable.table_params

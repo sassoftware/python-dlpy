@@ -28,6 +28,7 @@ dlpy.layers.Proj
    .. autosummary::
    
       ~Proj.can_be_last_layer
+      ~Proj.layer_id
       ~Proj.number_of_instances
       ~Proj.rnn_summary
       ~Proj.summary

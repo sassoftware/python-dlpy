@@ -29,6 +29,7 @@ dlpy.layers.Conv2d
    
       ~Conv2d.can_be_last_layer
       ~Conv2d.kernel_size
+      ~Conv2d.layer_id
       ~Conv2d.num_bias
       ~Conv2d.num_weights
       ~Conv2d.number_of_instances

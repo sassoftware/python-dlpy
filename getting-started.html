@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Getting Started &mdash; DLPy 1.0.1 documentation</title>
+  <title>Getting Started &mdash; DLPy 1.0.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="genindex.html"/>
         <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="DLPy 1.0.1 documentation" href="index.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="index.html"/>
         <link rel="next" title="API Reference" href="api.html"/>
         <link rel="prev" title="Installation" href="install.html"/> 
 
@@ -65,7 +65,7 @@
             
             
               <div class="version">
-                1.0.1
+                1.0.2
               </div>
             
           
@@ -211,24 +211,24 @@ to create a connection.</p>
 </div>
 <p>Display a print summary of the table.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="n">model1</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
-<span class="go">     Layer    Type         ...             Output Size Number of Parameters</span>
-<span class="go">0   Input1   input         ...           (224, 224, 3)               (0, 0)</span>
-<span class="go">1  Convo.1   convo         ...           (224, 224, 8)            (1176, 8)</span>
-<span class="go">2    Pool1    pool         ...           (112, 112, 8)               (0, 0)</span>
-<span class="go">3  Convo.2   convo         ...           (112, 112, 8)            (3136, 8)</span>
-<span class="go">4    Pool2    pool         ...             (56, 56, 8)               (0, 0)</span>
-<span class="go">5    F.C.1      fc         ...                      16          (401408, 0)</span>
-<span class="go">6  Output1  output         ...                       2              (32, 2)</span>
-<span class="go">7                          ...                                       405770</span>
+<span class="go">  Layer Id    Layer         ...             Output Size Number of Parameters</span>
+<span class="go">0        0   Input1         ...           (224, 224, 3)               (0, 0)</span>
+<span class="go">1        1  Convo.1         ...           (224, 224, 8)            (1176, 8)</span>
+<span class="go">2        2    Pool1         ...           (112, 112, 8)               (0, 0)</span>
+<span class="go">3        3  Convo.2         ...           (112, 112, 8)            (3136, 8)</span>
+<span class="go">4        4    Pool2         ...             (56, 56, 8)               (0, 0)</span>
+<span class="go">5        5    F.C.1         ...                      16          (401408, 0)</span>
+<span class="go">6        6  Output1         ...                       2              (32, 2)</span>
+<span class="go">7                           ...                                       405770</span>
 
-<span class="go">[8 rows x 7 columns]</span>
+<span class="go">[8 rows x 8 columns]</span>
 </pre></div>
 </div>
 <p>Use the open source utility Graphviz to display a plot of the model network.
 Graphviz is available here: <a class="reference external" href="https://www.graphviz.org/download/">https://www.graphviz.org/download/</a>.
 If you do not have Graphviz, skip this instruction.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">model1</span><span class="o">.</span><span class="n">plot_network</span><span class="p">()</span>
-<span class="gh">Out[14]: </span><span class="go">&lt;graphviz.dot.Digraph at 0x7fcdfb1c0cc0&gt;</span>
+<span class="gh">Out[14]: </span><span class="go">&lt;graphviz.dot.Digraph at 0x7f45608ba240&gt;</span>
 </pre></div>
 </div>
 <img alt="_images/model1_network.svg" src="_images/model1_network.svg" /></div>
@@ -274,7 +274,7 @@ If you do not have Graphviz, skip this instruction.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'1.0.1',
+            VERSION:'1.0.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

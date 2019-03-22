@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dlpy.timeseries.TimeseriesTable &mdash; DLPy 1.0.1 documentation</title>
+  <title>dlpy.timeseries.TimeseriesTable &mdash; DLPy 1.0.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="DLPy 1.0.1 documentation" href="../index.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="../index.html"/>
         <link rel="up" title="API Reference" href="../api.html"/>
         <link rel="next" title="dlpy.timeseries.TimeseriesTable.from_table" href="dlpy.timeseries.TimeseriesTable.from_table.html"/>
         <link rel="prev" title="dlpy.audio.AudioTable.create_audio_table" href="dlpy.audio.AudioTable.create_audio_table.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0.1
+                1.0.2
               </div>
             
           
@@ -168,7 +168,7 @@
 <h1>dlpy.timeseries.TimeseriesTable<a class="headerlink" href="#dlpy-timeseries-timeseriestable" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="dlpy.timeseries.TimeseriesTable">
-<em class="property">class </em><code class="descclassname">dlpy.timeseries.</code><code class="descname">TimeseriesTable</code><span class="sig-paren">(</span><em>name</em>, <em>timeid=None</em>, <em>groupby_var=None</em>, <em>sequence_opt=None</em>, <em>inputs_target=None</em>, <em>**table_params</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.timeseries.TimeseriesTable" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">dlpy.timeseries.</code><code class="descname">TimeseriesTable</code><span class="sig-paren">(</span><em>name</em>, <em>timeid=None</em>, <em>groupby_var=None</em>, <em>sequence_opt=None</em>, <em>inputs_target=None</em>, <em>target=None</em>, <em>autoregressive_sequence=None</em>, <em>acc_interval=None</em>, <em>**table_params</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.timeseries.TimeseriesTable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <strong>swat.cas.table.CASTable</strong></p>
 <p>Table for preprocessing timeseries</p>
 <p>It creates an instance of <a class="reference internal" href="#dlpy.timeseries.TimeseriesTable" title="dlpy.timeseries.TimeseriesTable"><strong>TimeseriesTable</strong></a> by loading from
@@ -217,7 +217,7 @@ It will be created by the prepare_subsequences method.
 </table>
 <dl class="method">
 <dt id="dlpy.timeseries.TimeseriesTable.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em>, <em>timeid=None</em>, <em>groupby_var=None</em>, <em>sequence_opt=None</em>, <em>inputs_target=None</em>, <em>**table_params</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.timeseries.TimeseriesTable.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>name</em>, <em>timeid=None</em>, <em>groupby_var=None</em>, <em>sequence_opt=None</em>, <em>inputs_target=None</em>, <em>target=None</em>, <em>autoregressive_sequence=None</em>, <em>acc_interval=None</em>, <em>**table_params</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.timeseries.TimeseriesTable.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -270,161 +270,155 @@ It will be created by the prepare_subsequences method.
 <tr class="row-even"><td><strong>boxplot</strong>([column,&nbsp;by])</td>
 <td>Make a boxplot from the table data</td>
 </tr>
-<tr class="row-odd"><td><strong>char_to_double</strong>(conn,&nbsp;tbl_colinfo,&nbsp;…[,&nbsp;num_fmt])</td>
-<td></td>
-</tr>
-<tr class="row-even"><td><strong>clip</strong>([lower,&nbsp;upper,&nbsp;axis])</td>
+<tr class="row-odd"><td><strong>clip</strong>([lower,&nbsp;upper,&nbsp;axis])</td>
 <td>Clip values at thresholds</td>
 </tr>
-<tr class="row-odd"><td><strong>clip_lower</strong>(threshold[,&nbsp;axis])</td>
+<tr class="row-even"><td><strong>clip_lower</strong>(threshold[,&nbsp;axis])</td>
 <td>Clip values at lower threshold</td>
 </tr>
-<tr class="row-even"><td><strong>clip_upper</strong>(threshold[,&nbsp;axis])</td>
+<tr class="row-odd"><td><strong>clip_upper</strong>(threshold[,&nbsp;axis])</td>
 <td>Clip values at upper threshold</td>
 </tr>
-<tr class="row-odd"><td><strong>convert_to_sas_time_format</strong>(python_time,&nbsp;…)</td>
+<tr class="row-even"><td><strong>convert_to_sas_time_format</strong>(python_time,&nbsp;…)</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><strong>copy</strong>([deep,&nbsp;exclude])</td>
+<tr class="row-odd"><td><strong>copy</strong>([deep,&nbsp;exclude])</td>
 <td>Make a copy of the <cite>CASTable</cite> object</td>
 </tr>
-<tr class="row-odd"><td><strong>corr</strong>([method,&nbsp;min_periods])</td>
+<tr class="row-even"><td><strong>corr</strong>([method,&nbsp;min_periods])</td>
 <td>Compute pairwise correlation of columns</td>
 </tr>
-<tr class="row-even"><td><strong>count</strong>([axis,&nbsp;level,&nbsp;numeric_only])</td>
+<tr class="row-odd"><td><strong>count</strong>([axis,&nbsp;level,&nbsp;numeric_only])</td>
 <td>Return total number of non-missing values in each column</td>
 </tr>
-<tr class="row-odd"><td><strong>create_lags</strong>(varname,&nbsp;nlags,&nbsp;byvar)</td>
+<tr class="row-even"><td><strong>create_lags</strong>(varname,&nbsp;nlags,&nbsp;byvar)</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><strong>css</strong>([casout])</td>
+<tr class="row-odd"><td><strong>css</strong>([casout])</td>
 <td>Return the corrected sum of squares of the values of each column</td>
 </tr>
-<tr class="row-odd"><td><strong>cv</strong>([casout])</td>
+<tr class="row-even"><td><strong>cv</strong>([casout])</td>
 <td>Return the coefficient of variation of the values of each column</td>
 </tr>
-<tr class="row-even"><td><strong>datastep</strong>(code[,&nbsp;casout])</td>
+<tr class="row-odd"><td><strong>datastep</strong>(code[,&nbsp;casout])</td>
 <td>Execute Data step code against the CAS table</td>
 </tr>
-<tr class="row-odd"><td><strong>del_action_params</strong>(*names)</td>
+<tr class="row-even"><td><strong>del_action_params</strong>(*names)</td>
 <td>Delete parameters for specified action names</td>
 </tr>
-<tr class="row-even"><td><strong>del_param</strong>(*keys)</td>
+<tr class="row-odd"><td><strong>del_param</strong>(*keys)</td>
 <td>Delete parameters</td>
 </tr>
-<tr class="row-odd"><td><strong>del_params</strong>(*keys)</td>
+<tr class="row-even"><td><strong>del_params</strong>(*keys)</td>
 <td>Delete parameters</td>
 </tr>
-<tr class="row-even"><td><strong>describe</strong>([percentiles,&nbsp;include,&nbsp;exclude,&nbsp;stats])</td>
+<tr class="row-odd"><td><strong>describe</strong>([percentiles,&nbsp;include,&nbsp;exclude,&nbsp;stats])</td>
 <td>Get descriptive statistics</td>
 </tr>
-<tr class="row-odd"><td><strong>drop</strong>(labels[,&nbsp;axis,&nbsp;level,&nbsp;inplace,&nbsp;errors])</td>
+<tr class="row-even"><td><strong>drop</strong>(labels[,&nbsp;axis,&nbsp;level,&nbsp;inplace,&nbsp;errors])</td>
 <td>Return a new <strong>CASTable</strong> object with the specified columns removed</td>
 </tr>
-<tr class="row-even"><td><strong>dropna</strong>([axis,&nbsp;how,&nbsp;thresh,&nbsp;subset,&nbsp;inplace])</td>
+<tr class="row-odd"><td><strong>dropna</strong>([axis,&nbsp;how,&nbsp;thresh,&nbsp;subset,&nbsp;inplace])</td>
 <td>Drop rows that contain missing values</td>
 </tr>
-<tr class="row-odd"><td><strong>eval</strong>(expr[,&nbsp;inplace,&nbsp;kwargs])</td>
+<tr class="row-even"><td><strong>eval</strong>(expr[,&nbsp;inplace,&nbsp;kwargs])</td>
 <td>Evaluate a CAS table expression</td>
 </tr>
-<tr class="row-even"><td><strong>exists</strong>()</td>
+<tr class="row-odd"><td><strong>exists</strong>()</td>
 <td>Return True if table exists in the server</td>
 </tr>
-<tr class="row-odd"><td><strong>fillna</strong>([value,&nbsp;method,&nbsp;axis,&nbsp;inplace,&nbsp;…])</td>
+<tr class="row-even"><td><strong>fillna</strong>([value,&nbsp;method,&nbsp;axis,&nbsp;inplace,&nbsp;…])</td>
 <td>Fill missing values using the specified method</td>
 </tr>
-<tr class="row-even"><td><strong>find_file_caslib</strong>(conn,&nbsp;path)</td>
+<tr class="row-odd"><td><strong>find_file_caslib</strong>(conn,&nbsp;path)</td>
 <td>Check whether the specified path is in the caslibs of the current session</td>
 </tr>
-<tr class="row-odd"><td><strong>from_csv</strong>(connection,&nbsp;path[,&nbsp;casout])</td>
+<tr class="row-even"><td><strong>from_csv</strong>(connection,&nbsp;path[,&nbsp;casout])</td>
 <td>Create a CASTable from a CSV file</td>
 </tr>
-<tr class="row-even"><td><strong>from_dict</strong>(connection,&nbsp;data[,&nbsp;casout])</td>
+<tr class="row-odd"><td><strong>from_dict</strong>(connection,&nbsp;data[,&nbsp;casout])</td>
 <td>Create a CASTable from a dictionary</td>
 </tr>
-<tr class="row-odd"><td><strong>from_items</strong>(connection,&nbsp;items[,&nbsp;casout])</td>
+<tr class="row-even"><td><strong>from_items</strong>(connection,&nbsp;items[,&nbsp;casout])</td>
 <td>Create a CASTable from a (key, value) pairs</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_localfile.html#dlpy.timeseries.TimeseriesTable.from_localfile" title="dlpy.timeseries.TimeseriesTable.from_localfile"><strong>from_localfile</strong></a>(conn,&nbsp;path[,&nbsp;columns,&nbsp;…])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_localfile.html#dlpy.timeseries.TimeseriesTable.from_localfile" title="dlpy.timeseries.TimeseriesTable.from_localfile"><strong>from_localfile</strong></a>(conn,&nbsp;path[,&nbsp;columns,&nbsp;…])</td>
 <td>Create an TimeseriesTable from a file on the client side.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_pandas.html#dlpy.timeseries.TimeseriesTable.from_pandas" title="dlpy.timeseries.TimeseriesTable.from_pandas"><strong>from_pandas</strong></a>(conn,&nbsp;pandas_df[,&nbsp;casout])</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_pandas.html#dlpy.timeseries.TimeseriesTable.from_pandas" title="dlpy.timeseries.TimeseriesTable.from_pandas"><strong>from_pandas</strong></a>(conn,&nbsp;pandas_df[,&nbsp;casout])</td>
 <td>Create an TimeseriesTable from a pandas DataFrame or Series</td>
 </tr>
-<tr class="row-even"><td><strong>from_records</strong>(connection,&nbsp;data[,&nbsp;casout])</td>
+<tr class="row-odd"><td><strong>from_records</strong>(connection,&nbsp;data[,&nbsp;casout])</td>
 <td>Create a CASTable from records</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_serverfile.html#dlpy.timeseries.TimeseriesTable.from_serverfile" title="dlpy.timeseries.TimeseriesTable.from_serverfile"><strong>from_serverfile</strong></a>(conn,&nbsp;path[,&nbsp;columns,&nbsp;…])</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_serverfile.html#dlpy.timeseries.TimeseriesTable.from_serverfile" title="dlpy.timeseries.TimeseriesTable.from_serverfile"><strong>from_serverfile</strong></a>(conn,&nbsp;path[,&nbsp;columns,&nbsp;…])</td>
 <td>Create an TimeseriesTable from a file on the server side</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_table.html#dlpy.timeseries.TimeseriesTable.from_table" title="dlpy.timeseries.TimeseriesTable.from_table"><strong>from_table</strong></a>(tbl[,&nbsp;columns,&nbsp;casout])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.timeseries.TimeseriesTable.from_table.html#dlpy.timeseries.TimeseriesTable.from_table" title="dlpy.timeseries.TimeseriesTable.from_table"><strong>from_table</strong></a>(tbl[,&nbsp;columns,&nbsp;casout])</td>
 <td>Create an TimeseriesTable from a CASTable</td>
 </tr>
-<tr class="row-odd"><td><strong>generate_splitting_code</strong>(timeid,&nbsp;start,&nbsp;end,&nbsp;…)</td>
+<tr class="row-even"><td><strong>generate_splitting_code</strong>(timeid,&nbsp;start,&nbsp;end,&nbsp;…)</td>
 <td></td>
 </tr>
-<tr class="row-even"><td><strong>get_action_names</strong>()</td>
+<tr class="row-odd"><td><strong>get_action_names</strong>()</td>
 <td>Return a list of available CAS actions</td>
 </tr>
-<tr class="row-odd"><td><strong>get_action_params</strong>(name,&nbsp;*default)</td>
+<tr class="row-even"><td><strong>get_action_params</strong>(name,&nbsp;*default)</td>
 <td>Return parameters for specified action name</td>
 </tr>
-<tr class="row-even"><td><strong>get_actionset_names</strong>()</td>
+<tr class="row-odd"><td><strong>get_actionset_names</strong>()</td>
 <td>Return a list of available actionsets</td>
 </tr>
-<tr class="row-odd"><td><strong>get_connection</strong>()</td>
+<tr class="row-even"><td><strong>get_connection</strong>()</td>
 <td>Get the registered connection object</td>
 </tr>
-<tr class="row-even"><td><strong>get_dtype_counts</strong>()</td>
+<tr class="row-odd"><td><strong>get_dtype_counts</strong>()</td>
 <td>Retrieve the frequency of CAS table column data types</td>
 </tr>
-<tr class="row-odd"><td><strong>get_fetch_params</strong>()</td>
+<tr class="row-even"><td><strong>get_fetch_params</strong>()</td>
 <td>Return options to be used during the table.fetch action</td>
 </tr>
-<tr class="row-even"><td><strong>get_ftype_counts</strong>()</td>
+<tr class="row-odd"><td><strong>get_ftype_counts</strong>()</td>
 <td>Retrieve the frequency of CAS table column data types</td>
 </tr>
-<tr class="row-odd"><td><strong>get_groupby_vars</strong>()</td>
+<tr class="row-even"><td><strong>get_groupby_vars</strong>()</td>
 <td>Return a list of By group variable names</td>
 </tr>
-<tr class="row-even"><td><strong>get_inputs_param</strong>()</td>
+<tr class="row-odd"><td><strong>get_inputs_param</strong>()</td>
 <td>Return the column names for the inputs= action parameter</td>
 </tr>
-<tr class="row-odd"><td><strong>get_param</strong>(key,&nbsp;*default)</td>
+<tr class="row-even"><td><strong>get_param</strong>(key,&nbsp;*default)</td>
 <td>Return the value of a parameter</td>
 </tr>
-<tr class="row-even"><td><strong>get_params</strong>(*keys)</td>
+<tr class="row-odd"><td><strong>get_params</strong>(*keys)</td>
 <td>Return the values of one or more parameters</td>
 </tr>
-<tr class="row-odd"><td><strong>get_value</strong>(index,&nbsp;col,&nbsp;**kwargs)</td>
+<tr class="row-even"><td><strong>get_value</strong>(index,&nbsp;col,&nbsp;**kwargs)</td>
 <td>Retrieve a single scalar value</td>
 </tr>
-<tr class="row-even"><td><strong>groupby</strong>(by[,&nbsp;axis,&nbsp;level,&nbsp;as_index,&nbsp;sort,&nbsp;…])</td>
+<tr class="row-odd"><td><strong>groupby</strong>(by[,&nbsp;axis,&nbsp;level,&nbsp;as_index,&nbsp;sort,&nbsp;…])</td>
 <td>Specify grouping variables for the table</td>
 </tr>
-<tr class="row-odd"><td><strong>has_groupby_vars</strong>()</td>
+<tr class="row-even"><td><strong>has_groupby_vars</strong>()</td>
 <td>Does the table have By group variables configured?</td>
 </tr>
-<tr class="row-even"><td><strong>has_param</strong>(*keys)</td>
+<tr class="row-odd"><td><strong>has_param</strong>(*keys)</td>
 <td>Return a boolean indicating whether or not the parameters exist</td>
 </tr>
-<tr class="row-odd"><td><strong>has_params</strong>(*keys)</td>
+<tr class="row-even"><td><strong>has_params</strong>(*keys)</td>
 <td>Return a boolean indicating whether or not the parameters exist</td>
 </tr>
-<tr class="row-even"><td><strong>head</strong>([n,&nbsp;columns,&nbsp;bygroup_as_index,&nbsp;casout])</td>
+<tr class="row-odd"><td><strong>head</strong>([n,&nbsp;columns,&nbsp;bygroup_as_index,&nbsp;casout])</td>
 <td>Retrieve first <cite>n</cite> rows</td>
 </tr>
-<tr class="row-odd"><td><strong>hist</strong>([column,&nbsp;by])</td>
+<tr class="row-even"><td><strong>hist</strong>([column,&nbsp;by])</td>
 <td>Make a histogram from the table data</td>
 </tr>
-<tr class="row-even"><td><strong>identify_coltype</strong>(col,&nbsp;tbl_colinfo)</td>
+<tr class="row-odd"><td><strong>identify_coltype</strong>(col,&nbsp;tbl_colinfo)</td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><strong>info</strong>([verbose,&nbsp;buf,&nbsp;max_cols,&nbsp;memory_usage,&nbsp;…])</td>
+<tr class="row-even"><td><strong>info</strong>([verbose,&nbsp;buf,&nbsp;max_cols,&nbsp;memory_usage,&nbsp;…])</td>
 <td>Print summary of <strong>CASTable</strong> information</td>
-</tr>
-<tr class="row-even"><td><strong>int_to_double</strong>(conn,&nbsp;tbl_colinfo,&nbsp;…[,&nbsp;num_fmt])</td>
-<td></td>
 </tr>
 <tr class="row-odd"><td><strong>invoke</strong>(_name_,&nbsp;**kwargs)</td>
 <td>Invoke an action on the registered connection</td>
@@ -704,7 +698,7 @@ It will be created by the prepare_subsequences method.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.1',
+            VERSION:'1.0.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

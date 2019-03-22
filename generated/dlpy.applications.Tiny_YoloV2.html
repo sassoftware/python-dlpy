@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dlpy.applications.Tiny_YoloV2 &mdash; DLPy 1.0.1 documentation</title>
+  <title>dlpy.applications.Tiny_YoloV2 &mdash; DLPy 1.0.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="DLPy 1.0.1 documentation" href="../index.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="../index.html"/>
         <link rel="up" title="API Reference" href="../api.html"/>
         <link rel="next" title="dlpy.applications.TextClassification" href="dlpy.applications.TextClassification.html"/>
         <link rel="prev" title="dlpy.applications.Tiny_YoloV1" href="dlpy.applications.Tiny_YoloV1.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0.1
+                1.0.2
               </div>
             
           
@@ -183,7 +183,7 @@
 <h1>dlpy.applications.Tiny_YoloV2<a class="headerlink" href="#dlpy-applications-tiny-yolov2" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="dlpy.applications.Tiny_YoloV2">
-<code class="descclassname">dlpy.applications.</code><code class="descname">Tiny_YoloV2</code><span class="sig-paren">(</span><em>conn</em>, <em>anchors</em>, <em>model_table='Tiny-Yolov2'</em>, <em>n_channels=3</em>, <em>width=416</em>, <em>height=416</em>, <em>scale=0.00392156862745098</em>, <em>act='leaky'</em>, <em>coord_type='YOLO'</em>, <em>max_label_per_image=30</em>, <em>max_boxes=30</em>, <em>random_mutation='random'</em>, <em>n_classes=20</em>, <em>predictions_per_grid=5</em>, <em>grid_number=13</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.applications.Tiny_YoloV2" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">dlpy.applications.</code><code class="descname">Tiny_YoloV2</code><span class="sig-paren">(</span><em>conn</em>, <em>anchors</em>, <em>model_table='Tiny-Yolov2'</em>, <em>n_channels=3</em>, <em>width=416</em>, <em>height=416</em>, <em>scale=0.00392156862745098</em>, <em>random_mutation='NONE'</em>, <em>act='leaky'</em>, <em>act_detection='AUTO'</em>, <em>softmax_for_class_prob=True</em>, <em>coord_type='YOLO'</em>, <em>max_label_per_image=30</em>, <em>max_boxes=30</em>, <em>n_classes=20</em>, <em>predictions_per_grid=5</em>, <em>do_sqrt=True</em>, <em>grid_number=13</em>, <em>coord_scale=None</em>, <em>object_scale=None</em>, <em>prediction_not_a_object_scale=None</em>, <em>class_scale=None</em>, <em>detection_threshold=None</em>, <em>iou_threshold=None</em>, <em>random_boxes=False</em>, <em>match_anchor_size=None</em>, <em>num_to_force_coord=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.applications.Tiny_YoloV2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a deep learning model with the Tiny Yolov2 architecture.</p>
 <p>Tiny Yolov2 is a very small model of Yolov2, so that it includes fewer
 numbers of convolutional layer and batch normalization layer.</p>
@@ -201,20 +201,6 @@ numbers of convolutional layer and batch normalization layer.</p>
 <dt><strong>model_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span></dt>
 <dd><p class="first last">Specifies the name of CAS table to store the model.</p>
 </dd>
-<dt><strong>n_classes</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies the number of classes. If None is assigned, the model will
-automatically detect the number of classes based on the training set.
-<br/><strong class="param-meta">Default:</strong> 20</p>
-</dd>
-<dt><strong>predictions_per_grid</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies the amount of predictions will be done per grid.
-<br/><strong class="param-meta">Default:</strong> 5</p>
-</dd>
-<dt><strong>grid_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies the amount of cells to be analyzed for an image. For example,
-if the value is 5, then the image will be divided into a 5 x 5 grid.
-<br/><strong class="param-meta">Default:</strong> 13</p>
-</dd>
 <dt><strong>n_channels</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
 <dd><p class="first last">Specifies the number of the channels (i.e., depth) of the input layer.
 <br/><strong class="param-meta">Default:</strong> 3</p>
@@ -231,8 +217,32 @@ if the value is 5, then the image will be divided into a 5 x 5 grid.
 <dd><p class="first last">Specifies a scaling factor to be applied to each pixel intensity values.
 <br/><strong class="param-meta">Default:</strong> 1.0 / 255</p>
 </dd>
+<dt><strong>random_mutation</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies how to apply data augmentations/mutations to the data in the
+input layer.
+<br/><strong class="param-meta">Valid Values:</strong> ‘none’, ‘random’
+<br/><strong class="param-meta">Default:</strong> ‘NONE’</p>
+</dd>
 <dt><strong>act</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
 <dd><p class="first last">Specifies the activation function for the batch normalization layers.</p>
+</dd>
+<dt><strong>act_detection</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the activation function for the detection layer.
+<br/><strong class="param-meta">Valid Values:</strong> AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+<br/><strong class="param-meta">Default:</strong> AUTO</p>
+</dd>
+<dt><strong>softmax_for_class_prob</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to perform Softmax on class probability per
+predicted object.
+<br/><strong class="param-meta">Default:</strong> True</p>
+</dd>
+<dt><strong>coord_type</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the format of how to represent bounding boxes. For example,
+a bounding box can be represented with the x and y locations of the
+top-left point as well as width and height of the rectangle.
+This format is the ‘rect’ format. We also support coco and yolo formats.
+<br/><strong class="param-meta">Valid Values:</strong> ‘rect’, ‘yolo’, ‘coco’
+<br/><strong class="param-meta">Default:</strong> ‘yolo’</p>
 </dd>
 <dt><strong>max_label_per_image</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
 <dd><p class="first last">Specifies the maximum number of labels per image in the training.
@@ -243,19 +253,56 @@ if the value is 5, then the image will be divided into a 5 x 5 grid.
 detection layer.
 <br/><strong class="param-meta">Default:</strong> 30</p>
 </dd>
-<dt><strong>random_mutation</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies how to apply data augmentations/mutations to the data in the
-input layer.
-<br/><strong class="param-meta">Valid Values:</strong> ‘none’, ‘random’
-<br/><strong class="param-meta">Default:</strong> ‘random’</p>
+<dt><strong>n_classes</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of classes. If None is assigned, the model will
+automatically detect the number of classes based on the training set.
+<br/><strong class="param-meta">Default:</strong> 20</p>
 </dd>
-<dt><strong>coord_type</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies the format of how to represent bounding boxes. For example,
-a bounding box can be represented with the x and y locations of the
-top-left point as well as width and height of the rectangle.
-This format is the ‘rect’ format. We also support coco and yolo formats.
-<br/><strong class="param-meta">Valid Values:</strong> ‘rect’, ‘yolo’, ‘coco’
-<br/><strong class="param-meta">Default:</strong> ‘yolo’</p>
+<dt><strong>predictions_per_grid</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the amount of predictions will be done per grid.
+<br/><strong class="param-meta">Default:</strong> 5</p>
+</dd>
+<dt><strong>do_sqrt</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies whether to apply the SQRT function to width and height of
+the object for the cost function.
+<br/><strong class="param-meta">Default:</strong> True</p>
+</dd>
+<dt><strong>grid_number</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the amount of cells to be analyzed for an image. For example,
+if the value is 5, then the image will be divided into a 5 x 5 grid.
+<br/><strong class="param-meta">Default:</strong> 13</p>
+</dd>
+<dt><strong>coord_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for the cost function in the detection layer,
+when objects exist in the grid.</p>
+</dd>
+<dt><strong>object_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for object detected for the cost function in
+the detection layer.</p>
+</dd>
+<dt><strong>prediction_not_a_object_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for the cost function in the detection layer,
+when objects do not exist in the grid.</p>
+</dd>
+<dt><strong>class_scale</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the weight for the class of object detected for the cost
+function in the detection layer.</p>
+</dd>
+<dt><strong>detection_threshold</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the threshold for object detection.</p>
+</dd>
+<dt><strong>iou_threshold</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the IOU Threshold of maximum suppression in object detection.</p>
+</dd>
+<dt><strong>random_boxes</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Randomizing boxes when loading the bounding box information. <br/><strong class="param-meta">Default:</strong> False</p>
+</dd>
+<dt><strong>match_anchor_size</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Whether to force the predicted box match the anchor boxes in sizes for all predictions</p>
+</dd>
+<dt><strong>num_to_force_coord</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">The number of leading chunk of images in training when the algorithm forces predicted objects
+in each grid to be equal to the anchor box sizes, and located at the grid center</p>
 </dd>
 </dl>
 </td>
@@ -315,7 +362,7 @@ This format is the ‘rect’ format. We also support coco and yolo formats.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.1',
+            VERSION:'1.0.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -29,6 +29,7 @@ dlpy.layers.Recurrent
    
       ~Recurrent.can_be_last_layer
       ~Recurrent.kernel_size
+      ~Recurrent.layer_id
       ~Recurrent.num_bias
       ~Recurrent.num_features
       ~Recurrent.num_weights

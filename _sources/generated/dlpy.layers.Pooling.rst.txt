@@ -29,6 +29,7 @@ dlpy.layers.Pooling
    
       ~Pooling.can_be_last_layer
       ~Pooling.kernel_size
+      ~Pooling.layer_id
       ~Pooling.num_bias
       ~Pooling.num_weights
       ~Pooling.number_of_instances

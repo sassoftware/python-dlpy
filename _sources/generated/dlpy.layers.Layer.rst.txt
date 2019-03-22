@@ -28,6 +28,7 @@ dlpy.layers.Layer
    .. autosummary::
    
       ~Layer.can_be_last_layer
+      ~Layer.layer_id
       ~Layer.number_of_instances
       ~Layer.rnn_summary
       ~Layer.summary

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dlpy.sequential.Sequential &mdash; DLPy 1.0.1 documentation</title>
+  <title>dlpy.sequential.Sequential &mdash; DLPy 1.0.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="DLPy 1.0.1 documentation" href="../index.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="../index.html"/>
         <link rel="up" title="API Reference" href="../api.html"/>
         <link rel="next" title="dlpy.sequential.Sequential.add" href="dlpy.sequential.Sequential.add.html"/>
         <link rel="prev" title="dlpy.model.FeatureMaps.display" href="dlpy.model.FeatureMaps.display.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0.1
+                1.0.2
               </div>
             
           
@@ -217,44 +217,56 @@
 <tr class="row-even"><td><a class="reference internal" href="dlpy.sequential.Sequential.compile.html#dlpy.sequential.Sequential.compile" title="dlpy.sequential.Sequential.compile"><strong>compile</strong></a>()</td>
 <td>Convert the layer objects into CAS action parameters</td>
 </tr>
-<tr class="row-odd"><td><strong>count_params</strong>()</td>
+<tr class="row-odd"><td><strong>count_instances</strong>()</td>
+<td></td>
+</tr>
+<tr class="row-even"><td><strong>count_params</strong>()</td>
 <td>Count the total number of parameters in the model</td>
 </tr>
-<tr class="row-even"><td><strong>deploy</strong>(path[,&nbsp;output_format,&nbsp;model_weights])</td>
+<tr class="row-odd"><td><strong>deploy</strong>(path[,&nbsp;output_format,&nbsp;model_weights])</td>
 <td>Deploy the deep learning model to a data file</td>
 </tr>
-<tr class="row-odd"><td><strong>evaluate</strong>(data[,&nbsp;text_parms,&nbsp;layer_out,&nbsp;…])</td>
+<tr class="row-even"><td><strong>evaluate</strong>(data[,&nbsp;text_parms,&nbsp;layer_out,&nbsp;…])</td>
 <td>Evaluate the deep learning model on a specified validation data set</td>
 </tr>
-<tr class="row-even"><td><strong>evaluate_object_detection</strong>(ground_truth,&nbsp;…)</td>
+<tr class="row-odd"><td><strong>evaluate_object_detection</strong>(ground_truth,&nbsp;…)</td>
 <td>Evaluate the deep learning model on a specified validation data set.</td>
 </tr>
-<tr class="row-odd"><td><strong>fit</strong>(data[,&nbsp;inputs,&nbsp;target,&nbsp;data_specs,&nbsp;…])</td>
+<tr class="row-even"><td><strong>fit</strong>(data[,&nbsp;inputs,&nbsp;target,&nbsp;data_specs,&nbsp;…])</td>
 <td>Fitting a deep learning model.</td>
 </tr>
-<tr class="row-even"><td><strong>from_caffe_model</strong>(conn,&nbsp;input_network_file[,&nbsp;…])</td>
+<tr class="row-odd"><td><strong>forecast</strong>([test_table,&nbsp;horizon,&nbsp;train_table,&nbsp;…])</td>
+<td>Make forecasts based on deep learning models trained on <cite>TimeseriesTable</cite>.</td>
+</tr>
+<tr class="row-even"><td><strong>format_name</strong>([block_num,&nbsp;local_count])</td>
+<td>Format the name of the layer</td>
+</tr>
+<tr class="row-odd"><td><strong>from_caffe_model</strong>(conn,&nbsp;input_network_file[,&nbsp;…])</td>
 <td>Generate a model object from a Caffe model proto file (e.g.</td>
 </tr>
-<tr class="row-odd"><td><strong>from_keras_model</strong>(conn,&nbsp;keras_model[,&nbsp;…])</td>
+<tr class="row-even"><td><strong>from_keras_model</strong>(conn,&nbsp;keras_model[,&nbsp;…])</td>
 <td>Generate a model object from a Keras model object</td>
 </tr>
-<tr class="row-even"><td><strong>from_onnx_model</strong>(conn,&nbsp;onnx_model[,&nbsp;…])</td>
+<tr class="row-odd"><td><strong>from_onnx_model</strong>(conn,&nbsp;onnx_model[,&nbsp;…])</td>
 <td>Generate a Model object from ONNX model.</td>
 </tr>
-<tr class="row-odd"><td><strong>from_sashdat</strong>(conn,&nbsp;path[,&nbsp;output_model_table])</td>
+<tr class="row-even"><td><strong>from_sashdat</strong>(conn,&nbsp;path[,&nbsp;output_model_table])</td>
 <td>Generate a model object using the model information in the sashdat file</td>
 </tr>
-<tr class="row-even"><td><strong>from_table</strong>(input_model_table[,&nbsp;…])</td>
+<tr class="row-odd"><td><strong>from_table</strong>(input_model_table[,&nbsp;…])</td>
 <td>Create a Model object from CAS table that defines a deep learning model</td>
 </tr>
-<tr class="row-odd"><td><strong>get_feature_maps</strong>(data[,&nbsp;label,&nbsp;idx,&nbsp;image_id])</td>
+<tr class="row-even"><td><strong>get_feature_maps</strong>(data[,&nbsp;label,&nbsp;idx,&nbsp;image_id])</td>
 <td>Extract the feature maps for a single image</td>
 </tr>
-<tr class="row-even"><td><strong>get_features</strong>(data,&nbsp;dense_layer[,&nbsp;target])</td>
+<tr class="row-odd"><td><strong>get_features</strong>(data,&nbsp;dense_layer[,&nbsp;target])</td>
 <td>Extract linear features for a data table from the layer specified by dense_layer</td>
 </tr>
-<tr class="row-odd"><td><strong>get_model_info</strong>()</td>
+<tr class="row-even"><td><strong>get_model_info</strong>()</td>
 <td>Return the information about the model table</td>
+</tr>
+<tr class="row-odd"><td><strong>get_number_of_instances</strong>()</td>
+<td></td>
 </tr>
 <tr class="row-even"><td><strong>heat_map_analysis</strong>([data,&nbsp;mask_width,&nbsp;…])</td>
 <td>Conduct a heat map analysis on table of images</td>
@@ -262,22 +274,22 @@
 <tr class="row-odd"><td><strong>load</strong>(path[,&nbsp;display_note])</td>
 <td>Load the deep learning model architecture from existing table</td>
 </tr>
-<tr class="row-even"><td><strong>load_weights</strong>(path[,&nbsp;labels])</td>
+<tr class="row-even"><td><strong>load_weights</strong>(path[,&nbsp;labels,&nbsp;data_spec,&nbsp;…])</td>
 <td>Load the weights form a data file specified by ‘path’</td>
 </tr>
 <tr class="row-odd"><td><strong>load_weights_attr</strong>(path)</td>
 <td>Load the weights attribute form a sashdat file</td>
 </tr>
-<tr class="row-even"><td><strong>load_weights_from_caffe</strong>(path[,&nbsp;labels])</td>
+<tr class="row-even"><td><strong>load_weights_from_caffe</strong>(path[,&nbsp;labels,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
-<tr class="row-odd"><td><strong>load_weights_from_file</strong>(path[,&nbsp;format_type])</td>
+<tr class="row-odd"><td><strong>load_weights_from_file</strong>(path[,&nbsp;format_type,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
 <tr class="row-even"><td><strong>load_weights_from_file_with_labels</strong>(path[,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
-<tr class="row-odd"><td><strong>load_weights_from_keras</strong>(path[,&nbsp;labels])</td>
+<tr class="row-odd"><td><strong>load_weights_from_keras</strong>(path[,&nbsp;labels,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
 <tr class="row-even"><td><strong>load_weights_from_table</strong>(path)</td>
@@ -292,7 +304,7 @@
 <tr class="row-odd"><td><strong>plot_network</strong>()</td>
 <td>Display a graph that summarizes the model architecture.</td>
 </tr>
-<tr class="row-even"><td><strong>plot_training_history</strong>([items,&nbsp;fig_size])</td>
+<tr class="row-even"><td><strong>plot_training_history</strong>([items,&nbsp;fig_size,&nbsp;…])</td>
 <td>Display the training iteration history.</td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="dlpy.sequential.Sequential.pop.html#dlpy.sequential.Sequential.pop" title="dlpy.sequential.Sequential.pop"><strong>pop</strong></a>([loc])</td>
@@ -330,6 +342,12 @@
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="dlpy.sequential.Sequential.switch.html#dlpy.sequential.Sequential.switch" title="dlpy.sequential.Sequential.switch"><strong>switch</strong></a>(loc1,&nbsp;loc2)</td>
 <td>Switch the order of two layers in the model.</td>
+</tr>
+<tr class="row-odd"><td><strong>to_functional_model</strong>([stop_layers])</td>
+<td>Convert a Sequential into a functional model and return the functional model.</td>
+</tr>
+<tr class="row-even"><td><strong>to_model_params</strong>()</td>
+<td>Convert the model configuration to CAS action parameters</td>
 </tr>
 <tr class="row-odd"><td><strong>train</strong>(table[,&nbsp;attributes,&nbsp;inputs,&nbsp;nominals,&nbsp;…])</td>
 <td>Trains a deep learning model</td>
@@ -384,7 +402,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.1',
+            VERSION:'1.0.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

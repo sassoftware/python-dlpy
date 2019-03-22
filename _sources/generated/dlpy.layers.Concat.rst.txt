@@ -29,6 +29,7 @@ dlpy.layers.Concat
    
       ~Concat.can_be_last_layer
       ~Concat.kernel_size
+      ~Concat.layer_id
       ~Concat.num_bias
       ~Concat.num_weights
       ~Concat.number_of_instances

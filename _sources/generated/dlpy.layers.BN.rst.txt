@@ -29,6 +29,7 @@ dlpy.layers.BN
    
       ~BN.can_be_last_layer
       ~BN.kernel_size
+      ~BN.layer_id
       ~BN.num_bias
       ~BN.num_weights
       ~BN.number_of_instances

@@ -29,6 +29,7 @@ dlpy.layers.InputLayer
    
       ~InputLayer.can_be_last_layer
       ~InputLayer.kernel_size
+      ~InputLayer.layer_id
       ~InputLayer.num_bias
       ~InputLayer.num_weights
       ~InputLayer.number_of_instances

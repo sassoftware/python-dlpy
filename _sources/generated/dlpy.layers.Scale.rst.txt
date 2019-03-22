@@ -29,6 +29,7 @@ dlpy.layers.Scale
    
       ~Scale.can_be_last_layer
       ~Scale.kernel_size
+      ~Scale.layer_id
       ~Scale.num_bias
       ~Scale.num_weights
       ~Scale.number_of_instances

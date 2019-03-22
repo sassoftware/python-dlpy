@@ -29,6 +29,7 @@ dlpy.layers.OutputLayer
    
       ~OutputLayer.can_be_last_layer
       ~OutputLayer.kernel_size
+      ~OutputLayer.layer_id
       ~OutputLayer.num_bias
       ~OutputLayer.num_features
       ~OutputLayer.num_weights

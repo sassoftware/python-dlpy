@@ -29,6 +29,7 @@ dlpy.layers.Detection
    
       ~Detection.can_be_last_layer
       ~Detection.kernel_size
+      ~Detection.layer_id
       ~Detection.num_bias
       ~Detection.num_weights
       ~Detection.number_of_instances

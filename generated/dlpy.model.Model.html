@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>dlpy.model.Model &mdash; DLPy 1.0.1 documentation</title>
+  <title>dlpy.model.Model &mdash; DLPy 1.0.2 documentation</title>
   
 
   
@@ -35,7 +35,7 @@
         <link rel="index" title="Index"
               href="../genindex.html"/>
         <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="DLPy 1.0.1 documentation" href="../index.html"/>
+    <link rel="top" title="DLPy 1.0.2 documentation" href="../index.html"/>
         <link rel="up" title="API Reference" href="../api.html"/>
         <link rel="next" title="dlpy.model.Model.from_table" href="dlpy.model.Model.from_table.html"/>
         <link rel="prev" title="dlpy.layers.Reshape" href="dlpy.layers.Reshape.html"/> 
@@ -66,7 +66,7 @@
             
             
               <div class="version">
-                1.0.1
+                1.0.2
               </div>
             
           
@@ -199,39 +199,11 @@
 <h1>dlpy.model.Model<a class="headerlink" href="#dlpy-model-model" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="dlpy.model.Model">
-<em class="property">class </em><code class="descclassname">dlpy.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>conn</em>, <em>model_table=None</em>, <em>model_weights=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><strong>object</strong></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
-<dt><strong>conn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">CAS</span></dt>
-<dd><p class="first last">Specifies the CAS connection object</p>
-</dd>
-<dt><strong>model_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or dict or CAS table</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies the CAS table to store the deep learning model.
-<br/><strong class="param-meta">Default:</strong> None</p>
-</dd>
-<dt><strong>model_weights</strong> <span class="classifier-delimiter">:</span> <span class="classifier">CASTable or string or dict</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
-<dd><p class="first last">Specifies the CASTable containing weights of the deep learning model.
-If not specified, random initial will be used.
-<br/><strong class="param-meta">Default:</strong> None</p>
-</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
-<dt><strong><a href="dlpy.model.Model.html">Model</a></strong></dt>
-<dd></dd>
-</dl>
-</td>
-</tr>
-</tbody>
-</table>
+<em class="property">class </em><code class="descclassname">dlpy.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>conn</em>, <em>inputs=None</em>, <em>outputs=None</em>, <em>model_table=None</em>, <em>model_weights=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <strong>dlpy.network.Network</strong></p>
 <dl class="method">
 <dt id="dlpy.model.Model.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>conn</em>, <em>model_table=None</em>, <em>model_weights=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>conn</em>, <em>inputs=None</em>, <em>outputs=None</em>, <em>model_table=None</em>, <em>model_weights=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
 </dd></dl>
 
@@ -242,11 +214,17 @@ If not specified, random initial will be used.
 <col width="90%" />
 </colgroup>
 <tbody valign="top">
-<tr class="row-odd"><td><a class="reference internal" href="#dlpy.model.Model.__init__" title="dlpy.model.Model.__init__"><strong>__init__</strong></a>(conn[,&nbsp;model_table,&nbsp;model_weights])</td>
+<tr class="row-odd"><td><a class="reference internal" href="#dlpy.model.Model.__init__" title="dlpy.model.Model.__init__"><strong>__init__</strong></a>(conn[,&nbsp;inputs,&nbsp;outputs,&nbsp;…])</td>
 <td>Initialize self.</td>
 </tr>
 <tr class="row-even"><td><strong>change_labels</strong>(label_file,&nbsp;id_column,&nbsp;…)</td>
 <td>Overrides the labels already in the model</td>
+</tr>
+<tr class="row-odd"><td><strong>compile</strong>()</td>
+<td>parse the network nodes and process CAS Action</td>
+</tr>
+<tr class="row-even"><td><strong>count_instances</strong>()</td>
+<td></td>
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.count_params.html#dlpy.model.Model.count_params" title="dlpy.model.Model.count_params"><strong>count_params</strong></a>()</td>
 <td>Count the total number of parameters in the model</td>
@@ -262,6 +240,12 @@ If not specified, random initial will be used.
 </tr>
 <tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.fit.html#dlpy.model.Model.fit" title="dlpy.model.Model.fit"><strong>fit</strong></a>(data[,&nbsp;inputs,&nbsp;target,&nbsp;data_specs,&nbsp;…])</td>
 <td>Fitting a deep learning model.</td>
+</tr>
+<tr class="row-even"><td><strong>forecast</strong>([test_table,&nbsp;horizon,&nbsp;train_table,&nbsp;…])</td>
+<td>Make forecasts based on deep learning models trained on <cite>TimeseriesTable</cite>.</td>
+</tr>
+<tr class="row-odd"><td><strong>format_name</strong>([block_num,&nbsp;local_count])</td>
+<td>Format the name of the layer</td>
 </tr>
 <tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.from_caffe_model.html#dlpy.model.Model.from_caffe_model" title="dlpy.model.Model.from_caffe_model"><strong>from_caffe_model</strong></a>(conn,&nbsp;input_network_file[,&nbsp;…])</td>
 <td>Generate a model object from a Caffe model proto file (e.g.</td>
@@ -287,79 +271,88 @@ If not specified, random initial will be used.
 <tr class="row-odd"><td><strong>get_model_info</strong>()</td>
 <td>Return the information about the model table</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.heat_map_analysis.html#dlpy.model.Model.heat_map_analysis" title="dlpy.model.Model.heat_map_analysis"><strong>heat_map_analysis</strong></a>([data,&nbsp;mask_width,&nbsp;…])</td>
+<tr class="row-even"><td><strong>get_number_of_instances</strong>()</td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.heat_map_analysis.html#dlpy.model.Model.heat_map_analysis" title="dlpy.model.Model.heat_map_analysis"><strong>heat_map_analysis</strong></a>([data,&nbsp;mask_width,&nbsp;…])</td>
 <td>Conduct a heat map analysis on table of images</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load.html#dlpy.model.Model.load" title="dlpy.model.Model.load"><strong>load</strong></a>(path[,&nbsp;display_note])</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load.html#dlpy.model.Model.load" title="dlpy.model.Model.load"><strong>load</strong></a>(path[,&nbsp;display_note])</td>
 <td>Load the deep learning model architecture from existing table</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights.html#dlpy.model.Model.load_weights" title="dlpy.model.Model.load_weights"><strong>load_weights</strong></a>(path[,&nbsp;labels])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights.html#dlpy.model.Model.load_weights" title="dlpy.model.Model.load_weights"><strong>load_weights</strong></a>(path[,&nbsp;labels,&nbsp;data_spec,&nbsp;…])</td>
 <td>Load the weights form a data file specified by ‘path’</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights_attr.html#dlpy.model.Model.load_weights_attr" title="dlpy.model.Model.load_weights_attr"><strong>load_weights_attr</strong></a>(path)</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights_attr.html#dlpy.model.Model.load_weights_attr" title="dlpy.model.Model.load_weights_attr"><strong>load_weights_attr</strong></a>(path)</td>
 <td>Load the weights attribute form a sashdat file</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_caffe.html#dlpy.model.Model.load_weights_from_caffe" title="dlpy.model.Model.load_weights_from_caffe"><strong>load_weights_from_caffe</strong></a>(path[,&nbsp;labels])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_caffe.html#dlpy.model.Model.load_weights_from_caffe" title="dlpy.model.Model.load_weights_from_caffe"><strong>load_weights_from_caffe</strong></a>(path[,&nbsp;labels,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
-<tr class="row-odd"><td><strong>load_weights_from_file</strong>(path[,&nbsp;format_type])</td>
+<tr class="row-even"><td><strong>load_weights_from_file</strong>(path[,&nbsp;format_type,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
-<tr class="row-even"><td><strong>load_weights_from_file_with_labels</strong>(path[,&nbsp;…])</td>
+<tr class="row-odd"><td><strong>load_weights_from_file_with_labels</strong>(path[,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_keras.html#dlpy.model.Model.load_weights_from_keras" title="dlpy.model.Model.load_weights_from_keras"><strong>load_weights_from_keras</strong></a>(path[,&nbsp;labels])</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_keras.html#dlpy.model.Model.load_weights_from_keras" title="dlpy.model.Model.load_weights_from_keras"><strong>load_weights_from_keras</strong></a>(path[,&nbsp;labels,&nbsp;…])</td>
 <td>Load the model weights from a HDF5 file</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_table.html#dlpy.model.Model.load_weights_from_table" title="dlpy.model.Model.load_weights_from_table"><strong>load_weights_from_table</strong></a>(path)</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.load_weights_from_table.html#dlpy.model.Model.load_weights_from_table" title="dlpy.model.Model.load_weights_from_table"><strong>load_weights_from_table</strong></a>(path)</td>
 <td>Load the weights from a file</td>
 </tr>
-<tr class="row-odd"><td><strong>plot_evaluate_res</strong>([cas_table,&nbsp;img_type,&nbsp;…])</td>
+<tr class="row-even"><td><strong>plot_evaluate_res</strong>([cas_table,&nbsp;img_type,&nbsp;…])</td>
 <td>Plot the bar chart of the classification predictions</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.plot_heat_map.html#dlpy.model.Model.plot_heat_map" title="dlpy.model.Model.plot_heat_map"><strong>plot_heat_map</strong></a>([idx,&nbsp;alpha])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.plot_heat_map.html#dlpy.model.Model.plot_heat_map" title="dlpy.model.Model.plot_heat_map"><strong>plot_heat_map</strong></a>([idx,&nbsp;alpha])</td>
 <td>Display the heat maps analysis results</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.plot_network.html#dlpy.model.Model.plot_network" title="dlpy.model.Model.plot_network"><strong>plot_network</strong></a>()</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.plot_network.html#dlpy.model.Model.plot_network" title="dlpy.model.Model.plot_network"><strong>plot_network</strong></a>()</td>
 <td>Display a graph that summarizes the model architecture.</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.plot_training_history.html#dlpy.model.Model.plot_training_history" title="dlpy.model.Model.plot_training_history"><strong>plot_training_history</strong></a>([items,&nbsp;fig_size])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.plot_training_history.html#dlpy.model.Model.plot_training_history" title="dlpy.model.Model.plot_training_history"><strong>plot_training_history</strong></a>([items,&nbsp;fig_size,&nbsp;…])</td>
 <td>Display the training iteration history.</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.predict.html#dlpy.model.Model.predict" title="dlpy.model.Model.predict"><strong>predict</strong></a>(data[,&nbsp;text_parms,&nbsp;layer_out,&nbsp;…])</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.predict.html#dlpy.model.Model.predict" title="dlpy.model.Model.predict"><strong>predict</strong></a>(data[,&nbsp;text_parms,&nbsp;layer_out,&nbsp;…])</td>
 <td>Evaluate the deep learning model on a specified validation data set</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.print_summary.html#dlpy.model.Model.print_summary" title="dlpy.model.Model.print_summary"><strong>print_summary</strong></a>()</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.print_summary.html#dlpy.model.Model.print_summary" title="dlpy.model.Model.print_summary"><strong>print_summary</strong></a>()</td>
 <td>Display a table that summarizes the model architecture</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.save_to_astore.html#dlpy.model.Model.save_to_astore" title="dlpy.model.Model.save_to_astore"><strong>save_to_astore</strong></a>([path])</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.save_to_astore.html#dlpy.model.Model.save_to_astore" title="dlpy.model.Model.save_to_astore"><strong>save_to_astore</strong></a>([path])</td>
 <td>Save the model to an astore object, and write it into a file.</td>
 </tr>
-<tr class="row-even"><td><strong>save_to_onnx</strong>(path[,&nbsp;model_weights])</td>
+<tr class="row-odd"><td><strong>save_to_onnx</strong>(path[,&nbsp;model_weights])</td>
 <td>Save to ONNX model</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.save_to_table.html#dlpy.model.Model.save_to_table" title="dlpy.model.Model.save_to_table"><strong>save_to_table</strong></a>(path)</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.save_to_table.html#dlpy.model.Model.save_to_table" title="dlpy.model.Model.save_to_table"><strong>save_to_table</strong></a>(path)</td>
 <td>Save the model as SAS dataset</td>
 </tr>
-<tr class="row-even"><td><strong>save_to_table_with_caslibify</strong>(path)</td>
+<tr class="row-odd"><td><strong>save_to_table_with_caslibify</strong>(path)</td>
 <td>Save the model as SAS dataset</td>
 </tr>
-<tr class="row-odd"><td><strong>save_weights_csv</strong>(path)</td>
+<tr class="row-even"><td><strong>save_weights_csv</strong>(path)</td>
 <td>Save model weights table as csv</td>
 </tr>
-<tr class="row-even"><td><strong>score</strong>(table[,&nbsp;model,&nbsp;init_weights,&nbsp;…])</td>
+<tr class="row-odd"><td><strong>score</strong>(table[,&nbsp;model,&nbsp;init_weights,&nbsp;…])</td>
 <td>Inference of input data with the trained deep learning model</td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.set_weights.html#dlpy.model.Model.set_weights" title="dlpy.model.Model.set_weights"><strong>set_weights</strong></a>(weight_tbl)</td>
+<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.set_weights.html#dlpy.model.Model.set_weights" title="dlpy.model.Model.set_weights"><strong>set_weights</strong></a>(weight_tbl)</td>
 <td>Assign weights to the Model object</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.set_weights_attr.html#dlpy.model.Model.set_weights_attr" title="dlpy.model.Model.set_weights_attr"><strong>set_weights_attr</strong></a>(attr_tbl[,&nbsp;clear])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.set_weights_attr.html#dlpy.model.Model.set_weights_attr" title="dlpy.model.Model.set_weights_attr"><strong>set_weights_attr</strong></a>(attr_tbl[,&nbsp;clear])</td>
 <td>Attach the weights attribute to the model weights</td>
 </tr>
-<tr class="row-odd"><td><strong>train</strong>(table[,&nbsp;attributes,&nbsp;inputs,&nbsp;nominals,&nbsp;…])</td>
+<tr class="row-even"><td><strong>to_functional_model</strong>([stop_layers])</td>
+<td>Convert a Sequential into a functional model and return the functional model.</td>
+</tr>
+<tr class="row-odd"><td><strong>to_model_params</strong>()</td>
+<td>Convert the model configuration to CAS action parameters</td>
+</tr>
+<tr class="row-even"><td><strong>train</strong>(table[,&nbsp;attributes,&nbsp;inputs,&nbsp;nominals,&nbsp;…])</td>
 <td>Trains a deep learning model</td>
 </tr>
-<tr class="row-even"><td><a class="reference internal" href="dlpy.model.Model.tune.html#dlpy.model.Model.tune" title="dlpy.model.Model.tune"><strong>tune</strong></a>(data[,&nbsp;inputs,&nbsp;target])</td>
+<tr class="row-odd"><td><a class="reference internal" href="dlpy.model.Model.tune.html#dlpy.model.Model.tune" title="dlpy.model.Model.tune"><strong>tune</strong></a>(data[,&nbsp;inputs,&nbsp;target])</td>
 <td>Tunes hyper parameters for the deep learning model.</td>
 </tr>
 </tbody>
@@ -409,7 +402,7 @@ If not specified, random initial will be used.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'1.0.1',
+            VERSION:'1.0.2',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

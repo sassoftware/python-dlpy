@@ -17,11 +17,14 @@ dlpy.sequential.Sequential
       ~Sequential.add
       ~Sequential.change_labels
       ~Sequential.compile
+      ~Sequential.count_instances
       ~Sequential.count_params
       ~Sequential.deploy
       ~Sequential.evaluate
       ~Sequential.evaluate_object_detection
       ~Sequential.fit
+      ~Sequential.forecast
+      ~Sequential.format_name
       ~Sequential.from_caffe_model
       ~Sequential.from_keras_model
       ~Sequential.from_onnx_model
@@ -30,6 +33,7 @@ dlpy.sequential.Sequential
       ~Sequential.get_feature_maps
       ~Sequential.get_features
       ~Sequential.get_model_info
+      ~Sequential.get_number_of_instances
       ~Sequential.heat_map_analysis
       ~Sequential.load
       ~Sequential.load_weights
@@ -55,6 +59,8 @@ dlpy.sequential.Sequential
       ~Sequential.set_weights
       ~Sequential.set_weights_attr
       ~Sequential.switch
+      ~Sequential.to_functional_model
+      ~Sequential.to_model_params
       ~Sequential.train
       ~Sequential.tune
    
@@ -66,6 +72,27 @@ dlpy.sequential.Sequential
 
    .. autosummary::
    
+      ~Sequential.can_be_last_layer
+      ~Sequential.feature_maps
+      ~Sequential.layer_id
+      ~Sequential.model_ever_trained
+      ~Sequential.model_explain_table
+      ~Sequential.n_epochs
+      ~Sequential.name
+      ~Sequential.number_of_instances
+      ~Sequential.rnn_summary
+      ~Sequential.score_message_level
+      ~Sequential.src_layers
       ~Sequential.summary
+      ~Sequential.train_tbl
+      ~Sequential.training_history
+      ~Sequential.type
+      ~Sequential.type_desc
+      ~Sequential.type_label
+      ~Sequential.valid_conf_mat
+      ~Sequential.valid_res
+      ~Sequential.valid_res_tbl
+      ~Sequential.valid_score
+      ~Sequential.valid_tbl
    
    

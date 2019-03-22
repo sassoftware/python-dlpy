@@ -27,7 +27,6 @@ dlpy.timeseries.TimeseriesTable
       ~TimeseriesTable.append_where
       ~TimeseriesTable.as_matrix
       ~TimeseriesTable.boxplot
-      ~TimeseriesTable.char_to_double
       ~TimeseriesTable.clip
       ~TimeseriesTable.clip_lower
       ~TimeseriesTable.clip_upper
@@ -78,7 +77,6 @@ dlpy.timeseries.TimeseriesTable
       ~TimeseriesTable.hist
       ~TimeseriesTable.identify_coltype
       ~TimeseriesTable.info
-      ~TimeseriesTable.int_to_double
       ~TimeseriesTable.invoke
       ~TimeseriesTable.iteritems
       ~TimeseriesTable.iterrows

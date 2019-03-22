@@ -29,6 +29,7 @@ dlpy.layers.Reshape
    
       ~Reshape.can_be_last_layer
       ~Reshape.kernel_size
+      ~Reshape.layer_id
       ~Reshape.num_bias
       ~Reshape.num_weights
       ~Reshape.number_of_instances

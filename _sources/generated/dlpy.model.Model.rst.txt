@@ -15,11 +15,15 @@ dlpy.model.Model
    
       ~Model.__init__
       ~Model.change_labels
+      ~Model.compile
+      ~Model.count_instances
       ~Model.count_params
       ~Model.deploy
       ~Model.evaluate
       ~Model.evaluate_object_detection
       ~Model.fit
+      ~Model.forecast
+      ~Model.format_name
       ~Model.from_caffe_model
       ~Model.from_keras_model
       ~Model.from_onnx_model
@@ -28,6 +32,7 @@ dlpy.model.Model
       ~Model.get_feature_maps
       ~Model.get_features
       ~Model.get_model_info
+      ~Model.get_number_of_instances
       ~Model.heat_map_analysis
       ~Model.load
       ~Model.load_weights
@@ -51,6 +56,8 @@ dlpy.model.Model
       ~Model.score
       ~Model.set_weights
       ~Model.set_weights_attr
+      ~Model.to_functional_model
+      ~Model.to_model_params
       ~Model.train
       ~Model.tune
    
@@ -62,6 +69,27 @@ dlpy.model.Model
 
    .. autosummary::
    
+      ~Model.can_be_last_layer
+      ~Model.feature_maps
+      ~Model.layer_id
+      ~Model.model_ever_trained
+      ~Model.model_explain_table
+      ~Model.n_epochs
+      ~Model.name
+      ~Model.number_of_instances
+      ~Model.rnn_summary
+      ~Model.score_message_level
+      ~Model.src_layers
       ~Model.summary
+      ~Model.train_tbl
+      ~Model.training_history
+      ~Model.type
+      ~Model.type_desc
+      ~Model.type_label
+      ~Model.valid_conf_mat
+      ~Model.valid_res
+      ~Model.valid_res_tbl
+      ~Model.valid_score
+      ~Model.valid_tbl
    
    

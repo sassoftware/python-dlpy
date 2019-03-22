@@ -29,6 +29,7 @@ dlpy.layers.Dense
    
       ~Dense.can_be_last_layer
       ~Dense.kernel_size
+      ~Dense.layer_id
       ~Dense.num_bias
       ~Dense.num_features
       ~Dense.num_weights

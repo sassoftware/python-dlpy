@@ -29,6 +29,7 @@ dlpy.layers.Keypoints
    
       ~Keypoints.can_be_last_layer
       ~Keypoints.kernel_size
+      ~Keypoints.layer_id
       ~Keypoints.num_bias
       ~Keypoints.num_features
       ~Keypoints.num_weights
