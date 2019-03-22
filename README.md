@@ -1,6 +1,6 @@
 <div align="center">  
 <h1>DLPy - SAS Viya Deep Learning API for Python</h1>
-<img src="doc/images/sas-ai.jpg" alt="SAS Deep Learning Icon" height="150">
+<img src="https://github.com/sassoftware/python-dlpy/raw/master/doc/images/sas-ai.jpg" alt="SAS Deep Learning Icon" height="150">
 <p>An efficient way to apply deep learning methods to image, text, and audio data.</p>
   
   <a href="https://www.sas.com/en_us/software/viya.html">
