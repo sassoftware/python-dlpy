@@ -675,6 +675,24 @@ class Model(Network):
         det_bb_list = []
         if '_image_' in det_tbl.columns.tolist():
             det_tbl.drop(['_image_'], axis=1, inplace=1)
+
+        freq_variable = []
+        max_num_det = int(det_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])
+        if max_num_det == 0:
+            print('NOTE: Cannot find any object in detection_data or predict() cannot detect any object.')
+            return
+        for i in range(max_num_det):
+            freq_variable.append('_Object{}_'.format(i))
+        use_all_class = False
+        if classes is None:
+            use_all_class = True
+            classes = set(self.conn.freq(det_tbl, inputs = freq_variable).Frequency['FmtVar'])
+            classes = sorted(classes)
+            classes = [x for x in classes if not (x is '' or x.startswith('NoObject'))]
+        elif isinstance(classes, str):
+            classes = [classes]
+        nrof_classes = len(classes)
+
         for idx, row in det_tbl.iterrows():
             if coord_type.lower() == 'yolo':
                 [det_bb_list.append(Box(row.loc['_Object{}_x'.format(i)],
@@ -698,6 +716,18 @@ class Model(Network):
         gt_bb_list = []
         if '_image_' in gt_tbl.columns.tolist():
             gt_tbl.drop(['_image_'], axis=1, inplace=1)
+
+        freq_variable = []
+        max_num_gt = int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])
+        if max_num_gt == 0:
+            print('NOTE: Cannot find any object in ground_truth.')
+            return
+        for i in range(int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])):
+            freq_variable.append('_Object{}_'.format(i))
+        classes_gt = set(self.conn.freq(gt_tbl, inputs = freq_variable).Frequency['FmtVar'])
+        classes_gt = sorted(classes_gt)
+        classes_gt = [x for x in classes_gt if not (x is '' or x.startswith('NoObject'))]
+
         for idx, row in gt_tbl.iterrows():
             if coord_type.lower() == 'yolo':
                 [gt_bb_list.append(Box(row.loc['_Object{}_x'.format(i)],
@@ -715,26 +745,6 @@ class Model(Network):
                                        row.loc['_Object{}_'.format(i)],
                                        1.0,
                                        row.loc['idjoin'], 'xyxy')) for i in range(int(row.loc['_nObjects_']))]
-
-        freq_variable = []
-        for i in range(int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])):
-            freq_variable.append('_Object{}_'.format(i))
-        classes_gt = set(self.conn.freq(gt_tbl, inputs=freq_variable).Frequency['FmtVar'])
-        classes_gt = sorted(classes_gt)
-        classes_gt = [x for x in classes_gt if not (x is '' or x.startswith('NoObject'))]
-
-        freq_variable = []
-        for i in range(int(det_tbl.max(axis=1, numeric_only=True)['_nObjects_'])):
-            freq_variable.append('_Object{}_'.format(i))
-        use_all_class = False
-        if classes is None:
-            use_all_class = True
-            classes = set(self.conn.freq(det_tbl, inputs=freq_variable).Frequency['FmtVar'])
-            classes = sorted(classes)
-            classes = [x for x in classes if not (x is '' or x.startswith('NoObject'))]
-        elif isinstance(classes, str):
-            classes = [classes]
-        nrof_classes = len(classes)
 
         classes_not_detected = [x for x in classes_gt if x not in classes]
 
