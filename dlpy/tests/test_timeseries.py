@@ -130,8 +130,8 @@ class TestTimeseriesTable(unittest.TestCase):
         tmp1_tbl = self.conn.CASTable('table_tmp1')
         localtmp1 = tmp1_tbl.to_frame()
         localtable1 = self.table1.to_frame()
-        localtmp1 = localtmp1.sort_values(['id1var', 'id2var', 'datetime'])
-        localtable1 = localtable1.sort_values(['id1var', 'id2var', 'datetime'])
+        localtmp1 = localtmp1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
+        localtable1 = localtable1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
         coltypes = {'id1var': np.float64, 'id2var': np.float64, 'covar': np.float64}
         localtmp1 = localtmp1.astype(coltypes)
         localtable1 = localtable1.astype(coltypes)
@@ -139,8 +139,8 @@ class TestTimeseriesTable(unittest.TestCase):
 
         tmp4_tbl = self.conn.CASTable('table_tmp4')
         localtmp4 = tmp4_tbl.to_frame()
-        localtmp4 = localtmp4.sort_values(['id1var', 'id2var', 'datetime'])
-        pandas_df1 = pandas_df1.sort_values(['id1var', 'id2var', 'datetime'])
+        localtmp4 = localtmp4.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
+        pandas_df1 = pandas_df1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
         coltypes = {'id1var':np.float64, 'id2var': np.float64, 'covar': np.float64}
         localtmp4 = localtmp4.astype(coltypes)
         pandas_df1 = pandas_df1.astype(coltypes)
@@ -174,8 +174,8 @@ class TestTimeseriesTable(unittest.TestCase):
         tmp1_tbl = self.conn.CASTable('table_tmp1')
         localtmp1 = tmp1_tbl.to_frame()
         localtable1 = self.table1.to_frame()
-        localtmp1 = localtmp1.sort_values(['id1var', 'id2var', 'datetime'])
-        localtable1 = localtable1.sort_values(['id1var', 'id2var', 'datetime'])
+        localtmp1 = localtmp1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
+        localtable1 = localtable1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
         coltypes = {'id1var': np.float64, 'id2var': np.float64, 'covar': np.float64}
         localtmp1 = localtmp1.astype(coltypes)
         localtable1 = localtable1.astype(coltypes)
@@ -183,8 +183,8 @@ class TestTimeseriesTable(unittest.TestCase):
 
         tmp4_tbl = self.conn.CASTable('table_tmp4')
         localtmp4 = tmp4_tbl.to_frame()
-        localtmp4 = localtmp4.sort_values(['id1var', 'id2var', 'datetime'])
-        pandas_df1 = pandas_df1.sort_values(['id1var', 'id2var', 'datetime'])
+        localtmp4 = localtmp4.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
+        pandas_df1 = pandas_df1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
         coltypes = {'id1var': np.float64, 'id2var': np.float64, 'covar': np.float64}
         localtmp4 = localtmp4.astype(coltypes)
         pandas_df1 = pandas_df1.astype(coltypes)
