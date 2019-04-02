@@ -55,6 +55,14 @@ def create_extended_attributes(conn, model_name, layers, data_spec, label_file_n
         
     '''
 
+    # ensure list of strings
+    if not isinstance(layers,list):
+        raise TypeError('layers must be a list of strings.')
+
+    # ensure list of data specs
+    if not isinstance(data_spec,list):
+        raise TypeError('data_spec must be a list of DataSpec objects.')
+            
     # read user-supplied labels
     if label_file_name is None:
         labels = None
