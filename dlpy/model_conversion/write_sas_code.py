@@ -96,7 +96,7 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
 def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
                             width='3', height='3', stride='1', nobias='False',
                             activation='identity', dropout='0', src_layer='none',
-                            padding='None'):
+                            padding='None',pad_height='None',pad_width='None'):
     '''
     Generate Python code defining a SAS deep learning convolution layer
 
@@ -122,19 +122,35 @@ def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
        dropout factor (0 < dropout < 1.0)
     src_layer : string, optional
        source layer(s) for the convolution layer
+    padding : string, optional
+       symmetric zero padding value
+    pad_height : string, optional
+       symmetric height zero padding value
+    pad_width : string, optional
+        symmetric width zero padding value
 
     Returns
     -------
     string
 
     '''
-    out = [
-        '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
-        '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
-        '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
-            activation) + ', dropout=' + dropout + ', padding=' + padding +'), \n',
-        '              srcLayers=' + src_layer + ')'
-    ]
+    if (pad_height.lower() != 'none') or (pad_width.lower() != 'none'):
+        out = [
+            '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
+            '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
+                activation) + ', dropout=' + dropout + ', padHeight=' + pad_height + ', padWidth=' + pad_width + '), \n',
+            '              srcLayers=' + src_layer + ')'
+        ]
+    else:
+        out = [
+            '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
+            '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
+                activation) + ', dropout=' + dropout + ', pad=' + padding +'), \n',
+            '              srcLayers=' + src_layer + ')'
+        ]
+
     return '\n'.join(out)
 
 
