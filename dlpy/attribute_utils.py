@@ -25,7 +25,8 @@ import pandas as pd
 import swat as sw
 import string
 import warnings
-import struct    
+import struct
+from dlpy.model import DataSpec
 
 def create_extended_attributes(conn, model_name, layers, data_spec, label_file_name=None):
 
@@ -54,6 +55,20 @@ def create_extended_attributes(conn, model_name, layers, data_spec, label_file_n
         are used.
         
     '''
+
+    # ensure list of strings
+    if not isinstance(layers,list):
+        raise TypeError('Parameter layers must be a list of strings.')
+    else:
+        if not all(isinstance(x,str) for x in layers):
+            raise TypeError('Some elements of the layers list are not strings.')
+
+    # ensure list of data specs
+    if not isinstance(data_spec,list):
+        raise TypeError('Parameter data_spec must be a list of DataSpec objects.')
+    else:
+        if not all(isinstance(x,DataSpec) for x in data_spec):
+            raise TypeError('Some elements of the data_spec list are not DataSpec objects.')
 
     # read user-supplied labels
     if label_file_name is None:
