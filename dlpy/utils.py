@@ -1148,6 +1148,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     A list of variables that are the labels of the object detection table
 
     '''
+    if coord_type.lower() not in ['yolo', 'coco']:
+        raise ValueError('coord_type, {}, is not supported'.format(coord_type))
     with sw.option_context(print_messages=False):
         server_type = get_cas_host_type(conn).lower()
     local_os_type = platform.system()
@@ -1165,9 +1167,6 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
     conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'deepLearn')
     conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'transpose')
-
-    if coord_type.lower() not in ['yolo', 'coco']:
-        raise ValueError('coord_type, {}, is not supported'.format(coord_type))
 
     # label variables, _ : category;
     yolo_var_name = ['_', '_x', '_y', '_width', '_height']
@@ -1222,10 +1221,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                 raise DLPyError('something went wrong while adding the caslib for the specified path.')
 
     # find all of annotation files under the directory
-    a = conn.fileinfo(caslib = caslib, allfiles = True)
     label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    # label_files = [x for x in label_files if x.endswith('.xml') or x.endswith('.json')]
-
     # if client and server are on different type of operation system, we assume user parse xml files and put
     # txt files in data_path folder. So skip get_txt_annotation()
     # parse xml or json files and create txt files
@@ -1287,8 +1283,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             conn.transpose(prefix = '_Object', suffix = var, id = 'seq_id', transpose = [var],
                            table = dict(name = output, groupby = 'idjoin'),
                            casout = dict(name = 'output{}'.format(var), replace = 1))
-            conn.altertable(name = 'output{}'.format(var), columns=[{'name':'_NAME_', 'drop':True}])
-    # dljoin the five columns
+            conn.altertable(name = 'output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
+    # dljoin the five label columns
     conn.deeplearn.dljoin(table = 'output{}'.format(var_name[0]), id = 'idjoin',
                           annotatedtable = 'output{}'.format(var_name[1]),
                           casout = dict(name = output, replace = True), _messagelevel = 'error')
@@ -1312,8 +1308,6 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             var_order.append('_Object'+str(i)+var)
     # change order of columns and unify the formattedlength of class columns
     format_ = '${}.'.format(cls_col_format_length)
-    # conn.altertable(name = output, columnorder = var_order, columns =[{'name': '_Object{}_'.format(i),
-    #                                                                    'format': format_} for i in range(max_instance)])
     conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
                                               for i in range(max_instance)])
     # parse and create dljoin id column
@@ -1322,8 +1316,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                 len(data_path.split('\\')) - 2)
-    img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code,
-                            vars = [{'name': 'idjoin'}, {'name': '_image_'}])
+    img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code, vars = [{'name': '_image_'}])
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
@@ -1736,8 +1729,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
 
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                                                                                                  len(data_path.split('\\')) - 2)
-    img_tbl = conn.CASTable(det_img_table, computedvars=['idjoin'], computedvarsprogram=image_sas_code,
-                            vars=[{'name': 'idjoin'}, {'name': '_image_'}])
+    img_tbl = conn.CASTable(det_img_table, computedvars=['idjoin'], computedvarsprogram=image_sas_code, vars=[{'name': '_image_'}])
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin',
                                 casout={'name': output, 'replace': True, 'replication': 0})
