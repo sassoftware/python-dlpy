@@ -56,7 +56,7 @@ def keras_to_sas(model, model_name=None):
         model_name = model.name
     for layer in model.layers:
         class_name = layer.__class__.__name__.lower()
-        if (class_name in computation_layer_classes):
+        if (class_name in computation_layer_classes) or (class_name == 'zeropadding2d'):
             comp_layer_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
             source_str = make_source_str(comp_layer_name)
             src_layer.update({layer.name: source_str})
@@ -82,6 +82,7 @@ def keras_to_sas(model, model_name=None):
             raise KerasParseError('Unable to generate an input layer')
 
     # extract layers and apply activation functions as needed
+    zero_pad = None
     for layer in model.layers:
         class_name = layer.__class__.__name__.lower()
 
@@ -104,7 +105,8 @@ def keras_to_sas(model, model_name=None):
         # 2D convolution
         elif (class_name == 'conv2d'):
             sas_code = keras_convolution_layer(layer, model_name, act_func,
-                                               src_layer, layer_dropout)
+                                               src_layer, layer_dropout, zero_pad)
+            zero_pad = None
         # batch normalization
         elif (class_name == 'batchnormalization'):
             sas_code = keras_batchnormalization_layer(layer, model_name,
@@ -116,7 +118,7 @@ def keras_to_sas(model, model_name=None):
         elif (class_name == 'add'):
             sas_code = keras_residual_layer(layer, model_name,
                                             act_func, src_layer)
-        elif (class_name in ['activation', 'flatten', 'dropout']):
+        elif (class_name in ['activation', 'flatten', 'dropout', 'zeropadding2d']):
             pass
         # fully connected
         elif (class_name == 'dense'):
@@ -133,6 +135,9 @@ def keras_to_sas(model, model_name=None):
         # write SAS code associated with Keras layer
         if sas_code:
             output_code = output_code + sas_code + '\n\n'
+        # zero-padding
+        elif (class_name == 'zeropadding2d'):
+            zero_pad = keras_zeropad2d_layer(layer, src_layer)
         elif (class_name not in ['activation', 'flatten', 'dropout']):
             print('WARNING: unable to generate SAS definition '
                   'for layer ' + class_name)
@@ -221,7 +226,7 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
 
 
 # create SAS 2D convolution layer
-def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropout):
+def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropout, zero_pad):
     '''
     Extract convolution layer parameters from layer definition object
 
@@ -238,6 +243,8 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
        convolution layer
     layer_dropout : dict
        Dictionary containing dropout layer names (keys) and dropout rates (values)
+    zero_pad : dict
+       Dictionary containing padding values derived from zero-padding layer (may be None)
 
     Returns
     -------
@@ -249,10 +256,17 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
 
     strides = config['strides']
     kernel_size = config['kernel_size']
-    if config['padding'] == 'valid':
-        padding = 0
-    else:
+    if zero_pad is not None:
+        pad_height = zero_pad['height']
+        pad_width = zero_pad['width']
         padding = None
+    else:
+        pad_height = None
+        pad_width = None
+        if config['padding'] == 'valid':
+            padding = 0
+        else:
+            padding = None
 
     # activation
     if (act_func):
@@ -282,11 +296,14 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
     nrof_filters = config['filters']
 
     # extract source layer(s)
-    if (layer.name in src_layer.keys()):
-        source_str = src_layer[layer.name]
+    if zero_pad is not None:
+        source_str = zero_pad['source_str']
     else:
-        raise KerasParseError('Unable to determine source layer for '
-                              'convolution layer = ' + layer.name)
+        if (layer.name in src_layer.keys()):
+            source_str = src_layer[layer.name]
+        else:
+            raise KerasParseError('Unable to determine source layer for '
+                                  'convolution layer = ' + layer.name)
 
     # set dropout
     if (layer.name in layer_dropout.keys()):
@@ -299,7 +316,8 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
                                    height=str(height), stride=str(step),
                                    nobias=bias_str, activation=layer_act_func,
                                    dropout=str(dropout), src_layer=source_str,
-                                   padding=str(padding))
+                                   padding=str(padding),pad_height=str(pad_height),
+                                   pad_width=str(pad_width))
 
 
 # create SAS batch normalization layer
@@ -543,7 +561,62 @@ def keras_concatenate_layer(layer, model_name, act_func, src_layer):
     return write_concatenate_layer(model_name=model_name, layer_name=layer.name,
                                    activation=layer_act_func, src_layer=source_str)
 
+# extract information from ZeroPadding2D layer
+def keras_zeropad2d_layer(layer, src_layer):
+    '''
+    Extract concatenate layer parameters from layer definition object
 
+    Parameters
+    ----------
+    layer : Layer object
+       Concatenate layer
+
+    Returns
+    -------
+    zero_pad
+        padding 
+
+    '''
+    config = layer.get_config()
+    zero_pad = {}
+    
+    # extract source layer(s)
+    if (layer.name in src_layer.keys()):
+        zero_pad['source_str'] = src_layer[layer.name]
+    else:
+        raise KerasParseError('Unable to determine source layer for '
+                              'zero padding layer = ' + layer.name)
+    
+    # Keras padding definition:
+    #   - If int: the same symmetric padding is applied to height and width.
+    #   - If tuple of 2 ints: interpreted as two different symmetric padding values for 
+    #       height and width: (symmetric_height_pad, symmetric_width_pad).
+    #   - If tuple of 2 tuples of 2 ints: interpreted as 
+    #       ((top_pad, bottom_pad), (left_pad, right_pad))
+
+    # determine padding
+    padding = config['padding']
+    if len(padding) == 1:
+        zero_pad['height'] = padding[0]
+        zero_pad['width'] = padding[0]
+    else:
+        if isinstance(padding[0],tuple):
+            # height
+            if (padding[0][0] == padding[0][1]):
+                zero_pad['height'] = padding[0][0]
+            else:
+                raise DLPyError('Asymmetric padding is not supported')
+            # width
+            if (padding[1][0] == padding[1][1]):
+                zero_pad['width'] = padding[1][0]
+            else:
+                raise DLPyError('Asymmetric padding is not supported')
+        else:
+            zero_pad['height'] = padding[0][0]
+            zero_pad['width'] = padding[0][1]
+    
+    return zero_pad
+                                   
 def map_keras_activation(layer, act_func):
     '''
     Map Keras activation function(s) to SAS activation function(s)
