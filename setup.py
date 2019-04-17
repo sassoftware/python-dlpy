@@ -29,7 +29,7 @@ def get_file(fname):
 
 setup(
     name='sas-dlpy',
-    version='1.0.2-dev',
+    version='1.0.3-dev',
     description='SAS Deep Learning Interface',
     long_description=get_file('README.md'),
     long_description_content_type='text/markdown',

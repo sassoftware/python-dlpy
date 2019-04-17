@@ -26,10 +26,12 @@ import os
 #import onnx
 import swat
 import swat.utils.testing as tm
-from dlpy.model import Model
+from swat.cas.table import CASTable
+from dlpy.model import Model, Optimizer, AdamSolver, Sequence
 from dlpy.sequential import Sequential
+from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
-                         Keypoints, BN, Res, Concat)
+                         Recurrent, Keypoints, BN, Res, Concat, Reshape)
 from dlpy.utils import caslibify
 from dlpy.applications import Tiny_YoloV2
 import unittest
@@ -620,6 +622,41 @@ class TestModel(unittest.TestCase):
 
         model1.deploy(self.data_dir, output_format='onnx')
 
+    def test_model22_1(self):
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+        from onnx import numpy_helper
+        import numpy as np
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7, act='identity', include_bias=False))
+        model1.add(Reshape(height=448, width=448, depth=2))
+        model1.add(Dense(2))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        model1.deploy(self.data_dir_local, output_format='onnx')
+
+        model_path = os.path.join(self.data_dir_local, 'Simple_CNN1.onnx')
+        m = onnx.load(model_path)
+        self.assertEqual(m.graph.node[1].op_type, 'Reshape')
+        init = numpy_helper.to_array(m.graph.initializer[1])
+        self.assertTrue(np.array_equal(init, [ -1,  2, 448, 448]))
+
     def test_model23(self):
         try:
             import onnx
@@ -802,7 +839,261 @@ class TestModel(unittest.TestCase):
 
         self.assertTrue(model1.layers[-1].name == 'test_output')
         self.assertTrue(model1.layers[-1].config['n'] == 50)
+        
+    def test_model_forecast1(self):
+        
+        import datetime
+        try:
+            import pandas as pd
+        except:
+            unittest.TestCase.skipTest(self, "pandas not found in the libraries") 
+        import numpy as np
+            
+        filename1 = os.path.join(os.path.dirname(__file__), 'datasources', 'timeseries_exp1.csv')
+        importoptions1 = dict(filetype='delimited', delimiter=',')
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
+        self.table1 = TimeseriesTable.from_localfile(self.s, filename1, importoptions=importoptions1)
+        self.table1.timeseries_formatting(timeid='datetime',
+                                  timeseries=['series', 'covar'],
+                                  timeid_informat='ANYDTDTM19.',
+                                  timeid_format='DATETIME19.')
+        self.table1.timeseries_accumlation(acc_interval='day',
+                                           groupby=['id1var', 'id2var'])
+        self.table1.prepare_subsequences(seq_len=2,
+                                         target='series',
+                                         predictor_timeseries=['series'],
+                                         missing_handling='drop')
+        
+        valid_start = datetime.date(2015, 1, 4)
+        test_start = datetime.date(2015, 1, 7)
+        
+        traintbl, validtbl, testtbl = self.table1.timeseries_partition(
+                validation_start=valid_start, testing_start=test_start)
+        
+        model1 = Sequential(self.s, model_table='lstm_rnn')
+        model1.add(InputLayer(std='STD'))
+        model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
+        model1.add(OutputLayer(act='IDENTITY'))
+        
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.01), mini_batch_size=32, 
+                              seed=1234, max_epochs=10)                    
+        seq_spec  = Sequence(**traintbl.sequence_opt)
+        result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, 
+                            sequence=seq_spec, **traintbl.inputs_target)
+        
+        self.assertTrue(result.severity == 0)
+        
+        resulttbl1 = model1.forecast(horizon=1)
+        self.assertTrue(isinstance(resulttbl1, CASTable))
+        self.assertTrue(resulttbl1.shape[0]==15)
+        
+        local_resulttbl1 = resulttbl1.to_frame()
+        unique_time = local_resulttbl1.datetime.unique()
+        self.assertTrue(len(unique_time)==1)
+        self.assertTrue(pd.Timestamp(unique_time[0])==datetime.datetime(2015,1,7))
+
+        resulttbl2 = model1.forecast(horizon=3)
+        self.assertTrue(isinstance(resulttbl2, CASTable))
+        self.assertTrue(resulttbl2.shape[0]==45)
+        
+        local_resulttbl2 = resulttbl2.to_frame()
+        local_resulttbl2.sort_values(by=['id1var', 'id2var', 'datetime'], inplace=True)
+        unique_time = local_resulttbl2.datetime.unique()
+        self.assertTrue(len(unique_time)==3)
+        for i in range(3):
+            self.assertTrue(pd.Timestamp(unique_time[i])==datetime.datetime(2015,1,7+i))
+        
+        series_lag1 = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             'series_lag1'].values
+                                           
+        series_lag2 = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             'series_lag2'].values
+        
+        DL_Pred = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             '_DL_Pred_'].values
+                                       
+        self.assertTrue(np.array_equal(series_lag1[1:3], DL_Pred[0:2]))
+        self.assertTrue(series_lag2[2]==DL_Pred[0])        
+
+    def test_model_forecast2(self):
+        
+        import datetime
+        try:
+            import pandas as pd
+        except:
+            unittest.TestCase.skipTest(self, "pandas not found in the libraries") 
+        import numpy as np
+            
+        filename1 = os.path.join(os.path.dirname(__file__), 'datasources', 'timeseries_exp1.csv')
+        importoptions1 = dict(filetype='delimited', delimiter=',')
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        self.table2 = TimeseriesTable.from_localfile(self.s, filename1, importoptions=importoptions1)
+        self.table2.timeseries_formatting(timeid='datetime',
+                                  timeseries=['series', 'covar'],
+                                  timeid_informat='ANYDTDTM19.',
+                                  timeid_format='DATETIME19.')
+        self.table2.timeseries_accumlation(acc_interval='day',
+                                           groupby=['id1var', 'id2var'])
+        self.table2.prepare_subsequences(seq_len=2,
+                                         target='series',
+                                         predictor_timeseries=['series', 'covar'],
+                                         missing_handling='drop')
+        
+        valid_start = datetime.date(2015, 1, 4)
+        test_start = datetime.date(2015, 1, 7)
+        
+        traintbl, validtbl, testtbl = self.table2.timeseries_partition(
+                validation_start=valid_start, testing_start=test_start)
+        
+        model1 = Sequential(self.s, model_table='lstm_rnn')
+        model1.add(InputLayer(std='STD'))
+        model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
+        model1.add(OutputLayer(act='IDENTITY'))
+        
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.01), mini_batch_size=32, 
+                              seed=1234, max_epochs=10)                    
+        seq_spec  = Sequence(**traintbl.sequence_opt)
+        result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, 
+                            sequence=seq_spec, **traintbl.inputs_target)
+        
+        self.assertTrue(result.severity == 0)
+        
+        resulttbl1 = model1.forecast(testtbl, horizon=1)
+        self.assertTrue(isinstance(resulttbl1, CASTable))
+        self.assertTrue(resulttbl1.shape[0]==testtbl.shape[0])
+        
+        local_resulttbl1 = resulttbl1.to_frame()
+        unique_time = local_resulttbl1.datetime.unique()
+        self.assertTrue(len(unique_time)==4)
+        for i in range(4):
+            self.assertTrue(pd.Timestamp(unique_time[i])==datetime.datetime(2015,1,7+i))
+
+        resulttbl2 = model1.forecast(testtbl, horizon=3)
+        self.assertTrue(isinstance(resulttbl2, CASTable))
+        self.assertTrue(resulttbl2.shape[0]==45)
+        
+        local_resulttbl2 = resulttbl2.to_frame()
+        local_resulttbl2.sort_values(by=['id1var', 'id2var', 'datetime'], inplace=True)
+        unique_time = local_resulttbl2.datetime.unique()
+        self.assertTrue(len(unique_time)==3)
+        for i in range(3):
+            self.assertTrue(pd.Timestamp(unique_time[i])==datetime.datetime(2015,1,7+i))
+        
+        series_lag1 = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             'series_lag1'].values
+                                           
+        series_lag2 = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             'series_lag2'].values
+        
+        DL_Pred = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             '_DL_Pred_'].values
+                                       
+        self.assertTrue(np.array_equal(series_lag1[1:3], DL_Pred[0:2]))
+        self.assertTrue(series_lag2[2]==DL_Pred[0])        
+
+    def test_model_forecast3(self):
+        
+        import datetime
+        try:
+            import pandas as pd
+        except:
+            unittest.TestCase.skipTest(self, "pandas not found in the libraries") 
+        import numpy as np
+            
+        filename1 = os.path.join(os.path.dirname(__file__), 'datasources', 'timeseries_exp1.csv')
+        importoptions1 = dict(filetype='delimited', delimiter=',')
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        self.table3 = TimeseriesTable.from_localfile(self.s, filename1, importoptions=importoptions1)
+        self.table3.timeseries_formatting(timeid='datetime',
+                                  timeseries=['series', 'covar'],
+                                  timeid_informat='ANYDTDTM19.',
+                                  timeid_format='DATETIME19.')
+        self.table3.timeseries_accumlation(acc_interval='day',
+                                           groupby=['id1var', 'id2var'])
+        self.table3.prepare_subsequences(seq_len=2,
+                                         target='series',
+                                         predictor_timeseries=['series', 'covar'],
+                                         missing_handling='drop')
+        
+        valid_start = datetime.date(2015, 1, 4)
+        test_start = datetime.date(2015, 1, 7)
+        
+        traintbl, validtbl, testtbl = self.table3.timeseries_partition(
+                validation_start=valid_start, testing_start=test_start)
+        
+        sascode = '''
+        data {};
+        set {};
+        drop series_lag1;
+        run;
+        '''.format(validtbl.name, validtbl.name)
+        
+        self.s.retrieve('dataStep.runCode', _messagelevel='error', code=sascode)
+        
+        sascode = '''
+        data {};
+        set {};
+        drop series_lag1;
+        run;
+        '''.format(testtbl.name, testtbl.name)
+        
+        self.s.retrieve('dataStep.runCode', _messagelevel='error', code=sascode)
+        
+        model1 = Sequential(self.s, model_table='lstm_rnn')
+        model1.add(InputLayer(std='STD'))
+        model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
+        model1.add(OutputLayer(act='IDENTITY'))
+        
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.01), mini_batch_size=32, 
+                              seed=1234, max_epochs=10)                    
+        seq_spec  = Sequence(**traintbl.sequence_opt)
+        result = model1.fit(traintbl, optimizer=optimizer, 
+                            sequence=seq_spec, **traintbl.inputs_target)
+        
+        self.assertTrue(result.severity == 0)
+        
+        resulttbl1 = model1.forecast(validtbl, horizon=1)
+        self.assertTrue(isinstance(resulttbl1, CASTable))
+        self.assertTrue(resulttbl1.shape[0]==15)
+        
+        local_resulttbl1 = resulttbl1.to_frame()
+        unique_time = local_resulttbl1.datetime.unique()
+        self.assertTrue(len(unique_time)==1)
+        self.assertTrue(pd.Timestamp(unique_time[0])==datetime.datetime(2015,1,4))
+
+        resulttbl2 = model1.forecast(validtbl, horizon=3)
+        self.assertTrue(isinstance(resulttbl2, CASTable))
+        self.assertTrue(resulttbl2.shape[0]==45)
+        
+        local_resulttbl2 = resulttbl2.to_frame()
+        local_resulttbl2.sort_values(by=['id1var', 'id2var', 'datetime'], inplace=True)
+        unique_time = local_resulttbl2.datetime.unique()
+        self.assertTrue(len(unique_time)==3)
+        for i in range(3):
+            self.assertTrue(pd.Timestamp(unique_time[i])==datetime.datetime(2015,1,4+i))
+        
+        series_lag1 = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             'series_lag1'].values
+                                           
+        series_lag2 = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             'series_lag2'].values
+        
+        DL_Pred = local_resulttbl2.loc[(local_resulttbl2.id1var==1) & (local_resulttbl2.id2var==1), 
+                             '_DL_Pred_'].values
+                                       
+        self.assertTrue(np.array_equal(series_lag1[1:3], DL_Pred[0:2]))
+        self.assertTrue(series_lag2[2]==DL_Pred[0]) 
+        
+        with self.assertRaises(RuntimeError):
+            resulttbl3 = model1.forecast(testtbl, horizon=3)
+        
+        
     def test_imagescaler1(self):
         # test import model with imagescaler
         try:

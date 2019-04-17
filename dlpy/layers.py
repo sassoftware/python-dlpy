@@ -86,6 +86,54 @@ def get_color(name, palette='default'):
     return PALETTES[palette].get(name, PALETTES[palette]['unknown'])
 
 
+class Tensor(object):
+    '''
+    Represent multidimensional arrays
+
+    Parameters
+    ----------
+    op : Layer
+       Specifies the Layer operation that produces this tensor as an output.
+    value : Numpy array
+       Specifies the value of the tensor.
+
+    Returns
+    -------
+    :class:`Tensor`
+
+    '''
+    def __init__(self, op, value=None):
+        self._op = op  # the layer that produces the tensor.
+        self._value = value
+
+    @property
+    def shape(self):
+        # TODO: check shape
+        raise NotImplementedError
+
+
+class Node(object):
+    '''
+    Represent the connectivity between the layers.
+
+    Parameters
+    ----------
+    inbound_layers : iter-of-Layers
+        Specifies the input layers of the Node
+    outbound_layer : Layer
+        Specifies the outbound layer of the Node
+
+    Returns
+    -------
+    :class:`Node`
+
+    '''
+    def __init__(self, inbound_layers, outbound_layer):
+        # multiple inbound layer but one output connection layer
+        self.inbound_layers = inbound_layers
+        self.outbound_layer = outbound_layer
+
+
 class Layer(object):
     '''
     Base class for all layers
@@ -116,6 +164,7 @@ class Layer(object):
         self.name = name
         self.config = config
         self.depth = None
+        self._inbound_nodes = []
 
         if src_layers is None:
             self.src_layers = None
@@ -131,15 +180,23 @@ class Layer(object):
         else:
             self.activation = None
 
-    def __call__(self, inputs, **kwargs):
+    def __call__(self, inputs):
         layer_type = self.__class__.__name__
         if isinstance(inputs, list):
-            if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'Dense']:
+            if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale',
+                                                      'Dense', 'Model', 'OutputLayer']:
                 raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
-        self.src_layers = self.src_layers or []
-        self.src_layers = self.src_layers + inputs
+        self._assert_inputs(inputs)
+        input_layers = []
+        for input_ in inputs:
+            if input_._op.__class__.__name__ == 'Model':
+                idx_tensor = input_._op.tensor.index(input_)
+                input_layers.append(input_._op.output_layers[idx_tensor])
+            else:
+                input_layers.append(input_._op)
+        self.src_layers = input_layers
 
         # give the layer a name
         self.count_instances()
@@ -150,10 +207,27 @@ class Layer(object):
             self.src_layers = list(set(self.src_layers))
             warnings.warn('You have duplicated src_layers in Layer {} '
                           'and the duplicated layers have been removed.'.format(self.name))
-        return self
+
+        # Model can output multiple tensors
+        if layer_type == 'Model':
+            for i, input_layer in enumerate(self.input_layers):
+                for layer in self.layers:
+                    if layer.type == 'input':continue
+                    if input_layer in layer.src_layers:
+                        layer.src_layers = [self.src_layers[i]]
+
+            self._inbound_nodes = [Node(src_layer, self) for src_layer in self.src_layers]
+            self.tensor = [Tensor(output_layer) for output_layer in self.output_layers]
+        else:
+            self._inbound_nodes = Node(self.src_layers, self)
+            self.tensor = Tensor(self)  # return Tensor object
+        return self.tensor
 
     def __lt__(self, other):
         return self.depth < other.depth
+
+    def __str__(self):
+        return self.name
 
     @classmethod
     def count_instances(cls):
@@ -232,6 +306,26 @@ class Layer(object):
         ''' Return a DataFrame containing the layer information for rnn models'''
         return pd.DataFrame([[self.layer_id, self.name, self.type, self.activation, self.output_size]],
                             columns=['Layer Id', 'Layer', 'Type', 'Activation', 'Output Size'])
+
+    def _assert_inputs(self, inputs):
+        '''
+        Inspect the type of inputs and check if inputs tensors match up to the layer.
+
+        inputs: a list of Tensor object
+
+        '''
+        # TODO: check if inputs tensors match up to the layer.
+        for input in inputs:
+            if not isinstance(input, Tensor):
+                raise ValueError('Layer {} is called with an input that isn\'t a tensor object'.format(self.name))
+
+
+def Input(n_channels=None, width=None, height=None, name=None, nominals=None, std=None, scale=None,
+          offsets=None, dropout=None, random_flip=None, random_crop=None, random_mutation=None):
+    # used to instantiate a tensor
+    input_layer = InputLayer(n_channels, width, height, name, nominals, std, scale, offsets,
+                             dropout, random_flip, random_crop, random_mutation)
+    return input_layer.input_tenor
 
 
 class InputLayer(Layer):
@@ -312,6 +406,9 @@ class InputLayer(Layer):
             self._output_size = 0
 
         self.color_code = get_color(self.type)
+
+        self.input_tenor = Tensor(self)
+        self.tensor = self.input_tenor
 
     @property
     def output_size(self):
