@@ -47,7 +47,7 @@ class KerasParseError(ValueError):
     '''
 
 
-def keras_to_sas(model, model_name=None):
+def keras_to_sas(model, model_name=None, offsets=None, std=None, scale=1.0):
     output_code = ''
     layer_activation = {}
     src_layer = {}
@@ -74,7 +74,7 @@ def keras_to_sas(model, model_name=None):
     # input layer code for a SAS deep learning model
     layer = model.layers[0]
     if (layer.__class__.__name__.lower() != 'inputlayer'):
-        sas_code = keras_input_layer(layer, model_name, False)
+        sas_code = keras_input_layer(layer, model_name, False, offsets, std, scale)
         # write SAS code for input layer
         if sas_code:
             output_code = output_code + sas_code + '\n\n'
@@ -101,7 +101,8 @@ def keras_to_sas(model, model_name=None):
         if (class_name in ['averagepooling2d', 'maxpooling2d', 
                            'globalaveragepooling2d']):
             sas_code = keras_pooling_layer(layer, model_name, class_name,
-                                           src_layer, layer_dropout)
+                                           src_layer, layer_dropout, zero_pad)
+            zero_pad = None
         # 2D convolution
         elif (class_name == 'conv2d'):
             sas_code = keras_convolution_layer(layer, model_name, act_func,
@@ -113,7 +114,7 @@ def keras_to_sas(model, model_name=None):
                                                       act_func, src_layer)
         # input layer
         elif (class_name == 'inputlayer'):
-            sas_code = keras_input_layer(layer, model_name, True)
+            sas_code = keras_input_layer(layer, model_name, True, offsets, std, scale)
         # add
         elif (class_name == 'add'):
             sas_code = keras_residual_layer(layer, model_name,
@@ -145,7 +146,7 @@ def keras_to_sas(model, model_name=None):
 
 
 # create SAS pooling layer
-def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout):
+def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout, zero_pad):
     '''
     Extract pooling layer parameters from layer definition object
 
@@ -162,6 +163,8 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
        pooling layer
     layer_dropout : dict
        Dictionary containing dropout layer names (keys) and dropout rates (values)
+    zero_pad : dict
+       Dictionary containing padding values derived from zero-padding layer (may be None)
 
     Returns
     -------
@@ -172,6 +175,8 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
     if class_name == 'globalaveragepooling2d':
         strides = (1, 1)
         padding = 0
+        pad_height = None
+        pad_width = None
         try:
             pool_size = int(layer.input.shape[1]), int(layer.input.shape[2])
         except:
@@ -181,10 +186,17 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
         config = layer.get_config()
         strides = config['strides']
         pool_size = config['pool_size']
-        if config['padding'] == 'valid':
-            padding = 0
-        else:
+        if zero_pad is not None:
+            pad_height = zero_pad['height']
+            pad_width = zero_pad['width']
             padding = None
+        else:
+            pad_height = None
+            pad_width = None
+            if config['padding'] == 'valid':
+                padding = 0
+            else:
+                padding = None                
 
     # pooling size
     width, height = pool_size
@@ -207,22 +219,27 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout)
                               ' is not supported yet')
 
     # extract source layer(s)
-    if (layer.name in src_layer.keys()):
-        source_str = src_layer[layer.name]
-    else:
-        raise KerasParseError('Unable to determine source layer for '
-                              'pooling layer = ' + layer.name)
+    if zero_pad is not None:
+        source_str = replace_forward_slash(zero_pad['source_str'])
+    else:    
+        if (layer.name in src_layer.keys()):
+            source_str = replace_forward_slash(src_layer[layer.name])
+        else:
+            raise KerasParseError('Unable to determine source layer for '
+                                  'pooling layer = ' + layer.name)
 
     # set dropout
     if (layer.name in layer_dropout.keys()):
         dropout = layer_dropout[layer.name]
     else:
         dropout = 0.0
-
-    return write_pooling_layer(model_name=model_name, layer_name=layer.name,
+        
+    return write_pooling_layer(model_name=model_name, 
+                               layer_name=replace_forward_slash(layer.name),
                                width=str(width), height=str(height), stride=str(step),
                                type=type, dropout=str(dropout), src_layer=source_str,
-                               padding=str(padding))
+                               padding=str(padding),pad_height=str(pad_height),
+                               pad_width=str(pad_width))
 
 
 # create SAS 2D convolution layer
@@ -297,10 +314,10 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
 
     # extract source layer(s)
     if zero_pad is not None:
-        source_str = zero_pad['source_str']
+        source_str = replace_forward_slash(zero_pad['source_str'])
     else:
         if (layer.name in src_layer.keys()):
-            source_str = src_layer[layer.name]
+            source_str = replace_forward_slash(src_layer[layer.name])
         else:
             raise KerasParseError('Unable to determine source layer for '
                                   'convolution layer = ' + layer.name)
@@ -310,8 +327,9 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
         dropout = layer_dropout[layer.name]
     else:
         dropout = 0.0
-
-    return write_convolution_layer(model_name=model_name, layer_name=layer.name,
+        
+    return write_convolution_layer(model_name=model_name, 
+                                   layer_name=replace_forward_slash(layer.name),
                                    nfilters=str(nrof_filters), width=str(width),
                                    height=str(height), stride=str(step),
                                    nobias=bias_str, activation=layer_act_func,
@@ -347,7 +365,7 @@ def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
 
     # extract source layer(s)
     if (layer.name in src_layer.keys()):
-        source_str = src_layer[layer.name]
+        source_str = replace_forward_slash(src_layer[layer.name])
     else:
         raise KerasParseError('Unable to determine source layer for '
                               'batch normalization layer = ' + layer.name)
@@ -360,12 +378,13 @@ def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
     else:
         layer_act_func = 'identity'
 
-    return write_batch_norm_layer(model_name=model_name, layer_name=layer.name,
+    return write_batch_norm_layer(model_name=model_name, 
+                                  layer_name=replace_forward_slash(layer.name),
                                   activation=layer_act_func, src_layer=source_str)
 
 
 # create SAS input layer
-def keras_input_layer(layer, model_name, input_layer):
+def keras_input_layer(layer, model_name, input_layer, offsets, std, scale):
     '''
     Extract input layer parameters from layer definition object
 
@@ -377,6 +396,15 @@ def keras_input_layer(layer, model_name, input_layer):
        Deep learning model name
     input_layer : boolean
        Indicate whether layer name given (True) or not (False)
+    offsets : list or None
+        Specifies the values to be subtracted from the pixel values
+        of the input data, used if the data is an image.
+    std : list or None
+        The pixel values of the input data are divided by these
+        values, used if the data is an image.
+    scale : float
+        Specifies the scaling factor to apply to each image.            
+       
 
     Returns
     -------
@@ -397,12 +425,10 @@ def keras_input_layer(layer, model_name, input_layer):
     else:
         input_name = config['name'] + '_input'
 
-    # TBD: fix scale, now default value for scale
-    scale = 1.0
-
     return write_input_layer(model_name=model_name, layer_name=input_name,
                              channels=str(C), width=str(W),
-                             height=str(H), scale=str(scale))
+                             height=str(H), scale=str(scale), 
+                             offsets=offsets, std=std)
 
 
 # create SAS residual layer
@@ -432,7 +458,7 @@ def keras_residual_layer(layer, model_name, act_func, src_layer):
 
     # extract source layer(s)
     if (layer.name in src_layer.keys()):
-        source_str = src_layer[layer.name]
+        source_str = replace_forward_slash(src_layer[layer.name])
     else:
         raise KerasParseError('Unable to determine source layers for '
                               'residual layer = ' + layer.name)
@@ -445,7 +471,8 @@ def keras_residual_layer(layer, model_name, act_func, src_layer):
     else:
         layer_act_func = 'identity'
 
-    return write_residual_layer(model_name=model_name, layer_name=layer.name,
+    return write_residual_layer(model_name=model_name, 
+                                layer_name=replace_forward_slash(layer.name),
                                 activation=layer_act_func, src_layer=source_str)
 
 
@@ -507,12 +534,13 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
 
     # extract source layer(s)
     if (layer.name in src_layer.keys()):
-        source_str = src_layer[layer.name]
+        source_str = replace_forward_slash(src_layer[layer.name])
     else:
         raise KerasParseError('Unable to determine source layer for '
                               'fully connected layer = ' + layer.name)
 
-    return write_full_connect_layer(model_name=model_name, layer_name=layer.name,
+    return write_full_connect_layer(model_name=model_name, 
+                                    layer_name=replace_forward_slash(layer.name),
                                     nrof_neurons=str(nrof_neurons), nobias=bias_str,
                                     activation=layer_act_func, type=layer_type,
                                     dropout=str(dropout), src_layer=source_str)
@@ -545,7 +573,7 @@ def keras_concatenate_layer(layer, model_name, act_func, src_layer):
 
     # extract source layer(s)
     if (layer.name in src_layer.keys()):
-        source_str = src_layer[layer.name]
+        source_str = replace_forward_slash(src_layer[layer.name])
     else:
         raise KerasParseError('Unable to determine source layers for '
                               'concatenate layer = ' + layer.name)
@@ -558,7 +586,8 @@ def keras_concatenate_layer(layer, model_name, act_func, src_layer):
     else:
         layer_act_func = 'identity'
 
-    return write_concatenate_layer(model_name=model_name, layer_name=layer.name,
+    return write_concatenate_layer(model_name=model_name, 
+                                   layer_name=replace_forward_slash(layer.name),
                                    activation=layer_act_func, src_layer=source_str)
 
 # extract information from ZeroPadding2D layer
@@ -755,24 +784,28 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
         src_layer_name = []
         node_config = layer._inbound_nodes[0].get_config()
         for lname in node_config['inbound_layers']:
-            tmp_layer = model.get_layer(name=lname)
-            prev_layer = tmp_layer
-            while (tmp_layer.__class__.__name__.lower() not in computation_layer_list):
-                # check for root node
-                node_config = tmp_layer._inbound_nodes[0].get_config()
-                if (len(node_config['inbound_layers']) > 1):
-                    raise KerasParseError('Unable to determine previous computation '
-                                          'layer(s) for layer = ' + layer_name)
-                    return None
-                elif (len(node_config['inbound_layers']) == 1):
-                    tmp_name = node_config['inbound_layers'][0]
-                    prev_layer = tmp_layer
-                    tmp_layer = model.get_layer(name=tmp_name)
-                else:
-                    tmp_layer = prev_layer
-                    break
+            try:
+                tmp_layer = model.get_layer(name=lname)
+                prev_layer = tmp_layer
+                while (tmp_layer.__class__.__name__.lower() not in computation_layer_list):
+                    # check for root node
+                    node_config = tmp_layer._inbound_nodes[0].get_config()
+                    if (len(node_config['inbound_layers']) > 1):
+                        raise KerasParseError('Unable to determine previous computation '
+                                              'layer(s) for layer = ' + layer_name)
+                        return None
+                    elif (len(node_config['inbound_layers']) == 1):
+                        tmp_name = node_config['inbound_layers'][0]
+                        prev_layer = tmp_layer
+                        tmp_layer = model.get_layer(name=tmp_name)
+                    else:
+                        tmp_layer = prev_layer
+                        break
 
-            src_layer_name.append(tmp_layer.name)
+                src_layer_name.append(tmp_layer.name)        
+            except ValueError:
+                print("WARNING: could not find layer " + lname + ", in model. Translated model may be inaccurate.")
+                src_layer_name.append(lname)
 
         return src_layer_name
 
@@ -796,3 +829,20 @@ def make_source_str(layer_name):
     for ii in range(len(layer_name)):
         source_str.append(layer_name[ii])
     return repr(source_str)
+
+def replace_forward_slash(layer_name):
+    '''
+    Replaces forward slash (/) in layer names with _
+
+    Parameters
+    ----------
+    layer_name : string
+       Layer name
+
+    Returns
+    -------
+    string
+        Layer name with / replaced with _
+
+    '''
+    return layer_name.replace('/','_')

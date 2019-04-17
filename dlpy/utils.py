@@ -371,26 +371,31 @@ def find_caslib(conn, path):
         return None
 
 
-def get_imagenet_labels_table(conn):
+def get_imagenet_labels_table(conn, label_length=None):
     temp_name = random_name('new_label_table', 6)
 
     filename = os.path.join('datasources', 'imagenet_labels.csv')
     project_path = os.path.dirname(os.path.abspath(__file__))
     full_filename = os.path.join(project_path, filename)
 
-    return get_user_defined_labels_table(conn, full_filename)
+    return get_user_defined_labels_table(conn, full_filename, label_length)
 
 
-def get_user_defined_labels_table(conn, label_file_name):
+def get_user_defined_labels_table(conn, label_file_name, label_length=None):
     temp_name = random_name('new_label_table', 6)
 
     full_filename = label_file_name
 
+    if label_length is None:
+        char_length = 200
+    else:
+        char_length = label_length
+    
     labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False)
     conn.upload_frame(labels, casout=dict(name=temp_name, replace=True),
                       importoptions={'vars':[
                           {'name': 'label_id', 'type': 'int64'},
-                          {'name': 'label', 'type': 'char', 'length': 200}]})
+                          {'name': 'label', 'type': 'char', 'length': char_length}]})
 
     return conn.CASTable(temp_name)
 
