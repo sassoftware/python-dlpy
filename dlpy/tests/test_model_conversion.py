@@ -75,8 +75,8 @@ class TestModelConversion(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        if (self.data_dir_local is None) or (not os.path.isfile(os.path.join(self.data_dir_local,'lenet.h5'))):
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables or lenet.h5 file is missing")
             
         model = Sequential()
         model.add(Conv2D(20, kernel_size=(5, 5), strides=(1, 1), activation='relu', input_shape=(28,28,1), padding="same"))

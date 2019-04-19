@@ -752,14 +752,14 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the file that
             contains the weight table.
-        labels: bool
+        labels : bool
             Specifies whether to apply user-defined classification labels
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
-        label_length: int, optional
+        label_length : int, optional
             Length of the classification labels (in characters).
 
         Notes
@@ -796,14 +796,14 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
-        labels: bool
+        labels : bool
             Specifies whether to use ImageNet classification labels
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
-        label_length: int, optional
+        label_length : int, optional
             Length of the classification labels (in characters).
 
         '''
@@ -822,14 +822,14 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
-        labels: bool
+        labels : bool
             Specifies whether to use ImageNet classification labels
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
-        label_length: int, optional
+        label_length : int, optional
             Length of the classification labels (in characters).
 
         '''
@@ -850,7 +850,7 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
 
         '''
@@ -919,12 +919,12 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
-        label_length: int, optional
+        label_length : int, optional
             Length of the classification labels (in characters).
 
         '''
