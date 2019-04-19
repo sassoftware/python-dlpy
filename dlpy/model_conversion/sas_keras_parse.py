@@ -199,7 +199,7 @@ def keras_pooling_layer(layer, model_name, class_name, src_layer, layer_dropout,
                 padding = None                
 
     # pooling size
-    width, height = pool_size
+    height, width = pool_size
 
     # stride
     if (strides[0] == strides[1]):
@@ -294,7 +294,7 @@ def keras_convolution_layer(layer, model_name, act_func, src_layer, layer_dropou
         layer_act_func = 'identity'
 
     # kernel size
-    width, height = kernel_size
+    height, width = kernel_size
 
     # stride
     if (strides[0] == strides[1]):
