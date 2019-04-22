@@ -645,7 +645,7 @@ class Network(Layer):
 
         '''
 
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -740,7 +740,7 @@ class Network(Layer):
                                             name=self.model_name + '_weights_attr'))
                 self.set_weights_attr(self.model_name + '_weights_attr')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None):
@@ -854,7 +854,7 @@ class Network(Layer):
             data specification for input and output layer(s)
 
         '''
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
         if data_spec:
 
@@ -905,7 +905,7 @@ class Network(Layer):
 
         self.set_weights(self.model_name + '_weights')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None, label_length=None):
@@ -928,7 +928,7 @@ class Network(Layer):
             Length of the classification labels (in characters).
 
         '''
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
         if (label_file_name):
             from dlpy.utils import get_user_defined_labels_table
@@ -985,7 +985,7 @@ class Network(Layer):
 
         self.set_weights(self.model_name + '_weights')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights_from_table(self, path):
@@ -999,7 +999,7 @@ class Network(Layer):
             contains the weight table.
 
         '''
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -1027,7 +1027,7 @@ class Network(Layer):
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
@@ -1151,7 +1151,7 @@ class Network(Layer):
         # if path.endswith(os.path.sep):
         #    path = path[:-1]
 
-        caslib, path_remaining = caslibify(self.conn, path, task = 'save')
+        caslib, path_remaining, tmp_caslib = caslibify(self.conn, path, task = 'save')
 
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.sashdat'
@@ -1195,7 +1195,7 @@ class Network(Layer):
 
         print('NOTE: Model table saved successfully.')
 
-        if caslib is not None:
+        if (caslib is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def save_weights_csv(self, path):
@@ -1217,7 +1217,7 @@ class Network(Layer):
                             casout = dict(name = self.model_weights.name,
                                           replace = True))
 
-        caslib, path_remaining = caslibify(self.conn, path, task = 'save')
+        caslib, path_remaining, tmp_caslib = caslibify(self.conn, path, task = 'save')
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.csv'
         weights_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
@@ -1230,7 +1230,7 @@ class Network(Layer):
 
         print('NOTE: Model weights csv saved successfully.')
 
-        if caslib is not None:
+        if (caslib is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def save_to_onnx(self, path, model_weights = None):

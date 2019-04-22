@@ -84,7 +84,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -95,6 +95,9 @@ class TestModel(unittest.TestCase):
             for msg in r.messages:
                 print(msg)
         self.assertTrue(r.severity <= 1)
+        
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def test_model2(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -109,7 +112,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -121,6 +124,9 @@ class TestModel(unittest.TestCase):
         r2 = model1.predict(data='eee')
         self.assertTrue(r2.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model3(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -134,7 +140,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -152,6 +158,9 @@ class TestModel(unittest.TestCase):
         r3 = model1.predict(data='eee')
         self.assertTrue(r3.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model4(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -165,7 +174,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -177,6 +186,9 @@ class TestModel(unittest.TestCase):
         r2 = model1.evaluate(data='eee')
         self.assertTrue(r2.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model5(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -190,7 +202,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -208,6 +220,9 @@ class TestModel(unittest.TestCase):
         r3 = model1.evaluate(data='eee')
         self.assertTrue(r3.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model6(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -221,7 +236,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -230,6 +245,9 @@ class TestModel(unittest.TestCase):
         r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
         self.assertTrue(r.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model7(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -243,7 +261,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -255,6 +273,9 @@ class TestModel(unittest.TestCase):
         r2 = model1.predict(data='eee', use_best_weights=True)
         self.assertTrue(r2.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model8(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -268,7 +289,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -280,6 +301,9 @@ class TestModel(unittest.TestCase):
         r2 = model1.predict(data='eee')
         self.assertTrue(r2.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model9(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -293,7 +317,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -305,6 +329,9 @@ class TestModel(unittest.TestCase):
         r2 = model1.evaluate(data='eee', use_best_weights=True)
         self.assertTrue(r2.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model10(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -318,7 +345,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -332,6 +359,9 @@ class TestModel(unittest.TestCase):
 
         model1.save_to_table(self.data_dir)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model11(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -345,7 +375,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -363,6 +393,9 @@ class TestModel(unittest.TestCase):
         r3 = model1.evaluate(data='eee', use_best_weights=True)
         self.assertTrue(r3.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model12(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -376,7 +409,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -394,6 +427,9 @@ class TestModel(unittest.TestCase):
         r3 = model1.predict(data='eee', use_best_weights=True)
         self.assertTrue(r3.severity == 0)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model13(self):
         model = Sequential(self.s, model_table='simple_cnn')
         model.add(InputLayer(3, 224, 224))
@@ -485,7 +521,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -496,6 +532,9 @@ class TestModel(unittest.TestCase):
 
         model1.save_weights_csv(self.data_dir)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model19(self):
         try:
             import onnx
@@ -514,7 +553,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -525,6 +564,9 @@ class TestModel(unittest.TestCase):
 
         model1.deploy(self.data_dir, output_format='onnx')
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model20(self):
         try:
             import onnx
@@ -543,7 +585,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -556,6 +598,9 @@ class TestModel(unittest.TestCase):
         weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
         model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model21(self):
         try:
             import onnx
@@ -579,7 +624,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -590,6 +635,9 @@ class TestModel(unittest.TestCase):
 
         model1.deploy(self.data_dir, output_format='onnx')
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model22(self):
         try:
             import onnx
@@ -611,7 +659,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -622,6 +670,9 @@ class TestModel(unittest.TestCase):
 
         model1.deploy(self.data_dir, output_format='onnx')
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model22_1(self):
         try:
             import onnx
@@ -640,7 +691,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -657,6 +708,9 @@ class TestModel(unittest.TestCase):
         init = numpy_helper.to_array(m.graph.initializer[1])
         self.assertTrue(np.array_equal(init, [ -1,  2, 448, 448]))
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model23(self):
         try:
             import onnx
@@ -677,7 +731,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -688,6 +742,9 @@ class TestModel(unittest.TestCase):
 
         model1.deploy(self.data_dir, output_format='onnx')
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_model24(self):
         try:
             import onnx
@@ -763,7 +820,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path = self.data_dir + 'evaluate_obj_det_det.sashdat', task = 'load')
+        caslib, path, tmp_caslib = caslibify(self.s, path = self.data_dir + 'evaluate_obj_det_det.sashdat', task = 'load')
 
         self.s.table.loadtable(caslib = caslib,
                                casout = {'name': 'evaluate_obj_det_det', 'replace': True},
@@ -795,6 +852,9 @@ class TestModel(unittest.TestCase):
         metrics = yolo_model.evaluate_object_detection(ground_truth = 'evaluate_obj_det_gt', coord_type = 'yolo',
                                                        detection_data = 'evaluate_obj_det_det', iou_thresholds=0.5)
 
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
+                                                       
     def test_model29(self):
         # test specifying output layer in Model.from_onnx_model
         try:
@@ -1180,7 +1240,7 @@ class TestModel(unittest.TestCase):
         model1.add(Pooling(2))
         model1.add(OutputLayer(act='softmax', n=2))
 
-        caslib, path = caslibify(self.s,
+        caslib, path, tmp_caslib = caslibify(self.s,
                                  path=self.data_dir+'images.sashdat',
                                  task='load')
         self.s.table.loadtable(caslib=caslib,
@@ -1199,6 +1259,9 @@ class TestModel(unittest.TestCase):
         self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[2], 0.3)
         self.assertAlmostEqual(onnx_model.graph.node[0].attribute[1].f, 1/255.)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     def test_load_reshape_detection(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -1225,7 +1288,7 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        caslib, path = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
@@ -1257,6 +1320,9 @@ class TestModel(unittest.TestCase):
         ax = model1.plot_training_history(tick_frequency=tick_frequency)
         self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs)
 
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        
     @classmethod
     def tearDownClass(cls):
         # tear down tests

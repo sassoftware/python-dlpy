@@ -466,7 +466,7 @@ def caslibify(conn, path, task='save'):
             remaining_path += sep
 
         if caslib is not None:
-            return caslib, remaining_path
+            return caslib, remaining_path, False
         else:
             new_caslib = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
@@ -475,7 +475,7 @@ def caslibify(conn, path, task='save'):
             if rt.severity > 1:
                 raise DLPyError('something went wrong while adding the caslib for the specified path.')
             else:
-                return new_caslib, ''
+                return new_caslib, '', True
     else:
         server_type = get_cas_host_type(conn).lower()
         if server_type.startswith("lin") or server_type.startswith("osx"):
@@ -486,10 +486,10 @@ def caslibify(conn, path, task='save'):
         if len(path_split) == 2:
             caslib = find_caslib(conn, path_split[0])
             if caslib is not None:
-                return caslib, path_split[1]
+                return caslib, path_split[1], False
             else:
-                caslib = random_name('Caslib', 6)
-                rt = conn.retrieve('addcaslib', _messagelevel='error', name=caslib, path=path_split[0],
+                new_caslib = random_name('Caslib', 6)
+                rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path_split[0],
                                    activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
 
                 if rt.severity > 1:
@@ -497,9 +497,9 @@ def caslibify(conn, path, task='save'):
                           'is part of an existing caslib. A workaround is to put the file under that subpath or'
                           'move to a different location. It sounds and is inconvenient but it is to protect '
                           'your privacy granted by your system admin.')
-                    return None, None
+                    return None, None, False
                 else:
-                    return caslib, path_split[1]
+                    return new_caslib, path_split[1], True
         else:
             raise DLPyError('we need more than one level of directories. e.g., /dir1/dir2 ')
 
@@ -1183,7 +1183,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     det_img_table = random_name('DET_IMG')
 
-    caslib, path_after_caslib = caslibify(conn, data_path, task='load')
+    caslib, path_after_caslib, tmp_caslib = caslibify(conn, data_path, task='load')
     if caslib is None and path_after_caslib is None:
         print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
               'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
@@ -1213,7 +1213,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         else:
             print("NOTE: Images are processed.")
 
-    if caslib is not None:
+    if (caslib is not None) and tmp_caslib:
         conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
     with sw.option_context(print_messages = False):
@@ -1551,7 +1551,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     annotation_data_is_in_the_client = 0
     label_files = []
     with sw.option_context(print_messages=False):
-        caslib_annotation, path_after_ann_caslib = caslibify(conn, annotation_path, task='save')
+        caslib_annotation, path_after_ann_caslib, tmp_caslib = caslibify(conn, annotation_path, task='save')
         if caslib_annotation is None:
             caslib_annotation = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel = 'error', name = caslib_annotation, path = annotation_path,
@@ -1588,10 +1588,10 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     if len(label_files) == 0:
         raise DLPyError('There is no annotation file in the annotation_path.')
 
-    if caslib_annotation is not None:
+    if (caslib_annotation is not None) and tmp_caslib:
         conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib_annotation)
 
-    caslib, path_after_caslib = caslibify(conn, data_path, task='load')
+    caslib, path_after_caslib, tmp_caslib = caslibify(conn, data_path, task='load')
     if caslib is None and path_after_caslib is None:
         print('Cannot create a caslib for the provided (i.e., '+data_path+') path. Please make sure that the '
                                                                           'path is accessible from'
@@ -1624,7 +1624,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
         else:
             print("NOTE: Images are processed.")
 
-    if caslib is not None:
+    if (caslib is not None) and tmp_caslib:
         conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
         caslib=None
 
@@ -1640,7 +1640,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
         var_name = coco_var_name
 
     if annotation_data_is_in_the_client == 0:
-        caslib_annotation, path_after_ann_caslib = caslibify(conn, annotation_path, task='save')
+        caslib_annotation, path_after_ann_caslib, tmp_caslib = caslibify(conn, annotation_path, task='save')
 
     label_tbl_name = random_name('obj_det')
     idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
@@ -1746,10 +1746,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
 
-    if caslib is not None:
-        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
-
-    if caslib_annotation is not None:
+    if (caslib_annotation is not None) and tmp_caslib:
         conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib_annotation)
 
     print("NOTE: Object detection table is successfully created.")
