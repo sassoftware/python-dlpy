@@ -21,7 +21,8 @@
 
 # model/input layer definition
 def write_input_layer(model_name='sas', layer_name='data', channels='-1',
-                      width='-1', height='-1', scale='1.0'):
+                      width='-1', height='-1', scale='1.0', offsets=None,
+                      std=None):
     '''
     Generate Python code defining a SAS deep learning input layer
 
@@ -39,6 +40,12 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
        image height
     scale : string
        scaling factor to apply to raw image pixel data
+    offsets : list
+       image channel offsets, these values will be subtracted from the pixels of 
+       each image channel
+    std : list
+       image channel standardization, the pixels of each image channel will be divided
+       by these values
 
     Returns
     -------
@@ -46,8 +53,19 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
         String representing Python code defining a SAS deep learning input layer
 
     '''
+    
+    if offsets is None:
+        str_offset = 'None'
+    else:
+        str_offset = repr(offsets)
+        
+    if std is None:
+        str_std = 'None'
+    else:
+        str_std = repr(std)
+
     out = [
-        'def sas_model_gen(s, input_crop_type=None, input_channel_offset=None, input_image_size=None):',
+        'def sas_model_gen(s, input_crop_type=None, input_channel_offset=' + str_offset + ', norm_std = ' + str_std + ', input_image_size=None):',
         '   # quick check for deeplearn actionset',
         '   actionset_list = s.actionsetinfo().setinfo.actionset.tolist()',
         '   actionset_list = [item.lower() for item in actionset_list]',
@@ -58,7 +76,7 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
         '       input_crop_type="NONE"',
         '   else:',
         '       if (input_crop_type.upper() != "NONE") and (input_crop_type.upper() != "UNIQUE"):',
-        '           raise ValueError("input_crop_type can only be NONE or UNIQUE")',
+        '           raise ValueError("Parameter input_crop_type can only be NONE or UNIQUE")',
         '',
         '   if (input_image_size is not None):',
         '       channels = input_image_size[0]',
@@ -67,7 +85,7 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
         '       elif (len(inputImageSize) == 3):',
         '           height,width = input_image_size[1:]',
         '       else:',
-        '           raise ValueError("input_image_size must be a tuple with two or three entries")',
+        '           raise ValueError("Parameter input_image_size must be a tuple with two or three entries")',
         '',
         '   # instantiate model',
         '   s.buildModel(model=dict(name=' + repr(model_name) + ',replace=True),type="CNN")',
@@ -75,19 +93,19 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
         '   # input layer',
         '   nchannels=' + channels,
         '   if input_channel_offset is None and nchannels==3:',
-        '       print("INFO: setting channel mean values to ImageNet means")',
+        '       print("INFO: Setting channel mean values to ImageNet means")',
         '       input_channel_offset = [103.939, 116.779, 123.68]',
         '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
         '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
-        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset))',
+        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset, offsetStd=norm_std))',
         '   elif input_channel_offset is not None:',
         '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
         '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
-        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset))',
+        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset, offsetStd=norm_std))',
         '   else:',
         '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
         '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
-        '                  scale = ' + scale + ', randomcrop=input_crop_type))'
+        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsetStd=norm_std))'
     ]
     return '\n'.join(out)
 
@@ -139,7 +157,7 @@ def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
             '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
             '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
             '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
-                activation) + ', dropout=' + dropout + ', padHeight=' + pad_height + ', padWidth=' + pad_width + '), \n',
+                activation) + ', dropout=' + dropout + ', padHeight=' + pad_height + ', padWidth=' + pad_width + '),',
             '              srcLayers=' + src_layer + ')'
         ]
     else:
@@ -147,7 +165,7 @@ def write_convolution_layer(model_name='sas', layer_name='conv', nfilters='-1',
             '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
             '              layer=dict(type="convolution", nfilters=' + nfilters + ', width=' + width + ', height=' + height + ',',
             '                         stride=' + stride + ', nobias=' + nobias + ', act=' + repr(
-                activation) + ', dropout=' + dropout + ', pad=' + padding +'), \n',
+                activation) + ', dropout=' + dropout + ', pad=' + padding +'),',
             '              srcLayers=' + src_layer + ')'
         ]
 
@@ -187,7 +205,8 @@ def write_batch_norm_layer(model_name='sas', layer_name='bn',
 # pooling layer definition
 def write_pooling_layer(model_name='sas', layer_name='pool',
                         width='2', height='2', stride='2', type='max',
-                        dropout='0', src_layer='none', padding='None'):
+                        dropout='0', src_layer='none', padding='None',
+                        pad_height='None',pad_width='None'):
     '''
     Generate Python code defining a SAS deep learning pooling layer
 
@@ -209,19 +228,34 @@ def write_pooling_layer(model_name='sas', layer_name='pool',
        dropout factor (0 < dropout < 1.0)
     src_layer : string, optional
        source layer(s) for the convolution layer
+    padding : string, optional
+       symmetric zero padding value
+    pad_height : string, optional
+       symmetric height zero padding value
+    pad_width : string, optional
+        symmetric width zero padding value
 
     Returns
     -------
     string
 
     '''
-    out = [
-        '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
-        '              layer=dict(type="pooling", width=' + width + ', height=' + height + ',',
-        '                         stride=' + stride + ', pool=' + repr(type) + ', dropout=' + dropout + ',',
-        '                         padding=' + padding + '),',
-        '              srcLayers=' + src_layer + ')'
-    ]
+    if (pad_height.lower() != 'none') or (pad_width.lower() != 'none'):
+        out = [
+            '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '              layer=dict(type="pooling", width=' + width + ', height=' + height + ',',
+            '                         stride=' + stride + ', pool=' + repr(type) + ', dropout=' + dropout + ',',
+            '                         padHeight=' + pad_height + ', padWidth=' + pad_width + '),',
+            '              srcLayers=' + src_layer + ')'
+        ]
+    else:
+        out = [
+            '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '              layer=dict(type="pooling", width=' + width + ', height=' + height + ',',
+            '                         stride=' + stride + ', pool=' + repr(type) + ', dropout=' + dropout + ',',
+            '                         pad=' + padding + '),',
+            '              srcLayers=' + src_layer + ')'
+        ]
     return '\n'.join(out)
 
 

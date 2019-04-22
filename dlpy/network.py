@@ -396,6 +396,7 @@ class Network(Layer):
 
     @classmethod
     def from_keras_model(cls, conn, keras_model, output_model_table = None,
+                         offsets=None, std=None, scale=1.0, 
                          include_weights = False, input_weights_file = None):
         '''
         Generate a model object from a Keras model object
@@ -409,6 +410,14 @@ class Network(Layer):
         output_model_table : string or dict or CAS table, optional
             Specifies the CAS table to store the deep learning model.
             Default: None
+        offsets : list, optional
+            Specifies the values to be subtracted from the pixel values
+            of the input data, used if the data is an image.
+        std : list or None
+            The pixel values of the input data are divided by these
+            values, used if the data is an image.
+        scale : float, optional
+            Specifies the scaling factor to apply to each image.            
         include_weights : bool, optional
             Specifies whether to load the weights of the keras model.
             Default: True
@@ -435,7 +444,9 @@ class Network(Layer):
 
         model_name = model_table_opts['name']
 
-        output_code = keras_to_sas(model = keras_model, model_name = model_name)
+        output_code = keras_to_sas(model = keras_model, model_name = model_name, offsets = offsets, 
+                                   std = std, scale = scale)
+                           
         exec(output_code)
         temp_name = conn
         exec('sas_model_gen(temp_name)')
@@ -732,7 +743,7 @@ class Network(Layer):
         if cas_lib_name is not None:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights(self, path, labels=False, data_spec=None, label_file_name=None):
+    def load_weights(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None):
         '''
         Load the weights form a data file specified by ‘path’
 
@@ -741,13 +752,15 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the file that
             contains the weight table.
-        labels: bool
+        labels : bool
             Specifies whether to apply user-defined classification labels
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
 
         Notes
         -----
@@ -761,17 +774,20 @@ class Network(Layer):
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         elif file_name.lower().endswith('caffemodel.h5'):
-            self.load_weights_from_caffe(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
+            self.load_weights_from_caffe(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,
+                                         label_length=label_length)
         elif file_name.lower().endswith('kerasmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,
+                                         label_length=label_length)
         elif file_name.lower().endswith('onnxmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name)
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,            
+                                         label_length=label_length)
         else:
             raise DLPyError('Weights file must be one of the follow types:\n'
                             'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
                             'Weights load failed.')
 
-    def load_weights_from_caffe(self, path, labels=False, data_spec=None, label_file_name=None):
+    def load_weights_from_caffe(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -780,21 +796,24 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
-        labels: bool
+        labels : bool
             Specifies whether to use ImageNet classification labels
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
 
         '''
         if labels:
-            self.load_weights_from_file_with_labels(path=path, format_type='CAFFE', data_spec=data_spec, label_file_name=label_file_name)
+            self.load_weights_from_file_with_labels(path=path, format_type='CAFFE', data_spec=data_spec, 
+                                                    label_file_name=label_file_name, label_length=label_length)
         else:
             self.load_weights_from_file(path=path, format_type='CAFFE', data_spec=data_spec)
 
-    def load_weights_from_keras(self, path, labels=False, data_spec=None, label_file_name=None):
+    def load_weights_from_keras(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -803,17 +822,20 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
-        labels: bool
+        labels : bool
             Specifies whether to use ImageNet classification labels
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
 
         '''
         if labels:
-            self.load_weights_from_file_with_labels(path=path, format_type='KERAS', data_spec=data_spec, label_file_name=label_file_name)
+            self.load_weights_from_file_with_labels(path=path, format_type='KERAS', data_spec=data_spec,
+                                                    label_file_name=label_file_name, label_length=label_length)
         else:
             self.load_weights_from_file(path=path, format_type='KERAS', data_spec=data_spec)
 
@@ -828,7 +850,7 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
 
         '''
@@ -886,7 +908,7 @@ class Network(Layer):
         if cas_lib_name is not None:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None):
+    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None, label_length=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -897,21 +919,23 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
-        data_spec: list of :class:`DataSpec`, optional
+        data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
-        label_file_name: string, optional
+        label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
 
         '''
         cas_lib_name, file_name = caslibify(self.conn, path, task='load')
 
         if (label_file_name):
             from dlpy.utils import get_user_defined_labels_table
-            label_table = get_user_defined_labels_table(self.conn, label_file_name)
+            label_table = get_user_defined_labels_table(self.conn, label_file_name, label_length)
         else:
             from dlpy.utils import get_imagenet_labels_table
-            label_table = get_imagenet_labels_table(self.conn)
+            label_table = get_imagenet_labels_table(self.conn, label_length)            
 
         if (data_spec):
 

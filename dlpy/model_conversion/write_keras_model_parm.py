@@ -22,6 +22,7 @@ import sys
 import h5py
 import numpy as np
 from keras import backend as K
+from dlpy.utils import DLPyError
 try:
     from keras.engine.topology import preprocess_weights_for_loading
 except ImportError:
@@ -60,6 +61,14 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
     try:
         image_data_format = K.image_data_format()
 
+        # navigate to correct HDF5 group
+        if 'layer_names' in f_in.attrs.keys():
+            root_group = f_in
+        elif 'layer_names' in f_in['model_weights'].attrs.keys():
+            root_group = f_in['model_weights']
+        else:
+            raise DLPyError('Cannot read HDF5 file correctly')
+        
         # determine layers with weights
         filtered_layers = []
         for layer in model.layers:
@@ -67,10 +76,10 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
             if weights:
                 filtered_layers.append(layer)
 
-        layer_names = [n.decode('utf8') for n in f_in.attrs['layer_names']]
+        layer_names = [n.decode('utf8') for n in root_group.attrs['layer_names']]
         filtered_layer_names = []
         for name in layer_names:
-            g = f_in[name]
+            g = root_group[name]
             weight_names = [n.decode('utf8') for n in g.attrs['weight_names']]
             if weight_names:
                 filtered_layer_names.append(name)
@@ -112,12 +121,13 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
                     perm_index[nn] = nn
         else:
             perm_index = []
+            permute_layer_name = None
 
-        f_out.attrs['layer_names'] = [l.encode('utf8') for l in layer_names]
-            # let Keras read weights, reformat, and write to SAS-compatible file
+        f_out.attrs['layer_names'] = [l.replace('/','_').encode('utf8') for l in layer_names]
+        # let Keras read weights, reformat, and write to SAS-compatible file
         for k, name in enumerate(layer_names):
-            g_in = f_in[name]
-            g_out = f_out.create_group(name)
+            g_in = root_group[name]
+            g_out = f_out.create_group(name.replace('/','_'))
             new_weight_names = []
 
             weight_names = [n.decode('utf8') for n in g_in.attrs['weight_names']]
@@ -144,19 +154,31 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
                                    dtype=weight_values[0].dtype)
                 bn_beta = np.zeros(weight_values[0].shape,
                                    dtype=weight_values[0].dtype)
+                                   
+                layer_config = layer.get_config()
+                
                 # if scale = False and center = True
-                if not layer.get_config()['scale'] and layer.get_config()['center']:
+                if not layer_config['scale'] and layer_config['center']:
                     weight_values.insert(0, bn_gamma)
-                    weight_names.insert(0, layer.name+'/'+'gamma:0')
+                    weight_names.insert(0, layer.name.replace('/','_')+'/'+'gamma:0')
                 # if scale = True and center = False
-                elif layer.get_config()['scale'] and not layer.get_config()['center']:
+                elif layer_config['scale'] and not layer_config['center']:
                     weight_values.insert(1, bn_beta)
-                    weight_names.insert(1, layer.name+'/'+'beta:0')
+                    weight_names.insert(1, layer.name.replace('/','_')+'/'+'beta:0')
                 # if scale = False and center = False
-                elif not layer.get_config()['scale'] and not layer.get_config()['center']:
+                elif not layer_config['scale'] and not layer_config['center']:
                     weight_values = [bn_gamma, bn_beta] + weight_values
-                    weight_names = [layer.name+'/'+'gamma:0', 
-                                    layer.name+'/'+'beta:0'] + weight_names
+                    weight_names = [layer.name.replace('/','_')+'/'+'gamma:0', 
+                                    layer.name.replace('/','_')+'/'+'beta:0'] + weight_names
+                                    
+                # add epsilon to variance values to avoid divide by zero
+                if 'epsilon' in layer_config.keys():
+                    for ii,wgt_name in enumerate(weight_names):
+                        if 'moving_variance' in wgt_name:
+                            weight_values[ii] = weight_values[ii] + (layer_config['epsilon']*
+                                                                     np.ones(weight_values[ii].shape,
+                                                                             dtype=weight_values[ii].dtype))
+                    
             # read/write weights
             for ii in range(len(weight_names)):
                 if type(weight_values[ii]) == np.ndarray:
@@ -168,7 +190,7 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
 
                 # permute axes as needed to conform to SAS deep
                 # learning "channels first" format
-                if ((image_data_format == 'channels_first') or (not perm_index)):
+                if (image_data_format == 'channels_first'):
                     # format: (C,fdim1, fdim2, fdim3) ==> (C,fdim3,fdim1,fdim2)
                     if (len(tensor_in.shape) == 4):
                         tensor_out = np.transpose(tensor_in, (0, 3, 1, 2))
@@ -186,7 +208,7 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
                         # have to account for neuron ordering in first dense
                         # layer following flattening operation
                         elif (layer.__class__.__name__ == 'Dense'):
-                            if (layer.name == permute_layer_name):
+                            if ((permute_layer_name is not None) and (layer.name == permute_layer_name)):
                                 tensor_out = np.zeros(tensor_in.shape)
                                 for jj in range(tensor_out.shape[0]):
                                     tensor_out[jj, :] = tensor_in[perm_index[jj], :]
@@ -196,7 +218,7 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
                             # mimic Caffe layout
                             tensor_out = np.transpose(tensor_out, (1, 0))
 
-                            # save weight in format amenable to SAS
+                # save weight in format amenable to SAS
                 dset_name = generate_dataset_name(layer, ii)
                 new_weight_names.append(dset_name)
                 g_out.create_dataset(dset_name, data=tensor_out)
@@ -274,7 +296,7 @@ def write_keras_hdf5(model, hdf5_out):
             # let Keras read weights, reformat, and write to SAS-compatible file
         for k, layer in enumerate(filtered_layers):
             # g_in = f_in[name]
-            g_out = f_out.create_group(layer.name)
+            g_out = f_out.create_group(layer.name.replace('/','_'))
             symbolic_weights = layer.weights
             weight_values = K.batch_get_value(symbolic_weights)
             weight_names = []
@@ -375,5 +397,5 @@ def generate_dataset_name(layer, index):
     else:
         raise ValueError('Unable to translate layer weight name for layer = ' + layer.name)
 
-    dataset_name = layer.name + '/' + template_names[index]
+    dataset_name = layer.name.replace('/','_') + '/' + template_names[index]
     return dataset_name.encode('utf8')
