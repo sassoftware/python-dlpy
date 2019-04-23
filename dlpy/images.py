@@ -193,7 +193,7 @@ class ImageTable(CASTable):
             casout['name'] = random_name()
 
         if caslib is None:
-            caslib, path = caslibify(conn, path, task='load')
+            caslib, path, tmp_caslib = caslibify(conn, path, task='load')
 
         if caslib is None and path is None:
             print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
@@ -224,7 +224,7 @@ class ImageTable(CASTable):
         out.set_connection(conn)
 
         # drop the temp caslib
-        if caslib is not None:
+        if (caslib is not None) and tmp_caslib:
             conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
         return out
