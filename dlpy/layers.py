@@ -24,6 +24,7 @@ from dlpy.utils import multiply_elements, DLPyError, camelcase_to_underscore, un
 from . import __dev__
 import warnings
 import collections
+from copy import deepcopy
 
 PALETTES = dict(
     original={
@@ -105,11 +106,15 @@ class Tensor(object):
     def __init__(self, op, value=None):
         self._op = op  # the layer that produces the tensor.
         self._value = value
+        self._shape = None
 
     @property
     def shape(self):
-        # TODO: check shape
-        raise NotImplementedError
+        return self._shape
+
+    @shape.setter
+    def shape(self, value):
+        self._shape = value
 
 
 class Node(object):
@@ -188,6 +193,16 @@ class Layer(object):
                 raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
+        if layer_type == 'Model':
+            copied_model = deepcopy(self)
+            # update name
+            if copied_model.number_of_instances != 0:
+                for layer in copied_model.layers:
+                    layer.name = layer.name + '_' + '{}'.format(copied_model.number_of_instances)
+            # share weights
+            # for layer in copied_model.layers:
+            #     layer.from_sub_network = self
+            self = copied_model
         self._assert_inputs(inputs)
         input_layers = []
         for input_ in inputs:
@@ -210,6 +225,7 @@ class Layer(object):
 
         # Model can output multiple tensors
         if layer_type == 'Model':
+            # hook input tensor layers with the layers connected to the input layer of the model
             for i, input_layer in enumerate(self.input_layers):
                 for layer in self.layers:
                     if layer.type == 'input':continue
@@ -218,9 +234,12 @@ class Layer(object):
 
             self._inbound_nodes = [Node(src_layer, self) for src_layer in self.src_layers]
             self.tensor = [Tensor(output_layer) for output_layer in self.output_layers]
+            for tensor, output_layer in zip(self.tensor, self.output_layers):
+                tensor.shape = output_layer
         else:
             self._inbound_nodes = Node(self.src_layers, self)
             self.tensor = Tensor(self)  # return Tensor object
+            self.tensor.shape = self.output_size
         return self.tensor
 
     def __lt__(self, other):
@@ -430,9 +449,9 @@ class InputLayer(Layer):
         return 0
 
 
-class Conv2d(Layer):
+class _Conv(Layer):
     '''
-    Convolution layer
+    Abstract Convolution layer
 
     Parameters
     ----------
@@ -489,12 +508,6 @@ class Conv2d(Layer):
 
     '''
 
-    type = 'convo'
-    type_label = 'Convo.'
-    type_desc = 'Convolution layer'
-    can_be_last_layer = False
-    number_of_instances = 0
-
     def __init__(self, n_filters, width=None, height=None, stride=1, name=None, stride_horizontal=None,
                  stride_vertical=None, padding=None, padding_width=None, padding_height=None, act='relu',
                  fcmp_act=None, init=None, std=None, mean=None, truncation_factor=None, init_bias=None,
@@ -519,14 +532,33 @@ class Conv2d(Layer):
         self._num_weights = None
         self.color_code = get_color(self.type)
 
+
+class Conv2d(_Conv):
+    type = 'convo'
+    type_label = 'Convo.'
+    type_desc = 'Convolution layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, n_filters, width = None, height = None, stride = 1, name = None, stride_horizontal = None,
+                 stride_vertical = None, padding = None, padding_width = None, padding_height = None, act = 'relu',
+                 fcmp_act = None, init = None, std = None, mean = None, truncation_factor = None, init_bias = None,
+                 dropout = None, include_bias = True, src_layers = None, **kwargs):
+        super(Conv2d, self).__init__(n_filters=n_filters, width=width, height=height, stride=stride, name=name,
+                                     stride_horizontal=stride_horizontal, stride_vertical=stride_vertical,
+                                     padding=padding, padding_width=padding_width, padding_height=padding_height,
+                                     act=act, fcmp_act=fcmp_act, init=init, std=std, mean=mean,
+                                     truncation_factor=truncation_factor, init_bias=init_bias, dropout=dropout,
+                                     include_bias=include_bias, src_layers=src_layers, **kwargs)
+
     @property
     def output_size(self):
         if self._output_size is None:
             # calculate output according to specified padding
             if self.config['padding'] is not None:
-                out_w = (self.src_layers[0].output_size[0] - 
+                out_w = (self.src_layers[0].output_size[0] -
                          self.config['width'] + 2*self.config['padding']) // self.config['stride'] + 1
-                out_h = (self.src_layers[0].output_size[1] - 
+                out_h = (self.src_layers[0].output_size[1] -
                          self.config['height'] + 2*self.config['padding']) // self.config['stride'] + 1
             else:
                 import math
@@ -536,12 +568,12 @@ class Conv2d(Layer):
 
                 # if either padding_height or padding_width are specified
                 if self.config['padding_width'] is not None:
-                    out_w = (self.src_layers[0].output_size[0] - 
-                             self.config['width'] + 
+                    out_w = (self.src_layers[0].output_size[0] -
+                             self.config['width'] +
                              2*self.config['padding_width']) // self.config['stride'] + 1
                 if self.config['padding_height'] is not None:
-                    out_h = (self.src_layers[0].output_size[1] - 
-                             self.config['height'] + 
+                    out_h = (self.src_layers[0].output_size[1] -
+                             self.config['height'] +
                              2*self.config['padding_height']) // self.config['stride'] + 1
             self._output_size = (int(out_w), int(out_h), int(self.config['n_filters']))
         return self._output_size
@@ -1621,3 +1653,7 @@ def _unpack_config(config):
     out.update(new_kwargs)
     # out.update(kwargs)
     return out
+
+
+# Aliases
+Add = Res
