@@ -1641,6 +1641,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
 
     if annotation_data_is_in_the_client == 0:
         caslib_annotation, path_after_ann_caslib, tmp_caslib = caslibify(conn, annotation_path, task='save')
+    else:
+        tmp_caslib = False
 
     label_tbl_name = random_name('obj_det')
     idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
