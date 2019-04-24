@@ -771,7 +771,10 @@ class Network(Layer):
         server_sep = get_server_path_sep(self.conn)
 
         if os.path.isfile(path):
-            dir_name, file_name = path.rsplit(server_sep, 1)
+            if server_sep in path:
+                dir_name, file_name = path.rsplit(server_sep, 1)
+            else:
+                file_name = path
         else:
             raise DLPyError('The specified file does not exist: ' + path)
 
@@ -1071,7 +1074,10 @@ class Network(Layer):
         server_sep = get_server_path_sep(self.conn)
         
         if os.path.isfile(path):
-            dir_name, file_name = path.rsplit(server_sep, 1)
+            if server_sep in path:
+                dir_name, file_name = path.rsplit(server_sep, 1)
+            else:
+                file_name = path
         else:
             raise DLPyError('The specified file does not exist: ' + path)
         

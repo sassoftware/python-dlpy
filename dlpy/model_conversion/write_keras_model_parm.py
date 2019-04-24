@@ -48,7 +48,10 @@ def write_keras_hdf5_from_file(model, hdf5_in, hdf5_out):
     # open input/output files
     if os.path.isfile(hdf5_in):
         f_in = h5py.File(hdf5_in, 'r')
-        f_out = h5py.File(hdf5_out, 'w')
+        try:
+            f_out = h5py.File(hdf5_out, 'w')
+        except IOError:
+            raise DLPyError('The specified file cannot be written: ' + hdf5_out)
     else:
         raise DLPyError('The specified file does not exist: ' + hdf5_in)
 
@@ -254,7 +257,10 @@ def write_keras_hdf5(model, hdf5_out):
 
     '''
     # open output file
-    f_out = h5py.File(hdf5_out, 'w')
+    try:
+        f_out = h5py.File(hdf5_out, 'w')
+    except IOError:
+        raise DLPyError('The specified file cannot be written: ' + hdf5_out)
 
     try:
         image_data_format = K.image_data_format()
