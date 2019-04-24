@@ -127,13 +127,13 @@ Finally, add the output layer:
 - DLPy API documentation [sassoftware.github.io/python-dlpy](https://sassoftware.github.io/python-dlpy/).
 - [SAS SWAT for Python](http://github.com/sassoftware/python-swat/)
 - [SAS ESPPy](https://github.com/sassoftware/python-esppy)
-- A series of Videos on DLPy examples:
-  * [Introduction to the series](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001746946001)
-  * [Image classification using CNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747449001)
-  * [Object detection using TinyYOLOv2](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747750001)
-  * [Import and export deep learning models with ONNX](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001743770001)
-  * [Text classification and text generation using RNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001746471001)
-  * [Time series forecasting using RNNs](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6001747359001)
+- Watch: Introduction to DLPy and examples (YouTube):
+  * [Introduction Deep Learning with Python (DLPy) and SAS Viya](https://www.youtube.com/watch?v=RJ0gbsB7d_8)
+  * [Image classification using CNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=125)
+  * [Object detection using TinyYOLOv2](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=390)
+  * [Import and export deep learning models with ONNX](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=627)
+  * [Text classification and text generation using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=943)
+  * [Time series forecasting using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=1185)
 - [SAS Deep Learning with Python made easy using DLPy](https://blogs.sas.com/content/subconsciousmusings/2019/03/13/sas-deep-learning-with-python-made-easy-using-dlpy/)
 
 ### Contributing
