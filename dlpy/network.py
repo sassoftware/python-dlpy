@@ -770,7 +770,14 @@ class Network(Layer):
 
         server_sep = get_server_path_sep(self.conn)
 
-        dir_name, file_name = path.rsplit(server_sep, 1)
+        if os.path.isfile(path):
+            if server_sep in path:
+                dir_name, file_name = path.rsplit(server_sep, 1)
+            else:
+                file_name = path
+        else:
+            raise DLPyError('The specified file does not exist: ' + path)
+
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         elif file_name.lower().endswith('caffemodel.h5'):
@@ -1065,7 +1072,15 @@ class Network(Layer):
 
         '''
         server_sep = get_server_path_sep(self.conn)
-        dir_name, file_name = path.rsplit(server_sep, 1)
+        
+        if os.path.isfile(path):
+            if server_sep in path:
+                dir_name, file_name = path.rsplit(server_sep, 1)
+            else:
+                file_name = path
+        else:
+            raise DLPyError('The specified file does not exist: ' + path)
+        
         try:
             flag, cas_lib_name = check_caslib(self.conn, dir_name)
         except:
