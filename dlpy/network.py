@@ -65,19 +65,15 @@ class Network(Layer):
     name = 'model' + str(number_of_instances)
 
     def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
-        if model_table is not None and any(i is not None for i in [inputs, outputs]):
-            raise DLPyError('Either parameter model_table or inputs and outputs needs to be set.\n'
-                            'The following cases are valid.\n'
-                            '1. model_table = "your_model_table"; inputs = None; outputs = None.\n'
-                            '2. model_table = None; inputs = input_layer(s); outputs = output_layer.'
-                            )
+        if (inputs is None or outputs is None) and (inputs is not None or outputs is not None):
+            raise ValueError('If one of inputs and outputs option is enabled, both should be specified')
         self._init_model(conn, model_table, model_weights)
-        if all(i is None for i in [inputs, outputs, model_table]):
-            return
+        # works for Sequential() as well
         if self.__class__.__name__ == 'Model':
-            if None in [inputs, outputs]:
-                raise DLPyError('Parameter inputs and outputs are required.')
-            self._map_graph_network(inputs, outputs)
+            # 1). Model(s, model_table, model_weights)
+            # 2). Model(s, inp, outputs, model_table, model_weights)
+            if all(i is not None for i in [inputs, outputs]):
+                self._map_graph_network(inputs, outputs)
 
     def _init_model(self, conn, model_table=None, model_weights=None):
         conn.loadactionset(actionSet='deeplearn', _messagelevel='error')
@@ -98,13 +94,17 @@ class Network(Layer):
         if model_weights is None:
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
         else:
-            self.set_weights(model_weights)
+            if self.conn.tableexists(model_weights).exists == 1:
+                self.set_weights(model_weights)
+            else:
+                self.model_weights = self.conn.CASTable(**input_table_check(model_weights))
 
         self.layers = []
         self.model_type = 'CNN'
         self.best_weights = None
         self.target = None
         self.num_params = None
+        self.count_instances()
 
     def _map_graph_network(self, inputs, outputs):
         '''
@@ -200,22 +200,27 @@ class Network(Layer):
         :class:`Model`
 
         '''
+        copied_model = deepcopy(self)  # deepcopy the sequential model and don't touch the original one
         stop_layers = stop_layers or []
-        if not isinstance(stop_layers, collections.Iterable):
-            stop_layers = [stop_layers]
         input_tensors = []
         output_tensors = []
-        for idx, layer in enumerate(self.layers):
+
+        if not isinstance(stop_layers, collections.Iterable):
+            stop_layers = [stop_layers]
+        index_l = [self.layers.index(x) for x in stop_layers]
+        stop_layers = [copied_model.layers[i] for i in index_l]
+
+        for idx, layer in enumerate(copied_model.layers):
             layer_type = layer.__class__.__name__
             if layer_type == 'InputLayer':
                 input_tensors.append(layer.tensor)
                 continue
             # find layer's outbound layer
-            for outbound_layer in self.layers[idx:]:
+            for outbound_layer in copied_model.layers[idx:]:
                 if outbound_layer.__class__.__name__ == 'InputLayer':
                     continue
                 # if all source layers of outbound_layer are visited(all in self.layers[:idx])
-                if all(src_layer in self.layers[:idx] for src_layer in outbound_layer.src_layers):
+                if all(src_layer in copied_model.layers[:idx] for src_layer in outbound_layer.src_layers):
                     # skip if stop_layers are visited and add its src_layers's output tensors
                     if outbound_layer in stop_layers:
                         for src_layer in outbound_layer.src_layers:
@@ -245,6 +250,10 @@ class Network(Layer):
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         ''' Call a CAS action '''
         return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)
+
+    @classmethod
+    def count_instances(cls):
+        cls.number_of_instances += 1
 
     @classmethod
     def from_table(cls, input_model_table, display_note = True, output_model_table = None):

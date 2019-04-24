@@ -234,7 +234,7 @@ class Model(Network):
         # set reference to the training and validation table
         self.train_tbl = data
         self.valid_tbl = valid_table
-        
+
         input_tbl_opts = input_table_check(data)
         input_table = self.conn.CASTable(**input_tbl_opts)
 
@@ -457,16 +457,16 @@ class Model(Network):
                             **kwargs)
         return r
 
-    def plot_training_history(self, items=('Loss', 'FitError'), fig_size=(12, 5), tick_frequency=1):
+    def plot_training_history(self, items=['Loss', 'FitError'], fig_size=(12, 5), tick_frequency=1):
         '''
         Display the training iteration history. If using in Jupyter, 
         supress return object with semicolon - plot_training_history();
 
         Parameters
         ----------
-        items : tuple, optional
+        items : list, optional
             Specifies the items to be displayed.
-            Default : ('Loss', 'FitError')
+            Default : ['Loss', 'FitError')
         fig_size : tuple, optional
             Specifies the size of the figure.
             Default : (12, 5)
@@ -489,9 +489,9 @@ class Model(Network):
                     len(self.training_history.Epoch) + 1, tick_frequency)))
             else:
                 x_ticks = self.training_history.Epoch.values
-            
-            return self.training_history.plot(x='Epoch', y=list(('Loss', 'FitError')), 
-                                              figsize=(12, 5),
+
+            return self.training_history.plot(x='Epoch', y=items,
+                                              figsize=fig_size,
                                               xticks=x_ticks)
         else:
             raise DLPyError('model.fit should be run before calling plot_training_history')
@@ -1009,67 +1009,67 @@ class Model(Network):
         :class:`CASTable`
 
         """
-            
+
         if horizon > 1:
             self.score_message_level = 'error' #prevent multiple notes in multistep forecast
 
         if self.train_tbl is None:
             self.train_tbl = train_table
-            
+
         if not isinstance(self.train_tbl, TimeseriesTable):
             raise RuntimeError('If the model is not fitted with a TimeseriesTable '+
                                '(such as being imported from other sources), '+
-                               'please consider use the train_table argument ' + 
+                               'please consider use the train_table argument ' +
                                'to pass a reference to the TimeseriesTable used for training, '+
                                'since model.forecast requires information '+
                                'including the last timestamp to extend from and subsequence length etc, '+
                                'which is stored in preprocessed TimeseriesTable. '+
                                'If this information is not available, consider using model.predict '+
                                'for non-timeseries prediction.')
-            
+
         if test_table is None:
             print('NOTE: test_table is None, extending forecast from training/validation data')
-                
+
             if isinstance(self.valid_tbl, str):
                 self.valid_tbl = self.conn.CASTable(self.valid_tbl)
-            
+
             train_valid_tbl = _combine_table(self.train_tbl, self.valid_tbl)
-            
-            cur_results = _get_last_obs(train_valid_tbl, self.train_tbl.timeid, 
+
+            cur_results = _get_last_obs(train_valid_tbl, self.train_tbl.timeid,
                                      groupby=self.train_tbl.groupby_var)
-            
+
             self.conn.retrieve('table.droptable', _messagelevel='error', name=train_valid_tbl.name)
-            
+
             for i in range(horizon):
                 if i == 0:
                     autoregressive_series = self.train_tbl.autoregressive_sequence + [self.train_tbl.target]
                 else:
                     autoregressive_series = self.train_tbl.autoregressive_sequence + ['_DL_Pred_']
-                
-                cur_input = _prepare_next_input(cur_results, timeid=self.train_tbl.timeid, 
-                                                timeid_interval=self.train_tbl.acc_interval, 
-                                                autoregressive_series=autoregressive_series, 
-                                                sequence_opt=self.train_tbl.sequence_opt, 
+
+                cur_input = _prepare_next_input(cur_results, timeid=self.train_tbl.timeid,
+                                                timeid_interval=self.train_tbl.acc_interval,
+                                                autoregressive_series=autoregressive_series,
+                                                sequence_opt=self.train_tbl.sequence_opt,
                                                 groupby=self.train_tbl.groupby_var)
-                
+
                 if i == 0:
                     self.conn.retrieve('table.droptable', _messagelevel='error', name=cur_results.name)
-                
-                self.predict(cur_input, layer_out=layer_out, layers=layers, 
+
+                self.predict(cur_input, layer_out=layer_out, layers=layers,
                              gpu=gpu, buffer_size=buffer_size,
-                             mini_batch_buf_size=mini_batch_buf_size, 
-                             use_best_weights=use_best_weights, 
+                             mini_batch_buf_size=mini_batch_buf_size,
+                             use_best_weights=use_best_weights,
                              n_threads=n_threads)
-                
+
                 self.conn.retrieve('table.droptable', _messagelevel='error', name=cur_input.name)
-                
+
                 cur_results = self.valid_res_tbl
-                
+
                 if i == 0:
                     output_tbl = cur_results
                     if casout is None:
                         casout={'name': random_name('forecast_output', 6)}
-                    
+
                     # Use _combine_table here to serve as a renaming
                     output_tbl = _combine_table(output_tbl,  casout=casout)
                 else:
@@ -1077,115 +1077,115 @@ class Model(Network):
         else:
             if isinstance(test_table, str):
                 test_table = self.conn.CASTable(test_table)
-                
+
             if set(self.train_tbl.autoregressive_sequence).issubset(test_table.columns.tolist()):
-                
+
                 if horizon == 1:
-                    self.predict(test_table, layer_out=layer_out, layers=layers, 
+                    self.predict(test_table, layer_out=layer_out, layers=layers,
                              gpu=gpu, buffer_size=buffer_size,
-                             mini_batch_buf_size=mini_batch_buf_size, 
-                             use_best_weights=use_best_weights, 
+                             mini_batch_buf_size=mini_batch_buf_size,
+                             use_best_weights=use_best_weights,
                              n_threads=n_threads)
 
                     output_tbl = self.valid_res_tbl
-                    
+
                     if casout is None:
                         casout={'name': random_name('forecast_output', 6)}
-                    
+
                     # Use _combine_table here to serve as a renaming
-                    output_tbl = _combine_table(output_tbl,  casout=casout)                
-                else:                    
-                    cur_input = _get_first_obs(test_table, self.train_tbl.timeid, 
+                    output_tbl = _combine_table(output_tbl,  casout=casout)
+                else:
+                    cur_input = _get_first_obs(test_table, self.train_tbl.timeid,
                              groupby=self.train_tbl.groupby_var)
-                    
+
                     for i in range(horizon):
                         if i > 0:
                             autoregressive_series = self.train_tbl.autoregressive_sequence + ['_DL_Pred_']
-                        
-                            cur_input = _prepare_next_input(cur_results, timeid=self.train_tbl.timeid, 
-                                                            timeid_interval=self.train_tbl.acc_interval, 
-                                                            autoregressive_series=autoregressive_series, 
-                                                            sequence_opt=self.train_tbl.sequence_opt, 
-                                                            covar_tbl = test_table, 
+
+                            cur_input = _prepare_next_input(cur_results, timeid=self.train_tbl.timeid,
+                                                            timeid_interval=self.train_tbl.acc_interval,
+                                                            autoregressive_series=autoregressive_series,
+                                                            sequence_opt=self.train_tbl.sequence_opt,
+                                                            covar_tbl = test_table,
                                                             groupby=self.train_tbl.groupby_var)
-                        
-                        self.predict(cur_input, layer_out=layer_out, layers=layers, 
+
+                        self.predict(cur_input, layer_out=layer_out, layers=layers,
                                      gpu=gpu, buffer_size=buffer_size,
-                                     mini_batch_buf_size=mini_batch_buf_size, 
-                                     use_best_weights=use_best_weights, 
+                                     mini_batch_buf_size=mini_batch_buf_size,
+                                     use_best_weights=use_best_weights,
                                      n_threads=n_threads)
-                        
+
                         self.conn.retrieve('table.droptable', _messagelevel='error', name=cur_input.name)
-                        
+
                         cur_results = self.valid_res_tbl
-                        
+
                         if i == 0:
                             output_tbl = cur_results
                             if casout is None:
                                 casout={'name': random_name('forecast_output', 6)}
-                            
+
                             # Use _combine_table here to serve as a renaming
                             output_tbl = _combine_table(output_tbl,  casout=casout)
                         else:
                             output_tbl = _combine_table(output_tbl, cur_results, casout=output_tbl)
-            
+
             else:
                 if isinstance(self.valid_tbl, str):
                     self.valid_tbl = self.conn.CASTable(self.valid_tbl)
-                
+
                 train_valid_tbl = _combine_table(self.train_tbl, self.valid_tbl)
-                
-                cur_results = _get_last_obs(train_valid_tbl, self.train_tbl.timeid, 
+
+                cur_results = _get_last_obs(train_valid_tbl, self.train_tbl.timeid,
                                          groupby=self.train_tbl.groupby_var)
-                
+
                 self.conn.retrieve('table.droptable', _messagelevel='error', name=train_valid_tbl.name)
-                
+
                 for i in range(horizon):
                     if i == 0:
                         autoregressive_series = self.train_tbl.autoregressive_sequence + [self.train_tbl.target]
                     else:
                         autoregressive_series = self.train_tbl.autoregressive_sequence + ['_DL_Pred_']
-                    
-                    cur_input = _prepare_next_input(cur_results, timeid=self.train_tbl.timeid, 
-                                                    timeid_interval=self.train_tbl.acc_interval, 
-                                                    autoregressive_series=autoregressive_series, 
-                                                    sequence_opt=self.train_tbl.sequence_opt, 
-                                                    covar_tbl = test_table, 
+
+                    cur_input = _prepare_next_input(cur_results, timeid=self.train_tbl.timeid,
+                                                    timeid_interval=self.train_tbl.acc_interval,
+                                                    autoregressive_series=autoregressive_series,
+                                                    sequence_opt=self.train_tbl.sequence_opt,
+                                                    covar_tbl = test_table,
                                                     groupby=self.train_tbl.groupby_var)
 
                     if i == 0:
                         self.conn.retrieve('table.droptable', _messagelevel='error', name=cur_results.name)
-                    
+
                     if cur_input.shape[0] == 0:
                         raise RuntimeError('Input test data does not have all the required autoregressive ' +
-                                           'lag variables that appeared in the training set. ' + 
-                                           'In this case, it has to have the timestamp that succeeds ' + 
+                                           'lag variables that appeared in the training set. ' +
+                                           'In this case, it has to have the timestamp that succeeds ' +
                                            'the last time point in training/validation set.')
-                    
-                    self.predict(cur_input, layer_out=layer_out, layers=layers, 
+
+                    self.predict(cur_input, layer_out=layer_out, layers=layers,
                                  gpu=gpu, buffer_size=buffer_size,
-                                 mini_batch_buf_size=mini_batch_buf_size, 
-                                 use_best_weights=use_best_weights, 
+                                 mini_batch_buf_size=mini_batch_buf_size,
+                                 use_best_weights=use_best_weights,
                                  n_threads=n_threads)
-                    
+
                     self.conn.retrieve('table.droptable', _messagelevel='error', name=cur_input.name)
-                    
+
                     cur_results = self.valid_res_tbl
-                    
+
                     if i == 0:
                         output_tbl = cur_results
-                        
+
                         if casout is None:
                             casout={'name': random_name('forecast_output', 6)}
-                        
+
                         # Use _combine_table here to serve as a renaming
                         output_tbl = _combine_table(output_tbl,  casout=casout)
                     else:
                         output_tbl = _combine_table(output_tbl, cur_results, casout=output_tbl)
-        
-             
-        self.score_message_level = 'note' 
-        
+
+
+        self.score_message_level = 'note'
+
         return output_tbl
 
     def score(self, table, model=None, init_weights=None, text_parms=None, layer_out=None,
