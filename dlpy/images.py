@@ -194,6 +194,8 @@ class ImageTable(CASTable):
 
         if caslib is None:
             caslib, path, tmp_caslib = caslibify(conn, path, task='load')
+        else:
+            tmp_caslib = False
 
         if caslib is None and path is None:
             print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'

@@ -1746,7 +1746,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
 
-    if (caslib_annotation is not None) and tmp_caslib:
+    if (caslib_annotation is not None) and (tmp_caslib is not None) and tmp_caslib:
         conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib_annotation)
 
     print("NOTE: Object detection table is successfully created.")
