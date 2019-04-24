@@ -1017,14 +1017,14 @@ class Model(Network):
             self.train_tbl = train_table
 
         if not isinstance(self.train_tbl, TimeseriesTable):
-            raise RuntimeError('If the model is not fitted with a TimeseriesTable '+
-                               '(such as being imported from other sources), '+
-                               'please consider use the train_table argument ' +
-                               'to pass a reference to the TimeseriesTable used for training, '+
-                               'since model.forecast requires information '+
-                               'including the last timestamp to extend from and subsequence length etc, '+
-                               'which is stored in preprocessed TimeseriesTable. '+
-                               'If this information is not available, consider using model.predict '+
+            raise RuntimeError('If the model is not fitted with a TimeseriesTable '
+                               '(such as being imported from other sources), '
+                               'please consider use the train_table argument '
+                               'to pass a reference to the TimeseriesTable used for training, '
+                               'since model.forecast requires information '
+                               'including the last timestamp to extend from and subsequence length etc, '
+                               'which is stored in preprocessed TimeseriesTable. '
+                               'If this information is not available, consider using model.predict '
                                'for non-timeseries prediction.')
 
         if test_table is None:
