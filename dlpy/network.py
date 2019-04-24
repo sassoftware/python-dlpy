@@ -62,7 +62,7 @@ class Network(Layer):
     can_be_last_layer = True
     number_of_instances = 0
     src_layers = []
-    name = 'model' + str(number_of_instances)
+    name = None
 
     def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
         if (inputs is None or outputs is None) and (inputs is not None or outputs is not None):
