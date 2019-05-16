@@ -146,6 +146,7 @@ Models
    Model.tune
    Model.plot_training_history
    Model.predict
+   Model.forecast
    Model.evaluate
    Model.get_feature_maps
    Model.get_features
@@ -170,6 +171,27 @@ Models
    VanillaSolver
    Solver
    Gpu
+   
+Metrics
+----------
+
+.. currentmodule:: dlpy.metrics
+
+.. autosummary::
+   :toctree: generated/
+   
+   accuracy_score
+   confusion_matrix
+   plot_roc
+   plot_precision_recall
+   roc_auc_score
+   average_precision_score
+   f1_score
+   explained_variance_score
+   mean_absolute_error
+   mean_squared_error
+   mean_squared_log_error
+   r2_score   
 
 
 Feature Maps

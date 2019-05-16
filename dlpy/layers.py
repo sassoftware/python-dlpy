@@ -1094,6 +1094,7 @@ class Concat(Layer):
                     self._output_size.append(int(sum([item.output_size[i] for item in self.src_layers])))
                 else:
                     self._output_size.append(int(self.src_layers[0].output_size[i]))
+            self._output_size = self._output_size[::-1]
             if len(self._output_size) == 1:
                 self._output_size = self._output_size[0]
             else:
