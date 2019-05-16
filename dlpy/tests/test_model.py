@@ -1311,6 +1311,59 @@ class TestModel(unittest.TestCase):
 
         if (caslib is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+
+    def test_stride(self):
+        model = Sequential(self.s, model_table = 'Simple_CNN_3classes_cropped')
+        model.add(InputLayer(1, width = 36, height = 144, #offsets = myimage.channel_means,
+                             name = 'input1',
+                             random_mutation = 'random',
+                             random_flip = 'HV'))
+
+        model.add(Conv2d(64, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(64, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(64, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Pooling(height = 2, width = 2, stride_vertical = 2, stride_horizontal = 1, pool = 'max'))  # 72, 36
+
+        model.add(Conv2d(128, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(128, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(128, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Pooling(height = 2, width = 2, stride_vertical = 2, stride_horizontal = 1, pool = 'max'))  # 36*36
+
+        model.add(Conv2d(256, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(256, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(256, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Pooling(2, pool = 'max'))  # 18 * 18
+
+        model.add(Conv2d(512, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(512, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(512, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Pooling(2, pool = 'max'))  # 9 * 9
+
+        model.add(Conv2d(1024, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(1024, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Conv2d(1024, 3, 3, include_bias = False, act = 'identity'))
+        model.add(BN(act = 'relu'))
+        model.add(Pooling(9))
+
+        model.add(Dense(256, dropout = 0.5))
+        model.add(OutputLayer(act = 'softmax', n = 3, name = 'output1'))
+        self.assertEqual(model.summary['Output Size'].values[-3], (1, 1, 1024))
+        model.print_summary()
+
         
     @classmethod
     def tearDownClass(cls):

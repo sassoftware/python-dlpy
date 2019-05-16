@@ -33,6 +33,10 @@ import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
 import warnings
+import platform
+import collections
+from itertools import repeat
+import math
 
 
 def random_name(name='ImageData', length=6):
@@ -1753,3 +1757,29 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
+
+
+def _ntuple(n):
+    def parse(x):
+        if isinstance(x, collections.Iterable):
+            return x
+        return tuple(repeat(x, n))
+    return parse
+
+
+_pair = _ntuple(2)
+_triple = _ntuple(3)
+
+
+def parameter_2d(param1, param2, param3, default_value):
+    if param1 is not None:
+        return _pair(param1)
+    elif not any([param2, param3]):
+        return default_value
+    else:
+        if param2 is None:
+            return (default_value[0], param3)
+        if param3 is None:
+            return (param2, default_value[1])
+        else:
+            return (param2, param3)
