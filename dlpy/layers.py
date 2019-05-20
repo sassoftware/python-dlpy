@@ -564,8 +564,8 @@ class Conv2d(_Conv):
         if self._output_size is None:
             # calculate output according to specified padding
             if self.padding != (None, None):
-                out_h = (self.src_layers[0].output_size[0]-self.config['height'] + 2*self.padding[0])//self.stride[0]+1
-                out_w = (self.src_layers[0].output_size[1]-self.config['width'] + 2*self.padding[1])//self.stride[1]+1
+                out_h = ((self.src_layers[0].output_size[0]-self.config['height'] + 2*self.padding[0])//self.stride[0])+1
+                out_w = ((self.src_layers[0].output_size[1]-self.config['width'] + 2*self.padding[1])//self.stride[1])+1
             else:
                 import math
                 # same padding
@@ -654,6 +654,8 @@ class Pooling(Layer):
         if width is None and height is None:
             parameters['width'] = 2
             parameters['height'] = 2
+        elif width == 0 or height == 0:
+            raise DLPyError('Neither width nor height can be 0')
         elif width is None:
             parameters['width'] = height
         elif height is None:
@@ -683,8 +685,8 @@ class Pooling(Layer):
         if self._output_size is None:
             # calculate output according to specified padding
             if self.padding != (None, None):
-                out_h = (self.src_layers[0].output_size[0]-self.config['height']+2*self.padding[0])//self.stride[0]+1
-                out_w = (self.src_layers[0].output_size[1]-self.config['width']+2*self.padding[1])//self.stride[1]+1
+                out_h = ((self.src_layers[0].output_size[0]-self.config['height']+2*self.padding[0])//self.stride[0])+1
+                out_w = ((self.src_layers[0].output_size[1]-self.config['width']+2*self.padding[1])//self.stride[1])+1
             else:
                 import math
                 out_h = math.ceil(self.src_layers[0].output_size[0]/self.stride[0])
@@ -1019,7 +1021,9 @@ class Res(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
+            # get dimension of source layers; source layer can be one dimension or multi-dimension
             n_dims = [len(i.output_size) if isinstance(i.output_size, tuple) else 1 for i in self.src_layers]
+            # number of dimension should be consistent.
             if len(set(n_dims)) != 1:
                 raise DLPyError('The dimension of source layers\' outputs are inconsistent.')
             # output size is same as first source layer's
@@ -1082,18 +1086,22 @@ class Concat(Layer):
 
     @property
     def output_size(self):
+        # calculate output size: Concatenate source layers' outputs along the last dimension
         if self._output_size is None:
             self._output_size = []
+            # get the dimension of input layers
             n_dims = [len(i.output_size) if isinstance(i.output_size, tuple) else 1 for i in self.src_layers]
+            # source layers' dimension should be consistent
             if len(set(n_dims)) != 1:
                 raise DLPyError('The dimension of source layers\' outputs are inconsistent.')
             n_dim = len(self.src_layers[0].output_size)
-
+            # last dimension should be sum of each layer's last dimension.
             for i in reversed(range(n_dim)):
                 if i == n_dim-1:
                     self._output_size.append(int(sum([item.output_size[i] for item in self.src_layers])))
                 else:
                     self._output_size.append(int(self.src_layers[0].output_size[i]))
+            # reorder
             self._output_size = self._output_size[::-1]
             if len(self._output_size) == 1:
                 self._output_size = self._output_size[0]
@@ -1548,7 +1556,7 @@ class Scale(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            # TODO
+            # TODO: check input dimension, src_layer order.
             self._output_size = (int(max(self.src_layers[0].output_size[0], self.src_layers[0].output_size[0])),
                                  int(max(self.src_layers[0].output_size[1], self.src_layers[0].output_size[1])),
                                  int(max(self.src_layers[0].output_size[2], self.src_layers[0].output_size[2])))
