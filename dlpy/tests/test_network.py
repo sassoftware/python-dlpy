@@ -407,6 +407,21 @@ class TestNetwork(tm.TestCase):
         backbone2 = model_resnet18.to_functional_model(model_resnet18.layers[-3])
         self.assertEqual(backbone2.layers[-1].__class__.__name__, 'BN')
 
+    def test_residual_output_shape0(self):
+        inLayer = Input(n_channels = 3, width = 32, height = 128,
+                        name = 'input1', random_mutation = 'random', random_flip = 'HV')
+        conv1 = Conv2d(32, 3, 3, name = 'conv1', act = 'relu', init = 'msra')([inLayer])
+        conv2 = Conv2d(32, 5, 5, name = 'conv2', act = 'relu', init = 'msra')([inLayer])
+        fc1 = Dense(3, name = 'fc1')([conv1])
+        fc2 = Dense(3, name = 'fc2')([conv2])
+        res = Res(name = 'res1')([fc1, fc2])
+        outLayer = OutputLayer(n = 3, name = 'output')([res])
+        model = Model(self.s, inLayer, outLayer)
+        model.compile()
+        self.assertEqual(model.summary['Output Size'].values[-2], 3)
+        model.print_summary()
+
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

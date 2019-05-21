@@ -33,6 +33,10 @@ import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
 import warnings
+import platform
+import collections
+from itertools import repeat
+import math
 
 
 def random_name(name='ImageData', length=6):
@@ -1753,3 +1757,55 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
+
+
+def _ntuple(n):
+    '''
+    create a function used to generate a tuple with length of n
+
+    n : int
+        specifies the length of the tuple.
+
+    '''
+    def parse(x):
+        if isinstance(x, collections.Iterable):
+            return x
+        return tuple(repeat(x, n))
+    return parse
+
+
+_pair = _ntuple(2)
+_triple = _ntuple(3)
+
+
+def parameter_2d(param1, param2, param3, default_value):
+    '''
+    a help function to generate layer properties such as strides, padding, output_padding.
+
+    For example:
+        parameter_2d(param1=None, param2=None, param3=None, default_value=(4, 4)) would return (4, 4)
+        parameter_2d(param1=2, param2=3, param3=2, default_value=(4, 4)) would return (3, 2)
+        parameter_2d(param1=2, param2=None, param3=None, default_value=(4, 4)) would return (2, 2)
+        parameter_2d(param1=None, param2=None, param3=2, default_value=(4, 4)) would return (4, 2)
+
+    param1 : int
+        specifies the layer option, such as stride, padding, output_padding
+    param1 : int
+        specifies the layer option related to the first dimension, such as stride_vertical, padding_height
+    param1 : int
+        specifies the layer option related to the second dimension, such as stride_horizontal, padding_width
+    default_value : tuple
+        specifies default value
+
+    '''
+    if param1 is not None:
+        return _pair(param1)
+    elif not any([param2, param3]):
+        return default_value
+    else:
+        if param2 is None:
+            return (default_value[0], param3)
+        if param3 is None:
+            return (param2, default_value[1])
+        else:
+            return (param2, param3)

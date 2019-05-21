@@ -21,6 +21,7 @@
 import pandas as pd
 import six
 from dlpy.utils import multiply_elements, DLPyError, camelcase_to_underscore, underscore_to_camelcase
+from dlpy.utils import DLPyError, _ntuple, _pair, _triple, parameter_2d
 from . import __dev__
 import warnings
 import collections
@@ -314,8 +315,13 @@ class Layer(object):
         else:
             kernel_size_ = self.kernel_size
 
+        if hasattr(self, 'stride'):
+            stride = self.stride
+        else:
+            stride = self.config.get('stride', '')
+
         return pd.DataFrame([[self.layer_id, self.name, self.type, kernel_size_,
-                              self.config.get('stride', ''), self.activation,
+                              stride, self.activation,
                               self.output_size, (self.num_weights, self.num_bias)]],
                             columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                      'Activation', 'Output Size', 'Number of Parameters'])
@@ -420,7 +426,7 @@ class InputLayer(Layer):
         number_of_instances = 0
         Layer.__init__(self, name, parameters)
         if n_channels is not None and (width or height is not None):
-            self._output_size = (int(self.config['width']), int(self.config['height']), int(self.config['n_channels']))
+            self._output_size = (int(self.config['height']), int(self.config['width']), int(self.config['n_channels']))
         else:
             self._output_size = 0
 
@@ -508,7 +514,7 @@ class _Conv(Layer):
 
     '''
 
-    def __init__(self, n_filters, width=None, height=None, stride=1, name=None, stride_horizontal=None,
+    def __init__(self, n_filters, width=None, height=None, stride=None, name=None, stride_horizontal=None,
                  stride_vertical=None, padding=None, padding_width=None, padding_height=None, act='relu',
                  fcmp_act=None, init=None, std=None, mean=None, truncation_factor=None, init_bias=None,
                  dropout=None, include_bias=True, src_layers=None, **kwargs):
@@ -531,6 +537,8 @@ class _Conv(Layer):
         self._output_size = None
         self._num_weights = None
         self.color_code = get_color(self.type)
+        self.padding = parameter_2d(padding, padding_height, padding_width, (None, None))
+        self.stride = parameter_2d(stride, stride_vertical, stride_horizontal, (1, 1))
 
 
 class Conv2d(_Conv):
@@ -555,39 +563,28 @@ class Conv2d(_Conv):
     def output_size(self):
         if self._output_size is None:
             # calculate output according to specified padding
-            if self.config['padding'] is not None:
-                out_w = (self.src_layers[0].output_size[0] -
-                         self.config['width'] + 2*self.config['padding']) // self.config['stride'] + 1
-                out_h = (self.src_layers[0].output_size[1] -
-                         self.config['height'] + 2*self.config['padding']) // self.config['stride'] + 1
+            if self.padding != (None, None):
+                out_h = ((self.src_layers[0].output_size[0]-self.config['height'] + 2*self.padding[0])//self.stride[0])+1
+                out_w = ((self.src_layers[0].output_size[1]-self.config['width'] + 2*self.padding[1])//self.stride[1])+1
             else:
                 import math
                 # same padding
-                out_w = math.ceil(self.src_layers[0].output_size[0] / self.config['stride'])
-                out_h = math.ceil(self.src_layers[0].output_size[1] / self.config['stride'])
+                out_h = math.ceil(self.src_layers[0].output_size[0]/self.stride[0])
+                out_w = math.ceil(self.src_layers[0].output_size[1]/self.stride[1])
 
-                # if either padding_height or padding_width are specified
-                if self.config['padding_width'] is not None:
-                    out_w = (self.src_layers[0].output_size[0] -
-                             self.config['width'] +
-                             2*self.config['padding_width']) // self.config['stride'] + 1
-                if self.config['padding_height'] is not None:
-                    out_h = (self.src_layers[0].output_size[1] -
-                             self.config['height'] +
-                             2*self.config['padding_height']) // self.config['stride'] + 1
-            self._output_size = (int(out_w), int(out_h), int(self.config['n_filters']))
+            self._output_size = (int(out_h), int(out_w), int(self.config['n_filters']))
         return self._output_size
 
     @property
     def num_weights(self):
         if self._num_weights is None:
-            self._num_weights = int(self.config['width'] * self.config['height'] *
+            self._num_weights = int(self.config['height'] * self.config['width'] *
                                     self.config['n_filters'] * self.src_layers[0].output_size[2])
         return self._num_weights
 
     @property
     def kernel_size(self):
-        return (int(self.config['width']), int(self.config['height']))
+        return (int(self.config['height']), int(self.config['width']))
 
     @property
     def num_bias(self):
@@ -657,13 +654,23 @@ class Pooling(Layer):
         if width is None and height is None:
             parameters['width'] = 2
             parameters['height'] = 2
+        elif width == 0 or height == 0:
+            raise DLPyError('Neither width nor height can be 0')
         elif width is None:
             parameters['width'] = height
         elif height is None:
             parameters['height'] = width
 
+        # by default stride is same as window size
+        self.stride = parameter_2d(stride, stride_vertical, stride_horizontal,
+                                   (parameters['height'], parameters['width']))
+        # if doing global pooling
+        if parameters['width'] == 0 and parameters['height'] == 0:
+            self.stride = _pair(1)
         if stride is None:
-            parameters['stride'] = parameters['width']
+            parameters['stride_vertical'] = self.stride[0]
+            parameters['stride_horizontal'] = self.stride[1]
+
         parameters = _unpack_config(parameters)
         # _clean_parameters(parameters)
 
@@ -671,37 +678,25 @@ class Pooling(Layer):
         self._output_size = None
         self.activation = pool.title()
         self.color_code = get_color(self.type)
+        self.padding = parameter_2d(padding, padding_height, padding_width, (None, None))
 
     @property
     def output_size(self):
         if self._output_size is None:
             # calculate output according to specified padding
-            if self.config['padding'] is not None:
-                out_w = (self.src_layers[0].output_size[0] - 
-                         self.config['width'] + 2*self.config['padding']) // self.config['stride'] + 1
-                out_h = (self.src_layers[0].output_size[1] - 
-                         self.config['height'] + 2*self.config['padding']) // self.config['stride'] + 1
+            if self.padding != (None, None):
+                out_h = ((self.src_layers[0].output_size[0]-self.config['height']+2*self.padding[0])//self.stride[0])+1
+                out_w = ((self.src_layers[0].output_size[1]-self.config['width']+2*self.padding[1])//self.stride[1])+1
             else:
                 import math
-                # same padding
-                out_w = math.ceil(self.src_layers[0].output_size[0] / self.config['stride'])
-                out_h = math.ceil(self.src_layers[0].output_size[1] / self.config['stride'])
-
-                # if either padding_height or padding_width are specified
-                if self.config['padding_width'] is not None:
-                    out_w = (self.src_layers[0].output_size[0] - 
-                             self.config['width'] + 
-                             2*self.config['padding_width']) // self.config['stride'] + 1
-                if self.config['padding_height'] is not None:
-                    out_h = (self.src_layers[0].output_size[1] - 
-                             self.config['height'] + 
-                             2*self.config['padding_height']) // self.config['stride'] + 1
-            self._output_size = (int(out_w), int(out_h), int(self.src_layers[0].output_size[2]))
+                out_h = math.ceil(self.src_layers[0].output_size[0]/self.stride[0])
+                out_w = math.ceil(self.src_layers[0].output_size[1]/self.stride[1])
+            self._output_size = (int(out_h), int(out_w), int(self.src_layers[0].output_size[2]))
         return self._output_size
 
     @property
     def kernel_size(self):
-        return (int(self.config['width']), int(self.config['height']))
+        return (int(self.config['height']), int(self.config['width']))
 
     @property
     def num_weights(self):
@@ -973,6 +968,7 @@ class BN(Layer):
 class Res(Layer):
     '''
     Residual layer
+    Element-wise addition
 
     Parameters
     ----------
@@ -1025,17 +1021,20 @@ class Res(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            if self.src_layers is None:
-                self._output_size = (0, 0, 0)
-            self._output_size = (int(min([item.output_size[0] for item in self.src_layers])),
-                                 int(min([item.output_size[1] for item in self.src_layers])),
-                                 int(max([item.output_size[2] for item in self.src_layers])))
+            # get dimension of source layers; source layer can be one dimension or multi-dimension
+            n_dims = [len(i.output_size) if isinstance(i.output_size, tuple) else 1 for i in self.src_layers]
+            # number of dimension should be consistent.
+            if len(set(n_dims)) != 1:
+                raise DLPyError('The dimension of source layers\' outputs are inconsistent.')
+            # output size is same as first source layer's
+            self._output_size = self.src_layers[0].output_size
         return self._output_size
 
 
 class Concat(Layer):
     '''
     Concat layer
+    Concatenate source layers' outputs along the last dimension
 
     Parameters
     ----------
@@ -1087,12 +1086,27 @@ class Concat(Layer):
 
     @property
     def output_size(self):
+        # calculate output size: Concatenate source layers' outputs along the last dimension
         if self._output_size is None:
-            if self.src_layers is None:
-                self._output_size = (0, 0, 0)
-            self._output_size = (int(self.src_layers[0].output_size[0]),
-                                 int(self.src_layers[0].output_size[1]),
-                                 int(sum([item.output_size[2] for item in self.src_layers])))
+            self._output_size = []
+            # get the dimension of input layers
+            n_dims = [len(i.output_size) if isinstance(i.output_size, tuple) else 1 for i in self.src_layers]
+            # source layers' dimension should be consistent
+            if len(set(n_dims)) != 1:
+                raise DLPyError('The dimension of source layers\' outputs are inconsistent.')
+            n_dim = len(self.src_layers[0].output_size)
+            # last dimension should be sum of each layer's last dimension.
+            for i in reversed(range(n_dim)):
+                if i == n_dim-1:
+                    self._output_size.append(int(sum([item.output_size[i] for item in self.src_layers])))
+                else:
+                    self._output_size.append(int(self.src_layers[0].output_size[i]))
+            # reorder
+            self._output_size = self._output_size[::-1]
+            if len(self._output_size) == 1:
+                self._output_size = self._output_size[0]
+            else:
+                self._output_size = tuple(self._output_size)
         return self._output_size
 
 
@@ -1542,6 +1556,7 @@ class Scale(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
+            # TODO: check input dimension, src_layer order.
             self._output_size = (int(max(self.src_layers[0].output_size[0], self.src_layers[0].output_size[0])),
                                  int(max(self.src_layers[0].output_size[1], self.src_layers[0].output_size[1])),
                                  int(max(self.src_layers[0].output_size[2], self.src_layers[0].output_size[2])))
@@ -1614,7 +1629,7 @@ class Reshape(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            self._output_size = (self.config['width'], self.config['height'], self.config['depth'])
+            self._output_size = (self.config['height'], self.config['width'], self.config['depth'])
         return self._output_size
 
     @property
@@ -1655,5 +1670,8 @@ def _unpack_config(config):
     return out
 
 
-# Aliases
+# Aliases: map to Keras layer name
 Add = Res
+BatchNormalization = BN
+Concatenate = Concat
+Conv2D = Conv2d
