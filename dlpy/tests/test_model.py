@@ -563,10 +563,16 @@ class TestModel(unittest.TestCase):
         r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
         self.assertTrue(r.severity == 0)
 
-        model1.deploy(self.data_dir, output_format='onnx')
+        import tempfile
+        tmp_dir_to_dump = tempfile.gettempdir()
+
+        model1.deploy(tmp_dir_to_dump, output_format='onnx')
+
+        import os
+        os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
         
     def test_model20(self):
         try:
@@ -634,11 +640,17 @@ class TestModel(unittest.TestCase):
         r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
         self.assertTrue(r.severity == 0)
 
-        model1.deploy(self.data_dir, output_format='onnx')
+        import tempfile
+        tmp_dir_to_dump = tempfile.gettempdir()
+
+        model1.deploy(tmp_dir_to_dump, output_format='onnx')
+
+        import os
+        os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
-        
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
     def test_model22(self):
         try:
             import onnx
@@ -669,10 +681,16 @@ class TestModel(unittest.TestCase):
         r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
         self.assertTrue(r.severity == 0)
 
-        model1.deploy(self.data_dir, output_format='onnx')
+        import tempfile
+        tmp_dir_to_dump = tempfile.gettempdir()
+
+        model1.deploy(tmp_dir_to_dump, output_format='onnx')
+
+        import os
+        os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
         
     def test_model22_1(self):
         try:
@@ -745,10 +763,16 @@ class TestModel(unittest.TestCase):
         r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
         self.assertTrue(r.severity == 0)
 
-        model1.deploy(self.data_dir, output_format='onnx')
+        import tempfile
+        tmp_dir_to_dump = tempfile.gettempdir()
+
+        model1.deploy(tmp_dir_to_dump, output_format='onnx')
+
+        import os
+        os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
         
     def test_model24(self):
         try:
