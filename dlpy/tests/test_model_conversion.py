@@ -23,12 +23,8 @@
 #       the CASPROTOCOL environment variable.
 
 import os
-#import onnx
 import swat
 import swat.utils.testing as tm
-from swat.cas.table import CASTable
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten
 from dlpy.model import Model
 from shutil import copyfile
 import unittest
@@ -77,7 +73,13 @@ class TestModelConversion(unittest.TestCase):
 
         if (self.data_dir_local is None) or (not os.path.isfile(os.path.join(self.data_dir_local,'lenet.h5'))):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables or lenet.h5 file is missing")
-            
+
+        try:
+            from keras.models import Sequential
+            from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Flatten
+        except:
+            unittest.TestCase.skipTest(self, "keras is not installed")
+
         model = Sequential()
         model.add(Conv2D(20, kernel_size=(5, 5), strides=(1, 1), activation='relu', input_shape=(28,28,1), padding="same"))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
