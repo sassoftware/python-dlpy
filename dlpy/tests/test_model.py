@@ -1364,6 +1364,12 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.summary['Output Size'].values[-3], (1, 1, 1024))
         model.print_summary()
 
+    def test_load_padding(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        model5 = Model(self.s)
+        model5.load(path = self.data_dir + 'vgg16.sashdat')
+
         
     @classmethod
     def tearDownClass(cls):
