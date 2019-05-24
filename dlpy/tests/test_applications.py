@@ -77,6 +77,15 @@ class TestApplications(unittest.TestCase):
                                random_crop='unique')
         model.print_summary()
 
+        model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop=None,
+                               offsets=None)
+        model.print_summary()
+
     def test_resnet50_caffe_caslib_msg(self):
 
         if self.data_dir is None:
@@ -98,6 +107,7 @@ class TestApplications(unittest.TestCase):
 
         model.print_summary()
 
+
     def test_resnet50_layerid(self):
 
         if self.data_dir is None:
@@ -106,6 +116,71 @@ class TestApplications(unittest.TestCase):
         model = ResNet50_Caffe(self.s)
         model.print_summary()
         model.print_summary()
+
+    def test_resnet101_caffe(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='unique')
+        model.print_summary()
+
+
+        model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop=None,
+                               offsets=None)
+        model.print_summary()
+
+
+        self.assertRaises(ValueError, 
+                               lambda:ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='wrong_val'))
+
+
+    def test_resnet152_caffe(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='unique')
+        model.print_summary()
+
+
+        model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop=None,
+                               offsets=None)
+        model.print_summary()
+
+
+        self.assertRaises(ValueError, 
+                               lambda:ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='wrong_val'))
 
     def test_lenet5(self):
         from dlpy.applications import LeNet5
@@ -131,16 +206,65 @@ class TestApplications(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        model1 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+        model1 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3, 
+                       width=224, height=224, scale=1,
                        offsets=(103.939, 116.779, 123.68),
                        pre_trained_weights=True,
                        pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
                        include_top=True)
 
+
+        model2 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop=None,
+                       pre_trained_weights=True,
+                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
+                       include_top=True)
+
+        self.assertRaises(ValueError, 
+                               lambda:VGG16(self.s, model_table='VGG16', 
+                               n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+                               offsets=None,
+                               random_crop='wrong_val',
+                               pre_trained_weights=True,
+                               pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
+                               include_top=True))
+
     def test_vgg19(self):
         from dlpy.applications import VGG19
         model = VGG19(self.s)
         model.print_summary()
+
+
+    def test_vgg19_2(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        model1 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3, 
+                       width=224, height=224, scale=1,
+                       offsets=(103.939, 116.779, 123.68),
+                       pre_trained_weights=True,
+                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
+                       include_top=True)
+
+        model2 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3, 
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop=None,
+                       pre_trained_weights=True,
+                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
+                       include_top=True)
+
+        self.assertRaises(ValueError, 
+                               lambda:VGG19(self.s, model_table='VGG19', 
+                               n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+                               offsets=None,
+                               random_crop='wrong_val',
+                               pre_trained_weights=True,
+                               pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
+                               include_top=True))
+
 
     def test_resnet18(self):
         from dlpy.applications import ResNet18_SAS
