@@ -141,3 +141,18 @@ class TestUtils(unittest.TestCase):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
         get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', 416)
+
+    def test_unify_keys(self):
+        dict_1={
+            'Key1':'abc',
+            'key_2':'def',
+            'KEY__3':'ghi',
+            '_key4___':'jkl'
+       }
+        dict_2={
+            'key1':'abc',
+            'key2':'def',
+            'key3':'ghi',
+            'key4':'jkl'
+        }
+        self.assertTrue(unify_keys(dict_1)==dict_2)
