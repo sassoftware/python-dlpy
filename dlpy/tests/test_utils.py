@@ -21,7 +21,7 @@ import unittest
 import swat
 import swat.utils.testing as tm
 from dlpy.utils import *
-
+from dlpy.images import ImageTable
 
 class TestUtils(unittest.TestCase):
     '''
@@ -156,3 +156,82 @@ class TestUtils(unittest.TestCase):
             'key4':'jkl'
         }
         self.assertTrue(unify_keys(dict_1)==dict_2)
+
+    def test__ntuple(self):
+        from dlpy.utils import _pair
+        self.assertTrue(_pair((1,2,3))==(1,2,3))
+
+    def test_filter_by_image_id_1(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        image_id = '1'
+        self.assertRaises(ValueError, lambda:filter_by_image_id(table, image_id, filtered_name=1))
+
+
+    def test_filter_by_image_id_2(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        image_id = ['1','3','4']
+        filtered = filter_by_image_id(table, image_id, filtered_name=None)
+        
+        self.assertTrue(filtered.numrows().numrows == 3)
+
+
+    def test_filter_by_image_id_3(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        image_id = 0
+        self.assertRaises(ValueError,lambda:filter_by_image_id(table, image_id, filtered_name=None))
+
+
+    def test_filter_by_filename_1(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = 'giraffe_'
+        self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=1))
+        
+
+    def test_filter_by_filename_2(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = 'giraffe_'
+        filtered = filter_by_filename(table, filename, filtered_name=None)
+        filtered = ImageTable.from_table(filtered)
+        self.assertTrue(filtered.label_freq.loc['Giraffe'][1]>0)
+        self.assertRaises(KeyError, lambda:filtered.label_freq.loc['Dolphin'])
+
+
+    def test_filter_by_filename_3(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = ['giraffe_', 'dolphin_']
+        filtered = filter_by_filename(table, filename, filtered_name=None)
+        filtered = ImageTable.from_table(filtered)
+        self.assertTrue(filtered.label_freq.loc['Giraffe'][1]>0)
+        self.assertTrue(filtered.label_freq.loc['Dolphin'][1]>0)
+   
+       
+    def test_get_max_objects_1(self):
+        self.assertRaises(ValueError, lambda:get_max_objects(1))
+
+    def test_get_anchors_2(self):
+        self.assertRaises(ValueError, lambda:get_anchors(self.s,data=1,coord_type='coco', image_size=None))
+ 
