@@ -846,7 +846,7 @@ def get_max_objects(cas_table):
 
 def filter_by_filename(cas_table, filename, filtered_name=None):
     '''
-    Filteres CASTable by filename using '_path_' or '_filename_0' column
+    Filters CASTable by filename using '_path_' or '_filename_0' column
 
     Parameters
     ----------
@@ -1794,9 +1794,9 @@ def parameter_2d(param1, param2, param3, default_value):
 
     param1 : int
         specifies the layer option, such as stride, padding, output_padding
-    param1 : int
+    param2 : int
         specifies the layer option related to the first dimension, such as stride_vertical, padding_height
-    param1 : int
+    param3 : int
         specifies the layer option related to the second dimension, such as stride_horizontal, padding_width
     default_value : tuple
         specifies default value

@@ -118,6 +118,15 @@ class TestUtils(unittest.TestCase):
         a = self.s.CASTable('output')
         self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*len(a))
 
+    def test_create_object_detection_table_3(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        self.assertRaises(ValueError, lambda:create_object_detection_table(self.s, 
+                                      data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type = 'invalid_val',
+                                      output = 'output'))
+
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
             if self.data_dir is None or self.data_dir_local is None:
@@ -137,10 +146,15 @@ class TestUtils(unittest.TestCase):
 
         get_anchors(self.s, coord_type='yolo', data='output')
 
-    def test_get_txt_annotation(self):
+    def test_get_txt_annotation_1(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
         get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', 416)
+
+    def test_get_txt_annotation_2(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        self.assertRaises(DLPyError, lambda:get_txt_annotation(self.data_dir_local+'vgg', 'yolo', 416))
 
     def test_unify_keys(self):
         dict_1={
@@ -251,4 +265,20 @@ class TestUtils(unittest.TestCase):
 
     def test_get_anchors_2(self):
         self.assertRaises(ValueError, lambda:get_anchors(self.s,data=1,coord_type='coco', image_size=None))
- 
+
+    def test_parameter_2d(self):
+        params = parameter_2d(param1=None, param2=None, param3=2, default_value=(5,6))
+        self.assertTrue(params[0]==5)
+        self.assertTrue(params[1]==2)
+
+        params = parameter_2d(param1=None, param2=3, param3=None, default_value=(5,6))
+        self.assertTrue(params[0]==3)
+        self.assertTrue(params[1]==6)
+
+    def test___init__(self):
+        my_box = Box(x=2, y=3, w=4, h=5, class_type=None, confidence=1.0, 
+                     image_name=None, format_type='xyxy')
+        self.assertTrue(my_box.x_min==2)
+        self.assertTrue(my_box.x_max==3)
+        self.assertTrue(my_box.y_min==4)
+        self.assertTrue(my_box.y_max==5)
