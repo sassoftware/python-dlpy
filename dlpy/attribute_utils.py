@@ -27,6 +27,7 @@ import string
 import warnings
 import struct
 from dlpy.model import DataSpec
+from dlpy.layers import Layer
 
 def create_extended_attributes(conn, model_name, layers, data_spec, label_file_name=None):
 
@@ -44,9 +45,8 @@ def create_extended_attributes(conn, model_name, layers, data_spec, label_file_n
         The CAS connection object
     model_name : string
         Specifies the name of the deep learning model
-    layers : list of strings
-        Specifies the names of all the layers in the deep learning
-        model
+    layers : list of :class:`Layer`
+        Specifies all the layers in the deep learning model
     data_spec: list of :class:`DataSpec`
         data specification for input and output layer(s)
     label_file_name: string, optional
@@ -60,8 +60,8 @@ def create_extended_attributes(conn, model_name, layers, data_spec, label_file_n
     if not isinstance(layers,list):
         raise TypeError('Parameter layers must be a list of strings.')
     else:
-        if not all(isinstance(x,str) for x in layers):
-            raise TypeError('Some elements of the layers list are not strings.')
+        if not all(isinstance(x,Layer) for x in layers):
+            raise TypeError('Some elements of the layers list are not Layer objects.')
 
     # ensure list of data specs
     if not isinstance(data_spec,list):
@@ -110,9 +110,8 @@ def create_dataspec_attributes(conn, model_name, layers, data_spec):
         The CAS connection object
     model_name : string
         Specifies the name of the deep learning model
-    layers : list of strings
-        Specifies the names of all the layers in the deep learning
-        model
+    layers : list of :class:`Layer`
+        Specifies all the layers in the deep learning model
     data_spec: list of :class:`DataSpec`
         data specification for input and output layer(s)
 
@@ -338,9 +337,8 @@ def create_varlist_attributes(conn, model_name, layers, ds_info):
         The CAS connection object
     model_name : string
         Specifies the name of the deep learning model
-    layers : list of strings
-        Specifies the names of all the layers in the deep learning
-        model
+    layers : list of :class:`Layer`
+        Specifies all the layers in the deep learning model
     data_info: dictionary
         parsed data spec information
 
@@ -393,9 +391,8 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
         The CAS connection object
     model_name : string
         Specifies the name of the deep learning model
-    layers : list of strings
-        Specifies the names of all the layers in the deep learning
-        model
+    layers : list of :class:`Layer`
+        Specifies all the layers in the deep learning model
     data_info: dictionary
         parsed data spec information
     labels: list, optional
@@ -545,9 +542,8 @@ def create_inputparm_attributes(conn, model_name, layers, ds_info):
         The CAS connection object
     model_name : string
         Specifies the name of the deep learning model
-    layers : list of strings
-        Specifies the names of all the layers in the deep learning
-        model
+    layers : list of :class:`Layer`
+        Specifies all the layers in the deep learning model
     data_info: dictionary
         parsed data spec information
 
