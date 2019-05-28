@@ -228,6 +228,23 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(filtered.label_freq.loc['Giraffe'][1]>0)
         self.assertTrue(filtered.label_freq.loc['Dolphin'][1]>0)
    
+    def test_filter_by_filename_4(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = 0
+        self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=None))
+
+    def test_filter_by_filename_5(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = [1,'text',5.3]
+        self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=None))
        
     def test_get_max_objects_1(self):
         self.assertRaises(ValueError, lambda:get_max_objects(1))

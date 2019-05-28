@@ -877,6 +877,8 @@ def filter_by_filename(cas_table, filename, filtered_name=None):
     if '_path_' not in cas_table.columns.tolist() and '_filename_0' not in cas_table.columns.tolist():
         raise ValueError('\'_path_\' or \'_filename_0\' column not found in CASTable : {}'.format(cas_table.name))
     if isinstance(filename, list):
+        if not all(isinstance(x, str) for x in filename):
+            raise ValueError('filename must be a string or a list of strings')
         image_id = []
         for name in filename:
             if '_path_' in cas_table.columns.tolist():
@@ -892,6 +894,8 @@ def filter_by_filename(cas_table, filename, filtered_name=None):
             image_id = cas_table[cas_table['_path_'].str.contains(filename)]['_id_'].tolist()
         elif '_filename_0' in cas_table.columns.tolist():
             image_id = cas_table[cas_table['_filename_0'].str.contains(filename)]['_id_'].tolist()
+    else:
+        raise ValueError('filename must be a string or a list of strings')
 
     if not image_id:
         raise ValueError('filename: {} not found in \'_path_\' or'
