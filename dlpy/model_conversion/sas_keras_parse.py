@@ -24,7 +24,7 @@ from keras import backend as K
 from distutils.version import StrictVersion
 import keras
 from dlpy.utils import DLPyError
-if StrictVersion( keras.__version__) < '2.1.3' or StrictVersion( keras.__version__) > '2.2.2':
+if StrictVersion( keras.__version__) < '2.1.3' or StrictVersion( keras.__version__) > '2.1.6':
     raise DLPyError('This keras version ('+keras.__version__+') is not supported, '
                                                              'please use a version >= 2.1.3 and <= 2.1.6')
 
