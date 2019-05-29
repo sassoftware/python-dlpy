@@ -56,7 +56,7 @@ class TestUtils(unittest.TestCase):
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
             cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith('/'):
+            if cls.data_dir_local.startswith('/'):
                 sep_ = '/'
             else:
                 sep_ = '\\'
