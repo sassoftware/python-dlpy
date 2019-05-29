@@ -1284,7 +1284,7 @@ class Network(Layer):
             print('NOTE: Model weights will be loaded from csv.')
             model_weights = pd.read_csv(model_weights)
         model_table = self.conn.CASTable(**self.model_table)
-        onnx_model = sas_to_onnx(layers = self.layers,
+        onnx_model = sas_to_onnx(layers=self.layers,
                                  model_table = model_table,
                                  model_weights = model_weights)
         file_name = self.model_name + '.onnx'

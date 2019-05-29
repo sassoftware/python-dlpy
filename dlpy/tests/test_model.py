@@ -574,48 +574,6 @@ class TestModel(unittest.TestCase):
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
         
-    def test_model20(self):
-        try:
-            import onnx
-        except:
-            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
-
-        model1 = Sequential(self.s, model_table='Simple_CNN1')
-        model1.add(InputLayer(3, 224, 224))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act='softmax', n=2))
-
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-
-        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
-
-        self.s.table.loadtable(caslib=caslib,
-                               casout={'name': 'eee', 'replace': True},
-                               path=path)
-
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
-        self.assertTrue(r.severity == 0)
-
-        model1.save_weights_csv(self.data_dir)
-        import os
-        weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
-        #model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
-
-        import tempfile
-        tmp_dir_to_dump = tempfile.gettempdir()
-
-        model1.deploy(tmp_dir_to_dump,  output_format='onnx', model_weights=weights_path)
-
-        os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
-
-        if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level='error', caslib=caslib)
-        
     def test_model21(self):
         try:
             import onnx
