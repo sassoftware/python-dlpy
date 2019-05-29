@@ -43,6 +43,8 @@ class ImageTable(CASTable):
         The count of images in different categories.
     channel_means : tuple of double
         The mean of the image intensities in each channels.
+    uid : pandas.DataFrame
+        The unique ID for each image
 
     Returns
     -------

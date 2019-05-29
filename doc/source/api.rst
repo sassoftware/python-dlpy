@@ -59,17 +59,25 @@ Image Processing
    ImageTable.resize
    ImageTable.as_patches
    ImageTable.as_random_patches
+   ImageTable.random_mutations
 
-Audio
------
+
+AudioTable
+----------
+
+The :class:`AudioTable` class is a specialized version of :class:`swat.CASTable`
+that includes extra methods for working with images.
 
 .. currentmodule:: dlpy.audio
 
+Constructors
+~~~~~~~~~~~~
+
 .. autosummary::
    :toctree: generated/
-       
+
    AudioTable
-   AudioTable.create_audio_table
+
    
 Timeseries
 ----------
