@@ -1429,13 +1429,17 @@ class TestModel(unittest.TestCase):
         self.assertRaises(ValueError, lambda:model.heat_map_analysis(mask_width=56, mask_height=56, 
                            step_size=8, display=False))       
 
-        from numpy import array
-        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=array([]), mask_width=56, 
-                           mask_height=56, step_size=8, display=False))       
-
         self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=my_im, mask_width=56, 
                            mask_height=56, step_size=8, display=False))       
  
+        try:
+            from numpy import array
+        except:
+            unittest.TestCase.skipTest(self, 'numpy is not installed')
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=array([]), mask_width=56, 
+                           mask_height=56, step_size=8, display=False))       
+
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

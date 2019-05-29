@@ -128,7 +128,6 @@ class TestImageTable(unittest.TestCase):
         self.assertTrue(int(out[5]) == 100)
         self.assertTrue(int(out[6]) == 100)
 
-        my_images = ImageTable.load_files(self.s, path=self.data_dir+'giraffe_dolphin_small')
         out = my_images.as_patches(x=0, y=0, width=None, height=None, step_size=None,
                                    output_width=None, output_height=None, inplace=False)
         out = out.image_summary
@@ -143,7 +142,6 @@ class TestImageTable(unittest.TestCase):
         self.assertTrue(int(out[5]) == 224)
         self.assertTrue(int(out[6]) == 224)
 
-        my_images = ImageTable.load_files(self.s, path=self.data_dir+'giraffe_dolphin_small')
         out = my_images.as_patches(x=0, y=0, width=None, height=200, step_size=None,
                                    output_width=None, output_height=None, inplace=False)
         out = out.image_summary

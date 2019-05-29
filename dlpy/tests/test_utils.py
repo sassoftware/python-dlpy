@@ -122,6 +122,7 @@ class TestUtils(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
+        # If coord_type is not either 'yolo' or 'coco', an error should be thrown
         self.assertRaises(ValueError, lambda:create_object_detection_table(self.s, 
                                       data_path = self.data_dir + 'dlpy_obj_det_test',
                                       coord_type = 'invalid_val',
@@ -154,6 +155,7 @@ class TestUtils(unittest.TestCase):
     def test_get_txt_annotation_2(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        # If there are no xml files under data_path, an error should be thrown
         self.assertRaises(DLPyError, lambda:get_txt_annotation(self.data_dir_local+'vgg', 'yolo', 416))
 
     def test_unify_keys(self):
@@ -264,6 +266,7 @@ class TestUtils(unittest.TestCase):
         self.assertRaises(ValueError, lambda:get_max_objects(1))
 
     def test_get_anchors_2(self):
+        # If coord_type is 'coco', image_size must be specified.  If not, an error should be thrown
         self.assertRaises(ValueError, lambda:get_anchors(self.s,data=1,coord_type='coco', image_size=None))
 
     def test_parameter_2d(self):
