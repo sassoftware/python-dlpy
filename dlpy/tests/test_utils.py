@@ -23,6 +23,7 @@ import swat.utils.testing as tm
 from dlpy.utils import *
 from dlpy.images import ImageTable
 
+
 class TestUtils(unittest.TestCase):
     '''
     If you are using dlpy on a Windows machine, then copy datasources/dlpy_obj_det_test to both DLPY_DATA_DIR and
@@ -55,9 +56,13 @@ class TestUtils(unittest.TestCase):
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
             cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith(cls.server_sep):
+            if cls.data_dir_local.endswith('/'):
+                sep_ = '/'
+            else:
+                sep_ = '\\'
+            if cls.data_dir_local.endswith(sep_):
                 cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += cls.server_sep
+            cls.data_dir_local += sep_
 
     @classmethod
     def tearDownClass(cls):
@@ -155,6 +160,7 @@ class TestUtils(unittest.TestCase):
     def test_get_txt_annotation_2(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
         # If there are no xml files under data_path, an error should be thrown
         self.assertRaises(DLPyError, lambda:get_txt_annotation(self.data_dir_local+'vgg', 'yolo', 416))
 
