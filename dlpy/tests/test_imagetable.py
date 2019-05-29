@@ -127,3 +127,82 @@ class TestImageTable(unittest.TestCase):
         self.assertTrue(int(out[4]) == 100)
         self.assertTrue(int(out[5]) == 100)
         self.assertTrue(int(out[6]) == 100)
+
+        out = my_images.as_patches(x=0, y=0, width=None, height=None, step_size=None,
+                                   output_width=None, output_height=None, inplace=False)
+        out = out.image_summary
+        column_list = ['jpg', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'meanWidth',
+                       'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
+                       'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
+                       'min3rdChannel', 'max3rdChannel']
+        self.assertTrue(int(out[1]) == 224)
+        self.assertTrue(int(out[2]) == 224)
+        self.assertTrue(int(out[3]) == 224)
+        self.assertTrue(int(out[4]) == 224)
+        self.assertTrue(int(out[5]) == 224)
+        self.assertTrue(int(out[6]) == 224)
+
+        out = my_images.as_patches(x=0, y=0, width=None, height=200, step_size=None,
+                                   output_width=None, output_height=None, inplace=False)
+        out = out.image_summary
+        column_list = ['jpg', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'meanWidth',
+                       'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
+                       'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
+                       'min3rdChannel', 'max3rdChannel']
+        self.assertTrue(int(out[1]) == 200)
+        self.assertTrue(int(out[2]) == 200)
+        self.assertTrue(int(out[3]) == 200)
+        self.assertTrue(int(out[4]) == 200)
+        self.assertTrue(int(out[5]) == 200)
+        self.assertTrue(int(out[6]) == 200)
+
+
+
+    def test_as_random_patches(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        my_images = ImageTable.load_files(self.s, path=self.data_dir+'giraffe_dolphin_small')
+        out = my_images.as_random_patches(x=0, y=0, width=200, height=200, step_size=200,
+                                   output_width=100, output_height=100, inplace=False)
+        out = out.image_summary
+        column_list = ['jpg', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'meanWidth',
+                       'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
+                       'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
+                       'min3rdChannel', 'max3rdChannel']
+        self.assertTrue(int(out[1]) == 100)
+        self.assertTrue(int(out[2]) == 100)
+        self.assertTrue(int(out[3]) == 100)
+        self.assertTrue(int(out[4]) == 100)
+        self.assertTrue(int(out[5]) == 100)
+        self.assertTrue(int(out[6]) == 100)
+
+        my_images = ImageTable.load_files(self.s, path=self.data_dir+'giraffe_dolphin_small')
+        out = my_images.as_random_patches(x=0, y=0, width=None, height=None, step_size=None,
+                                   output_width=None, output_height=None, inplace=False)
+        out = out.image_summary
+        column_list = ['jpg', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'meanWidth',
+                       'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
+                       'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
+                       'min3rdChannel', 'max3rdChannel']
+        self.assertTrue(int(out[1]) == 224)
+        self.assertTrue(int(out[2]) == 224)
+        self.assertTrue(int(out[3]) == 224)
+        self.assertTrue(int(out[4]) == 224)
+        self.assertTrue(int(out[5]) == 224)
+        self.assertTrue(int(out[6]) == 224)
+
+        my_images = ImageTable.load_files(self.s, path=self.data_dir+'giraffe_dolphin_small')
+        out = my_images.as_random_patches(x=0, y=0, width=None, height=200, step_size=None,
+                                   output_width=None, output_height=None, inplace=False)
+        out = out.image_summary
+        column_list = ['jpg', 'minWidth', 'maxWidth', 'minHeight', 'maxHeight', 'meanWidth',
+                       'meanHeight', 'mean1stChannel', 'min1stChannel', 'max1stChannel',
+                       'mean2ndChannel', 'min2ndChannel', 'max2ndChannel', 'mean3rdChannel',
+                       'min3rdChannel', 'max3rdChannel']
+        self.assertTrue(int(out[1]) == 200)
+        self.assertTrue(int(out[2]) == 200)
+        self.assertTrue(int(out[3]) == 200)
+        self.assertTrue(int(out[4]) == 200)
+        self.assertTrue(int(out[5]) == 200)
+        self.assertTrue(int(out[6]) == 200)
