@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 import itertools
 import unittest
+import dlpy
 from dlpy.metrics import *
 from dlpy.utils import random_name, get_server_path_sep
 
