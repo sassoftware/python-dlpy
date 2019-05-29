@@ -1405,7 +1405,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.summary['Output Size'].values[-3], (1, 1, 1024))
         model.print_summary()
 
-    def test_heat_map_analysis(self): 
+    def test_heat_map_analysis(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR is not set in the environment variables')
 
@@ -1416,28 +1416,34 @@ class TestModel(unittest.TestCase):
         my_im = ImageTable.load_files(self.s, self.data_dir+'giraffe_dolphin_small')
         my_im_r = my_im.resize(width=224, inplace=False)
 
-        model = ResNet50_Caffe(self.s, model_table='ResNet50_Caffe', 
+        model = ResNet50_Caffe(self.s, model_table='ResNet50_Caffe',
                                n_classes=2, n_channels=3, width=224, height=224, scale=1,
                                random_flip='none', random_crop='none',
                                offsets=my_im_r.channel_means, pre_trained_weights=True,
-                               pre_trained_weights_file=pre_train_weight_file, 
+                               pre_trained_weights_file=pre_train_weight_file,
                                include_top=False)
         model.fit(data=my_im_r, mini_batch_size=1, max_epochs=1)
         model.heat_map_analysis(data=my_im_r, mask_width=None, mask_height=None, step_size=None,
                                  max_display=1)
-        
-        self.assertRaises(ValueError, lambda:model.heat_map_analysis(mask_width=56, mask_height=56, 
-                           step_size=8, display=False))       
 
-        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=my_im, mask_width=56, 
-                           mask_height=56, step_size=8, display=False))       
- 
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(mask_width=56, mask_height=56,
+                           step_size=8, display=False))
+
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=my_im, mask_width=56,
+                           mask_height=56, step_size=8, display=False))
+
         try:
             from numpy import array
         except:
             unittest.TestCase.skipTest(self, 'numpy is not installed')
-        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=array([]), mask_width=56, 
-                           mask_height=56, step_size=8, display=False))       
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=array([]), mask_width=56,
+                           mask_height=56, step_size=8, display=False))
+
+    def test_load_padding(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        model5 = Model(self.s)
+        model5.load(path = self.data_dir + 'vgg16.sashdat')
 
 
     @classmethod

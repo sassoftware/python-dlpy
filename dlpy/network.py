@@ -1638,12 +1638,14 @@ def extract_conv_layer(layer_table):
     else:
         conv_layer_config['include_bias'] = True
 
-    padding_width = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_left'].tolist()[0]
-    padding_height = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_top'].tolist()[0]
-    if padding_width != -1:
-        conv_layer_config['padding_width'] = padding_width
-    if padding_height != -1:
-        conv_layer_config['padding_height'] = padding_height
+    # pad_top and pad_left are added after vb015
+    if 'convopts.pad_left' in layer_table['_DLKey1_'].values and 'convopts.pad_top' in layer_table['_DLKey1_'].values:
+        padding_width = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_left'].tolist()[0]
+        padding_height = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_top'].tolist()[0]
+        if padding_width != -1:
+            conv_layer_config['padding_width'] = padding_width
+        if padding_height != -1:
+            conv_layer_config['padding_height'] = padding_height
 
     layer = Conv2d(**conv_layer_config)
     return layer
@@ -1676,12 +1678,14 @@ def extract_pooling_layer(layer_table):
     del pool_layer_config['poolingtype']
     pool_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
-    padding_width = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_left'].tolist()[0]
-    padding_height = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_top'].tolist()[0]
-    if padding_width != -1:
-        pool_layer_config['padding_width'] = padding_width
-    if padding_height != -1:
-        pool_layer_config['padding_height'] = padding_height
+    # pad_top and pad_left are added after vb015
+    if 'poolingopts.pad_left' in layer_table['_DLKey1_'].values and 'poolingopts.pad_top' in layer_table['_DLKey1_'].values:
+        padding_width = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_left'].tolist()[0]
+        padding_height = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_top'].tolist()[0]
+        if padding_width != -1:
+            pool_layer_config['padding_width'] = padding_width
+        if padding_height != -1:
+            pool_layer_config['padding_height'] = padding_height
 
     layer = Pooling(**pool_layer_config)
     return layer
