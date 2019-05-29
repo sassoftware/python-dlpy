@@ -21,7 +21,7 @@ import unittest
 import swat
 import swat.utils.testing as tm
 from dlpy.utils import *
-
+from dlpy.images import ImageTable
 
 class TestUtils(unittest.TestCase):
     '''
@@ -118,6 +118,16 @@ class TestUtils(unittest.TestCase):
         a = self.s.CASTable('output')
         self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*len(a))
 
+    def test_create_object_detection_table_3(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        # If coord_type is not either 'yolo' or 'coco', an error should be thrown
+        self.assertRaises(ValueError, lambda:create_object_detection_table(self.s, 
+                                      data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type = 'invalid_val',
+                                      output = 'output'))
+
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
             if self.data_dir is None or self.data_dir_local is None:
@@ -137,10 +147,16 @@ class TestUtils(unittest.TestCase):
 
         get_anchors(self.s, coord_type='yolo', data='output')
 
-    def test_get_txt_annotation(self):
+    def test_get_txt_annotation_1(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
         get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', 416)
+
+    def test_get_txt_annotation_2(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        # If there are no xml files under data_path, an error should be thrown
+        self.assertRaises(DLPyError, lambda:get_txt_annotation(self.data_dir_local+'vgg', 'yolo', 416))
 
     def test_unify_keys(self):
         dict_1={
@@ -156,3 +172,116 @@ class TestUtils(unittest.TestCase):
             'key4':'jkl'
         }
         self.assertTrue(unify_keys(dict_1)==dict_2)
+
+    def test__ntuple(self):
+        from dlpy.utils import _pair
+        self.assertTrue(_pair((1,2,3))==(1,2,3))
+
+    def test_filter_by_image_id_1(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        image_id = '1'
+        self.assertRaises(ValueError, lambda:filter_by_image_id(table, image_id, filtered_name=1))
+
+
+    def test_filter_by_image_id_2(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        image_id = ['1','3','4']
+        filtered = filter_by_image_id(table, image_id, filtered_name=None)
+        
+        self.assertTrue(filtered.numrows().numrows == 3)
+
+
+    def test_filter_by_image_id_3(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        image_id = 0
+        self.assertRaises(ValueError,lambda:filter_by_image_id(table, image_id, filtered_name=None))
+
+
+    def test_filter_by_filename_1(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = 'giraffe_'
+        self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=1))
+        
+
+    def test_filter_by_filename_2(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = 'giraffe_'
+        filtered = filter_by_filename(table, filename, filtered_name=None)
+        filtered = ImageTable.from_table(filtered)
+        self.assertTrue(filtered.label_freq.loc['Giraffe'][1]>0)
+        self.assertRaises(KeyError, lambda:filtered.label_freq.loc['Dolphin'])
+
+
+    def test_filter_by_filename_3(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = ['giraffe_', 'dolphin_']
+        filtered = filter_by_filename(table, filename, filtered_name=None)
+        filtered = ImageTable.from_table(filtered)
+        self.assertTrue(filtered.label_freq.loc['Giraffe'][1]>0)
+        self.assertTrue(filtered.label_freq.loc['Dolphin'][1]>0)
+   
+    def test_filter_by_filename_4(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = 0
+        self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=None))
+
+    def test_filter_by_filename_5(self): 
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        table = ImageTable.load_files(self.s, path=img_path)
+        filename = [1,'text',5.3]
+        self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=None))
+       
+    def test_get_max_objects_1(self):
+        self.assertRaises(ValueError, lambda:get_max_objects(1))
+
+    def test_get_anchors_2(self):
+        # If coord_type is 'coco', image_size must be specified.  If not, an error should be thrown
+        self.assertRaises(ValueError, lambda:get_anchors(self.s,data=1,coord_type='coco', image_size=None))
+
+    def test_parameter_2d(self):
+        params = parameter_2d(param1=None, param2=None, param3=2, default_value=(5,6))
+        self.assertTrue(params[0]==5)
+        self.assertTrue(params[1]==2)
+
+        params = parameter_2d(param1=None, param2=3, param3=None, default_value=(5,6))
+        self.assertTrue(params[0]==3)
+        self.assertTrue(params[1]==6)
+
+    def test___init__(self):
+        my_box = Box(x=2, y=3, w=4, h=5, class_type=None, confidence=1.0, 
+                     image_name=None, format_type='xyxy')
+        self.assertTrue(my_box.x_min==2)
+        self.assertTrue(my_box.x_max==3)
+        self.assertTrue(my_box.y_min==4)
+        self.assertTrue(my_box.y_max==5)
