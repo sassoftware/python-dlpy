@@ -245,7 +245,7 @@ class ResBlock_Caffe(ResBlock):
 
     Returns
     -------
-    :class:`ResBlock_Caffee`
+    :class:`ResBlock_Caffe`
 
     '''
 
@@ -286,6 +286,8 @@ class ResBlock_Caffe(ResBlock):
 
     def compile(self, src_layer, block_num=None):
         '''
+        Compile the block structure into DLPy layer definitions.
+
         Parameters
         ----------
         src_layer : Layer

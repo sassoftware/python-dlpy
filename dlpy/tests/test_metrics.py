@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 import itertools
 import unittest
+import dlpy
 from dlpy.metrics import *
 from dlpy.utils import random_name, get_server_path_sep
 
@@ -204,7 +205,6 @@ class TestMetrics(unittest.TestCase):
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
 
-
         skcm_matrix1 = skcm(self.local_class1.target, self.local_class1.p_target)
         skcm_matrix2 = skcm(self.local_class1.target, self.local_class1.p_target, labels=[1, 3, 4])
         
@@ -269,6 +269,16 @@ class TestMetrics(unittest.TestCase):
             from sklearn.metrics import average_precision_score as skaps
         except:
             unittest.TestCase.skipTest(self, "sklearn is not found in the libraries")
+
+        try:
+            from distutils.version import StrictVersion
+        except:
+            unittest.TestCase.skipTest(self, "StrictVersion issue")
+
+        import sklearn
+        if StrictVersion(sklearn.__version__) < StrictVersion('0.20.3'):
+            unittest.TestCase.skipTest(self, "There is an API change in sklearn, "
+                                             "this test is skipped with old versions of sklearn")
 
         skaps_score1 = skaps(self.local_class3.target, self.local_class3.p_1, pos_label=1)       
         dlpyaps_score1 = average_precision_score('target', 'p_1', pos_label=1, castable=self.class_table3, 
