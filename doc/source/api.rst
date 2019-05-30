@@ -257,9 +257,6 @@ Architecture Information
 Solvers
 -------
 
-Constructors
-~~~~~~~~~~~~
-
 .. autosummary::
    :toctree: generated/
 
