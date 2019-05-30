@@ -516,7 +516,7 @@ class _Conv(Layer):
 
     Returns
     -------
-    :class: '_Conv`
+    :class:'_Conv`
 
     '''
 
@@ -2375,9 +2375,9 @@ class FastRCNN(Layer):
         return 0
 
 
-class CLoss(Layer):
+class EmbeddingLoss(Layer):
     '''
-    CLoss layer
+    EmbeddingLoss layer
 
     Parameters
     ----------
@@ -2395,7 +2395,7 @@ class CLoss(Layer):
 
     Returns
     -------
-    :class:`CLoss`
+    :class:`EmbeddingLoss`
 
     '''
     type = 'closs'
@@ -2474,3 +2474,4 @@ Add = Res
 BatchNormalization = BN
 Concatenate = Concat
 Conv2D = Conv2d
+CLoss = EmbeddingLoss
