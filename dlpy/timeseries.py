@@ -255,6 +255,11 @@ class TimeseriesTable(CASTable):
         It will be created by the prepare_subsequences method.
         Default: None
 
+    Attributes
+    ----------
+    timeid_type : string
+         Specifies whether the table uses 'date' or 'datetime' format
+
     Returns
     -------
     :class:`TimeseriesTable`
