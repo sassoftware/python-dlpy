@@ -271,22 +271,11 @@ Solvers
 Optimizer
 ---------
 
-
-Constructor
-~~~~~~~~~~~
-
 .. autosummary::
    :toctree: generated/
 
    Optimizer
 
-Utilities
-~~~~~~~~~
-
-.. autosummary::
-   :toctree: generated/
-
-   Optimizer.add_optimizer_mode
 
 
 Parameters
