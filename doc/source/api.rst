@@ -106,8 +106,12 @@ Timeseries
 TimeseriesTable
 ~~~~~~~~~~~~~~~
 
+.. currentmodule:: dlpy.audio
+
 The :class:`TimeseriesTable` class is a specialized version of :class:`swat.CASTable`
 that includes extra methods for working with timeseries.
+
+.. currentmodule:: dlpy.timeseries
 
 Constructors
 ^^^^^^^^^^^^
@@ -161,32 +165,16 @@ Layers
    Reshape
    
 
-
-Models
-------
-
-.. currentmodule:: dlpy.model
-
-.. autosummary::
-   :toctree: generated/
-
-   DataSpec
-   DataSpecNumNomOpts
-   Sequence
-   TextParms
-   Optimizer
-   Gpu
-
-
 Model
-~~~~~
+-----
 
 The :class:`Model` class is a specialized version of :class:`dlpy.Network`
 that adds training, evaluation, tuning, and feature analysis routines.  
 
+.. currentmodule:: dlpy.model
 
 Constructors
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -200,12 +188,13 @@ Constructors
    Model.load
 
 
-Setting Weights and Weight Attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Model Setup
+~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
 
+   Model.change_labels
    Model.set_weights
    Model.load_weights
    Model.load_weights_from_caffe
@@ -216,7 +205,7 @@ Setting Weights and Weight Attributes
 
 
 Training
-^^^^^^^^
+~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -227,7 +216,7 @@ Training
 
 
 Inference, Evaluation, and Analysis
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -235,6 +224,8 @@ Inference, Evaluation, and Analysis
    Model.predict
    Model.forecast
    Model.evaluate
+   Model.evaluate_object_detection
+   Model.plot_evaluate_res
    Model.get_feature_maps
    Model.get_features
    Model.heat_map_analysis
@@ -242,7 +233,7 @@ Inference, Evaluation, and Analysis
 
 
 Saving
-^^^^^^
+~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -253,7 +244,7 @@ Saving
 
 
 Architecture Information
-^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -261,10 +252,13 @@ Architecture Information
    Model.count_params
    Model.print_summary
    Model.plot_network
-
+   Model.get_model_info
 
 Solvers
-~~~~~~~
+-------
+
+Constructors
+~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -275,9 +269,46 @@ Solvers
    AdamSolver
    MomentumSolver
    VanillaSolver
+
    
-Metrics
+Optimizer
+---------
+
+
+Constructor
+~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
+   Optimizer
+
+Utilities
+~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
+   Optimizer.add_optimizer_mode
+
+
+Parameters
 ----------
+
+.. currentmodule:: dlpy.model
+
+.. autosummary::
+   :toctree: generated/
+
+   DataSpec
+   DataSpecNumNomOpts
+   Sequence
+   TextParms
+   Gpu
+
+
+Metrics
+-------
 
 .. currentmodule:: dlpy.metrics
 
@@ -303,10 +334,19 @@ Feature Maps
 
 .. currentmodule:: dlpy.model
 
+Constructor
+~~~~~~~~~~~
+
 .. autosummary::
    :toctree: generated/
 
    FeatureMaps
+
+Utilities
+~~~~~~~~~
+.. autosummary::
+   :toctree: generated/
+
    FeatureMaps.display
 
 
@@ -357,8 +397,13 @@ Residual Networks
 
    ResBlock_Caffe
    ResBlock_Caffe.compile
-   
-   
+      
+.. autosummary::
+   :toctree: generated/
+
+   Bidirectional 
+   Bidirectional.compile
+
 Pre-Built Models for Computer Vision Tasks
 ------------------------------------------
 
@@ -388,6 +433,7 @@ Pre-Built Models for Computer Vision Tasks
    Darknet
    Darknet_Reference
    InceptionV3
+   YoloV1
    YoloV2
    YoloV2_MultiSize
    Tiny_YoloV1
