@@ -22,7 +22,8 @@ import json
 import os
 
 from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, Recurrent, BN, Res, Proj, OutputLayer, \
-                        Keypoints, Detection, Scale, Reshape
+                        Keypoints, Detection, Scale, Reshape, Conv2DTranspose, GroupConv2d, GlobalAveragePooling2D, \
+                        FastRCNN, ROIPooling, RegionProposal
 from dlpy.blocks import ResBlock, ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
 from dlpy.utils import DLPyError, get_mapping_dict
 from dlpy import __dev__
@@ -308,6 +309,38 @@ class TestLayers(unittest.TestCase):
     def test_bidirectional_block4(self):
         list1 = Bidirectional(n=[10, 20, 30], n_blocks=3).compile()
         self.assertTrue(self.sample_syntax['bidirectional3'] == list1)
+
+    def test_transpose_conv1(self):
+        trans1 = Conv2DTranspose(n_filters=30, stride_horizontal = 2)
+        self.assertTrue(trans1.padding == (0, 0))
+        self.assertTrue(trans1.stride == (1, 2))
+        self.assertTrue(trans1.output_padding == (0, 0))
+
+        trans2 = Conv2DTranspose(n_filters = 30, padding_width = 3, stride = 10, output_padding = 2)
+        self.assertTrue(trans2.padding == (0, 3))
+        self.assertTrue(trans2.stride == (10, 10))
+        self.assertTrue(trans2.output_padding == (2, 2))
+
+        trans3 = Conv2DTranspose(n_filters = 30, padding_width = 3, stride = 10, output_padding_width = 2)
+        self.assertTrue(trans3.output_padding == (0, 2))
+
+    def test_group_conv1(self):
+        group_conv1 = GroupConv2d(n_filters=30, n_groups=3, stride_horizontal = 2)
+        self.assertTrue(group_conv1.config['nGroups'] == 3)
+
+    def test_global_pooling1(self):
+        global_pooling = GlobalAveragePooling2D()
+        self.assertTrue(global_pooling.config['width'] == 0)
+
+    def test_region_proposal1(self):
+        region_proposal = RegionProposal(base_anchor_size = 10, anchor_ratio = [0.1, 2.0, 3.0],
+                                         anchor_scale = [1.2, 2.3, 3.4])
+        self.assertTrue(self.sample_syntax['region_proposal1'] == region_proposal.config)
+
+    def test_fast_rcnn(self):
+        fast_rcnn = FastRCNN(class_number = 10, detection_threshold = 0.2, max_label_per_image = 60,
+                             nms_iou_threshold = 0.3)
+        self.assertTrue(self.sample_syntax['fast_rcnn1'] == fast_rcnn.config)
 
     def test_mapping_dict(self):
         mapping = get_mapping_dict()

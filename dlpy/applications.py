@@ -26,7 +26,8 @@ from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
 from .caffe_models import (model_vgg16, model_vgg19, model_resnet50,
                            model_resnet101, model_resnet152)
 from .keras_models import model_inceptionv3
-from .layers import (InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer, Detection, Concat, Reshape, Recurrent)
+from .layers import (InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer, Detection, Concat, Reshape, Recurrent,
+                     GlobalAveragePooling2D, GroupConv2d, Conv2DTranspose)
 from .model import Model
 from .utils import random_name, DLPyError
 
@@ -856,8 +857,7 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
                                  batch_norm_first=batch_norm_first))
 
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -955,8 +955,7 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
                                      batch_norm_first=batch_norm_first, conv_short_cut=conv_short_cut))
 
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1056,8 +1055,7 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
                                  strides=strides, batch_norm_first=batch_norm_first))
 
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1157,8 +1155,7 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
                                      batch_norm_first=batch_norm_first, conv_short_cut=conv_short_cut))
 
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1261,8 +1258,7 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
     model.add(BN(act='relu'))
 
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1380,8 +1376,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
                                          conv_short_cut=conv_short_cut))
 
         # Bottom Layers
-        pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-        model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+        model.add(GlobalAveragePooling2D())
 
         model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1519,8 +1514,7 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
                                  strides=strides, batch_norm_first=batch_norm_first))
     model.add(BN(act='relu'))
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1638,8 +1632,7 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
                                          conv_short_cut=conv_short_cut))
 
         # Bottom Layers
-        pooling_size = (width // 2 // 2 // 2 // 2 // 2, height // 2 // 2 // 2 // 2 // 2)
-        model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+        model.add(GlobalAveragePooling2D())
 
         model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1777,9 +1770,7 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
                                  strides=strides, batch_norm_first=batch_norm_first))
     model.add(BN(act='relu'))
     # Bottom Layers
-    pooling_size = (width // 2 // 2 // 2 // 2 // 2,
-                    height // 2 // 2 // 2 // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -1897,9 +1888,7 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
                                          conv_short_cut=conv_short_cut))
 
         # Bottom Layers
-        pooling_size = (width // 2 // 2 // 2 // 2 // 2,
-                        height // 2 // 2 // 2 // 2 // 2)
-        model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+        model.add(GlobalAveragePooling2D())
 
         model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -2047,8 +2036,7 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
                                  strides=strides, batch_norm_first=batch_norm_first))
     model.add(BN(act='relu'))
     # Bottom Layers
-    pooling_size = (width // 2 // 2, height // 2 // 2)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -2140,18 +2128,7 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
             model.add(Conv2d(channel_in, width=3, act='identity', include_bias=False, stride=1))
             model.add(Pooling(width=2, height=2, pool='mean'))
 
-    # Bottom Layers
-    pool_width = (width // (2 ** n_blocks // 2))
-    if pool_width < 1:
-        pool_width = 1
-        print("WARNING: You seem to have a network that might be too deep for the input width.")
-
-    pool_height = (height // (2 ** n_blocks // 2))
-    if pool_height < 1:
-        pool_height = 1
-        print("WARNING: You seem to have a network that might be too deep for the input height.")
-
-    model.add(Pooling(width=pool_width, height=pool_height, pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -2263,8 +2240,7 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
 
     model.add(BN(act='identity'))
     # Bottom Layers
-    pooling_size = (7, 7)
-    model.add(Pooling(width=pooling_size[0], height=pooling_size[1], pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
@@ -2361,7 +2337,7 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
     # conv8 7
     model.add(Conv2d(1000, width=1, act=act, include_bias=True, stride=1))
 
-    model.add(Pooling(width=7, height=7, pool='mean'))
+    model.add(GlobalAveragePooling2D())
     model.add(OutputLayer(act='softmax', n=n_classes))
 
     return model
@@ -2497,7 +2473,7 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
     model.add(Conv2d(1000, width=1, act=act, include_bias=True, stride=1))
     # model.add(BN(act = actx))
 
-    model.add(Pooling(width=7, height=7, pool='mean'))
+    model.add(GlobalAveragePooling2D())
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 

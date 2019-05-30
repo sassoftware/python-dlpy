@@ -22,12 +22,14 @@ import os
 
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
-from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
+from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
+    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN
 import dlpy.model
 import collections
 import pandas as pd
 import swat as sw
 from copy import deepcopy
+from . import __dev__
 
 
 class Network(Layer):
@@ -94,6 +96,7 @@ class Network(Layer):
         if model_weights is None:
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
         else:
+            # TODO put tableexits in set_weights
             if self.conn.tableexists(model_weights).exists == 1:
                 self.set_weights(model_weights)
             else:
@@ -317,6 +320,16 @@ class Network(Layer):
                 model.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 model.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 17:
+                model.layers.append(extract_groupconv_layer(layer_table = layer_table))
+            elif layer_type == 18:
+                model.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+            elif layer_type == 23:
+                model.layers.append(extract_rpn_layer(layer_table = layer_table))
+            elif layer_type == 24:
+                model.layers.append(extract_roipooling_layer(layer_table = layer_table))
+            elif layer_type == 25:
+                model.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -708,6 +721,16 @@ class Network(Layer):
                 self.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 self.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 17:
+                self.layers.append(extract_groupconv_layer(layer_table = layer_table))
+            elif layer_type == 18:
+                self.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+            elif layer_type == 23:
+                self.layers.append(extract_rpn_layer(layer_table = layer_table))
+            elif layer_type == 24:
+                self.layers.append(extract_roipooling_layer(layer_table = layer_table))
+            elif layer_type == 25:
+                self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -1106,6 +1129,28 @@ class Network(Layer):
 
         if not flag:
             self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
+
+    def share_weights(self, layers):
+        """
+        TODO: Add more comment
+        Share weights
+
+        Parameters
+        ----------
+        layers : layers dict or iter-of-dict
+
+
+        """
+        if not isinstance(layers, list):
+            layers = [layers]
+        layers_name = [l.name for l in self.layers]
+        for layer in layers:
+            for anchor, shares in layer.items():
+                if isinstance(shares, str):
+                    shares = [shares]
+                for share in shares:
+                    idx_share = layers_name.index(share)
+                    self.layers[idx_share].shared_weights = anchor
 
     def save_to_astore(self, path = None, **kwargs):
         """
@@ -1585,6 +1630,32 @@ def extract_input_layer(layer_table):
     except IndexError:
         pass
 
+    input_layer_config['norm_stds'] = []
+    try:
+        input_layer_config['norm_stds'].append(
+            int(layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                          'inputopts.normstds'].tolist()[0]))
+    except IndexError:
+        pass
+    try:
+        input_layer_config['norm_stds'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.normstds.0'].tolist()[0])
+    except IndexError:
+        pass
+    try:
+        input_layer_config['norm_stds'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.normstds.1'].tolist()[0])
+    except IndexError:
+        pass
+    try:
+        input_layer_config['norm_stds'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.normstds.2'].tolist()[0])
+    except IndexError:
+        pass
+
     if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] ==
                                  'inputopts.crop'].tolist()[0] == 'No cropping':
         input_layer_config['random_crop'] = 'none'
@@ -1988,4 +2059,200 @@ def extract_reshape_layer(layer_table):
     reshape_layer_config.update(get_str_configs(str_keys, 'reshapeopts', layer_table))
     reshape_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
     layer = Reshape(**reshape_layer_config)
+    return layer
+
+
+def extract_groupconv_layer(layer_table):
+    '''
+    Extract layer configuration from a group convolution layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['n_filters', 'width', 'height', 'stride', 'std', 'mean',
+                'init_bias', 'dropout', 'truncation_factor', 'init_b', 'trunc_fact', 'n_groups']
+    str_keys = ['act', 'init']
+
+    grpconv_layer_config = dict()
+    grpconv_layer_config.update(get_num_configs(num_keys, 'groupconvopts', layer_table))
+    grpconv_layer_config.update(get_str_configs(str_keys, 'groupconvopts', layer_table))
+    grpconv_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    if 'trunc_fact' in grpconv_layer_config.keys():
+        grpconv_layer_config['truncation_factor'] = grpconv_layer_config['trunc_fact']
+        del grpconv_layer_config['trunc_fact']
+    if grpconv_layer_config.get('act') == 'Leaky Activation function':
+        grpconv_layer_config['act'] = 'Leaky'
+
+    dl_numval = layer_table['_DLNumVal_']
+    if dl_numval[layer_table['_DLKey1_'] == 'groupconvopts.no_bias'].any():
+        grpconv_layer_config['include_bias'] = False
+    else:
+        grpconv_layer_config['include_bias'] = True
+
+    padding_width = dl_numval[layer_table['_DLKey1_'] == 'groupconvopts.pad_left'].tolist()[0]
+    padding_height = dl_numval[layer_table['_DLKey1_'] == 'groupconvopts.pad_top'].tolist()[0]
+    if padding_width != -1:
+        grpconv_layer_config['padding_width'] = padding_width
+    if padding_height != -1:
+        grpconv_layer_config['padding_height'] = padding_height
+
+    layer = GroupConv2d(**grpconv_layer_config)
+    return layer
+
+
+def extract_channelshuffle_layer(layer_table):
+    '''
+    Extract layer configuration from a channel shuffle layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['scale', 'n_groups']
+    str_keys = ['init']
+
+    channel_shuffle_layer_config = dict()
+    channel_shuffle_layer_config.update(get_num_configs(num_keys, 'shuffleopts', layer_table))
+    channel_shuffle_layer_config.update(get_str_configs(str_keys, 'shuffleopts', layer_table))
+    channel_shuffle_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = ChannelShuffle(**channel_shuffle_layer_config)
+    return layer
+
+
+def extract_rpn_layer(layer_table):
+    '''
+    Extract layer configuration from a Region proposal layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['base_anchor_size', 'max_label_per_image', 'roi_train_sample_num', 'do_RPN_only',
+                'proposed_roi_num_train', 'proposed_roi_num_score', 'anchor_num_to_sample']
+    if __dev__:
+        num_keys += ['preNmsTopNScore', 'preNmsTopNTrain', 'preNmsTopNTrain', 'preNmsTopNScore']
+    str_key = 'act'
+
+    rpn_layer_config = dict()
+    for key in num_keys:
+        try:
+            rpn_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'dlregionproposalopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+
+    rpn_layer_config[str_key] = layer_table['_DLChrVal_'][
+        layer_table['_DLKey1_'] == 'dlregionproposalopts.' + underscore_to_camelcase(str_key)].tolist()[0]
+
+    num_scale = layer_table[layer_table['_DLChrVal_'] == 'anchorScale'].shape[0]
+    num_ratio = layer_table[layer_table['_DLChrVal_'] == 'anchorRatio'].shape[0]
+    rpn_layer_config['anchor_scale'] = []
+    rpn_layer_config['anchor_ratio'] = []
+
+    for i in range(num_scale):
+        rpn_layer_config['anchor_scale'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'dlregionproposalopts.anchorScale.{}'.format(i)].tolist()[0])
+
+    for i in range(num_ratio):
+        rpn_layer_config['anchor_ratio'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'dlregionproposalopts.anchorRatio.{}'.format(i)].tolist()[0])
+
+    rpn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = RegionProposal(**rpn_layer_config)
+    return layer
+
+
+def extract_roipooling_layer(layer_table):
+    '''
+    Extract layer configuration from a Region pooling layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['output_height', 'spatial_scale', 'output_width']
+    str_keys = ['act']
+
+    roipooling_layer_config = dict()
+    for key in num_keys:
+        try:
+            roipooling_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'dlroipoolingopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+    roipooling_layer_config.update(get_str_configs(str_keys, 'dlroipoolingopts', layer_table))
+
+    roipooling_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = ROIPooling(**roipooling_layer_config)
+    return layer
+
+
+def extract_fastrcnn_layer(layer_table):
+    '''
+    Extract layer configuration from a Fast RCNN layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['class_number', 'max_label_per_image', 'nms_iou_threshold', 'max_object_num', 'detection_threshold']
+
+    rpn_layer_config = dict()
+    for key in num_keys:
+        try:
+            rpn_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'dlfastrcnnopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+
+    rpn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = FastRCNN(**rpn_layer_config)
     return layer
