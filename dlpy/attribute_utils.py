@@ -57,9 +57,9 @@ def create_extended_attributes(conn, model_name, layers, data_spec, label_file_n
         
     '''
 
-    # ensure list of strings
+    # ensure list of layers
     if not isinstance(layers,list):
-        raise TypeError('Parameter layers must be a list of strings.')
+        raise TypeError('Parameter layers must be a list of Layer objects.')
     else:
         if not all(isinstance(x,Layer) for x in layers):
             raise TypeError('Some elements of the layers list are not Layer objects.')
