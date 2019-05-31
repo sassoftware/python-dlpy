@@ -41,7 +41,6 @@ def TextClassification(conn, model_table='text_classifier', neurons=10, n_blocks
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: text_classifier
     neurons : int, optional
         Specifies the number of neurons to be in each layer.
         Default: 10
@@ -88,7 +87,6 @@ def TextGeneration(conn, model_table='text_generator', neurons=10, max_output_le
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: text_generator
     neurons : int, optional
         Specifies the number of neurons to be in each layer.
         Default: 10
@@ -143,7 +141,6 @@ def SequenceLabeling(conn, model_table='sequence_labeling_model', neurons=10, n_
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: sequence_labeling_model
     neurons : int, optional
         Specifies the number of neurons to be in each layer.
         Default: 10
@@ -183,7 +180,6 @@ def SpeechRecognition(conn, model_table='acoustic_model', neurons=10, n_blocks=3
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: acoustic_model
     neurons : int, optional
         Specifies the number of neurons to be in each layer.
         Default: 10
@@ -224,7 +220,6 @@ def LeNet5(conn, model_table='LENET5', n_classes=10, n_channels=1, width=28, hei
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: LENET5
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model
         will automatically detect the number of classes based on the
@@ -301,7 +296,6 @@ def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, he
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: VGG11
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -389,7 +383,6 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: VGG13
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -489,7 +482,6 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: VGG16
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -783,7 +775,6 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: RESNET18_SAS
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -884,7 +875,6 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET18_CAFFE
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -986,7 +976,6 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET34_SAS
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1086,7 +1075,6 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
         Specifies the CAS connection object
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET34_CAFFE
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1191,7 +1179,6 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET50_SAS
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1295,7 +1282,6 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET50_CAFFE
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1453,7 +1439,6 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET101_SAS
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1555,7 +1540,6 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET101_CAFFE
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1713,7 +1697,6 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET152_SAS
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1816,7 +1799,6 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: RESNET152_CAFFE
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1975,7 +1957,6 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
-        Default: WIDE_RESNET
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -2087,7 +2068,6 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
         Specifies the connection of the CAS connection.
     model_table : string
         Specifies the name of CAS table to store the model.
-        Default: DenseNet
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -2191,7 +2171,6 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
         Specifies the connection of the CAS connection.
     model_table : string
         Specifies the name of CAS table to store the model.
-        Default: DENSENET121
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -2309,7 +2288,6 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
         Specifies the connection of the CAS connection.
     model_table : string
         Specifies the name of CAS table to store the model.
-        Default: Darknet_Reference
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -2405,7 +2383,6 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
         Specifies the connection of the CAS connection.
     model_table : string
         Specifies the name of CAS table to store the model.
-        Default: Darknet
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model
         will automatically detect the number of classes based on the
@@ -2546,7 +2523,6 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
         Specifies the anchor box values.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: Tiny-Yolov2
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2745,7 +2721,6 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
         Specifies the anchor box values.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: Tiny-Yolov2
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2962,7 +2937,6 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
         Specifies the anchor box values.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: Tiny-Yolov2
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -3119,7 +3093,6 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
         Specifies the connection of the CAS connection.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: Yolov1
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -3299,7 +3272,6 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
         Specifies the connection of the CAS connection.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
-        Default: Tiny-Yolov1
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -3446,7 +3418,6 @@ def InceptionV3(conn, model_table='InceptionV3',
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model in.
-        Default: InceptionV3
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
