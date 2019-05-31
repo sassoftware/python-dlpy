@@ -574,48 +574,6 @@ class TestModel(unittest.TestCase):
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
         
-    def test_model20(self):
-        try:
-            import onnx
-        except:
-            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
-
-        model1 = Sequential(self.s, model_table='Simple_CNN1')
-        model1.add(InputLayer(3, 224, 224))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(Dense(16))
-        model1.add(OutputLayer(act='softmax', n=2))
-
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-
-        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
-
-        self.s.table.loadtable(caslib=caslib,
-                               casout={'name': 'eee', 'replace': True},
-                               path=path)
-
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
-        self.assertTrue(r.severity == 0)
-
-        model1.save_weights_csv(self.data_dir)
-        import os
-        weights_path = os.path.join(self.data_dir, 'Simple_CNN1_weights.csv')
-        #model1.deploy(self.data_dir_local, output_format='onnx', model_weights=weights_path)
-
-        import tempfile
-        tmp_dir_to_dump = tempfile.gettempdir()
-
-        model1.deploy(tmp_dir_to_dump,  output_format='onnx', model_weights=weights_path)
-
-        os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
-
-        if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level='error', caslib=caslib)
-        
     def test_model21(self):
         try:
             import onnx
@@ -1183,115 +1141,6 @@ class TestModel(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             resulttbl3 = model1.forecast(testtbl, horizon=3)
         
-        
-    def test_imagescaler1(self):
-        # test import model with imagescaler
-        try:
-            import onnx
-            from onnx import helper, TensorProto
-        except:
-            unittest.TestCase.skipTest(self, 'onnx not found')
-
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR_LOCAL is not set in '
-                                             'the environment variables')
-
-        import numpy as np
-        n1 = helper.make_node('ImageScaler',
-                              ['X'],
-                              ['X1'],
-                              bias=[0., 0., 0.],
-                              scale=1.)
-        n2 = helper.make_node('Conv',
-                              inputs=['X1', 'W1'],
-                              outputs=['X2'],
-                              kernel_shape=[3, 3],
-                              pads=[0, 0, 0, 0])
-        n3 = helper.make_node('MatMul',
-                              inputs=['X2', 'W2'],
-                              outputs=['X3'])
-
-        W1 = np.ones((3, 3, 3)).astype(np.float32)
-        W2 = np.ones((9, 2)).astype(np.float32)
-
-        graph_def = helper.make_graph(
-            [n1, n2, n3],
-            name='test',
-            inputs=[
-                helper.make_tensor_value_info('X',
-                                              TensorProto.FLOAT,
-                                              [1, 3, 10, 10]),
-                helper.make_tensor_value_info('W1',
-                                              TensorProto.FLOAT,
-                                              [3, 3, 3]),
-                helper.make_tensor_value_info('W2',
-                                              TensorProto.FLOAT,
-                                              [9, 2])],
-            outputs=[
-                helper.make_tensor_value_info('X3',
-                                              TensorProto.FLOAT,
-                                              [1, 2])],
-            initializer=[
-                helper.make_tensor('W1',
-                                   TensorProto.FLOAT,
-                                   [3, 3, 3],
-                                   W1.flatten().astype(np.float32)),
-                helper.make_tensor('W2',
-                                   TensorProto.FLOAT,
-                                   [9, 2],
-                                   W2.flatten().astype(np.float32))])
-        onnx_model =  helper.make_model(graph_def)
-
-        model1 = Model.from_onnx_model(self.s, onnx_model)
-
-        l1 = model1.layers[0]
-        self.assertTrue(l1.type == 'input')
-        self.assertTrue(l1.config['offsets'] == [0., 0., 0.])
-        self.assertTrue(l1.config['scale'] == 1.)
-
-    def test_imagescaler2(self):
-        # test export model with imagescaler
-        try:
-            import onnx
-        except:
-            unittest.TestCase.skipTest(self, 'onnx not found')
-
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR_LOCAL is not set in '
-                                             'the environment variables')
-
-        model1 = Sequential(self.s, model_table='imagescaler2')
-        model1.add(InputLayer(n_channels=3,
-                              width=224,
-                              height=224,
-                              scale=1/255.,
-                              offsets=[0.1, 0.2, 0.3]))
-        model1.add(Conv2d(8, 7))
-        model1.add(Pooling(2))
-        model1.add(OutputLayer(act='softmax', n=2))
-
-        caslib, path, tmp_caslib = caslibify(self.s,
-                                 path=self.data_dir+'images.sashdat',
-                                 task='load')
-        self.s.table.loadtable(caslib=caslib,
-                               casout={'name': 'eee', 'replace': True},
-                               path=path)
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
-        self.assertTrue(r.severity == 0)
-
-        from dlpy.model_conversion.write_onnx_model import sas_to_onnx
-        onnx_model = sas_to_onnx(model1.layers,
-                                 self.s.CASTable('imagescaler2'),
-                                 self.s.CASTable('imagescaler2_weights'))
-
-        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[0], 0.1)
-        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[1], 0.2)
-        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[0].floats[2], 0.3)
-        self.assertAlmostEqual(onnx_model.graph.node[0].attribute[1].f, 1/255.)
-
-        if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
-        
     def test_load_reshape_detection(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -1405,7 +1254,47 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.summary['Output Size'].values[-3], (1, 1, 1024))
         model.print_summary()
 
-        
+    def test_heat_map_analysis(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR is not set in the environment variables')
+
+        from dlpy.applications import ResNet50_Caffe
+        from dlpy.images import ImageTable
+
+        pre_train_weight_file = os.path.join(self.data_dir, 'ResNet-50-model.caffemodel.h5')
+        my_im = ImageTable.load_files(self.s, self.data_dir+'giraffe_dolphin_small')
+        my_im_r = my_im.resize(width=224, inplace=False)
+
+        model = ResNet50_Caffe(self.s, model_table='ResNet50_Caffe',
+                               n_classes=2, n_channels=3, width=224, height=224, scale=1,
+                               random_flip='none', random_crop='none',
+                               offsets=my_im_r.channel_means, pre_trained_weights=True,
+                               pre_trained_weights_file=pre_train_weight_file,
+                               include_top=False)
+        model.fit(data=my_im_r, mini_batch_size=1, max_epochs=1)
+        model.heat_map_analysis(data=my_im_r, mask_width=None, mask_height=None, step_size=None,
+                                 max_display=1)
+
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(mask_width=56, mask_height=56,
+                           step_size=8, display=False))
+
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=my_im, mask_width=56,
+                           mask_height=56, step_size=8, display=False))
+
+        try:
+            from numpy import array
+        except:
+            unittest.TestCase.skipTest(self, 'numpy is not installed')
+        self.assertRaises(ValueError, lambda:model.heat_map_analysis(data=array([]), mask_width=56,
+                           mask_height=56, step_size=8, display=False))
+
+    def test_load_padding(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        model5 = Model(self.s)
+        model5.load(path = self.data_dir + 'vgg16.sashdat')
+
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

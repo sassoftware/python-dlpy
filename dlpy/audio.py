@@ -209,14 +209,19 @@ class AudioTable(CASTable):
 
         Returns
         -------
-        ???
+        :class:`CASTable`
+
+        Raises
+        ------
+        DLPyError
+            If anything goes wrong, it complains and prints the appropriate message.
 
         '''
-
+        
         if task == 'speech2text':
             return cls.load_audio_metadata_speechrecognition(conn, path, audio_path)
         else:
-            raise DLPyError("We do not support this task yet!.")
+            raise DLPyError("We do not support this task yet!")
 
     @classmethod
     def create_audio_table(cls, conn, data_path, metadata_path,
@@ -252,7 +257,7 @@ class AudioTable(CASTable):
         Raises
         ------
         DLPyError
-            If anything goes wrong at any in the process of creating this AudioTable, it complains and
+            If anything goes wrong at any point in the process of creating this AudioTable, it complains and
             prints the appropriate message.
 
         '''
