@@ -28,6 +28,7 @@ import warnings
 import struct
 from dlpy.model import DataSpec
 from dlpy.layers import Layer
+from dlpy.utils import DLPyError
 
 def create_extended_attributes(conn, model_name, layers, data_spec, label_file_name=None):
 
@@ -462,9 +463,12 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
                         raise DLPyError('You must specify the number of neurons for the output\n'
                                         'layer variables when setting attributes.\n')
                                         
-                    n_levels = layer.config['n']
+                    n_levels = int(layer.config['n'])
                     task_type = '0x8'
                     
+                    # create needed labels for nominal variables
+                    ljust_labels = create_class_labels(n_levels, labels)
+
                 elif layer.type == 'detection':
                     if layer.config['class_number'] is None:
                         raise DLPyError('You must specify the number of classes for the object\n'
@@ -475,22 +479,7 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
                     task_type = '0x800000'
                     
                     # create needed labels for nominal variables
-                    ljust_labels = []
-                    if labels is None:
-                        # strictly numeric labels (e.g. 0, 1, ...)
-                        for ii in range(n_levels):
-                            ljust_labels.append(str(ii).ljust(12))
-                    else:
-                        # user-supplied labels
-                        if n_levels != len(labels):
-                            raise DLPyError('The number of class labels does not match\n'
-                                            'the number of class levels for object detection.\n')
-                        else:
-                            for lval in labels:
-                                if len(lval) > 12:
-                                    ljust_labels.append(lval[:12])
-                                else:
-                                    ljust_labels.append(lval.ljust(12))
+                    ljust_labels = create_class_labels(n_levels, labels)
                                     
                 else:
                     raise DLPyError('Attributes can only be set for variables defined in input,\n'
@@ -772,3 +761,44 @@ def export_attr_xml(conn, model_name, file_name):
     with open(file_name, "w") as myfile:
         myfile.write(ascii_text)
     myfile.close()                                                  
+
+def create_class_labels(n_levels, labels=None):
+
+    '''
+    Create class labels
+
+    Create class labels with or without user-defined labels.
+
+    Parameters
+    ----------
+    n_levels : integer
+        The number of levels for each classification variable.
+    labels : list of string or None
+        Specifies the class labels
+
+    Returns
+    -------
+    list
+        Left-justified class labels.
+
+    '''
+
+    # create needed labels for nominal variables
+    ljust_labels = []
+    if labels is None:
+        # strictly numeric labels (e.g. 0, 1, ...)
+        for ii in range(n_levels):
+            ljust_labels.append(str(ii).ljust(12))
+    else:
+        # user-supplied labels
+        if n_levels != len(labels):
+            raise DLPyError('The number of class labels does not match\n'
+                            'the number of class levels for object detection.\n')
+        else:
+            for lval in labels:
+                if len(lval) > 12:
+                    ljust_labels.append(lval[:12])
+                else:
+                    ljust_labels.append(lval.ljust(12))
+
+    return ljust_labels

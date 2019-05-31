@@ -405,11 +405,13 @@ def write_keras_hdf5(model, rnn_support, hdf5_out):
 
         # determine layers with weights
         filtered_layers = []
+        filtered_layer_names = []
         for layer in model.layers:
             weights = layer.weights
             if weights:
                 filtered_layers.append(layer)
-
+                filtered_layer_names.append(layer.name)
+                
         # determine permutation vector associated with flattening layer (if it exists)
         if model_type == 'CNN':
             flatten_layer_index = -1
@@ -446,9 +448,17 @@ def write_keras_hdf5(model, rnn_support, hdf5_out):
             perm_index = []
             permute_layer_name = None
 
+        # populate attributes with layer names
+        attrib_layer_names = []
+        for name in filtered_layer_names:
+            layer = model.get_layer(name=name)
+            class_name, sublayers = remove_layer_wrapper(layer)
+            for tlayer in sublayers:
+                attrib_layer_names.append(tlayer.name)
+                            
+        f_out.attrs['layer_names'] = [replace_forward_slash(l).encode('utf8') for l in attrib_layer_names]            
         # let Keras read weights, reformat, and write to SAS-compatible file
         for k, layer in enumerate(filtered_layers):
-            g_out = f_out.create_group(layer.name.replace('/','_'))
             symbolic_weights = layer.weights
             weight_values = K.batch_get_value(symbolic_weights)
             weight_names = []
@@ -457,7 +467,8 @@ def write_keras_hdf5(model, rnn_support, hdf5_out):
                     name = str(w.name)
                 else:
                     name = 'param_' + str(i)
-                weight_names.append(name.encode('utf8'))
+                #weight_names.append(name.encode('utf8'))
+                weight_names.append(name)
 
             # layer modification from here:
             new_weight_names = []
@@ -473,6 +484,10 @@ def write_keras_hdf5(model, rnn_support, hdf5_out):
                                  ' weights, but the saved weights have ' +
                                  str(len(weight_values)) +
                                  ' elements.')
+                                 
+            # create CPU-compatible layer
+            cpu_layer = create_cpu_compatible_layer(layer, model_type)
+                                 
             # read/write weights
             class_name, sublayers = remove_layer_wrapper(layer)
             for tlayer in sublayers:

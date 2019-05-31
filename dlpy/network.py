@@ -476,7 +476,7 @@ class Network(Layer):
                           
         if verbose:
             print(output_code)
-        
+
         exec(output_code)
         temp_name = conn
         exec('sas_model_gen(temp_name)')
