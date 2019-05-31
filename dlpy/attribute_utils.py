@@ -329,7 +329,7 @@ def create_varlist_attributes(conn, model_name, layers, ds_info):
     Create/override extended model attributes for variable(s)
 
     Update the extended model attributes for the model variable(s).
-    The data spec attribute(s) must have been created prior to 
+    The data spec attribute(s) must have been created prior to
     calling this function.
 
     Parameters
@@ -341,7 +341,7 @@ def create_varlist_attributes(conn, model_name, layers, ds_info):
     layers : list of strings
         Specifies the names of all the layers in the deep learning
         model
-    data_info: dictionary
+    ds_info: dictionary
         parsed data spec information
 
     '''
@@ -396,7 +396,7 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
     layers : list of strings
         Specifies the names of all the layers in the deep learning
         model
-    data_info: dictionary
+    ds_info: dictionary
         parsed data spec information
     labels: list, optional
         list of string values representing class labels
@@ -548,7 +548,7 @@ def create_inputparm_attributes(conn, model_name, layers, ds_info):
     layers : list of strings
         Specifies the names of all the layers in the deep learning
         model
-    data_info: dictionary
+    ds_info: dictionary
         parsed data spec information
 
     '''
@@ -606,7 +606,7 @@ def sas_var_info(var_type):
 
     Parameters
     ----------
-    type_ : string
+    var_type : string
         Specifies the type of the input data in the data spec.
         Valid Values: NUMERICNOMINAL, NUMNOM, TEXT, IMAGE, OBJECTDETECTION
 
@@ -775,4 +775,4 @@ def export_attr_xml(conn, model_name, file_name):
     ascii_text = rt['xmlblob'].decode('utf8')
     with open(file_name, "w") as myfile:
         myfile.write(ascii_text)
-    myfile.close()                                                  
+    myfile.close()                                                       
