@@ -42,6 +42,11 @@ of [PyTorch](https://pytorch.org/) flavor.
 - A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
 - It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
 - Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
+#### External Libraries ####
+The following versions of external libraries are supported:
+- ONNX: versions >= 1.5.0
+- Keras: versions >= 2.1.3
+
 
 ### Getting Started
 
