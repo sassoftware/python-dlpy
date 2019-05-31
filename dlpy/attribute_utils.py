@@ -329,7 +329,7 @@ def create_varlist_attributes(conn, model_name, layers, ds_info):
     Create/override extended model attributes for variable(s)
 
     Update the extended model attributes for the model variable(s).
-    The data spec attribute(s) must have been created prior to 
+    The data spec attribute(s) must have been created prior to
     calling this function.
 
     Parameters
@@ -340,7 +340,7 @@ def create_varlist_attributes(conn, model_name, layers, ds_info):
         Specifies the name of the deep learning model
     layers : list of :class:`Layer`
         Specifies all the layers in the deep learning model
-    data_info: dictionary
+    ds_info: dictionary
         parsed data spec information
 
     '''
@@ -394,7 +394,7 @@ def create_varinfo_attributes(conn, model_name, layers, ds_info, labels=None):
         Specifies the name of the deep learning model
     layers : list of :class:`Layer`
         Specifies all the layers in the deep learning model
-    data_info: dictionary
+    ds_info: dictionary
         parsed data spec information
     labels: list, optional
         list of string values representing class labels
@@ -533,7 +533,7 @@ def create_inputparm_attributes(conn, model_name, layers, ds_info):
         Specifies the name of the deep learning model
     layers : list of :class:`Layer`
         Specifies all the layers in the deep learning model
-    data_info: dictionary
+    ds_info: dictionary
         parsed data spec information
 
     '''
@@ -591,7 +591,7 @@ def sas_var_info(var_type):
 
     Parameters
     ----------
-    type_ : string
+    var_type : string
         Specifies the type of the input data in the data spec.
         Valid Values: NUMERICNOMINAL, NUMNOM, TEXT, IMAGE, OBJECTDETECTION
 
