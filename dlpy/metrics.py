@@ -838,7 +838,7 @@ def mean_squared_log_error(y_true, y_pred, castable=None, id_vars=None):
 
 def r2_score(y_true, y_pred, castable=None, id_vars=None):
     '''
-    Compute the :math:`R^2` (coefficient of determination) regression score. 
+    Compute the R^2 (coefficient of determination) regression score. 
 
     Parameters
     ----------
