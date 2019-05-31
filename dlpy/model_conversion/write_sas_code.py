@@ -22,7 +22,7 @@
 # model/input layer definition
 def write_input_layer(model_name='sas', layer_name='data', channels='-1',
                       width='-1', height='-1', scale='1.0', offsets=None,
-                      std=None):
+                      std=None, model_type='CNN'):
     '''
     Generate Python code defining a SAS deep learning input layer
 
@@ -46,6 +46,8 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
     std : list
        image channel standardization, the pixels of each image channel will be divided
        by these values
+    model_type : string
+       Specifies the deep learning model type (either CNN or RNN)
 
     Returns
     -------
@@ -64,49 +66,68 @@ def write_input_layer(model_name='sas', layer_name='data', channels='-1',
     else:
         str_std = repr(std)
 
-    out = [
-        'def sas_model_gen(s, input_crop_type=None, input_channel_offset=' + str_offset + ', norm_std = ' + str_std + ', input_image_size=None):',
-        '   # quick check for deeplearn actionset',
-        '   actionset_list = s.actionsetinfo().setinfo.actionset.tolist()',
-        '   actionset_list = [item.lower() for item in actionset_list]',
-        '   if "deeplearn" not in actionset_list:s.loadactionset("deeplearn")',
-        '   ',
-        '   # quick error-checking and default setting',
-        '   if (input_crop_type is None):',
-        '       input_crop_type="NONE"',
-        '   else:',
-        '       if (input_crop_type.upper() != "NONE") and (input_crop_type.upper() != "UNIQUE"):',
-        '           raise ValueError("Parameter input_crop_type can only be NONE or UNIQUE")',
-        '',
-        '   if (input_image_size is not None):',
-        '       channels = input_image_size[0]',
-        '       if (len(input_image_size) == 2):',
-        '           height = width = input_image_size[1]',
-        '       elif (len(inputImageSize) == 3):',
-        '           height,width = input_image_size[1:]',
-        '       else:',
-        '           raise ValueError("Parameter input_image_size must be a tuple with two or three entries")',
-        '',
-        '   # instantiate model',
-        '   s.buildModel(model=dict(name=' + repr(model_name) + ',replace=True),type="CNN")',
-        '',
-        '   # input layer',
-        '   nchannels=' + channels,
-        '   if input_channel_offset is None and nchannels==3:',
-        '       print("INFO: Setting channel mean values to ImageNet means")',
-        '       input_channel_offset = [103.939, 116.779, 123.68]',
-        '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
-        '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
-        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset, offsetStd=norm_std))',
-        '   elif input_channel_offset is not None:',
-        '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
-        '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
-        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset, offsetStd=norm_std))',
-        '   else:',
-        '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
-        '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
-        '                  scale = ' + scale + ', randomcrop=input_crop_type, offsetStd=norm_std))'
-    ]
+    if model_type == 'CNN':
+        out = [
+            'def sas_model_gen(s, input_crop_type=None, input_channel_offset=' + str_offset + ', norm_std = ' + str_std + ', input_image_size=None):',
+            '   # quick check for deeplearn actionset',
+            '   actionset_list = s.actionsetinfo().setinfo.actionset.tolist()',
+            '   actionset_list = [item.lower() for item in actionset_list]',
+            '   if "deeplearn" not in actionset_list:s.loadactionset("deeplearn")',
+            '   ',
+            '   # quick error-checking and default setting',
+            '   if (input_crop_type is None):',
+            '       input_crop_type="NONE"',
+            '   else:',
+            '       if (input_crop_type.upper() != "NONE") and (input_crop_type.upper() != "UNIQUE"):',
+            '           raise ValueError("Parameter input_crop_type can only be NONE or UNIQUE")',
+            '',
+            '   if (input_image_size is not None):',
+            '       channels = input_image_size[0]',
+            '       if (len(input_image_size) == 2):',
+            '           height = width = input_image_size[1]',
+            '       elif (len(inputImageSize) == 3):',
+            '           height,width = input_image_size[1:]',
+            '       else:',
+            '           raise ValueError("Parameter input_image_size must be a tuple with two or three entries")',
+            '',
+            '   # instantiate model',
+            '   s.buildModel(model=dict(name=' + repr(model_name) + ',replace=True),type="CNN")',
+            '',
+            '   # input layer',
+            '   nchannels=' + channels,
+            '   if input_channel_offset is None and nchannels==3:',
+            '       print("INFO: Setting channel mean values to ImageNet means")',
+            '       input_channel_offset = [103.939, 116.779, 123.68]',
+            '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
+            '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset, offsetStd=norm_std))',
+            '   elif input_channel_offset is not None:',
+            '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
+            '                  scale = ' + scale + ', randomcrop=input_crop_type, offsets=input_channel_offset, offsetStd=norm_std))',
+            '   else:',
+            '       s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '                  layer=dict( type="input", nchannels=' + channels + ', width=' + width + ', height=' + height + ',',
+            '                  scale = ' + scale + ', randomcrop=input_crop_type, offsetStd=norm_std))'
+        ]
+    else:
+        out = [
+            'def sas_model_gen(s):',
+            '   # quick check for deeplearn actionset',
+            '   actionset_list = s.actionsetinfo().setinfo.actionset.tolist()',
+            '   actionset_list = [item.lower() for item in actionset_list]',
+            '   if "deeplearn" not in actionset_list:s.loadactionset("deeplearn")',
+            '   ',
+            '',
+            '   # instantiate model',
+            '   s.buildModel(model=dict(name=' + repr(model_name) + ',replace=True),type="RNN")',
+            '',
+            '   # input layer',
+            '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+            '              layer=dict( type="input", nchannels=' + channels + ', width=' + width + ',',
+            '                           height=' + height + '))'
+        ]
+    
     return '\n'.join(out)
 
 
@@ -293,7 +314,7 @@ def write_residual_layer(model_name='sas', layer_name='residual',
 def write_full_connect_layer(model_name='sas', layer_name='fullconnect',
                              nrof_neurons='-1', nobias='true',
                              activation='identity', type='fullconnect', dropout='0',
-                             src_layer='none'):
+                             src_layer='none', ctc_loss=False):
     '''
     Generate Python code defining a SAS deep learning fully connected layer
 
@@ -315,6 +336,9 @@ def write_full_connect_layer(model_name='sas', layer_name='fullconnect',
        dropout factor (0 < dropout < 1.0)
     src_layer : string, optional
        source layer(s) for the convolution layer
+    ctc_loss : boolean, optional
+       specifies whether the CTC loss function is used for 
+       an output layer
 
     Returns
     -------
@@ -329,12 +353,18 @@ def write_full_connect_layer(model_name='sas', layer_name='fullconnect',
             '              srcLayers=' + src_layer + ')'
         ]
     else:
+        if ctc_loss:
+            loss_error = 'CTC'
+        else:
+            loss_error = 'AUTO'
         out = [
             '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
             '              layer=dict(type=' + repr(type) + ', n=' + nrof_neurons + ',',
-            '                         nobias=' + nobias + ', act=' + repr(activation) + '),',
+            '                         nobias=' + nobias + ', act=' + repr(activation) + ',',
+            '                         error = "' + loss_error + '"),',
             '              srcLayers=' + src_layer + ')'
         ]
+        
     return '\n'.join(out)
 
 
@@ -367,6 +397,50 @@ def write_concatenate_layer(model_name='sas', layer_name='concat',
     ]
     return '\n'.join(out)
 
+# recurrent layer definition
+def write_recurrent_layer(model_name='sas', layer_name='recurrent',
+                          activation='tanh', src_layer = 'none',                          
+                          rnn_type='rnn', seq_output='samelength',
+                          direction='forward', rnn_size=1,
+                          dropout=0.0):
+    '''
+    Generate Python code defining a SAS deep learning recurrent layer
+
+    Parameters
+    ----------
+    model_name : string, optional
+        Name for deep learning model
+    layer_name : string, optional
+        Layer name
+    activation : string, optional
+        activation function
+    src_layer : string, optional
+        source layer(s) for the concat layer
+    rnn_type : string, optional
+        one of 'rnn', 'lstm', or 'gru'
+    seq_output : string, optional
+        one of 'samelength' or 'encoding'
+    direction : boolean, optional
+        indicates whether sequence processing 
+        performed in forward or reverse direction
+    rnn_size : integer
+        size of hidden dimension
+    dropout : float, optional
+        dropout rate, values range from 0.0 to 1.0
+
+    Returns
+    -------
+    string
+
+    '''
+    out = [
+        '   s.addLayer(model=' + repr(model_name) + ', name=' + repr(layer_name) + ',',
+        '              layer=dict(type="recurrent", n=' + str(rnn_size) + ',',
+        '                         rnnType="' + rnn_type + '", act=' + repr(activation) + ', dropout=' + str(dropout) + ',',
+        '                         outputType = "' + seq_output + '", reversed=' + repr(direction) + '),',
+        '              srcLayers=' + src_layer + ')'
+    ]
+    return '\n'.join(out)    
 
 # Python __main__ function
 def write_main_entry(model_name):

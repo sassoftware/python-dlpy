@@ -28,15 +28,18 @@ if StrictVersion( keras.__version__) < '2.1.3' or StrictVersion( keras.__version
     raise DLPyError('This keras version ('+keras.__version__+') is not supported, '
                                                              'please use a version >= 2.1.3 and <= 2.1.6')
 
+from .model_conversion_utils import replace_forward_slash, remove_layer_wrapper
 from .write_keras_model_parm import write_keras_hdf5
 from .write_sas_code import (write_input_layer, write_convolution_layer,
                              write_batch_norm_layer, write_pooling_layer,
                              write_residual_layer, write_full_connect_layer,
-                             write_concatenate_layer, write_main_entry)
+                             write_concatenate_layer, write_main_entry,
+                             write_recurrent_layer)
 
 computation_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d',
                              'dense', 'batchnormalization', 'add', 'concatenate',
-                             'globalaveragepooling2d']
+                             'globalaveragepooling2d', 'simplernn', 'lstm', 'gru', 
+                             'cudnnlstm', 'cudnngru']
 dropout_layer_classes = ['averagepooling2d', 'maxpooling2d', 'conv2d', 'dense']
 
 
@@ -47,101 +50,134 @@ class KerasParseError(ValueError):
     '''
 
 
-def keras_to_sas(model, model_name=None, offsets=None, std=None, scale=1.0):
+def keras_to_sas(model, rnn_support, model_name=None, offsets=None, std=None, scale=1.0, max_num_frames=-1, verbose=False):
     output_code = ''
     layer_activation = {}
     src_layer = {}
     layer_dropout = {}
     if model_name is None:
         model_name = model.name
+    model_type='CNN'
+    n_lambda_layer = 0
     for layer in model.layers:
-        class_name = layer.__class__.__name__.lower()
-        if (class_name in computation_layer_classes) or (class_name == 'zeropadding2d'):
-            comp_layer_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
-            source_str = make_source_str(comp_layer_name)
-            src_layer.update({layer.name: source_str})
-        elif (class_name == 'activation'):
-            tmp_name = find_previous_computation_layer(
-                model, layer.name, computation_layer_classes)
-            tmp_act = extract_activation(layer)
-            layer_activation.update({tmp_name[0]: tmp_act})
-        elif (class_name == 'dropout'):
-            tmp = find_next_computation_layer(model, layer, dropout_layer_classes)
-            dconfig = layer.get_config()
-            layer_dropout.update({tmp: dconfig['rate']})
-
+        class_name, sublayers = remove_layer_wrapper(layer)
+        for tlayer in sublayers:
+            if (class_name in computation_layer_classes) or (class_name == 'zeropadding2d'):
+                comp_layer_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
+                source_str = make_source_str(comp_layer_name)
+                src_layer.update({tlayer.name: source_str})
+            elif class_name == 'activation':
+                tmp_name = find_previous_computation_layer(model, layer.name, computation_layer_classes)
+                tmp_act = extract_activation(layer)
+                layer_activation.update({tmp_name[0]: tmp_act})
+            elif class_name == 'dropout':
+                tmp = find_next_computation_layer(model, layer, dropout_layer_classes)
+                dconfig = layer.get_config()
+                layer_dropout.update({tmp: dconfig['rate']})
+            # check for RNN model
+            if class_name in ['simplernn', 'lstm', 'gru', 'cudnnlstm', 'cudnngru']:
+                if rnn_support:
+                    model_type = 'RNN'
+                else:
+                    raise DLPyError('RNN model detected: your Viya deployment does not support '
+                                    'importing an RNN model.')
+            # check for Lambda layers
+            if layer.__class__.__name__.lower() == 'lambda':
+                n_lambda_layer = n_lambda_layer + 1
+                
     # if first layer is not an input layer, generate the correct
     # input layer code for a SAS deep learning model
     layer = model.layers[0]
-    if (layer.__class__.__name__.lower() != 'inputlayer'):
-        sas_code = keras_input_layer(layer, model_name, False, offsets, std, scale)
+    if layer.__class__.__name__.lower() != 'inputlayer':
+        sas_code = keras_input_layer(layer, model_name, False, offsets, std, scale, model_type, max_num_frames)
         # write SAS code for input layer
         if sas_code:
             output_code = output_code + sas_code + '\n\n'
         else:
             raise KerasParseError('Unable to generate an input layer')
-
+  
+    # only one Lambda layer supported, and it must be the last model layer
+    # assumption: CTC loss must be specified for an RNN model using a 
+    #             Lambda layer
+    ctc_loss = False
+    if n_lambda_layer > 0:
+        layer = model.layers[-1]
+        if (n_lambda_layer == 1) and (layer.__class__.__name__.lower() == 'lambda') and (model_type == 'RNN'):
+            ctc_loss = True
+            if verbose:
+                print('WARNING - detected a Lambda layer terminating the Keras model.  This is assumed to be '
+                      'the CTC loss function definition.  If that is incorrect, please revise your Keras model.')
+        else:
+            raise KerasParseError('Detected one or more Lambda layers. Only 1 Lambda '
+                                  'layer is supported for RNN models, and it must be '
+                                  'the last layer.')            
+            
     # extract layers and apply activation functions as needed
     zero_pad = None
     for layer in model.layers:
-        class_name = layer.__class__.__name__.lower()
-
-        sas_code = None
-
-        # determine activation function
-        if (class_name in ['conv2d', 'batchnormalization', 'add', 'dense']):
-            if (layer.name in layer_activation.keys()):
-                act_func = layer_activation[layer.name]
+        class_name, sublayers = remove_layer_wrapper(layer)
+        for tlayer in sublayers:
+            sas_code = None
+            
+            # determine activation function
+            if class_name in ['conv2d', 'batchnormalization', 'add', 'dense']:
+                if layer.name in layer_activation.keys():
+                    act_func = layer_activation[layer.name]
+                else:
+                    act_func = None
             else:
                 act_func = None
-        else:
-            act_func = None
-
-        # average/max pooling/globalaveragepooling
-        if (class_name in ['averagepooling2d', 'maxpooling2d', 
-                           'globalaveragepooling2d']):
-            sas_code = keras_pooling_layer(layer, model_name, class_name,
-                                           src_layer, layer_dropout, zero_pad)
-            zero_pad = None
-        # 2D convolution
-        elif (class_name == 'conv2d'):
-            sas_code = keras_convolution_layer(layer, model_name, act_func,
+                
+            # average/max pooling/globalaveragepooling
+            if class_name in ['averagepooling2d', 'maxpooling2d', 
+                               'globalaveragepooling2d']:
+                sas_code = keras_pooling_layer(tlayer, model_name, class_name,
                                                src_layer, layer_dropout, zero_pad)
-            zero_pad = None
-        # batch normalization
-        elif (class_name == 'batchnormalization'):
-            sas_code = keras_batchnormalization_layer(layer, model_name,
-                                                      act_func, src_layer)
-        # input layer
-        elif (class_name == 'inputlayer'):
-            sas_code = keras_input_layer(layer, model_name, True, offsets, std, scale)
-        # add
-        elif (class_name == 'add'):
-            sas_code = keras_residual_layer(layer, model_name,
-                                            act_func, src_layer)
-        elif (class_name in ['activation', 'flatten', 'dropout', 'zeropadding2d']):
-            pass
-        # fully connected
-        elif (class_name == 'dense'):
-            sas_code = keras_full_connect_layer(layer, model_name, act_func,
-                                                src_layer, layer_dropout)
-        # concatenate
-        elif (class_name == 'concatenate'):
-            sas_code = keras_concatenate_layer(layer, model_name,
-                                               act_func, src_layer)
-        else:
-            print('WARNING: ' + class_name + ' is an unsupported layer '
-                                             'type - your SAS model may be incomplete')
+                zero_pad = None
+            # 2D convolution
+            elif class_name == 'conv2d':
+                sas_code = keras_convolution_layer(tlayer, model_name, act_func,
+                                                   src_layer, layer_dropout, zero_pad)
+                zero_pad = None
+            # batch normalization
+            elif class_name == 'batchnormalization':
+                sas_code = keras_batchnormalization_layer(tlayer, model_name,
+                                                          act_func, src_layer)
+            # input layer
+            elif class_name == 'inputlayer':
+                sas_code = keras_input_layer(tlayer, model_name, True, offsets, std, scale, model_type, max_num_frames)
+            # add
+            elif class_name == 'add':
+                sas_code = keras_residual_layer(tlayer, model_name,
+                                                act_func, src_layer)
+            elif class_name in ['activation', 'flatten', 'dropout', 'zeropadding2d', 'lambda']:
+                pass
+            # fully connected
+            elif class_name == 'dense':
+                sas_code = keras_full_connect_layer(tlayer, model_name, act_func,
+                                                    src_layer, layer_dropout, ctc_loss)
+            # concatenate
+            elif class_name == 'concatenate':
+                sas_code = keras_concatenate_layer(tlayer, model_name,
+                                                   act_func, src_layer)
+            # recurrent
+            elif class_name in ['simplernn', 'lstm', 'gru', 'cudnnlstm', 'cudnngru']:
+                sas_code = keras_recurrent_layer(tlayer, model_name,
+                                                 act_func, src_layer)
+            else:
+                raise KerasParseError(class_name + ' is an unsupported layer '
+                                      'type - model conversion failed')
 
-        # write SAS code associated with Keras layer
-        if sas_code:
-            output_code = output_code + sas_code + '\n\n'
-        # zero-padding
-        elif (class_name == 'zeropadding2d'):
-            zero_pad = keras_zeropad2d_layer(layer, src_layer)
-        elif (class_name not in ['activation', 'flatten', 'dropout']):
-            print('WARNING: unable to generate SAS definition '
-                  'for layer ' + class_name)
+            # write SAS code associated with Keras layer
+            if sas_code:
+                output_code = output_code + sas_code + '\n\n'
+            # zero-padding
+            elif (class_name == 'zeropadding2d'):
+                zero_pad = keras_zeropad2d_layer(tlayer, src_layer)
+            elif (class_name not in ['activation', 'flatten', 'dropout', 'lambda']):
+                if verbose:
+                    print('WARNING: unable to generate SAS definition '
+                          'for layer ' + tlayer.name)
     return output_code
 
 
@@ -384,7 +420,7 @@ def keras_batchnormalization_layer(layer, model_name, act_func, src_layer):
 
 
 # create SAS input layer
-def keras_input_layer(layer, model_name, input_layer, offsets, std, scale):
+def keras_input_layer(layer, model_name, input_layer, offsets, std, scale, model_type, max_num_frames):
     '''
     Extract input layer parameters from layer definition object
 
@@ -403,7 +439,11 @@ def keras_input_layer(layer, model_name, input_layer, offsets, std, scale):
         The pixel values of the input data are divided by these
         values, used if the data is an image.
     scale : float
-        Specifies the scaling factor to apply to each image.            
+        Specifies the scaling factor to apply to each image.
+    model_type : string
+        Specifies the deep learning model type (either CNN or RNN).
+    max_num_frames : int
+        Specifies the maximum number of frames for sequence processing.
        
 
     Returns
@@ -413,11 +453,19 @@ def keras_input_layer(layer, model_name, input_layer, offsets, std, scale):
 
     '''
     config = layer.get_config()
-
-    if (K.image_data_format() == 'channels_first'):
-        dummy, C, H, W = config['batch_input_shape']
+        
+    if model_type == 'CNN':
+        if (K.image_data_format() == 'channels_first'):
+            dummy, C, H, W = config['batch_input_shape']
+        else:
+            dummy, H, W, C = config['batch_input_shape']
     else:
-        dummy, H, W, C = config['batch_input_shape']
+        if len(config['batch_input_shape']) == 3:
+            d1, d2, ts = config['batch_input_shape']
+            H = C = 1
+            W = ts*max_num_frames
+        else:
+            return None
 
     # generate name based on whether layer is actually an input layer
     if (input_layer):
@@ -428,7 +476,8 @@ def keras_input_layer(layer, model_name, input_layer, offsets, std, scale):
     return write_input_layer(model_name=model_name, layer_name=input_name,
                              channels=str(C), width=str(W),
                              height=str(H), scale=str(scale), 
-                             offsets=offsets, std=std)
+                             offsets=offsets, std=std,
+                             model_type=model_type)
 
 
 # create SAS residual layer
@@ -477,7 +526,7 @@ def keras_residual_layer(layer, model_name, act_func, src_layer):
 
 
 # create SAS fully connected layer
-def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropout):
+def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropout, ctc_loss):
     '''
     Extract fully connected layer parameters from layer definition object
 
@@ -494,6 +543,8 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
        fully connected layer
     layer_dropout : dict
        Dictionary containing dropout layer names (keys) and dropout rates (values)
+    ctc_loss : boolean
+       Specifies whether to use CTC loss function
 
     Returns
     -------
@@ -543,8 +594,8 @@ def keras_full_connect_layer(layer, model_name, act_func, src_layer, layer_dropo
                                     layer_name=replace_forward_slash(layer.name),
                                     nrof_neurons=str(nrof_neurons), nobias=bias_str,
                                     activation=layer_act_func, type=layer_type,
-                                    dropout=str(dropout), src_layer=source_str)
-
+                                    dropout=str(dropout), src_layer=source_str,
+                                    ctc_loss=ctc_loss)
 
 # create SAS concatenate layer
 def keras_concatenate_layer(layer, model_name, act_func, src_layer):
@@ -590,6 +641,93 @@ def keras_concatenate_layer(layer, model_name, act_func, src_layer):
                                    layer_name=replace_forward_slash(layer.name),
                                    activation=layer_act_func, src_layer=source_str)
 
+# create SAS concatenate layer
+def keras_recurrent_layer(layer, model_name, act_func, src_layer):
+    '''
+    Extract recurrent layer parameters from layer definition object
+
+    Parameters
+    ----------
+    layer : Layer object
+       Concatenate layer
+    model_name : string
+       Deep learning model name
+    src_layer : list-of-Layer objects
+       Layer objects corresponding to source layer(s) for
+       residual layer
+
+    Returns
+    -------
+    string
+        String value with SAS deep learning residual layer definition
+
+    '''
+    config = layer.get_config()
+        
+    # extract source layer(s)
+    if layer.name in src_layer.keys():
+        source_str = replace_forward_slash(src_layer[layer.name])
+    else:
+        raise KerasParseError('Unable to determine source layers for '
+                              'recurrent layer = ' + layer.name)
+
+    # activation
+    if (act_func):
+        layer_act_func = map_keras_activation(layer, act_func)    
+    elif 'activation' in config.keys():
+        layer_act_func = map_keras_activation(layer, config['activation'])
+    else:
+        layer_act_func = 'auto'
+        
+    # layer type
+    if layer.__class__.__name__.lower() in ['lstm', 'cudnnlstm']:
+        rnn_type = 'lstm'
+    elif layer.__class__.__name__.lower() in ['gru', 'cudnngru']:
+        rnn_type = 'gru'
+    else:
+        rnn_type = 'rnn'
+        
+    # sequence output type
+    if 'return_sequences' in config.keys():
+        if config['return_sequences']:
+            seq_output = 'samelength'
+        else:
+            seq_output = 'encoding'
+    else:
+        seq_output = 'samelength'
+        
+    # forward/reverse layer
+    if 'go_backwards' in config.keys():
+        direction = config['go_backwards']
+    else:
+        direction = False
+        
+    # hidden units
+    if 'units' in config.keys():
+        rnn_size = config['units']
+    else:
+        raise KerasParseError('Number of hidden neurons not specified '
+                              'for layer ' + layer.name)
+    
+    # bias
+    if 'use_bias' in config.keys():
+        if not config['use_bias']:
+            raise KerasParseError('SAS deep learning requires the use of bias '
+                                  'terms.  Cannot import layer ' + layer.name)
+                              
+    # dropout
+    if 'dropout' in config.keys():
+        dropout = config['dropout']
+    else:
+        dropout = 0.0
+
+    return write_recurrent_layer(model_name=model_name, 
+                                 layer_name=replace_forward_slash(layer.name),
+                                 activation=layer_act_func, src_layer=source_str,
+                                 rnn_type=rnn_type, seq_output=seq_output,
+                                 direction=direction, rnn_size=rnn_size,
+                                 dropout=dropout)
+                                   
 # extract information from ZeroPadding2D layer
 def keras_zeropad2d_layer(layer, src_layer):
     '''
@@ -664,18 +802,22 @@ def map_keras_activation(layer, act_func):
 
     '''
     class_name = layer.__class__.__name__.lower()
-    # convolution layer
-    if (class_name in ['conv2d', 'batchnormalization']):
+    if class_name in ['conv2d', 'batchnormalization']:
         map_dict = {'softmax': None, 'elu': 'elu', 'selu': None,
                     'softplus': 'softplus', 'softsign': None,
                     'relu': 'relu', 'tanh': 'tanh', 'sigmoid': 'sigmoid',
                     'hard_sigmoid': None, 'linear': 'identity'}
-    elif (class_name == 'dense'):
+    elif class_name == 'dense':
         map_dict = {'softmax': 'softmax', 'elu': 'elu', 'selu': None,
                     'softplus': 'softplus', 'softsign': None,
                     'relu': 'relu', 'tanh': 'tanh', 'sigmoid': 'sigmoid',
                     'hard_sigmoid': None, 'linear': 'identity'}
-    elif (class_name == 'add'):
+    elif class_name in ['simplernn', 'lstm', 'gru', 'cudnnlstm', 'cudnngru']:
+        map_dict = {'softmax': None, 'elu': None, 'selu': None,
+                    'softplus': None, 'softsign': None,
+                    'relu': 'relu', 'tanh': 'tanh', 'sigmoid': 'sigmoid',
+                    'hard_sigmoid': None, 'linear': 'identity'}
+    elif class_name == 'add':
         map_dict = {'softmax': None, 'elu': None, 'selu': None,
                     'softplus': None, 'softsign': None, 'relu': 'relu',
                     'tanh': None, 'sigmoid': None, 'hard_sigmoid': None,
@@ -683,7 +825,7 @@ def map_keras_activation(layer, act_func):
     else:
         raise KerasParseError('SAS does not support activation functions '
                               'for layer ' + layer.name)
-
+                              
     if (act_func.lower() in map_dict.keys()):
         sas_act_func = map_dict[act_func.lower()]
         if not sas_act_func:
@@ -786,8 +928,9 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
         for lname in node_config['inbound_layers']:
             try:
                 tmp_layer = model.get_layer(name=lname)
+                class_name, sublayers = remove_layer_wrapper(tmp_layer)
                 prev_layer = tmp_layer
-                while (tmp_layer.__class__.__name__.lower() not in computation_layer_list):
+                while (class_name not in computation_layer_list):
                     # check for root node
                     node_config = tmp_layer._inbound_nodes[0].get_config()
                     if (len(node_config['inbound_layers']) > 1):
@@ -801,8 +944,12 @@ def find_previous_computation_layer(model, layer_name, computation_layer_list):
                     else:
                         tmp_layer = prev_layer
                         break
+                    
+                    class_name, sublayers = remove_layer_wrapper(tmp_layer)
 
-                src_layer_name.append(tmp_layer.name)        
+                for tlayer in sublayers:
+                    src_layer_name.append(tlayer.name)
+                #src_layer_name.append(tmp_layer.name)        
             except ValueError:
                 print("WARNING: could not find layer " + lname + ", in model. Translated model may be inaccurate.")
                 src_layer_name.append(lname)
@@ -829,20 +976,3 @@ def make_source_str(layer_name):
     for ii in range(len(layer_name)):
         source_str.append(layer_name[ii])
     return repr(source_str)
-
-def replace_forward_slash(layer_name):
-    '''
-    Replaces forward slash (/) in layer names with _
-
-    Parameters
-    ----------
-    layer_name : string
-       Layer name
-
-    Returns
-    -------
-    string
-        Layer name with / replaced with _
-
-    '''
-    return layer_name.replace('/','_')
