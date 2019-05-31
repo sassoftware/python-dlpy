@@ -760,7 +760,7 @@ def export_attr_xml(conn, model_name, file_name):
     ascii_text = rt['xmlblob'].decode('utf8')
     with open(file_name, "w") as myfile:
         myfile.write(ascii_text)
-    myfile.close()                                                  
+    myfile.close()
 
 def create_class_labels(n_levels, labels=None):
 
