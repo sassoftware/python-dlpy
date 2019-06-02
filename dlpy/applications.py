@@ -50,7 +50,7 @@ def TextClassification(conn, model_table='text_classifier', neurons=10, n_blocks
         Default: 3
     rnn_type : string, optional
         Specifies the type of the rnn layer.
-        Default: RNN
+        Default: GRU
         Valid Values: RNN, LSTM, GRU
 
     Returns
@@ -99,7 +99,7 @@ def TextGeneration(conn, model_table='text_generator', neurons=10, max_output_le
         Default: 15
     rnn_type : string, optional
         Specifies the type of the rnn layer.
-        Default: RNN
+        Default: GRU
         Valid Values: RNN, LSTM, GRU
 
     Returns
@@ -150,7 +150,7 @@ def SequenceLabeling(conn, model_table='sequence_labeling_model', neurons=10, n_
         Default: 3
     rnn_type : string, optional
         Specifies the type of the rnn layer.
-        Default: RNN
+        Default: GRU
         Valid Values: RNN, LSTM, GRU
         
     Returns
@@ -189,7 +189,7 @@ def SpeechRecognition(conn, model_table='acoustic_model', neurons=10, n_blocks=3
         Default: 3
     rnn_type : string, optional
         Specifies the type of the rnn layer.
-        Default: RNN
+        Default: GRU
         Valid Values: RNN, LSTM, GRU
 
     Returns
@@ -221,6 +221,11 @@ def LeNet5(conn, model_table='LENET5', n_classes=10, n_channels=1, width=28, hei
         Specifies the CAS connection object.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model
+        will automatically detect the number of classes based on the
+        training set.
+        Default: 10
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 1
@@ -230,11 +235,6 @@ def LeNet5(conn, model_table='LENET5', n_classes=10, n_channels=1, width=28, hei
     height : int, optional
         Specifies the height of the input layer.
         Default: 28
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model
-        will automatically detect the number of classes based on the
-        training set.
-        Default: 10
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
         Default: 1.0 / 255
@@ -583,11 +583,11 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
         if pre_trained_weights_file is None:
             raise DLPyError('\nThe pre-trained weights file is not specified.\n'
                             'Please follow the steps below to attach the pre-trained weights:\n'
-                            '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                            '1. Go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
                             'and download the associated weight file.\n'
-                            '2. upload the *.h5 file to '
+                            '2. Upload the *.h5 file to '
                             'a server side directory which the CAS session has access to.\n'
-                            '3. specify the pre_trained_weights_file using the fully qualified server side path.')
+                            '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
 
         model_cas = model_vgg16.VGG16_Model(s=conn, model_table=model_table, n_channels=n_channels,
                                             width=width, height=height, random_crop=random_crop, offsets=offsets)
@@ -728,11 +728,11 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
         if pre_trained_weights_file is None:
             raise DLPyError('\nThe pre-trained weights file is not specified.\n'
                             'Please follow the steps below to attach the pre-trained weights:\n'
-                            '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                            '1. Go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
                             'and download the associated weight file.\n'
-                            '2. upload the *.h5 file to '
+                            '2. Upload the *.h5 file to '
                             'a server side directory which the CAS session has access to.\n'
-                            '3. specify the pre_trained_weights_file using the fully qualified server side path.')
+                            '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
 
         model_cas = model_vgg19.VGG19_Model(s=conn, model_table=model_table, n_channels=n_channels,
                                             width=width, height=height, random_crop=random_crop, offsets=offsets)
@@ -1111,6 +1111,7 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
+        Default: None
 
     Returns
     -------
@@ -1284,6 +1285,10 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
         mappings in deep residual networks." European Conference on Computer
         Vision. Springer International Publishing, 2016.
         Default: False
+     n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -1296,10 +1301,6 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
         Default: 1
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model will
-        automatically detect the number of classes based on the training set.
-        Default: 1000
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
@@ -1386,11 +1387,11 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
         if pre_trained_weights_file is None:
             raise DLPyError('\nThe pre-trained weights file is not specified.\n'
                             'Please follow the steps below to attach the pre-trained weights:\n'
-                            '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                            '1. Go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
                             'and download the associated weight file.\n'
-                            '2. upload the *.h5 file to '
+                            '2. Upload the *.h5 file to '
                             'a server side directory which the CAS session has access to.\n'
-                            '3. specify the pre_trained_weights_file using the fully qualified server side path.')
+                            '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
 
         model_cas = model_resnet50.ResNet50_Model(s=conn, model_table=model_table, n_channels=n_channels,
                                                   width=width, height=height, random_crop=random_crop, offsets=offsets)
@@ -1642,11 +1643,11 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         if pre_trained_weights_file is None:
             raise DLPyError('\nThe pre-trained weights file is not specified.\n'
                             'Please follow the steps below to attach the pre-trained weights:\n'
-                            '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                            '1. Go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
                             'and download the associated weight file.\n'
-                            '2. upload the *.h5 file to '
+                            '2. Upload the *.h5 file to '
                             'a server side directory which the CAS session has access to.\n'
-                            '3. specify the pre_trained_weights_file using the fully qualified server side path.')
+                            '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
         model_cas = model_resnet101.ResNet101_Model( s=conn, model_table=model_table, n_channels=n_channels,
                                                      width=width, height=height, random_crop=random_crop,
                                                      offsets=offsets)
@@ -1897,11 +1898,11 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         if pre_trained_weights_file is None:
             raise ValueError('\nThe pre-trained weights file is not specified.\n'
                              'Please follow the steps below to attach the pre-trained weights:\n'
-                             '1. go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
+                             '1. Go to the website https://support.sas.com/documentation/prod-p/vdmml/zip/ '
                              'and download the associated weight file.\n'
-                             '2. upload the *.h5 file to '
+                             '2. Upload the *.h5 file to '
                              'a server side directory which the CAS session has access to.\n'
-                             '3. specify the pre_trained_weights_file using the fully qualified server side path.')
+                             '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
         model_cas = model_resnet152.ResNet152_Model( s=conn, model_table=model_table, n_channels=n_channels,
                                                      width=width, height=height, random_crop=random_crop,
                                                      offsets=offsets)
@@ -1964,7 +1965,7 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
-        Default: 1000
+        Default: None
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -2073,16 +2074,16 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
         Default: 4
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
-        Default: 3.
+        Default: 3
     width : int, optional
         Specifies the width of the input layer.
-        Default: 224.
+        Default: 32
     height : int, optional
         Specifies the height of the input layer.
-        Default: 224.
+        Default: 32
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
-        Default: 1.
+        Default: 1
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
@@ -2150,16 +2151,16 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
-        Default: None
+        Default: 1000
     conv_channel : int, optional
         Specifies the number of filters of the first convolution layer.
-        Default: 16
+        Default: 64
     growth_rate : int, optional
         Specifies the growth rate of convolution layers.
-        Default: 12
-    n_cells : int, optional
+        Default: 32
+    n_cells : int array length=4, optional
         Specifies the number of dense connection for each DenseNet block.
-        Default: 4
+        Default: [6, 12, 24, 16]
     reduction : double, optional
         Specifies the factor of transition blocks.
         Default: 0.5
@@ -2380,7 +2381,7 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel
         intensity values.
-        Default: 1. / 255
+        Default: 1.0 / 255
     random_flip : string, optional
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
@@ -2496,7 +2497,7 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
         Specifies the connection of the CAS connection.
     anchors : list
         Specifies the anchor box values.
-    model_table : string
+    model_table : string, optional
         Specifies the name of CAS table to store the model.
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
@@ -2516,6 +2517,7 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
         Default: 'NONE'
     act : string, optional
         Specifies the activation function for the batch normalization layers.
+        Default: 'leaky'
     act_detection : string, optional
         Specifies the activation function for the detection layer.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
@@ -2570,7 +2572,8 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
     iou_threshold : float, optional
         Specifies the IOU Threshold of maximum suppression in object detection.
     random_boxes : bool, optional
-        Randomizing boxes when loading the bounding box information. Default: False
+        Randomizing boxes when loading the bounding box information. 
+        Default: False
     match_anchor_size : bool, optional
         Whether to force the predicted box match the anchor boxes in sizes for all predictions
     num_to_force_coord : int, optional
@@ -2692,7 +2695,7 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
         Specifies the connection of the CAS connection.
     anchors : list
         Specifies the anchor box values.
-    model_table : string
+    model_table : string, optional
         Specifies the name of CAS table to store the model.
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
@@ -2713,6 +2716,7 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
         Default: 'NONE'
     act : string, optional
         Specifies the activation function for the batch normalization layers.
+        Default: 'leaky'
     act_detection : string, optional
         Specifies the activation function for the detection layer.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
@@ -2907,7 +2911,7 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
         Specifies the connection of the CAS connection.
     anchors : list
         Specifies the anchor box values.
-    model_table : string
+    model_table : string, optional
         Specifies the name of CAS table to store the model.
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
@@ -2928,6 +2932,7 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
         Default: 'NONE'
     act : string, optional
         Specifies the activation function for the batch normalization layers.
+        Default: 'leaky'
     act_detection : string, optional
         Specifies the activation function for the detection layer.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
@@ -2982,7 +2987,8 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
     iou_threshold : float, optional
         Specifies the IOU Threshold of maximum suppression in object detection.
     random_boxes : bool, optional
-        Randomizing boxes when loading the bounding box information. Default: False
+        Randomizing boxes when loading the bounding box information. 
+        Default: False
     match_anchor_size : bool, optional
         Whether to force the predicted box match the anchor boxes in sizes for all predictions
     num_to_force_coord : int, optional
@@ -3061,7 +3067,7 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
     ----------
     conn : CAS
         Specifies the connection of the CAS connection.
-    model_table : string
+    model_table : string, optional
         Specifies the name of CAS table to store the model.
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
@@ -3074,7 +3080,7 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
         Default: 448
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
-        Default: 1
+        Default: 1.0 / 255
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in
         the input layer.
@@ -3141,7 +3147,8 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
     iou_threshold : float, optional
         Specifies the IOU Threshold of maximum suppression in object detection.
     random_boxes : bool, optional
-        Randomizing boxes when loading the bounding box information. Default: False
+        Randomizing boxes when loading the bounding box information. 
+        Default: False
 
     Returns
     -------
@@ -3239,7 +3246,7 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
     ----------
     conn : CAS
         Specifies the connection of the CAS connection.
-    model_table : string
+    model_table : string, optional
         Specifies the name of CAS table to store the model.
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
@@ -3252,7 +3259,7 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
         Default: 448
     scale : double, optional
         Specifies a scaling factor to be applied to each pixel intensity values.
-        Default: 1
+        Default: 1.0 / 255
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in
         the input layer.
@@ -3319,7 +3326,8 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
     iou_threshold : float, optional
         Specifies the IOU Threshold of maximum suppression in object detection.
     random_boxes : bool, optional
-        Randomizing boxes when loading the bounding box information. Default: False
+        Randomizing boxes when loading the bounding box information. 
+        Default: False
 
     Returns
     -------
@@ -3952,13 +3960,13 @@ def InceptionV3(conn, model_table='InceptionV3',
             raise ValueError('\nThe pre-trained weights file is not specified.\n'
                              'Please follow the steps below to attach the '
                              'pre-trained weights:\n'
-                             '1. go to the website '
+                             '1. Go to the website '
                              'https://support.sas.com/documentation/prod-p/vdmml/zip/ '
                              'and download the associated weight file.\n'
-                             '2. upload the *.h5 file to '
+                             '2. Upload the *.h5 file to '
                              'a server side directory which the CAS '
                              'session has access to.\n'
-                             '3. specify the pre_train_weight_file using '
+                             '3. Specify the pre_train_weight_file using '
                              'the fully qualified server side path.')
         print('NOTE: Scale is set to 1/127.5, and offsets 1 to '
               'match Keras preprocessing.')
