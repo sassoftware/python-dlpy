@@ -307,10 +307,12 @@ class Layer(object):
         if self.type == 'input':
             return dict(name=self.name, layer=new_params)
         elif self.type == 'transconvo':
-            if 'outputsize' in new_params:
-                del new_params['outputsize']
-        return dict(name = self.name, layer = new_params, sharedweights = self.shared_weights,
-                    srclayers = [item.name for item in self.src_layers])
+            new_params.pop('outputsize', None)
+        if self.shared_weights is None:
+            return dict(name = self.name, layer = new_params, srclayers = [item.name for item in self.src_layers])
+        else:
+            return dict(name = self.name, layer = new_params, sharedweights = self.shared_weights,
+                        srclayers = [item.name for item in self.src_layers])
 
     @property
     def summary(self):
@@ -516,7 +518,7 @@ class _Conv(Layer):
 
     Returns
     -------
-    :class:'_Conv`
+    :class:`_Conv`
 
     '''
 
@@ -602,7 +604,7 @@ class Conv2d(_Conv):
 
     Returns
     -------
-    :class: 'Conv2d`
+    :class:`Conv2d`
 
     '''
     type = 'convo'
@@ -661,7 +663,7 @@ class Conv2d(_Conv):
 
 class GroupConv2d(Conv2d):
     '''
-    Convolution layer in 2D
+    Group Convolution layer in 2D
 
     Parameters
     ----------
@@ -716,7 +718,7 @@ class GroupConv2d(Conv2d):
 
     Returns
     -------
-    :class: 'GroupConv2d`
+    :class:`GroupConv2d`
 
     '''
     type = 'groupconvo'
@@ -745,10 +747,11 @@ class GroupConv2d(Conv2d):
             # calculate output according to specified padding
             # calculate output according to specified padding
             if self.padding != (None, None):
-                out_h = (self.src_layers[0].output_size[0] - self.config['height'] + 2 * self.padding[0]) // \
-                        self.stride[0] + 1
-                out_w = (self.src_layers[0].output_size[1] - self.config['width'] + 2 * self.padding[1]) // self.stride[
-                    1] + 1
+                out_h = ((self.src_layers[0].output_size[0] - self.config['height'] + 2 * self.padding[0]) //
+                         self.stride[0] + 1)
+                out_w = ((self.src_layers[0].output_size[1] - self.config['width'] + 2 * self.padding[1]) //
+                         self.stride[1] + 1)
+
             else:
                 import math
                 # same padding
@@ -2021,9 +2024,9 @@ class Segmentation(Layer):
     name : string, optional
         Specifies the name of the layer.
     act : string, optional
-        | Specifies the activation function.
-        | possible values: [ AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP ]
-        | default: AUTO
+        Specifies the activation function.
+        possible values: [ AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP ]
+        default: AUTO
     fcmp_act : string, optional
         Specifies the FCMP activation function for the layer.
     src_layers : iterable Layer, optional
@@ -2452,10 +2455,7 @@ def _unpack_config(config):
     for key, value in six.iteritems(kwargs):
         new_kwargs[camelcase_to_underscore(key)] = value
     del config['self'], config['name'], config['kwargs']
-    try:
-        del config['src_layers']
-    except:
-        pass
+    config.pop('src_layers', None)
     out = {}
     conflict_arg = [i for i in config if i in new_kwargs.keys()]
     for arg in conflict_arg:

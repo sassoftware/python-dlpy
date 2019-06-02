@@ -23,7 +23,7 @@ import os
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
-    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN
+    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose
 import dlpy.model
 import collections
 import pandas as pd
@@ -87,7 +87,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name=random_name('Model', 6)))
 
         self.model_name = model_table_opts['name']
@@ -320,6 +320,8 @@ class Network(Layer):
                 model.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 model.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 16:
+                model.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
             elif layer_type == 17:
                 model.layers.append(extract_groupconv_layer(layer_table = layer_table))
             elif layer_type == 18:
@@ -403,7 +405,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(output_model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name = random_name('caffe_model', 6)))
 
         model_name = model_table_opts['name']
@@ -461,7 +463,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(output_model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name = random_name('caffe_model', 6)))
 
         model_name = model_table_opts['name']
@@ -526,7 +528,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(output_model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name = random_name('onnx_model', 6)))
 
         model_name = model_table_opts['name']
@@ -721,6 +723,8 @@ class Network(Layer):
                 self.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 self.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 16:
+                self.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
             elif layer_type == 17:
                 self.layers.append(extract_groupconv_layer(layer_table = layer_table))
             elif layer_type == 18:
@@ -1132,12 +1136,14 @@ class Network(Layer):
 
     def share_weights(self, layers):
         """
-        TODO: Add more comment
-        Share weights
+        Share weights between layers
 
         Parameters
         ----------
-        layers : layers dict or iter-of-dict
+        layers : iter-of-dict or dict
+            Pass a list of dictionary or a dictionary. Key specifies a layer name.
+            Value is the name of layers whose weights will be shared with the layer specified in key, such as
+            [dict('conv1_1', ['conv1_2', 'conv1_3', 'conv1_4']), dict('conv2_1', ['conv2_2', 'conv2_3', 'conv2_4'])]
 
 
         """
@@ -1424,7 +1430,7 @@ def layer_to_node(layer):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to graph configuration.
 
     '''
@@ -1463,7 +1469,7 @@ def layer_to_edge(layer):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to graph configuration.
 
     '''
@@ -1537,7 +1543,7 @@ def get_num_configs(keys, layer_type_prefix, layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1568,7 +1574,7 @@ def get_str_configs(keys, layer_type_prefix, layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition.
 
     '''
@@ -1595,7 +1601,7 @@ def extract_input_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1684,7 +1690,7 @@ def extract_conv_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1697,7 +1703,7 @@ def extract_conv_layer(layer_table):
     conv_layer_config.update(get_str_configs(str_keys, 'convopts', layer_table))
     conv_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
-    if 'trunc_fact' in conv_layer_config.keys():
+    if 'trunc_fact' in conv_layer_config:
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
     if conv_layer_config.get('act') == 'Leaky Activation function':
@@ -1734,7 +1740,7 @@ def extract_pooling_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1774,7 +1780,7 @@ def extract_batchnorm_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1800,7 +1806,7 @@ def extract_residual_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1826,7 +1832,7 @@ def extract_concatenate_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1852,7 +1858,7 @@ def extract_detection_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1906,7 +1912,7 @@ def extract_fc_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1924,7 +1930,7 @@ def extract_fc_layer(layer_table):
     else:
         fc_layer_config['include_bias'] = True
 
-    if 'trunc_fact' in fc_layer_config.keys():
+    if 'trunc_fact' in fc_layer_config:
         fc_layer_config['truncation_factor'] = fc_layer_config['trunc_fact']
         del fc_layer_config['trunc_fact']
     if fc_layer_config.get('act') == 'Leaky Activation function':
@@ -1946,7 +1952,7 @@ def extract_output_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1964,7 +1970,7 @@ def extract_output_layer(layer_table):
     else:
         output_layer_config['include_bias'] = True
 
-    if 'trunc_fact' in output_layer_config.keys():
+    if 'trunc_fact' in output_layer_config:
         output_layer_config['truncation_factor'] = output_layer_config['trunc_fact']
         del output_layer_config['trunc_fact']
 
@@ -1984,7 +1990,7 @@ def extract_scale_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2011,7 +2017,7 @@ def extract_keypoints_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2029,7 +2035,7 @@ def extract_keypoints_layer(layer_table):
     else:
         keypoints_layer_config['include_bias'] = True
 
-    if 'trunc_fact' in keypoints_layer_config.keys():
+    if 'trunc_fact' in keypoints_layer_config:
         keypoints_layer_config['truncation_factor'] = keypoints_layer_config['trunc_fact']
         del keypoints_layer_config['trunc_fact']
     return layer
@@ -2047,7 +2053,7 @@ def extract_reshape_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2074,7 +2080,7 @@ def extract_groupconv_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2087,7 +2093,7 @@ def extract_groupconv_layer(layer_table):
     grpconv_layer_config.update(get_str_configs(str_keys, 'groupconvopts', layer_table))
     grpconv_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
-    if 'trunc_fact' in grpconv_layer_config.keys():
+    if 'trunc_fact' in grpconv_layer_config:
         grpconv_layer_config['truncation_factor'] = grpconv_layer_config['trunc_fact']
         del grpconv_layer_config['trunc_fact']
     if grpconv_layer_config.get('act') == 'Leaky Activation function':
@@ -2110,6 +2116,55 @@ def extract_groupconv_layer(layer_table):
     return layer
 
 
+def extract_conv2dtranspose_layer(layer_table):
+    '''
+    Extract layer configuration from a Conv2DTranspose layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['n_filters', 'width', 'height', 'stride', 'std', 'mean',
+                'init_bias', 'dropout', 'truncation_factor', 'init_b', 'trunc_fact',
+                'output_padding_height', 'output_padding_width']
+    str_keys = ['act', 'init']
+
+    conv2dtranspose_layer_config = dict()
+    conv2dtranspose_layer_config.update(get_num_configs(num_keys, 'transposeconvopts', layer_table))
+    conv2dtranspose_layer_config.update(get_str_configs(str_keys, 'transposeconvopts', layer_table))
+    conv2dtranspose_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    if 'trunc_fact' in conv2dtranspose_layer_config:
+        conv2dtranspose_layer_config['truncation_factor'] = conv2dtranspose_layer_config['trunc_fact']
+        del conv2dtranspose_layer_config['trunc_fact']
+    if conv2dtranspose_layer_config.get('act') == 'Leaky Activation function':
+        conv2dtranspose_layer_config['act'] = 'Leaky'
+
+    dl_numval = layer_table['_DLNumVal_']
+    if dl_numval[layer_table['_DLKey1_'] == 'transposeconvopts.no_bias'].any():
+        conv2dtranspose_layer_config['include_bias'] = False
+    else:
+        conv2dtranspose_layer_config['include_bias'] = True
+
+    padding_width = dl_numval[layer_table['_DLKey1_'] == 'transposeconvopts.pad_left'].tolist()[0]
+    padding_height = dl_numval[layer_table['_DLKey1_'] == 'transposeconvopts.pad_top'].tolist()[0]
+    if padding_width != -1:
+        conv2dtranspose_layer_config['padding_width'] = padding_width
+    if padding_height != -1:
+        conv2dtranspose_layer_config['padding_height'] = padding_height
+
+    layer = Conv2DTranspose(**conv2dtranspose_layer_config)
+    return layer
+
+
 def extract_channelshuffle_layer(layer_table):
     '''
     Extract layer configuration from a channel shuffle layer table
@@ -2122,7 +2177,7 @@ def extract_channelshuffle_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2150,7 +2205,7 @@ def extract_rpn_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2204,7 +2259,7 @@ def extract_roipooling_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2238,7 +2293,7 @@ def extract_fastrcnn_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
