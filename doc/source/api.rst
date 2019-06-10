@@ -59,22 +59,62 @@ Image Processing
    ImageTable.resize
    ImageTable.as_patches
    ImageTable.as_random_patches
+   ImageTable.random_mutations
 
-Audio
------
+
+AudioTable
+----------
+
+The :class:`AudioTable` class is a specialized version of :class:`swat.CASTable`
+that includes extra methods for working with audio data.
 
 .. currentmodule:: dlpy.audio
 
+Constructors
+~~~~~~~~~~~~
+
 .. autosummary::
    :toctree: generated/
-       
+
    AudioTable
    AudioTable.create_audio_table
-   
+   AudioTable.create_audio_table_speechrecognition
+   AudioTable.load_audio_files
+  
+
+Audio Processing
+~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
+   AudioTable.extract_audio_features
+   AudioTable.load_audio_metadata
+   AudioTable.load_audio_metadata_speechrecognition
+
+
 Timeseries
 ----------
 
 .. currentmodule:: dlpy.timeseries
+
+.. autosummary::
+   :toctree: generated/
+
+   plot_timeseries   
+
+TimeseriesTable
+~~~~~~~~~~~~~~~
+
+.. currentmodule:: dlpy.audio
+
+The :class:`TimeseriesTable` class is a specialized version of :class:`swat.CASTable`
+that includes extra methods for working with timeseries.
+
+.. currentmodule:: dlpy.timeseries
+
+Constructors
+^^^^^^^^^^^^
 
 .. autosummary::
    :toctree: generated/
@@ -84,11 +124,17 @@ Timeseries
    TimeseriesTable.from_pandas
    TimeseriesTable.from_localfile
    TimeseriesTable.from_serverfile
+
+Utilities
+^^^^^^^^^
+
+.. autosummary::
+   :toctree: generated/
+
    TimeseriesTable.timeseries_formatting
    TimeseriesTable.timeseries_accumlation
    TimeseriesTable.prepare_subsequences
    TimeseriesTable.timeseries_partition
-   plot_timeseries   
    
 Layers
 ------
@@ -119,11 +165,16 @@ Layers
    Reshape
    
 
+Model
+-----
 
-Models
-------
+The :class:`Model` class is a specialized version of :class:`dlpy.Network`
+that adds training, evaluation, tuning, and feature analysis routines.  
 
 .. currentmodule:: dlpy.model
+
+Constructors
+~~~~~~~~~~~~
 
 .. autosummary::
    :toctree: generated/
@@ -135,6 +186,15 @@ Models
    Model.from_onnx_model
    Model.from_sashdat
    Model.load
+
+
+Model Setup
+~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
+   Model.change_labels
    Model.set_weights
    Model.load_weights
    Model.load_weights_from_caffe
@@ -142,34 +202,117 @@ Models
    Model.load_weights_from_table
    Model.set_weights_attr
    Model.load_weights_attr
+
+
+Training
+~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
    Model.fit
    Model.tune
    Model.plot_training_history
+
+
+Inference, Evaluation, and Analysis
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
    Model.predict
+   Model.forecast
    Model.evaluate
+   Model.evaluate_object_detection
+   Model.plot_evaluate_res
    Model.get_feature_maps
    Model.get_features
    Model.heat_map_analysis
    Model.plot_heat_map
+
+
+Saving
+~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
    Model.save_to_astore
    Model.save_to_table
    Model.deploy
+
+
+Architecture Information
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
    Model.count_params
    Model.print_summary
    Model.plot_network
+   Model.get_model_info
 
-   DataSpec
-   DataSpecNumNomOpts
-   Sequence
-   TextParms
-   Optimizer
+Solvers
+-------
+
+.. autosummary::
+   :toctree: generated/
+
+   Solver
    NatGradSolver
    LBFGSolver
    AdamSolver
    MomentumSolver
    VanillaSolver
-   Solver
+
+   
+Optimizer
+---------
+
+.. autosummary::
+   :toctree: generated/
+
+   Optimizer
+
+
+
+Parameters
+----------
+
+.. currentmodule:: dlpy.model
+
+.. autosummary::
+   :toctree: generated/
+
+   DataSpec
+   DataSpecNumNomOpts
+   Sequence
+   TextParms
    Gpu
+
+
+Metrics
+-------
+
+.. currentmodule:: dlpy.metrics
+
+.. autosummary::
+   :toctree: generated/
+   
+   accuracy_score
+   confusion_matrix
+   plot_roc
+   plot_precision_recall
+   roc_auc_score
+   average_precision_score
+   f1_score
+   explained_variance_score
+   mean_absolute_error
+   mean_squared_error
+   mean_squared_log_error
+   r2_score   
 
 
 Feature Maps
@@ -177,10 +320,19 @@ Feature Maps
 
 .. currentmodule:: dlpy.model
 
+Constructor
+~~~~~~~~~~~
+
 .. autosummary::
    :toctree: generated/
 
    FeatureMaps
+
+Utilities
+~~~~~~~~~
+.. autosummary::
+   :toctree: generated/
+
    FeatureMaps.display
 
 
@@ -189,10 +341,20 @@ Sequential Model
 
 .. currentmodule:: dlpy.sequential
 
+Constructor
+~~~~~~~~~~~
+
 .. autosummary::
    :toctree: generated/
 
    Sequential
+
+Utilities
+~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
    Sequential.add
    Sequential.pop
    Sequential.switch
@@ -221,8 +383,13 @@ Residual Networks
 
    ResBlock_Caffe
    ResBlock_Caffe.compile
-   
-   
+      
+.. autosummary::
+   :toctree: generated/
+
+   Bidirectional 
+   Bidirectional.compile
+
 Pre-Built Models for Computer Vision Tasks
 ------------------------------------------
 
@@ -252,6 +419,7 @@ Pre-Built Models for Computer Vision Tasks
    Darknet
    Darknet_Reference
    InceptionV3
+   YoloV1
    YoloV2
    YoloV2_MultiSize
    Tiny_YoloV1

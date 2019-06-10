@@ -22,9 +22,12 @@ import os
 
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
-from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape
+from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape, Recurrent
+import dlpy.model
 import collections
 import pandas as pd
+import swat as sw
+from copy import deepcopy
 
 
 class Network(Layer):
@@ -53,20 +56,24 @@ class Network(Layer):
 
     '''
 
+    type = 'model'
+    type_label = 'Model'
+    type_desc = 'Model'
+    can_be_last_layer = True
+    number_of_instances = 0
+    src_layers = []
+    name = 'model' + str(number_of_instances)
+
     def __init__(self, conn, inputs=None, outputs=None, model_table=None, model_weights=None):
-        if model_table is not None and any(i is not None for i in [inputs, outputs]):
-            raise DLPyError('Either parameter model_table or inputs and outputs needs to be set.\n'
-                            'The following cases are valid.\n'
-                            '1. model_table = "your_model_table"; inputs = None; outputs = None.\n'
-                            '2. model_table = None; inputs = input_layer(s); outputs = output_layer.'
-                            )
+        if (inputs is None or outputs is None) and (inputs is not None or outputs is not None):
+            raise ValueError('If one of inputs and outputs option is enabled, both should be specified')
         self._init_model(conn, model_table, model_weights)
-        if all(i is None for i in [inputs, outputs, model_table]):
-            return
+        # works for Sequential() as well
         if self.__class__.__name__ == 'Model':
-            if None in [inputs, outputs]:
-                raise DLPyError('Parameter inputs and outputs are required.')
-            self._map_graph_network(inputs, outputs)
+            # 1). Model(s, model_table, model_weights)
+            # 2). Model(s, inp, outputs, model_table, model_weights)
+            if all(i is not None for i in [inputs, outputs]):
+                self._map_graph_network(inputs, outputs)
 
     def _init_model(self, conn, model_table=None, model_weights=None):
         conn.loadactionset(actionSet='deeplearn', _messagelevel='error')
@@ -87,16 +94,26 @@ class Network(Layer):
         if model_weights is None:
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
         else:
-            self.set_weights(model_weights)
+            if self.conn.tableexists(model_weights).exists == 1:
+                self.set_weights(model_weights)
+            else:
+                self.model_weights = self.conn.CASTable(**input_table_check(model_weights))
 
         self.layers = []
         self.model_type = 'CNN'
         self.best_weights = None
         self.target = None
         self.num_params = None
+        self.count_instances()
 
     def _map_graph_network(self, inputs, outputs):
-        """propagate all of layers"""
+        '''
+        Propagate all of layers
+
+        inputs : iter-of-Tensors
+        outputs : iter-of-Tensors
+
+        '''
         def build_map(start):
             if start.name is None:
                 start.count_instances()
@@ -105,29 +122,32 @@ class Network(Layer):
             if start in self.layers:
                 return
             # if the node is an input layer, add it and return
-            if start in inputs:
+            if start in self.input_layers and start.type != 'model':
                 self.layers.append(start)
                 return
-            for layer in start.src_layers:
-                build_map(layer)
-                # if all of src_layer of layer is in layers list, add it in layers list
-                if all(i in self.layers for i in start.src_layers):
+            for src_layer in start.src_layers:
+                build_map(src_layer)
+                # if all of src_layer of layer is input layer type, add it in layers list
+                src_layer.depth = 0 if src_layer.type == 'input' \
+                    else max([i.depth for i in src_layer.src_layers]) + 1
+
+                if all(i in self.layers for i in start.src_layers) and start not in self.layers:
                     self.layers.append(start)
-                # set the layer's depth
-                layer.depth = 0 if str(layer.__class__.__name__) == 'InputLayer' \
-                    else max([i.depth for i in layer.src_layers]) + 1
             return
 
         if not isinstance(inputs, collections.Iterable):
             inputs = [inputs]
-        if any(x.__class__.__name__ != 'InputLayer' for x in inputs):
-            raise DLPyError('Input layers should be input layer type.')
+        if any(x.__class__.__name__ != 'Tensor' for x in inputs):
+            raise DLPyError('All inputs should be tensors.')
         if not isinstance(outputs, collections.Iterable):
             outputs = [outputs]
-        if not all(x.can_be_last_layer for x in outputs):
-            raise DLPyError('Output layers can only be {}'\
-                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
-        for layer in outputs:
+
+        self.inputs = inputs
+        self.outputs = outputs
+        self.output_layers = [output._op for output in outputs]
+        self.input_layers = [input._op for input in inputs]
+
+        for layer in self.output_layers:
             build_map(layer)
             layer.depth = max([i.depth for i in layer.src_layers]) + 1
 
@@ -137,6 +157,10 @@ class Network(Layer):
         ''' parse the network nodes and process CAS Action '''
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
+
+        if not all(x.can_be_last_layer for x in self.output_layers):
+            raise DLPyError('Output layers can only be {}' \
+                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
 
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
@@ -159,9 +183,77 @@ class Network(Layer):
             self.num_params += num_weights + num_bias
         print('NOTE: Model compiled successfully.')
 
+    def to_functional_model(self, stop_layers=None):
+        '''
+        Convert a Sequential into a functional model and return the functional model.
+
+        stop_layers : iter-of-Layer or Layer
+            stop_layers refers to the layers that stop traverse the graph.
+            All of layers followed by the stop_layers are removed from the functional model.
+            The argument is useful when you want to get a subset of network.
+            For example:
+                Given a ResNet50 model, only generate the feature extraction network of ResNet50.
+                feature_extractor = resnet50_model.to_functional_model(stop_layers=resnet50_model.layers[-1])
+
+        Returns
+        -------
+        :class:`Model`
+
+        '''
+        copied_model = deepcopy(self)  # deepcopy the sequential model and don't touch the original one
+        stop_layers = stop_layers or []
+        input_tensors = []
+        output_tensors = []
+
+        if not isinstance(stop_layers, collections.Iterable):
+            stop_layers = [stop_layers]
+        index_l = [self.layers.index(x) for x in stop_layers]
+        stop_layers = [copied_model.layers[i] for i in index_l]
+
+        for idx, layer in enumerate(copied_model.layers):
+            layer_type = layer.__class__.__name__
+            if layer_type == 'InputLayer':
+                input_tensors.append(layer.tensor)
+                continue
+            # find layer's outbound layer
+            for outbound_layer in copied_model.layers[idx:]:
+                if outbound_layer.__class__.__name__ == 'InputLayer':
+                    continue
+                # if all source layers of outbound_layer are visited(all in self.layers[:idx])
+                if all(src_layer in copied_model.layers[:idx] for src_layer in outbound_layer.src_layers):
+                    # skip if stop_layers are visited and add its src_layers's output tensors
+                    if outbound_layer in stop_layers:
+                        for src_layer in outbound_layer.src_layers:
+                            output_tensors.append(src_layer.tensor)
+                        continue
+                    # initialize tensor of the outbound_layer
+                    # if any of tensor doesn't exit, stop calling the layer
+                    try:
+                        outbound_layer([l.tensor for l in outbound_layer.src_layers])
+                    except AttributeError:
+                        continue
+                    if outbound_layer.can_be_last_layer:
+                        output_tensors.append(outbound_layer.tensor)
+
+        return dlpy.model.Model(self.conn, input_tensors, output_tensors)
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == 'conn':
+                continue
+            setattr(result, k, deepcopy(v, memo))
+        return result
+
     def _retrieve_(self, _name_, message_level='error', **kwargs):
         ''' Call a CAS action '''
         return self.conn.retrieve(_name_, _messagelevel=message_level, **kwargs)
+
+    @classmethod
+    def count_instances(cls):
+        cls.number_of_instances += 1
 
     @classmethod
     def from_table(cls, input_model_table, display_note = True, output_model_table = None):
@@ -211,6 +303,8 @@ class Network(Layer):
                 model.layers.append(extract_fc_layer(layer_table = layer_table))
             elif layer_type == 5:
                 model.layers.append(extract_output_layer(layer_table = layer_table))
+            elif layer_type == 6:
+                model.layers.append(extract_recurrent_layer(layer_table = layer_table))
             elif layer_type == 8:
                 model.layers.append(extract_batchnorm_layer(layer_table = layer_table))
             elif layer_type == 9:
@@ -313,7 +407,9 @@ class Network(Layer):
 
     @classmethod
     def from_keras_model(cls, conn, keras_model, output_model_table = None,
-                         include_weights = False, input_weights_file = None):
+                         offsets=None, std=None, scale=1.0,
+                         max_num_frames=-1, include_weights = False, 
+                         input_weights_file = None, verbose=False):
         '''
         Generate a model object from a Keras model object
 
@@ -326,6 +422,16 @@ class Network(Layer):
         output_model_table : string or dict or CAS table, optional
             Specifies the CAS table to store the deep learning model.
             Default: None
+        offsets : list, optional
+            Specifies the values to be subtracted from the pixel values
+            of the input data, used if the data is an image.
+        std : list or None
+            The pixel values of the input data are divided by these
+            values, used if the data is an image.
+        scale : float, optional
+            Specifies the scaling factor to apply to each image.
+        max_num_frames : int, optional
+            Maximum number of frames for sequence processing.
         include_weights : bool, optional
             Specifies whether to load the weights of the keras model.
             Default: True
@@ -334,41 +440,61 @@ class Network(Layer):
             the keras model weights. Only effective when include_weights=True.
             If None is given, the current weights in the keras model will be used.
             Default: None
+        verbose : boolean optional
+            Specifies whether to print warning messages and debugging information
+            Default: False
 
         Returns
         -------
         :class:`Model`
+        boolean : use GPU
 
         '''
 
         from .model_conversion.sas_keras_parse import keras_to_sas
         if output_model_table is None:
-            output_model_table = dict(name = random_name('caffe_model', 6))
+            output_model_table = dict(name = random_name('keras_model', 6))
 
         model_table_opts = input_table_check(output_model_table)
 
         if 'name' not in model_table_opts.keys():
-            model_table_opts.update(**dict(name = random_name('caffe_model', 6)))
+            model_table_opts.update(**dict(name = random_name('keras_model', 6)))
 
         model_name = model_table_opts['name']
+        
+        # determine what features are supported by current Viya server/deep learning action set
+        from .model_conversion.model_conversion_utils import check_rnn_import, check_normstd
+        rnn_support = check_rnn_import(conn)
+        normstd_support = check_normstd(conn)
+        if (std is not None) and (not normstd_support):
+            print('WARNING: Your Viya installation does not support the std parameter - ignoring')
+            std = None
+        
+        output_code = keras_to_sas(model = keras_model, rnn_support = rnn_support, 
+                                   model_name = model_name, offsets = offsets, std = std,
+                                   scale = scale, max_num_frames = max_num_frames, verbose = verbose)
+                          
+        if verbose:
+            print(output_code)
 
-        output_code = keras_to_sas(model = keras_model, model_name = model_name)
         exec(output_code)
         temp_name = conn
         exec('sas_model_gen(temp_name)')
         input_model_table = conn.CASTable(**model_table_opts)
         model = cls.from_table(input_model_table = input_model_table)
 
+        use_gpu = False
         if include_weights:
             from .model_conversion.write_keras_model_parm import write_keras_hdf5, write_keras_hdf5_from_file
             temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.kerasmodel.h5'.format(model_name))
             if input_weights_file is None:
-                write_keras_hdf5(keras_model, temp_HDF5)
+                use_gpu = write_keras_hdf5(keras_model, rnn_support, temp_HDF5)
             else:
-                write_keras_hdf5_from_file(keras_model, input_weights_file, temp_HDF5)
+                use_gpu = write_keras_hdf5_from_file(keras_model, rnn_support, input_weights_file, temp_HDF5)
             print('NOTE: the model weights has been stored in the following file:\n'
                   '{}'.format(temp_HDF5))
-        return model
+                  
+        return model, use_gpu
 
     @classmethod
     def from_onnx_model(cls, conn, onnx_model, output_model_table = None,
@@ -551,7 +677,7 @@ class Network(Layer):
 
         '''
 
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -591,6 +717,8 @@ class Network(Layer):
                 self.layers.append(extract_fc_layer(layer_table=layer_table))
             elif layer_type == 5:
                 self.layers.append(extract_output_layer(layer_table=layer_table))
+            elif layer_type == 6:
+                model.layers.append(extract_recurrent_layer(layer_table = layer_table))                
             elif layer_type == 8:
                 self.layers.append(extract_batchnorm_layer(layer_table=layer_table))
             elif layer_type == 9:
@@ -646,10 +774,11 @@ class Network(Layer):
                                             name=self.model_name + '_weights_attr'))
                 self.set_weights_attr(self.model_name + '_weights_attr')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights(self, path, labels=False):
+    def load_weights(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None,
+                     use_gpu=False):
         '''
         Load the weights form a data file specified by ‘path’
 
@@ -658,6 +787,17 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the file that
             contains the weight table.
+        labels : bool
+            Specifies whether to apply user-defined classification labels
+        data_spec : list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)
+        label_file_name : string, optional
+            Fully qualified path to CSV file containing user-defined
+            classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
+        use_gpu: boolean, optional
+            GPU processing of model required (or not)
 
         Notes
         -----
@@ -667,21 +807,28 @@ class Network(Layer):
 
         server_sep = get_server_path_sep(self.conn)
 
-        dir_name, file_name = path.rsplit(server_sep, 1)
+        if server_sep in path:
+            dir_name, file_name = path.rsplit(server_sep, 1)
+        else:
+            file_name = path
+
         if file_name.lower().endswith('.sashdat'):
             self.load_weights_from_table(path)
         elif file_name.lower().endswith('caffemodel.h5'):
-            self.load_weights_from_caffe(path, labels=labels)
+            self.load_weights_from_caffe(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,
+                                         label_length=label_length)
         elif file_name.lower().endswith('kerasmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels)
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,
+                                         label_length=label_length, use_gpu=use_gpu)
         elif file_name.lower().endswith('onnxmodel.h5'):
-            self.load_weights_from_keras(path, labels=labels)
+            self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,            
+                                         label_length=label_length, use_gpu=use_gpu)
         else:
             raise DLPyError('Weights file must be one of the follow types:\n'
                             'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
                             'Weights load failed.')
 
-    def load_weights_from_caffe(self, path, labels=False):
+    def load_weights_from_caffe(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -690,16 +837,25 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
-        labels : CASTable, optional
-            Specifies the table that contains the imagenet1k labels.
+        labels : bool
+            Specifies whether to use ImageNet classification labels
+        data_spec : list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)
+        label_file_name : string, optional
+            Fully qualified path to CSV file containing user-defined
+            classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
 
         '''
         if labels:
-            self.load_weights_from_file_with_labels(path=path, format_type='CAFFE')
+            self.load_weights_from_file_with_labels(path=path, format_type='CAFFE', data_spec=data_spec, 
+                                                    label_file_name=label_file_name, label_length=label_length)
         else:
-            self.load_weights_from_file(path=path, format_type='CAFFE')
+            self.load_weights_from_file(path=path, format_type='CAFFE', data_spec=data_spec)
 
-    def load_weights_from_keras(self, path, labels=False):
+    def load_weights_from_keras(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None,
+                                use_gpu=False):
         '''
         Load the model weights from a HDF5 file
 
@@ -708,14 +864,27 @@ class Network(Layer):
         path : string
             Specifies the server-side directory of the HDF5 file that
             contains the weight table.
+        labels : bool
+            Specifies whether to use ImageNet classification labels
+        data_spec : list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)
+        label_file_name : string, optional
+            Fully qualified path to CSV file containing user-defined
+            classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
+        use_gpu : boolean, optional
+            Require GPU for processing model
 
         '''
         if labels:
-            self.load_weights_from_file_with_labels(path=path, format_type='KERAS')
+            self.load_weights_from_file_with_labels(path=path, format_type='KERAS', data_spec=data_spec,
+                                                    label_file_name=label_file_name, label_length=label_length,
+                                                    use_gpu=use_gpu)
         else:
-            self.load_weights_from_file(path=path, format_type='KERAS')
+            self.load_weights_from_file(path=path, format_type='KERAS', data_spec=data_spec, use_gpu=use_gpu)
 
-    def load_weights_from_file(self, path, format_type='KERAS'):
+    def load_weights_from_file(self, path, format_type='KERAS', data_spec=None, use_gpu=False):
         '''
         Load the model weights from a HDF5 file
 
@@ -726,22 +895,71 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
+        data_spec : list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)
+        use_gpu : boolean, optional
+            Require GPU for processing model
 
         '''
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
-        self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                        modelWeights=dict(replace=True,
-                                          name=self.model_name + '_weights'),
-                        formatType=format_type, weightFilePath=file_name,
-                        caslib=cas_lib_name)
+        if data_spec:
+
+            # run action with dataSpec option
+            with sw.option_context(print_messages = False):
+                rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                    model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    dataSpecs=data_spec,
+                                    gpuModel=use_gpu,
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    );
+
+            # if error, may not support dataspec
+            if rt.severity > 1:
+
+                # check for error containing "dataSpecs"
+                data_spec_missing = False
+                for msg in rt.messages:
+                    if ('ERROR' in msg) and ('dataSpecs' in msg):
+                        data_spec_missing = True
+
+                if data_spec_missing:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True,
+                                                              name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name,
+                                            gpuModel=use_gpu,
+                                            caslib=cas_lib_name,
+                                            )
+
+                # handle error or create necessary attributes
+                if rt.severity > 1:
+                    for msg in rt.messages:
+                        print(msg)
+                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                else:
+                    from dlpy.attribute_utils import create_extended_attributes
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
+
+        else:
+            print("NOTE: no dataspec(s) provided - creating image classification model.")
+            self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                            modelWeights=dict(replace=True,
+                                              name=self.model_name + '_weights'),
+                            formatType=format_type, weightFilePath=file_name,
+                            gpuModel=use_gpu,
+                            caslib=cas_lib_name,
+                            )
 
         self.set_weights(self.model_name + '_weights')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights_from_file_with_labels(self, path, format_type='KERAS'):
+    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None, label_length=None,
+                                           use_gpu=False):
         '''
         Load the model weights from a HDF5 file
 
@@ -752,21 +970,78 @@ class Network(Layer):
             contains the weight table.
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
+        data_spec : list of :class:`DataSpec`, optional
+            data specification for input and output layer(s)
+        label_file_name : string, optional
+            Fully qualified path to CSV file containing user-defined
+            classification labels.  If not specified, ImageNet labels assumed.
+        label_length : int, optional
+            Length of the classification labels (in characters).
+        use_gpu : boolean, optional
+            Require GPU for processing model
 
         '''
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
-        from dlpy.utils import get_imagenet_labels_table
-        label_table = get_imagenet_labels_table(self.conn)
+        if (label_file_name):
+            from dlpy.utils import get_user_defined_labels_table
+            label_table = get_user_defined_labels_table(self.conn, label_file_name, label_length)
+        else:
+            from dlpy.utils import get_imagenet_labels_table
+            label_table = get_imagenet_labels_table(self.conn, label_length)            
 
-        self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                        modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                        formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                        labelTable=label_table);
+        if (data_spec):
+
+            # run action with dataSpec option
+            with sw.option_context(print_messages = False):
+                rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                    model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    dataSpecs=data_spec,
+                                    gpuModel=use_gpu,
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    labelTable=label_table,
+                                    );
+
+            # if error, may not support dataspec
+            if rt.severity > 1:
+
+                # check for error containing "dataSpecs"
+                data_spec_missing = False
+                for msg in rt.messages:
+                    if ('ERROR' in msg) and ('dataSpecs' in msg):
+                        data_spec_missing = True
+
+                if data_spec_missing:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            gpuModel=use_gpu,
+                                            labelTable=label_table,
+                                            );
+
+                # handle error or create necessary attributes with Python function
+                if rt.severity > 1:
+                    for msg in rt.messages:
+                        print(msg)
+                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                else:
+                    from dlpy.attribute_utils import create_extended_attributes
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec, label_file_name)
+
+        else:
+            print("NOTE: no dataspec(s) provided - creating image classification model.")
+            self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                            gpuModel=use_gpu,
+                            labelTable=label_table,
+                            );
 
         self.set_weights(self.model_name + '_weights')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights_from_table(self, path):
@@ -780,7 +1055,7 @@ class Network(Layer):
             contains the weight table.
 
         '''
-        cas_lib_name, file_name = caslibify(self.conn, path, task='load')
+        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
         self._retrieve_('table.loadtable',
                         caslib=cas_lib_name,
@@ -808,7 +1083,7 @@ class Network(Layer):
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
 
-        if cas_lib_name is not None:
+        if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
@@ -846,7 +1121,15 @@ class Network(Layer):
 
         '''
         server_sep = get_server_path_sep(self.conn)
-        dir_name, file_name = path.rsplit(server_sep, 1)
+        
+        if os.path.isfile(path):
+            if server_sep in path:
+                dir_name, file_name = path.rsplit(server_sep, 1)
+            else:
+                file_name = path
+        else:
+            raise DLPyError('The specified file does not exist: ' + path)
+        
         try:
             flag, cas_lib_name = check_caslib(self.conn, dir_name)
         except:
@@ -888,6 +1171,7 @@ class Network(Layer):
                         modelTable = self.model_table,
                         randomCrop = 'none',
                         randomFlip = 'none',
+                        randomMutation = 'none',
                         **kwargs)
 
         model_astore = self._retrieve_('astore.download',
@@ -931,7 +1215,7 @@ class Network(Layer):
         # if path.endswith(os.path.sep):
         #    path = path[:-1]
 
-        caslib, path_remaining = caslibify(self.conn, path, task = 'save')
+        caslib, path_remaining, tmp_caslib = caslibify(self.conn, path, task = 'save')
 
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.sashdat'
@@ -975,7 +1259,7 @@ class Network(Layer):
 
         print('NOTE: Model table saved successfully.')
 
-        if caslib is not None:
+        if (caslib is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def save_weights_csv(self, path):
@@ -997,7 +1281,7 @@ class Network(Layer):
                             casout = dict(name = self.model_weights.name,
                                           replace = True))
 
-        caslib, path_remaining = caslibify(self.conn, path, task = 'save')
+        caslib, path_remaining, tmp_caslib = caslibify(self.conn, path, task = 'save')
         _file_name_ = self.model_name.replace(' ', '_')
         _extension_ = '.csv'
         weights_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
@@ -1010,7 +1294,7 @@ class Network(Layer):
 
         print('NOTE: Model weights csv saved successfully.')
 
-        if caslib is not None:
+        if (caslib is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def save_to_onnx(self, path, model_weights = None):
@@ -1043,7 +1327,7 @@ class Network(Layer):
             print('NOTE: Model weights will be loaded from csv.')
             model_weights = pd.read_csv(model_weights)
         model_table = self.conn.CASTable(**self.model_table)
-        onnx_model = sas_to_onnx(layers = self.layers,
+        onnx_model = sas_to_onnx(layers=self.layers,
                                  model_table = model_table,
                                  model_weights = model_weights)
         file_name = self.model_name + '.onnx'
@@ -1089,7 +1373,7 @@ class Network(Layer):
         DLPy supports ONNX version >= 1.3.0, and Opset version 8.
 
         For ONNX format, currently supported layers are convo, pool,
-        fc, batchnorm, residual, concat, and detection.
+        fc, batchnorm, residual, concat, reshape, and detection.
 
         If dropout is specified in the model, train the model using
         inverted dropout, which can be specified in :class:`Optimizer`.
@@ -1397,12 +1681,14 @@ def extract_conv_layer(layer_table):
     else:
         conv_layer_config['include_bias'] = True
 
-    padding_width = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_left'].tolist()[0]
-    padding_height = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_top'].tolist()[0]
-    if padding_width != -1:
-        conv_layer_config['padding_width'] = padding_width
-    if padding_height != -1:
-        conv_layer_config['padding_height'] = padding_height
+    # pad_top and pad_left are added after vb015
+    if 'convopts.pad_left' in layer_table['_DLKey1_'].values and 'convopts.pad_top' in layer_table['_DLKey1_'].values:
+        padding_width = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_left'].tolist()[0]
+        padding_height = dl_numval[layer_table['_DLKey1_'] == 'convopts.pad_top'].tolist()[0]
+        if padding_width != -1:
+            conv_layer_config['padding_width'] = padding_width
+        if padding_height != -1:
+            conv_layer_config['padding_height'] = padding_height
 
     layer = Conv2d(**conv_layer_config)
     return layer
@@ -1435,12 +1721,14 @@ def extract_pooling_layer(layer_table):
     del pool_layer_config['poolingtype']
     pool_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
-    padding_width = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_left'].tolist()[0]
-    padding_height = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_top'].tolist()[0]
-    if padding_width != -1:
-        pool_layer_config['padding_width'] = padding_width
-    if padding_height != -1:
-        pool_layer_config['padding_height'] = padding_height
+    # pad_top and pad_left are added after vb015
+    if 'poolingopts.pad_left' in layer_table['_DLKey1_'].values and 'poolingopts.pad_top' in layer_table['_DLKey1_'].values:
+        padding_width = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_left'].tolist()[0]
+        padding_height = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'poolingopts.pad_top'].tolist()[0]
+        if padding_width != -1:
+            pool_layer_config['padding_width'] = padding_width
+        if padding_height != -1:
+            pool_layer_config['padding_height'] = padding_height
 
     layer = Pooling(**pool_layer_config)
     return layer
@@ -1617,7 +1905,84 @@ def extract_fc_layer(layer_table):
     layer = Dense(**fc_layer_config)
     return layer
 
+def extract_recurrent_layer(layer_table):
+    '''
+    Extract layer configuration from a recurrent layer table
 
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    dict
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['n', 'std', 'mean', 'max_output_length', 
+                'dropout', 'reversed', 'trunc_fact']
+    str_keys = ['act', 'init', 'rnn_type', 'rnn_outputtype']
+
+    recurrent_layer_config = dict()
+    recurrent_layer_config.update(get_num_configs(num_keys, 'rnnopts', layer_table))
+    recurrent_layer_config.update(get_str_configs(str_keys, 'rnnopts', layer_table))
+    recurrent_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    
+    if 'trunc_fact' in recurrent_layer_config.keys():
+        recurrent_layer_config['truncation_factor'] = recurrent_layer_config['trunc_fact']
+        del recurrent_layer_config['trunc_fact']
+        
+    if 'reversed' in recurrent_layer_config.keys():
+        if recurrent_layer_config['reversed'] > 0:
+            recurrent_layer_config['reversed_'] = True
+        else:
+            recurrent_layer_config['reversed_'] = False
+        del recurrent_layer_config['reversed']
+    else:
+        recurrent_layer_config['reversed_'] = False
+        
+    if 'rnn_type' in recurrent_layer_config.keys():
+        if 'Long' in recurrent_layer_config['rnn_type']:
+            recurrent_layer_config['rnn_type'] = 'LSTM'
+        elif 'Gated' in recurrent_layer_config['rnn_type']:
+            recurrent_layer_config['rnn_type'] = 'GRU'
+        else:
+            recurrent_layer_config['rnn_type'] = 'RNN'
+    else:
+        recurrent_layer_config['rnn_type'] = 'RNN'
+        
+    if 'act' in recurrent_layer_config.keys():
+        if 'Hyperbolic' in recurrent_layer_config['act']:
+            recurrent_layer_config['act'] = 'TANH'
+        elif recurrent_layer_config['act'] == 'Automatic':
+            recurrent_layer_config['act'] = 'AUTO'
+        elif recurrent_layer_config['act'] == 'Identity':
+            recurrent_layer_config['act'] = 'IDENTITY'
+        elif recurrent_layer_config['act'] == 'Logistic':
+            recurrent_layer_config['act'] = 'LOGISTIC'
+        elif recurrent_layer_config['act'] == 'Sigmoid':
+            recurrent_layer_config['act'] = 'SIGMOID'
+        else:
+            recurrent_layer_config['act'] = 'AUTO'
+    else:
+        recurrent_layer_config['act'] = 'AUTO'
+   
+    if 'rnn_outputtype' in recurrent_layer_config.keys():
+        if 'arbitrary' in recurrent_layer_config['rnn_outputtype']:
+            recurrent_layer_config['output_type'] = 'ARBITRARYLENGTH'
+        elif 'fixed-length' in recurrent_layer_config['rnn_outputtype']:
+            recurrent_layer_config['output_type'] = 'ENCODING'
+        else:
+            recurrent_layer_config['output_type'] = 'SAMELENGTH'
+        del recurrent_layer_config['rnn_outputtype']
+    else:
+        recurrent_layer_config['output_type'] = 'SAMELENGTH'
+                
+    layer = Recurrent(**recurrent_layer_config)
+    return layer  
+    
 def extract_output_layer(layer_table):
     '''
     Extract layer configuration from an output layer table
@@ -1642,7 +2007,7 @@ def extract_output_layer(layer_table):
     output_layer_config.update(get_num_configs(num_keys, 'outputopts', layer_table))
     output_layer_config.update(get_str_configs(str_keys, 'outputopts', layer_table))
     output_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
-
+    
     if layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'outputopts.no_bias'].any():
         output_layer_config['include_bias'] = False
     else:

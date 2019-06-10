@@ -80,25 +80,21 @@ def caffe_to_sas(network_file, model_name, network_param=None,
         else:
             model = caffe.Net(network_file, phase, weights=network_param)
         net = caffe_pb2.NetParameter()
-        text_format.Merge(open(network_file + '.tmp').read(), net)
-
-        # remove temporary file created
-        if os.path.isfile(network_file + '.tmp'):
-            os.remove(network_file + '.tmp')
+        text_format.Merge(open(network_file).read(), net)
 
         # identify common Caffe/SAS computation layers
         layer_list = []
         for layer in net.layer:
             include_layer = False
-            if (len(layer.include) == 0):
+            if len(layer.include) == 0:
                 include_layer = True
             else:
                 for layer_phase in layer.include:
-                    if (caffe.TEST == layer_phase.phase):
+                    if caffe.TEST == layer_phase.phase:
                         include_layer = True
 
             # exclude layers not implemented (or implemented in a different fashion)
-            if (layer.type.lower() not in common_layers):
+            if layer.type.lower() not in common_layers:
                 include_layer = False
 
             if include_layer:
@@ -107,10 +103,10 @@ def caffe_to_sas(network_file, model_name, network_param=None,
         # associate activations with computation layers
         for layer in net.layer:
             layer_type = layer.type.lower()
-            if (layer_type in ['relu', 'prelu', 'elu', 'sigmoid', 'tanh']):
+            if layer_type in ['relu', 'prelu', 'elu', 'sigmoid', 'tanh']:
                 layer_index = None
                 for ii in range(len(layer_list)):
-                    if (layer.top[0] == layer_list[ii].layer_parm.top[0]):
+                    if layer.top[0] == layer_list[ii].layer_parm.top[0]:
                         layer_index = ii
 
                 if layer_index is not None:
@@ -123,10 +119,10 @@ def caffe_to_sas(network_file, model_name, network_param=None,
         # associate dropout with computation layers
         for layer in net.layer:
             layer_type = layer.type.lower()
-            if (layer_type == 'dropout'):
+            if layer_type == 'dropout':
                 layer_index = None
                 for ii in range(len(layer_list)):
-                    if (layer.top[0] == layer_list[ii].layer_parm.top[0]):
+                    if layer.top[0] == layer_list[ii].layer_parm.top[0]:
                         layer_index = ii
 
                 if layer_index is not None:
@@ -139,11 +135,11 @@ def caffe_to_sas(network_file, model_name, network_param=None,
         # associate softmax with a fully-connected layer
         for layer in net.layer:
             layer_type = layer.type.lower()
-            if (layer_type in ['softmax', 'softmaxwithloss']):
+            if layer_type in ['softmax', 'softmaxwithloss']:
                 layer_index = None
                 for ii in range(len(layer_list)):
                     for jj in range(len(layer.bottom)):
-                        if (layer.bottom[jj] == layer_list[ii].layer_parm.top[0]):
+                        if layer.bottom[jj] == layer_list[ii].layer_parm.top[0]:
                             layer_index = ii
 
                 if layer_index is not None:
@@ -167,7 +163,7 @@ def caffe_to_sas(network_file, model_name, network_param=None,
 
         # associate scale layer with batchnorm layer
         for layer in net.layer:
-            if (layer.type.lower() == 'scale'):
+            if layer.type.lower() == 'scale':
                 bn_found = False
                 for ii in range(len(layer_list)):
                     if ((layer_list[ii].layer_parm.type.lower() == 'batchnorm') and
@@ -184,17 +180,17 @@ def caffe_to_sas(network_file, model_name, network_param=None,
         # loop over included layers
         for clayer in layer_list:
             layer_type = clayer.layer_parm.type.lower()
-            if (layer_type == 'pooling'):  # average/max pooling
+            if layer_type == 'pooling':  # average/max pooling
                 sas_code = caffe_pooling_layer(clayer, model_name)
-            elif (layer_type == 'convolution'):  # 2D convolution
+            elif layer_type == 'convolution':  # 2D convolution
                 sas_code = caffe_convolution_layer(clayer, model_name)
-            elif (layer_type == 'batchnorm'):  # batch normalization
+            elif layer_type == 'batchnorm':  # batch normalization
                 sas_code = caffe_batch_normalization_layer(clayer, model_name)
-            elif (layer_type in ['data', 'memorydata']):  # input layer
+            elif layer_type in ['data', 'memorydata']:  # input layer
                 sas_code = caffe_input_layer(clayer, model_name)
-            elif (layer_type == 'eltwise'):  # residual
+            elif layer_type == 'eltwise':  # residual
                 sas_code = caffe_residual_layer(clayer, model_name)
-            elif (layer_type == 'innerproduct'):  # fully connected
+            elif layer_type == 'innerproduct':  # fully connected
                 sas_code = caffe_full_connect_layer(clayer, model_name)
             else:
                 raise CaffeParseError(layer_type +
@@ -209,10 +205,12 @@ def caffe_to_sas(network_file, model_name, network_param=None,
                     'Unable to generate SAS definition for layer ' +
                     clayer.layer_parm.name)
 
-            # convert from BINARYPROTO to HDF5
-            if network_param is not None:
-                sas_hdf5 = os.path.join(os.getcwd(), '{}_weights.h5'.format(model_name))
-                write_caffe_hdf5(model, layer_list, sas_hdf5)
+        # convert from BINARYPROTO to HDF5
+        if network_param is not None:
+            sas_hdf5 = os.path.join(os.getcwd(), '{}_weights.caffemodel.h5'.format(model_name))
+            write_caffe_hdf5(model, layer_list, sas_hdf5)
+            print('NOTE: the model weights has been stored in the following file:\n'
+              '{}'.format(sas_hdf5))
 
         return output_code
 
@@ -256,83 +254,84 @@ def caffe_pooling_layer(clayer, model_name):
 
     # read pooling parameters
     pooling_param = getattr(layer_parm, 'pooling_param', None)
+    parms = {}
     if (pooling_param is not None):
         for ii in range(len(dstruct)):
             if (dstruct[ii]['repeated']):
-                code_str = (dstruct[ii]['field'] + '=extract_repeated_attr' +
-                            '(pooling_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_repeated_attr' + '(pooling_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
             else:
-                code_str = (dstruct[ii]['field'] + '=extract_attr' +
-                            '(pooling_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_attr' + '(pooling_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
 
-            exec(code_str)
+            parms[dstruct[ii]['field']] = eval(code_str)
     else:
         raise CaffeParseError('No pooling parameters given')
 
     # define parameters needed by SAS pooling layer
 
     # pooling type
-    if (pool == 0):
+    if parms['pool'] == 0:
         pool_type = 'max'
-    elif (pool == 1):
+    elif parms['pool'] == 1:
         pool_type = 'mean'
     else:
         raise CaffeParseError('Invalid pooling type specified for layer = ' +
                               layer_parm.name)
 
     # stride (vertical)
-    if (stride_h is not None) and (stride_h > 0):
-        tmp_stride_h = stride_h
+    if parms['stride_h'] > 0:
+        tmp_stride_h = parms['stride_h']
     else:
-        if (stride is None) or (stride == 0):
+        if parms['stride'] == 0:
             tmp_stride_h = 1
         else:
-            tmp_stride_h = stride
+            tmp_stride_h = parms['stride']
 
     # stride (horizontal)
-    if (stride_w is not None) and (stride_w > 0):
-        tmp_stride_w = stride_w
+    if parms['stride_w'] > 0:
+        tmp_stride_w = parms['stride_w']
     else:
-        if (stride is None) or (stride == 0):
+        if parms['stride'] == 0:
             tmp_stride_w = 1
         else:
-            tmp_stride_w = stride
+            tmp_stride_w = parms['stride']
 
     # horizontal/vertical stride must agree
-    if (tmp_stride_w != tmp_stride_h):
+    if tmp_stride_w != tmp_stride_h:
         raise CaffeParseError('Horizontal/vertical strides do not agree '
                               'for layer = ' + layer_parm.name)
     else:
         common_stride = tmp_stride_w
 
     # height of kernel
-    if (kernel_h is not None) and (kernel_h > 0):
-        height = kernel_h
+    if parms['kernel_h'] > 0:
+        height = parms['kernel_h']
     else:
-        if (kernel_size is None):
+        if parms['kernel_size'] == 0:
             raise CaffeParseError('Unable to set kernel height for layer = ' +
                                   layer_parm.name)
         else:
-            height = kernel_size
+            height = parms['kernel_size']
 
     # width of kernel
-    if (kernel_w is not None) and (kernel_w > 0):
+    if parms['kernel_w'] > 0:
         width = kernel_w
     else:
-        if (kernel_size is None):
+        if parms['kernel_size'] == 0:
             raise CaffeParseError('Unable to set kernel width for layer = ' +
                                   layer_parm.name)
         else:
-            width = kernel_size
+            width = parms['kernel_size']
 
     # determine dropout
     dropout = extract_dropout(clayer)
-    if (dropout is None):
+    if dropout is None:
         dropout = 0
 
     # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
-    if (num_layers != 1):
+    if num_layers != 1:
         raise CaffeParseError('Pooling layer requires one input layer, ' +
                               str(num_layers) + ' provided')
 
@@ -384,82 +383,82 @@ def caffe_convolution_layer(clayer, model_name):
 
     # read convolution parameters
     convolution_param = getattr(layer_parm, 'convolution_param', None)
-    if (convolution_param is not None):
+    parms = {}
+    if convolution_param is not None:
         for ii in range(len(dstruct)):
             if (dstruct[ii]['repeated']):
-                code_str = (dstruct[ii]['field'] + '=extract_repeated_attr' +
-                            '(convolution_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_repeated_attr' + '(convolution_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
             else:
-                code_str = (dstruct[ii]['field'] + '=extract_attr' +
-                            '(convolution_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_attr' + '(convolution_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
 
-            exec(code_str)
+            parms[dstruct[ii]['field']] = eval(code_str)
     else:
         raise CaffeParseError('No convolution parameters given')
-
+    
     # define parameters needed by SAS convolution layer
     # bias
-    if (bias_term is not None):
-        if bias_term:
-            nobias = 'False'
-        else:
-            nobias = 'True'
-    else:
+    if parms['bias_term']:
         nobias = 'False'
+    else:
+        nobias = 'True'
 
     # number of output layers
-    if (num_output is None):
+    if parms['num_output'] == 0:
         raise CaffeParseError('num_output not provided for layer = ' +
                               layer_parm.name)
+    else:
+        num_output = parms['num_output']
 
     # stride (vertical)
-    if (stride_h is not None) and (stride_h > 0):
-        tmp_stride_h = stride_h
+    if parms['stride_h'] > 0:
+        tmp_stride_h = parms['stride_h']
     else:
-        if (stride is None) or (stride == 0):
+        if parms['stride'] == 0:
             tmp_stride_h = 1
         else:
-            tmp_stride_h = stride
+            tmp_stride_h = parms['stride']
 
     # stride (horizontal)
-    if (stride_w is not None) and (stride_w > 0):
-        tmp_stride_w = stride_w
+    if parms['stride_w'] > 0:
+        tmp_stride_w = parms['stride_w']
     else:
-        if (stride is None) or (stride == 0):
+        if (parms['stride'] == 0):
             tmp_stride_w = 1
         else:
-            tmp_stride_w = stride
+            tmp_stride_w = parms['stride']
 
     # horizontal/vertical stride must agree
-    if (tmp_stride_w != tmp_stride_h):
+    if tmp_stride_w != tmp_stride_h:
         raise CaffeParseError('Horizontal/vertical strides do not '
                               'agree for layer = ' + layer_parm.name)
     else:
         common_stride = tmp_stride_w
 
     # height of kernel
-    if (kernel_h is not None) and (kernel_h > 0):
-        height = kernel_h
+    if parms['kernel_h'] > 0:
+        height = parms['kernel_h']
     else:
-        if (kernel_size is None):
+        if parms['kernel_size'] == 0:
             raise CaffeParseError('Unable to set kernel height for layer = ' +
                                   layer_parm.name)
         else:
-            height = kernel_size
+            height = parms['kernel_size']
 
     # width of kernel
-    if (kernel_w is not None) and (kernel_w > 0):
-        width = kernel_w
+    if parms['kernel_w'] > 0:
+        width = parms['kernel_w']
     else:
-        if (kernel_size is None):
+        if parms['kernel_size'] == 0:
             raise CaffeParseError('Unable to set kernel width for layer = ' +
                                   layer_parm.name)
         else:
-            width = kernel_size
+            width = parms['kernel_size']
 
     # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
-    if (num_layers != 1):
+    if num_layers != 1:
         raise CaffeParseError('Convolution layer requires one input layer, ' +
                               str(num_layers) + ' provided')
 
@@ -468,7 +467,7 @@ def caffe_convolution_layer(clayer, model_name):
 
     # determine dropout
     dropout = extract_dropout(clayer)
-    if (dropout is None):
+    if dropout is None:
         dropout = 0
 
     return write_convolution_layer(model_name=model_name,
@@ -534,7 +533,7 @@ def caffe_input_layer(clayer, model_name):
 
     # read scaling parameter
     transform_param = getattr(layer_parm, 'transform_param', None)
-    if (transform_param is not None):
+    if transform_param is not None:
         scale = getattr(transform_param, 'scale', 1.0)
 
     # read image format parameters
@@ -581,21 +580,22 @@ def caffe_residual_layer(clayer, model_name):
 
     # read eltwise parameters
     eltwise_param = getattr(layer_parm, 'eltwise_param', None)
-    if (eltwise_param is not None):
+    parms = {}
+    if eltwise_param is not None:
         for ii in range(len(dstruct)):
             if (dstruct[ii]['repeated']):
-                code_str = (dstruct[ii]['field'] + '=extract_repeated_attr' +
-                            '(eltwise_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_repeated_attr' + '(eltwise_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
             else:
-                code_str = (dstruct[ii]['field'] + '=extract_attr' +
-                            '(eltwise_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_attr' + '(eltwise_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
 
-            exec(code_str)
+            parms[dstruct[ii]['field']] = eval(code_str)
     else:
         raise CaffeParseError('No eltwise parameters given')
 
     # determine whether operation specified is valid
-    if (operation != 1):
+    if parms['operation'] != 1:
         raise CaffeParseError('Element-wise operation not supported')
 
     # determine activation
@@ -603,7 +603,7 @@ def caffe_residual_layer(clayer, model_name):
 
     # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
-    if (num_layers < 2):
+    if num_layers < 2:
         raise CaffeParseError(
             'Residual layer requires two or more input layers, ' +
             str(num_layers) + ' provided')
@@ -642,51 +642,49 @@ def caffe_full_connect_layer(clayer, model_name):
 
     # read inner product parameters
     inner_product_param = getattr(layer_parm, 'inner_product_param', None)
-    if (inner_product_param is not None):
+    parms = {}
+    if inner_product_param is not None:
         for ii in range(len(dstruct)):
             if (dstruct[ii]['repeated']):
-                code_str = (dstruct[ii]['field'] + '=extract_repeated_attr' +
-                            '(inner_product_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_repeated_attr' + '(inner_product_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
             else:
-                code_str = (dstruct[ii]['field'] + '=extract_attr' +
-                            '(inner_product_param,\'' + dstruct[ii]['field'] + '\')')
+                code_str = ('extract_attr' + '(inner_product_param,\'' + 
+                            dstruct[ii]['field'] + '\')')
 
-            exec(code_str)
+            parms[dstruct[ii]['field']] = eval(code_str)
     else:
         raise CaffeParseError('No inner_product parameters given')
 
     # define parameters needed by SAS fully-connected layer
 
     # bias
-    if (bias_term is not None):
-        if bias_term:
-            nobias = 'False'
-        else:
-            nobias = 'True'
-    else:
+    if parms['bias_term']:
         nobias = 'False'
+    else:
+        nobias = 'True'
 
     # number of output neurons
-    if (num_output is not None):
-        num_neurons = num_output
+    if parms['num_output'] > 0:
+        num_neurons = parms['num_output']
     else:
         raise CaffeParseError('Number of output neurons not specified '
                               'for layer = , ' + layer_parm.name)
 
     # check axis setting
-    if (axis is not None) and (axis != 1):
-        raise CaffeParseError('axis = , ' + str(axis) + ' is not supported')
+    if parms['axis'] != 1:
+        raise CaffeParseError('axis = , ' + str(parms['axis']) + ' is not supported')
 
     # check transpose setting
-    if (transpose is not None) and (transpose is not False):
-        raise CaffeParseError('transpose = , ' + str(transpose) +
+    if parms['transpose']:
+        raise CaffeParseError('transpose = , ' + str(parms['transpose']) +
                               ' is not supported')
 
     # determine activation
     act = extract_activation(clayer, 'innerproduct')
 
     # determine layer type
-    if (act == 'softmax'):
+    if act == 'softmax':
         fc_type = 'output'
     else:
         fc_type = 'fullconnect'
@@ -698,7 +696,7 @@ def caffe_full_connect_layer(clayer, model_name):
 
         # determine source layer(s)
     source_layer, num_layers = extract_source_layers(clayer)
-    if (num_layers != 1):
+    if num_layers != 1:
         raise CaffeParseError('Fully connected layer requires one input layer, ' +
                               str(num_layers) + ' provided')
 
@@ -769,16 +767,16 @@ def map_caffe_activation(layer_name, layer_type, act_type):
     '''
 
     # convolution layer
-    if (layer_type in ['convolution', 'batchnorm', 'residual']):
+    if layer_type in ['convolution', 'batchnorm', 'residual']:
         map_dict = {'elu': 'elu', 'relu': 'relu', 'tanh': 'tanh', 'sigmoid': 'sigmoid'}
-    elif (layer_type == 'innerproduct'):
+    elif layer_type == 'innerproduct':
         map_dict = {'softmax': 'softmax', 'elu': 'elu', 'relu': 'relu',
                     'tanh': 'tanh', 'sigmoid': 'sigmoid', 'softmaxwithloss': 'softmax'}
     else:
         raise CaffeParseError('SAS does not support activation functions for layer ' +
                               layer_name)
 
-    if (act_type in map_dict.keys()):
+    if act_type in map_dict.keys():
         act_func = map_dict[act_type]
         if act_func is None:
             raise CaffeParseError('Activation function ' + act_type + ' not supported')
@@ -806,10 +804,10 @@ def extract_activation(clayer, layer_type):
 
     '''
     act = None
-    if (len(clayer.related_layers) > 0):
+    if len(clayer.related_layers) > 0:
         for ii in range(len(clayer.related_layers)):
             act_type = clayer.related_layers[ii].type.lower()
-            if (act_type in caffe_activation_types):
+            if act_type in caffe_activation_types:
                 if (act is None):
                     act = map_caffe_activation(clayer.layer_parm.name,
                                                layer_type, act_type)
@@ -840,16 +838,16 @@ def extract_dropout(clayer):
     '''
     dropout = None
     dropout_ratio = 0.0
-    if (len(clayer.related_layers) > 0):
+    if len(clayer.related_layers) > 0:
         for ii in range(len(clayer.related_layers)):
             layer_type = clayer.related_layers[ii].type.lower()
-            if (layer_type == 'dropout'):
-                if (dropout is None):
+            if layer_type == 'dropout':
+                if dropout is None:
                     # read dropout parameters --> only one variable in
                     # DropoutParameter message, so no intervening layer_param wrapper
                     dropout_param = getattr(clayer.related_layers[ii],
                                             'dropout_param', None)
-                    if (dropout_param is not None):
+                    if dropout_param is not None:
                         # dropout ratio
                         dropout_ratio = getattr(dropout_param, 'dropout_ratio', 0.0)
                     else:
@@ -907,10 +905,10 @@ def extract_repeated_attr(param, field):
 
     '''
     tmpval = getattr(param, field, None)
-    if (tmpval is not None):
+    if tmpval is not None:
         if isinstance(tmpval, (float, int, bool)):
             y = tmpval
-        elif (len(tmpval) > 0):
+        elif len(tmpval) > 0:
             y = tmpval[0]
         else:
             y = None
@@ -938,7 +936,7 @@ def extract_attr(param, field):
 
     '''
     tmpval = getattr(param, field, None)
-    if (tmpval is not None):
+    if tmpval is not None:
         return tmpval
     else:
         return None

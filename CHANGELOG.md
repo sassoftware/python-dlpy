@@ -1,7 +1,7 @@
 # Change Log
 
-## 1.0.1 - 2018-12-04
+## 1.0.2 - 2019-03-22
 
 - Various bug fixes
-- ONNX import and export support
-- Re-organization of examples
+- A new way of creating models
+- Multi-step forecasting

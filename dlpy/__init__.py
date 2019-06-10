@@ -18,7 +18,7 @@
 
 ''' SAS Deep Learning '''
 
-__version__ = '1.0.2-dev'
+__version__ = '1.0.3-dev'
 __dev__ = False
 
 from dlpy.model import Model

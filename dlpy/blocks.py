@@ -30,14 +30,18 @@ class ResBlock(object):
     ----------
     kernel_sizes : list-of-ints, optional
         Specifies the size of the kernels. This assumes the kernels are square.
+        Default: 3
     n_filters : list-of-ints, optional
         Specifies the number of filters.
+        Default: (16, 16)
     strides : list-of-ints, optional
         Specifies the stride values for the filters
     batch_norm_first : bool, optional
         Set to True, if the batch normalization comes first
+        Default: False
     conv_short_cut : bool, optional
         Set to True, if convolution layer has a short cut
+        Default: False
 
     Returns
     -------
@@ -97,7 +101,7 @@ class ResBlock(object):
         return cls.number_of_instances
 
     def add_layers(self):
-        '''  Add the layers for the blokck '''
+        '''  Add the layers for the block '''
         for n_filter, kernel_size, stride in zip(self.n_filters, self.kernel_sizes, self.strides):
             self.layers.append(Conv2d(n_filters=n_filter, width=kernel_size, stride=stride))
         self.layers.append(Res(act='identity'))
@@ -148,12 +152,15 @@ class ResBlockBN(ResBlock):
     ----------
     kernel_sizes : iter-of-ints, optional
         Kernel size of the convolution filters.
+        Default: 3
     n_filters : iter-of-ints, optional
         List of numbers of filter in each convolution layers.
+        Default: (16, 16)
     strides : iter-of-ints, optional
         List of stride in each convolution layers.
     batch_norm_first : bool, optional
         Specify whether to add batch normal layer before conv layer.
+        Default: True
 
     Returns
     -------
@@ -192,7 +199,7 @@ class ResBlockBN(ResBlock):
         ----------
         src_layer : Layer
             The source layer for the whole block.
-        block_num : int
+        block_num : int, optional
             The label of the block. (used to name the layers)
 
         Returns
@@ -234,18 +241,22 @@ class ResBlock_Caffe(ResBlock):
     ----------
     kernel_sizes : iter-of-ints, optional
         Kernel size of the convolution filters.
+        Default: 3
     n_filters : iter-of-ints, optional
         List of numbers of filter in each convolution layers.
+        Default: (16, 16)
     strides : iter-of-ints, optional
         List of stride in each convolution layers.
     batch_norm_first : bool, optional
         Specify whether to add batch normal layer before conv layer.
+        Default: False
     conv_short_cut : bool, optional
        Set to True, if there is short cut in the convolution layer
+       Default: False
 
     Returns
     -------
-    :class:`ResBlock_Caffee`
+    :class:`ResBlock_Caffe`
 
     '''
 
@@ -286,11 +297,13 @@ class ResBlock_Caffe(ResBlock):
 
     def compile(self, src_layer, block_num=None):
         '''
+        Compile the block structure into DLPy layer definitions.
+
         Parameters
         ----------
         src_layer : Layer
             The source layer for the whole block.
-        block_num : int
+        block_num : int, optional
             The label of the block. (used to name the layers)
 
         Returns
@@ -359,14 +372,18 @@ class DenseNetBlock(object):
 
     Parameters
     ----------
-    n_cells : int
+    n_cells : int, optional
         Number of cells
-    kernel_size : int
+        Default: 4
+    kernel_size : int, optional
         Size of the kernel
-    n_filter : int
+        Default: 3
+    n_filter : int, optional
         Number of filters
-    stride : int
+        Default: 12
+    stride : int, optional
         Size of the stride
+        Default: 1
 
     Returns
     -------
@@ -464,22 +481,29 @@ class Bidirectional(object):
         list of ints to indicate the number of neurons in each block.
     n_blocks : int, optional
         Specifies the number of bidirectional recurrent layer blocks.
+        Default: 1
     rnn_type : string, optional
         Specifies the type of the rnn layer.
-        Default: RNN
+        Default: GRU
         Valid Values: RNN, LSTM, GRU
     output_type : string, optional
         Specifies the output type of the recurrent layer.
-        Default: ENCODING
+        Default: SAMELENGTH
         Valid Values: ENCODING, SAMELENGTH, ARBITRARYLENGTH
     max_output_length : int, mostly optional
         Specifies the maximum number of tokens to generate when the outputType
         parameter is set to ARBITRARYLENGTH.
     dropout : float, optional
         Specifies the dropout rate.
-        Default: 0
-    src_layers : list
+        Default: 0.2
+    src_layers : list, optional
         Specifies the list of source layers for the layer.
+    name : string, optional
+        Specifies layer names. If not specified, 'RNN' is used
+
+    Returns
+    -------
+    :class:`Bidirectional'
 
     '''
 

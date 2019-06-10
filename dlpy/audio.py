@@ -40,7 +40,7 @@ class AudioTable(CASTable):
             CAS connection object
         path : string
             Path to audio files
-        casout : dict or string or CASTable, optional
+        casout : dict, string, or CASTable, optional
             The output CAS table specification
         caslib : string, optional
             The caslib to load audio files from
@@ -119,17 +119,23 @@ class AudioTable(CASTable):
             An audio table containing the audio files.
         frame_shift : int, optional
             Specifies the time difference (in milliseconds) between the beginnings of consecutive frames.
+            Default: 10
         frame_length : int, optional
             Specifies the length of a frame (in milliseconds).
+            Default: 25
         n_bins : int, optional
             Specifies the number of triangular mel-frequency bins.
+            Default: 40
         n_ceps : int, optional
             Specifies the number of cepstral coefficients in each MFCC feature frame (including C0).
+            Default: 40
         feature_scaling_method : string, optional
             Specifies the feature scaling method to apply to the computed feature vectors.
+            Default: 'standardization'
         n_output_frames : int, optional
             Specifies the exact number of frames to include in the output table (extra frames are dropped and missing
             frames are padded with zeros).
+            Default: 500
         casout : dict or string or CASTable, optional
             CAS Output table
         kwargs : keyword-arguments, optional
@@ -174,7 +180,7 @@ class AudioTable(CASTable):
             A connection object to the current session.
         path : string
             Location to the input metadata file.
-        delimiter : audio_path
+        audio_path : delimiter
             Delimiter for the metadata file.
 
         Returns
@@ -206,17 +212,23 @@ class AudioTable(CASTable):
             Location to the audio files.
         task : string, optional
             Specifies the task
+            Note: currently only support 'speech2text' (default)
 
         Returns
         -------
-        ???
+        :class:`CASTable`
+
+        Raises
+        ------
+        DLPyError
+            If anything goes wrong, it complains and prints the appropriate message.
 
         '''
-
+        
         if task == 'speech2text':
             return cls.load_audio_metadata_speechrecognition(conn, path, audio_path)
         else:
-            raise DLPyError("We do not support this task yet!.")
+            raise DLPyError("We do not support this task yet!")
 
     @classmethod
     def create_audio_table(cls, conn, data_path, metadata_path,
@@ -238,10 +250,11 @@ class AudioTable(CASTable):
             Location to the metadata file (this is expected to be on the client side).
         features_parameters : dict, optional
             Parameters to be used while extracting audio features
-        casout : string or dict or CASTable, optional
+        casout : string, dict, or CASTable, optional
             Resulting output CAS table
         task : string, optional
             Specifies the type of the task. Default is speech to text.
+            Note: currently only support 'speech2text' (default)
 
         Returns
         -------
@@ -252,7 +265,7 @@ class AudioTable(CASTable):
         Raises
         ------
         DLPyError
-            If anything goes wrong at any in the process of creating this AudioTable, it complains and
+            If anything goes wrong at any point in the process of creating this AudioTable, it complains and
             prints the appropriate message.
 
         '''
@@ -298,7 +311,7 @@ class AudioTable(CASTable):
         Raises
         ------
         DLPyError
-            If anything goes wrong at any in the process of creating this AudioTable, it complains and
+            If anything goes wrong at any point in the process of creating this AudioTable, it complains and
             prints the appropriate message.
 
         '''
