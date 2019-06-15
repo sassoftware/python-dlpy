@@ -2866,7 +2866,7 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
     model.add(Conv2d(64, width=1, act='identity', include_bias=False, stride=1, src_layers=[pointLayer1]))
     model.add(BN(act=act))
     # reshape 26 * 26 * 64 -> 13 * 13 * 256
-    pointLayer3 = Reshape(act='identity', width=13, height=13, depth=256, name='reshape1')
+    pointLayer3 = Reshape(act='identity', width=grid_number, height=grid_number, depth=256, name='reshape1')
     model.add(pointLayer3)
 
     # concat
