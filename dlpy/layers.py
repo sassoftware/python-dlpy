@@ -352,10 +352,10 @@ class Layer(object):
                 raise ValueError('Layer {} is called with an input that isn\'t a tensor object'.format(self.name))
 
 
-def Input(n_channels=None, height=None, width=None, name=None, nominals=None, std=None, scale=None,
+def Input(n_channels=None, width=None, height=None, name=None, nominals=None, std=None, scale=None,
           offsets=None, dropout=None, random_flip=None, random_crop=None, random_mutation=None, norm_stds=None):
     # used to instantiate a tensor
-    input_layer = InputLayer(n_channels, height, width, name, nominals, std, scale, offsets,
+    input_layer = InputLayer(n_channels, width, height, name, nominals, std, scale, offsets,
                              dropout, random_flip, random_crop, random_mutation, norm_stds)
     return input_layer.input_tenor
 
@@ -400,6 +400,10 @@ class InputLayer(Layer):
         Specifies the type of the random mutation to be applied to the input data, used if data is image.
         Valid Values: NONE, RANDOM
         Default: NONE
+    norm_stds : float-list, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: NONE
 
     Returns
     -------
@@ -413,7 +417,7 @@ class InputLayer(Layer):
     can_be_last_layer = False
     number_of_instances = 0
 
-    def __init__(self, n_channels=None, height=None, width=None, name=None, nominals=None, std=None, scale=None,
+    def __init__(self, n_channels=None, width=None, height=None, name=None, nominals=None, std=None, scale=None,
                  offsets=None, dropout=None, random_flip=None, random_crop=None, random_mutation=None,
                  norm_stds=None, **kwargs):
 
@@ -555,7 +559,6 @@ class Conv2d(_Conv):
 
     Parameters
     ----------
-
     n_filters : int
         Specifies the number of filters for the layer.
     width : int
@@ -667,7 +670,6 @@ class GroupConv2d(Conv2d):
 
     Parameters
     ----------
-
     n_filters : int
         Specifies the number of filters for the layer.
     n_groups : int
@@ -851,7 +853,6 @@ class Conv2DTranspose(Conv2d):
         Includes bias neurons (default).
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
-
 
     Returns
     -------
