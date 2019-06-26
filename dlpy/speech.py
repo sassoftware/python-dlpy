@@ -1,4 +1,4 @@
-from speech_utils import *
+from dlpy.speech_utils import *
 from dlpy.utils import get_server_path_sep
 import os
 
