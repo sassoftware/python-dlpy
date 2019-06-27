@@ -217,7 +217,7 @@ class SpeechToText:
             raise DLPyError("Cannot load the language model.")
 
     def transcribe(self, audio_path,
-                   segment_len=30, gpu_devices=None, max_path_size=100, alpha=1.0, beta=0.0):
+                   segment_len=10, gpu_devices=None, max_path_size=100, alpha=1.0, beta=0.0):
         """
         Transcribe the audio file into text.
 
@@ -232,7 +232,7 @@ class SpeechToText:
 
         segment_len: int, optional
             Specifies the maximum length of one segment in seconds.
-            Default: 30
+            Default: 10
         gpu_devices: set of int, optional
             Specifies the gpu devices to use.
             Default: None
@@ -262,7 +262,7 @@ class SpeechToText:
         return result
 
 
-def load_audio(speech, audio_path, casout, segment_len=30, framerate=16000, sampwidth=2):
+def load_audio(speech, audio_path, casout, segment_len=10, framerate=16000, sampwidth=2):
     """
     Load the audio.
 
@@ -277,7 +277,7 @@ def load_audio(speech, audio_path, casout, segment_len=30, framerate=16000, samp
 
     segment_len: int, optional
         Specifies the maximum length of one segment in seconds.
-        Default: 30
+        Default: 10
     framerate: int, optional
         Specifies the desired sampling rate.
         Default: 16000
