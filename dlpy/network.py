@@ -22,12 +22,14 @@ import os
 
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
-from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale, Reshape, Recurrent
+from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
+    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
 import dlpy.model
 import collections
 import pandas as pd
 import swat as sw
 from copy import deepcopy
+from . import __dev__
 
 
 class Network(Layer):
@@ -85,7 +87,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name=random_name('Model', 6)))
 
         self.model_name = model_table_opts['name']
@@ -94,6 +96,7 @@ class Network(Layer):
         if model_weights is None:
             self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
         else:
+            # TODO put tableexits in set_weights
             if self.conn.tableexists(model_weights).exists == 1:
                 self.set_weights(model_weights)
             else:
@@ -319,6 +322,18 @@ class Network(Layer):
                 model.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 model.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 16:
+                model.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
+            elif layer_type == 17:
+                model.layers.append(extract_groupconv_layer(layer_table = layer_table))
+            elif layer_type == 18:
+                model.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+            elif layer_type == 23:
+                model.layers.append(extract_rpn_layer(layer_table = layer_table))
+            elif layer_type == 24:
+                model.layers.append(extract_roipooling_layer(layer_table = layer_table))
+            elif layer_type == 25:
+                model.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -392,7 +407,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(output_model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name = random_name('caffe_model', 6)))
 
         model_name = model_table_opts['name']
@@ -408,7 +423,7 @@ class Network(Layer):
     @classmethod
     def from_keras_model(cls, conn, keras_model, output_model_table = None,
                          offsets=None, std=None, scale=1.0,
-                         max_num_frames=-1, include_weights = False, 
+                         max_num_frames=-1, include_weights = False,
                          input_weights_file = None, verbose=False):
         '''
         Generate a model object from a Keras model object
@@ -457,11 +472,11 @@ class Network(Layer):
 
         model_table_opts = input_table_check(output_model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name = random_name('keras_model', 6)))
 
         model_name = model_table_opts['name']
-        
+
         # determine what features are supported by current Viya server/deep learning action set
         from .model_conversion.model_conversion_utils import check_rnn_import, check_normstd
         rnn_support = check_rnn_import(conn)
@@ -469,11 +484,11 @@ class Network(Layer):
         if (std is not None) and (not normstd_support):
             print('WARNING: Your Viya installation does not support the std parameter - ignoring')
             std = None
-        
-        output_code = keras_to_sas(model = keras_model, rnn_support = rnn_support, 
+
+        output_code = keras_to_sas(model = keras_model, rnn_support = rnn_support,
                                    model_name = model_name, offsets = offsets, std = std,
                                    scale = scale, max_num_frames = max_num_frames, verbose = verbose)
-                          
+
         if verbose:
             print(output_code)
 
@@ -493,7 +508,7 @@ class Network(Layer):
                 use_gpu = write_keras_hdf5_from_file(keras_model, rnn_support, input_weights_file, temp_HDF5)
             print('NOTE: the model weights has been stored in the following file:\n'
                   '{}'.format(temp_HDF5))
-                  
+
         return model, use_gpu
 
     @classmethod
@@ -536,7 +551,7 @@ class Network(Layer):
 
         model_table_opts = input_table_check(output_model_table)
 
-        if 'name' not in model_table_opts.keys():
+        if 'name' not in model_table_opts:
             model_table_opts.update(**dict(name = random_name('onnx_model', 6)))
 
         model_name = model_table_opts['name']
@@ -718,7 +733,7 @@ class Network(Layer):
             elif layer_type == 5:
                 self.layers.append(extract_output_layer(layer_table=layer_table))
             elif layer_type == 6:
-                model.layers.append(extract_recurrent_layer(layer_table = layer_table))                
+                model.layers.append(extract_recurrent_layer(layer_table = layer_table))
             elif layer_type == 8:
                 self.layers.append(extract_batchnorm_layer(layer_table=layer_table))
             elif layer_type == 9:
@@ -733,6 +748,18 @@ class Network(Layer):
                 self.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 self.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 16:
+                self.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
+            elif layer_type == 17:
+                self.layers.append(extract_groupconv_layer(layer_table = layer_table))
+            elif layer_type == 18:
+                self.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+            elif layer_type == 23:
+                self.layers.append(extract_rpn_layer(layer_table = layer_table))
+            elif layer_type == 24:
+                self.layers.append(extract_roipooling_layer(layer_table = layer_table))
+            elif layer_type == 25:
+                self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -1150,6 +1177,30 @@ class Network(Layer):
         if not flag:
             self._retrieve_('table.dropcaslib', caslib=cas_lib_name)
 
+    def share_weights(self, layers):
+        """
+        Share weights between layers
+
+        Parameters
+        ----------
+        layers : iter-of-dict or dict
+            Pass a list of dictionary or a dictionary. Key specifies a layer name.
+            Value is the name of layers whose weights will be shared with the layer specified in key, such as
+            [dict('conv1_1', ['conv1_2', 'conv1_3', 'conv1_4']), dict('conv2_1', ['conv2_2', 'conv2_3', 'conv2_4'])]
+
+
+        """
+        if not isinstance(layers, list):
+            layers = [layers]
+        layers_name = [l.name for l in self.layers]
+        for layer in layers:
+            for anchor, shares in layer.items():
+                if isinstance(shares, str):
+                    shares = [shares]
+                for share in shares:
+                    idx_share = layers_name.index(share)
+                    self.layers[idx_share].shared_weights = anchor
+
     def save_to_astore(self, path = None, **kwargs):
         """
         Save the model to an astore object, and write it into a file.
@@ -1422,7 +1473,7 @@ def layer_to_node(layer):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to graph configuration.
 
     '''
@@ -1461,7 +1512,7 @@ def layer_to_edge(layer):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to graph configuration.
 
     '''
@@ -1535,7 +1586,7 @@ def get_num_configs(keys, layer_type_prefix, layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1566,7 +1617,7 @@ def get_str_configs(keys, layer_type_prefix, layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition.
 
     '''
@@ -1593,7 +1644,7 @@ def extract_input_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1628,6 +1679,32 @@ def extract_input_layer(layer_table):
     except IndexError:
         pass
 
+    input_layer_config['norm_stds'] = []
+    try:
+        input_layer_config['norm_stds'].append(
+            int(layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                          'inputopts.normstds'].tolist()[0]))
+    except IndexError:
+        pass
+    try:
+        input_layer_config['norm_stds'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.normstds.0'].tolist()[0])
+    except IndexError:
+        pass
+    try:
+        input_layer_config['norm_stds'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.normstds.1'].tolist()[0])
+    except IndexError:
+        pass
+    try:
+        input_layer_config['norm_stds'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'inputopts.normstds.2'].tolist()[0])
+    except IndexError:
+        pass
+
     if layer_table['_DLChrVal_'][layer_table['_DLKey1_'] ==
                                  'inputopts.crop'].tolist()[0] == 'No cropping':
         input_layer_config['random_crop'] = 'none'
@@ -1656,7 +1733,7 @@ def extract_conv_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1669,7 +1746,7 @@ def extract_conv_layer(layer_table):
     conv_layer_config.update(get_str_configs(str_keys, 'convopts', layer_table))
     conv_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
-    if 'trunc_fact' in conv_layer_config.keys():
+    if 'trunc_fact' in conv_layer_config:
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
     if conv_layer_config.get('act') == 'Leaky Activation function':
@@ -1706,7 +1783,7 @@ def extract_pooling_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1746,7 +1823,7 @@ def extract_batchnorm_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1772,7 +1849,7 @@ def extract_residual_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1798,7 +1875,7 @@ def extract_concatenate_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1824,7 +1901,7 @@ def extract_detection_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1878,7 +1955,7 @@ def extract_fc_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -1896,7 +1973,7 @@ def extract_fc_layer(layer_table):
     else:
         fc_layer_config['include_bias'] = True
 
-    if 'trunc_fact' in fc_layer_config.keys():
+    if 'trunc_fact' in fc_layer_config:
         fc_layer_config['truncation_factor'] = fc_layer_config['trunc_fact']
         del fc_layer_config['trunc_fact']
     if fc_layer_config.get('act') == 'Leaky Activation function':
@@ -1921,7 +1998,7 @@ def extract_recurrent_layer(layer_table):
         Options that can be passed to layer definition
 
     '''
-    num_keys = ['n', 'std', 'mean', 'max_output_length', 
+    num_keys = ['n', 'std', 'mean', 'max_output_length',
                 'dropout', 'reversed', 'trunc_fact']
     str_keys = ['act', 'init', 'rnn_type', 'rnn_outputtype']
 
@@ -1929,11 +2006,11 @@ def extract_recurrent_layer(layer_table):
     recurrent_layer_config.update(get_num_configs(num_keys, 'rnnopts', layer_table))
     recurrent_layer_config.update(get_str_configs(str_keys, 'rnnopts', layer_table))
     recurrent_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
-    
+
     if 'trunc_fact' in recurrent_layer_config.keys():
         recurrent_layer_config['truncation_factor'] = recurrent_layer_config['trunc_fact']
         del recurrent_layer_config['trunc_fact']
-        
+
     if 'reversed' in recurrent_layer_config.keys():
         if recurrent_layer_config['reversed'] > 0:
             recurrent_layer_config['reversed_'] = True
@@ -1942,7 +2019,7 @@ def extract_recurrent_layer(layer_table):
         del recurrent_layer_config['reversed']
     else:
         recurrent_layer_config['reversed_'] = False
-        
+
     if 'rnn_type' in recurrent_layer_config.keys():
         if 'Long' in recurrent_layer_config['rnn_type']:
             recurrent_layer_config['rnn_type'] = 'LSTM'
@@ -1952,7 +2029,7 @@ def extract_recurrent_layer(layer_table):
             recurrent_layer_config['rnn_type'] = 'RNN'
     else:
         recurrent_layer_config['rnn_type'] = 'RNN'
-        
+
     if 'act' in recurrent_layer_config.keys():
         if 'Hyperbolic' in recurrent_layer_config['act']:
             recurrent_layer_config['act'] = 'TANH'
@@ -1968,7 +2045,7 @@ def extract_recurrent_layer(layer_table):
             recurrent_layer_config['act'] = 'AUTO'
     else:
         recurrent_layer_config['act'] = 'AUTO'
-   
+
     if 'rnn_outputtype' in recurrent_layer_config.keys():
         if 'arbitrary' in recurrent_layer_config['rnn_outputtype']:
             recurrent_layer_config['output_type'] = 'ARBITRARYLENGTH'
@@ -1979,10 +2056,10 @@ def extract_recurrent_layer(layer_table):
         del recurrent_layer_config['rnn_outputtype']
     else:
         recurrent_layer_config['output_type'] = 'SAMELENGTH'
-                
+
     layer = Recurrent(**recurrent_layer_config)
-    return layer  
-    
+    return layer
+
 def extract_output_layer(layer_table):
     '''
     Extract layer configuration from an output layer table
@@ -1995,7 +2072,7 @@ def extract_output_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2007,13 +2084,13 @@ def extract_output_layer(layer_table):
     output_layer_config.update(get_num_configs(num_keys, 'outputopts', layer_table))
     output_layer_config.update(get_str_configs(str_keys, 'outputopts', layer_table))
     output_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
-    
+
     if layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'outputopts.no_bias'].any():
         output_layer_config['include_bias'] = False
     else:
         output_layer_config['include_bias'] = True
 
-    if 'trunc_fact' in output_layer_config.keys():
+    if 'trunc_fact' in output_layer_config:
         output_layer_config['truncation_factor'] = output_layer_config['trunc_fact']
         del output_layer_config['trunc_fact']
 
@@ -2033,7 +2110,7 @@ def extract_scale_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2060,7 +2137,7 @@ def extract_keypoints_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2078,7 +2155,7 @@ def extract_keypoints_layer(layer_table):
     else:
         keypoints_layer_config['include_bias'] = True
 
-    if 'trunc_fact' in keypoints_layer_config.keys():
+    if 'trunc_fact' in keypoints_layer_config:
         keypoints_layer_config['truncation_factor'] = keypoints_layer_config['trunc_fact']
         del keypoints_layer_config['trunc_fact']
     return layer
@@ -2096,7 +2173,7 @@ def extract_reshape_layer(layer_table):
 
     Returns
     -------
-    dict
+    :class:`dict`
         Options that can be passed to layer definition
 
     '''
@@ -2108,4 +2185,249 @@ def extract_reshape_layer(layer_table):
     reshape_layer_config.update(get_str_configs(str_keys, 'reshapeopts', layer_table))
     reshape_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
     layer = Reshape(**reshape_layer_config)
+    return layer
+
+
+def extract_groupconv_layer(layer_table):
+    '''
+    Extract layer configuration from a group convolution layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['n_filters', 'width', 'height', 'stride', 'std', 'mean',
+                'init_bias', 'dropout', 'truncation_factor', 'init_b', 'trunc_fact', 'n_groups']
+    str_keys = ['act', 'init']
+
+    grpconv_layer_config = dict()
+    grpconv_layer_config.update(get_num_configs(num_keys, 'groupconvopts', layer_table))
+    grpconv_layer_config.update(get_str_configs(str_keys, 'groupconvopts', layer_table))
+    grpconv_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    if 'trunc_fact' in grpconv_layer_config:
+        grpconv_layer_config['truncation_factor'] = grpconv_layer_config['trunc_fact']
+        del grpconv_layer_config['trunc_fact']
+    if grpconv_layer_config.get('act') == 'Leaky Activation function':
+        grpconv_layer_config['act'] = 'Leaky'
+
+    dl_numval = layer_table['_DLNumVal_']
+    if dl_numval[layer_table['_DLKey1_'] == 'groupconvopts.no_bias'].any():
+        grpconv_layer_config['include_bias'] = False
+    else:
+        grpconv_layer_config['include_bias'] = True
+
+    padding_width = dl_numval[layer_table['_DLKey1_'] == 'groupconvopts.pad_left'].tolist()[0]
+    padding_height = dl_numval[layer_table['_DLKey1_'] == 'groupconvopts.pad_top'].tolist()[0]
+    if padding_width != -1:
+        grpconv_layer_config['padding_width'] = padding_width
+    if padding_height != -1:
+        grpconv_layer_config['padding_height'] = padding_height
+
+    layer = GroupConv2d(**grpconv_layer_config)
+    return layer
+
+
+def extract_conv2dtranspose_layer(layer_table):
+    '''
+    Extract layer configuration from a Conv2DTranspose layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['n_filters', 'width', 'height', 'stride', 'std', 'mean',
+                'init_bias', 'dropout', 'truncation_factor', 'init_b', 'trunc_fact',
+                'output_padding_height', 'output_padding_width']
+    str_keys = ['act', 'init']
+
+    conv2dtranspose_layer_config = dict()
+    conv2dtranspose_layer_config.update(get_num_configs(num_keys, 'transposeconvopts', layer_table))
+    conv2dtranspose_layer_config.update(get_str_configs(str_keys, 'transposeconvopts', layer_table))
+    conv2dtranspose_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    if 'trunc_fact' in conv2dtranspose_layer_config:
+        conv2dtranspose_layer_config['truncation_factor'] = conv2dtranspose_layer_config['trunc_fact']
+        del conv2dtranspose_layer_config['trunc_fact']
+    if conv2dtranspose_layer_config.get('act') == 'Leaky Activation function':
+        conv2dtranspose_layer_config['act'] = 'Leaky'
+
+    dl_numval = layer_table['_DLNumVal_']
+    if dl_numval[layer_table['_DLKey1_'] == 'transposeconvopts.no_bias'].any():
+        conv2dtranspose_layer_config['include_bias'] = False
+    else:
+        conv2dtranspose_layer_config['include_bias'] = True
+
+    padding_width = dl_numval[layer_table['_DLKey1_'] == 'transposeconvopts.pad_left'].tolist()[0]
+    padding_height = dl_numval[layer_table['_DLKey1_'] == 'transposeconvopts.pad_top'].tolist()[0]
+    if padding_width != -1:
+        conv2dtranspose_layer_config['padding_width'] = padding_width
+    if padding_height != -1:
+        conv2dtranspose_layer_config['padding_height'] = padding_height
+
+    layer = Conv2DTranspose(**conv2dtranspose_layer_config)
+    return layer
+
+
+def extract_channelshuffle_layer(layer_table):
+    '''
+    Extract layer configuration from a channel shuffle layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['scale', 'n_groups']
+    str_keys = ['init']
+
+    channel_shuffle_layer_config = dict()
+    channel_shuffle_layer_config.update(get_num_configs(num_keys, 'shuffleopts', layer_table))
+    channel_shuffle_layer_config.update(get_str_configs(str_keys, 'shuffleopts', layer_table))
+    channel_shuffle_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = ChannelShuffle(**channel_shuffle_layer_config)
+    return layer
+
+
+def extract_rpn_layer(layer_table):
+    '''
+    Extract layer configuration from a Region proposal layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['base_anchor_size', 'max_label_per_image', 'roi_train_sample_num', 'do_RPN_only',
+                'proposed_roi_num_train', 'proposed_roi_num_score', 'anchor_num_to_sample']
+    if __dev__:
+        num_keys += ['preNmsTopNScore', 'preNmsTopNTrain', 'preNmsTopNTrain', 'preNmsTopNScore']
+    str_key = 'act'
+
+    rpn_layer_config = dict()
+    for key in num_keys:
+        try:
+            rpn_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'dlregionproposalopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+
+    rpn_layer_config[str_key] = layer_table['_DLChrVal_'][
+        layer_table['_DLKey1_'] == 'dlregionproposalopts.' + underscore_to_camelcase(str_key)].tolist()[0]
+
+    num_scale = layer_table[layer_table['_DLChrVal_'] == 'anchorScale'].shape[0]
+    num_ratio = layer_table[layer_table['_DLChrVal_'] == 'anchorRatio'].shape[0]
+    rpn_layer_config['anchor_scale'] = []
+    rpn_layer_config['anchor_ratio'] = []
+
+    for i in range(num_scale):
+        rpn_layer_config['anchor_scale'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'dlregionproposalopts.anchorScale.{}'.format(i)].tolist()[0])
+
+    for i in range(num_ratio):
+        rpn_layer_config['anchor_ratio'].append(
+            layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                      'dlregionproposalopts.anchorRatio.{}'.format(i)].tolist()[0])
+
+    rpn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = RegionProposal(**rpn_layer_config)
+    return layer
+
+
+def extract_roipooling_layer(layer_table):
+    '''
+    Extract layer configuration from a Region pooling layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['output_height', 'spatial_scale', 'output_width']
+    str_keys = ['act']
+
+    roipooling_layer_config = dict()
+    for key in num_keys:
+        try:
+            roipooling_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'dlroipoolingopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+    roipooling_layer_config.update(get_str_configs(str_keys, 'dlroipoolingopts', layer_table))
+
+    roipooling_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = ROIPooling(**roipooling_layer_config)
+    return layer
+
+
+def extract_fastrcnn_layer(layer_table):
+    '''
+    Extract layer configuration from a Fast RCNN layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['class_number', 'max_label_per_image', 'nms_iou_threshold', 'max_object_num', 'detection_threshold']
+
+    rpn_layer_config = dict()
+    for key in num_keys:
+        try:
+            rpn_layer_config[key] = layer_table['_DLNumVal_'][
+                layer_table['_DLKey1_'] == 'dlfastrcnnopts.' + underscore_to_camelcase(key)].tolist()[0]
+        except IndexError:
+            pass
+
+    rpn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = FastRCNN(**rpn_layer_config)
     return layer
