@@ -25,7 +25,7 @@ import pandas as pd
 import collections
 import sys
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
-from .utils import filter_by_image_id, filter_by_filename
+from .utils import filter_by_image_id, filter_by_filename, isnotebook
 from dlpy.timeseries import TimeseriesTable
 from dlpy.timeseries import _get_first_obs, _get_last_obs, _combine_table, _prepare_next_input
 from dlpy.utils import DLPyError, Box
@@ -2720,3 +2720,202 @@ class DataSpec(DLPyDict):
     def __init__(self, type_, layer, data, nominals=None, numeric_nominal_parms=None):
         DLPyDict.__init__(self, type=type_, layer=layer, data=data, nominals=nominals,
                           numeric_nominal_parms=numeric_nominal_parms)
+
+
+def _train_visualization(self):
+    from IPython.display import display, HTML
+    display(HTML('''
+        <canvas id='%(plot_id)s_canvas' style='width: %(plot_width)spx; height: %(plot_height)spx'></canvas>
+
+        <script language='javascript'>
+        <!--
+        requirejs.config({
+            paths: {
+                Chart: ['//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min']
+            }
+        });
+
+        require(['jquery', 'Chart'], function($, Chart) {
+
+            var comm = Jupyter.notebook.kernel.comm_manager.new_comm('%(plot_id)s_comm')
+            var ctx = document.getElementById('%(plot_id)s_canvas').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'FitError',
+                        borderColor: '#FF0000',
+                        backgroundColor: '#FF0000',
+                        fill: false,
+                        data: [],
+                        yAxisID: 'y-axis-1'
+                    }, {
+                        label: 'Loss',
+                        borderColor: '#0000FF',
+                        backgroundColor: '#0000FF',
+                        fill: false,
+                        data: [],
+                        yAxisID: 'y-axis-2'
+                    }],
+                },
+                options: {
+                    stacked: false,
+                    scales: {
+                        yAxes: [{
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-axis-1',
+                            data: []
+                        }, {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-axis-2',
+                            data: [],
+
+                            // grid line settings
+                            gridLines: {
+                                drawOnChartArea: false, // only want the grid lines for one axis to show up
+                            },
+                        }],
+                    }
+                }
+            });
+
+            Jupyter.notebook.kernel.comm_manager.register_target('%(plot_id)s_comm',
+                function(comm, msg) {
+                    comm.on_msg(function(msg) {
+                        var data = msg.content.data;
+                        chart.data.labels.push(data.label);
+                        for ( var i = 0; i < chart.data.datasets.length; i++ ) {
+                            chart.data.datasets[i].data.push(data.data[i]);
+                        }
+                        chart.update(0);
+                    })
+
+                    comm.on_close(function() {
+                        comm.send({'command': 'stop'});
+                    })
+
+                    // Send message when plot is removed
+                    $.event.special.destroyed = {
+                        remove: function(o) {
+                            if (o.handler) {
+                                o.handler()
+                            }
+                        }
+                    }
+
+                    $('#%(plot_id)s_canvas').bind('destroyed', function() {
+                        comm.send({'command': 'stop'});
+                    });
+                }
+            );
+
+        });
+        //-->
+        </script>''' % dict(plot_id='foo', plot_width='950', plot_height='400')))
+
+
+def _pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, freq, status):
+
+    def parse_results(response, connection, userdata):
+
+        if len(response.messages) == 0:
+            for key, value in response:
+                if key == 'OptIterHistory':
+                    iter_history.append(value)
+        elif len(response.messages) == 1:
+            line = response.messages[0].split(" ")
+            numbers=[]
+            for l in line:
+                if len(l.strip()) > 0 and l.strip().replace('.','',1).isdigit():
+                    numbers.append( float(l.strip()))
+            if len(numbers) == 5:
+                t = 1 # this is for when epoch history hits
+                # TODO: do something with epoch values, maybe another graph
+            elif len(numbers) >= 6:
+                batch_id = numbers[0]
+                sample_size = numbers[1]
+                learning_rate = numbers[2]
+                loss = numbers[3]
+                fit_error = numbers[4]
+
+                le = len(x)
+
+                if le == 0:
+                    y.append( fit_error)
+                    y_loss.append( loss)
+                    x.append( len(x))
+                    total_sample_size.append( sample_size)
+                else:
+                    temp = (y[-1]*total_sample_size[0])
+                    temp += (fit_error * sample_size)
+                    temp2 = (y_loss[-1]*total_sample_size[0])
+                    temp2 += (loss * sample_size)
+
+                    total_sample_size[0] += sample_size
+                    if total_sample_size[0] > 0:
+                        y.append( temp / total_sample_size[0])
+                        y_loss.append( temp2 / total_sample_size[0])
+                    else:
+                        y.append( y[-1])
+                        y_loss.append( y_loss[-1])
+
+                    x.append( len(x))
+
+                    if le % freq[0] == 0:
+                        comm.send({'label': x[-1], 'data': [y[-1], y_loss[-1]]})
+
+        if response.disposition.status_code != 0:
+            status[0] = response.disposition.status_code
+            print(response.disposition.status)
+            print(response.disposition.debug)
+
+    return parse_results
+
+
+def _train_visualize(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None, valid_freq=1,
+                     model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
+                     sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
+                     optimizer=None, target_missing='mean', best_weights=None, repeat_weight_table=False,
+                     force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending', x=None, y=None, y_loss=None,
+                     total_sample_size=None, e=None, iter_history=None, freq=None, status=None):
+    """
+    Function that calls the training action enriched with training history visualization.
+    This is an internal private function and for documentation, please refer to fit() or train()
+
+    """
+    self._train_visualization()
+
+    b_w = None
+    if best_weights is not None:
+        b_w = dict(replace=True, name=best_weights)
+    if optimizer is not None:
+        optimizer['log_level'] = 3
+    else:
+        optimizer=Optimizer(log_level=3)
+
+    parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
+                          valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
+                          model_weights=model_weights, target=target, target_sequence=target_sequence,
+                          sequence=sequence, text_parms=text_parms, weight=weight, gpu=gpu, seed=seed,
+                          record_seed=record_seed, missing=missing, optimizer=optimizer,
+                          target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
+                          force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
+                          target_order=target_order)
+    import swat
+    from ipykernel.comm import Comm
+    comm = Comm(target_name='%(plot_id)s_comm' % dict(plot_id='foo'))
+    with swat.option_context(print_messages=False):
+        self._retrieve_('deeplearn.dltrain', message_level='note',
+                        responsefunc=_pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, freq, status),
+                        **parameters)
+
+    if status[0] == 0:
+        self.model_ever_trained = True
+        return iter_history[0]
+    else:
+        return None

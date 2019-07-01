@@ -98,7 +98,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity <= 1)
         
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def test_model2(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -126,7 +126,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r2.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model3(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -160,7 +160,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r3.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model4(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -188,7 +188,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r2.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model5(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -222,7 +222,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r3.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model6(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -247,7 +247,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model7(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -275,7 +275,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r2.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model8(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -303,7 +303,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r2.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model9(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -331,7 +331,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r2.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model10(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -361,7 +361,7 @@ class TestModel(unittest.TestCase):
         model1.save_to_table(self.data_dir)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model11(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -395,7 +395,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r3.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model12(self):
         model1 = Sequential(self.s, model_table='Simple_CNN1')
@@ -429,7 +429,7 @@ class TestModel(unittest.TestCase):
         self.assertTrue(r3.severity == 0)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model13(self):
         model = Sequential(self.s, model_table='simple_cnn')
@@ -534,7 +534,7 @@ class TestModel(unittest.TestCase):
         model1.save_weights_csv(self.data_dir)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_evaluate_obj_det(self):
 
@@ -888,7 +888,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(len(ax.xaxis.majorTicks), model1.n_epochs)
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def test_stride(self):
         model = Sequential(self.s, model_table = 'Simple_CNN_3classes_cropped')

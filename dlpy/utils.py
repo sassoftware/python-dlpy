@@ -1782,6 +1782,19 @@ _pair = _ntuple(2)
 _triple = _ntuple(3)
 
 
+def isnotebook(self):
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+
 def parameter_2d(param1, param2, param3, default_value):
     '''
     a help function to generate layer properties such as strides, padding, output_padding.

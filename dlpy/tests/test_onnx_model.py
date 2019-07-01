@@ -245,7 +245,7 @@ class TestModel(unittest.TestCase):
         os.remove(os.path.join(tmp_dir_to_dump, "Simple_CNN1.onnx"))
 
         if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
         
     def test_model5(self):
         try:
