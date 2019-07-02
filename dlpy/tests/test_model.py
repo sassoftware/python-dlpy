@@ -27,7 +27,7 @@ import os
 import swat
 import swat.utils.testing as tm
 from swat.cas.table import CASTable
-from dlpy.model import Model, Optimizer, AdamSolver, Sequence
+from dlpy.model import Model, Optimizer, AdamSolver, Sequence, Solver
 from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
@@ -981,6 +981,33 @@ class TestModel(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         model5 = Model(self.s)
         model5.load(path = self.data_dir + 'vgg16.sashdat')
+
+    def test_solver_compatible(self):
+        model1 = Sequential(self.s, model_table = 'Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(4))
+        model1.add(OutputLayer(act = 'softmax', n = 2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path = self.data_dir + 'images.sashdat', task = 'load')
+
+        self.s.table.loadtable(caslib = caslib,
+                               casout = {'name': 'eee', 'replace': True},
+                               path = path)
+
+        solver = Solver(clip_grad_max = 100, clip_grad_min = -100)
+        optimizer = Optimizer(algorithm = solver, mini_batch_size = 16, log_level = 3, max_epochs = 5, reg_l2 = 0.0005)
+        r = model1.fit(data = 'eee', inputs = '_image_', target = '_label_', optimizer=optimizer)
+        self.assertTrue(r.severity == 0)
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
 
 
     @classmethod

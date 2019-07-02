@@ -2031,7 +2031,7 @@ class FeatureMaps(object):
 
 class _Solver(DLPyDict):
     '''
-    Solver object
+    _Solver object
 
     Parameters
     ----------
@@ -2077,7 +2077,7 @@ class _Solver(DLPyDict):
 
     Returns
     -------
-    :class:`Solver`
+    :class:`_Solver`
 
     '''
     def __init__(self, use_locking=None, clip_grad_max=None, clip_grad_min=None,
@@ -2187,7 +2187,7 @@ class VanillaSolver(_Solver):
     def __init__(self, use_locking=True, clip_grad_max=None, clip_grad_min=None,
                  learning_rate=0.001, learning_rate_policy='fixed', gamma=None, step_size=None, power=None,
                  steps=None, fcmp_learning_rate=None, lr_scheduler=None):
-        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min,learning_rate, learning_rate_policy,
+        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min, learning_rate, learning_rate_policy,
                          gamma, step_size, power, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('vanilla')
 
@@ -3017,3 +3017,7 @@ def _train_visualize(self, table, attributes=None, inputs=None, nominals=None, t
         return iter_history[0]
     else:
         return None
+
+
+# used to be backward compatible
+Solver = _Solver
