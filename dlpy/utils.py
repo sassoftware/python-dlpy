@@ -566,6 +566,39 @@ def get_cas_host_type(conn):
         return ostype + '.' + stype
 
 
+class DLPyDict(collections.MutableMapping):
+    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
+
+    def __init__(self, *args, **kwargs):
+        for k in kwargs:
+            self.__setitem__(k, kwargs[k])
+
+    def __getitem__(self, key):
+        return self.__dict__[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        if value is not None:
+            self.__dict__[self.__keytransform__(key)] = value
+        else:
+            if key in self.__dict__:
+                self.__delitem__[key]
+
+    def __delitem__(self, key):
+        del self.__dict__[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __keytransform__(self, key):
+        return key.lower().replace("_", "")
+
+    def __str__(self):
+        return str(self.__dict__)
+
+
 class DLPyError(Exception):
     pass
 
