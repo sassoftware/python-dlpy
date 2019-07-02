@@ -2593,7 +2593,7 @@ class Optimizer(DLPyDict):
     :class:`Optimizer`
 
     '''
-    def __init__(self, algorithm=VanillaSolver(, mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
+    def __init__(self, algorithm=VanillaSolver(lr_scheduler=StepLR()), mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
                  dropout=0, dropout_input=0, dropout_type='standard', stagnation=0, threshold=0.00000001, f_conv=0,
                  snapshot_freq=0, log_level=0, bn_src_layer_warnings=True, freeze_layers_to=None, flush_weights=False,
                  total_mini_batch_size=None, mini_batch_buf_size=None, freeze_layers = None,
@@ -2796,7 +2796,7 @@ class DataSpec(DLPyDict):
         Valid Values: NUMERICNOMINAL, NUMNOM, TEXT, IMAGE, OBJECTDETECTION
     layer : string
         Specifies the name of the layer to data spec.
-    data : list, optional
+    data : list
         Specifies the name of the columns/variables as the data, this might
         be input or output based on layer type.
     data_layer : string, optional
