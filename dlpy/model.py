@@ -28,7 +28,8 @@ from .utils import image_blocksize, unify_keys, input_table_check, random_name, 
 from .utils import filter_by_image_id, filter_by_filename, isnotebook
 from dlpy.timeseries import TimeseriesTable
 from dlpy.timeseries import _get_first_obs, _get_last_obs, _combine_table, _prepare_next_input
-from dlpy.utils import DLPyError, Box
+from dlpy.utils import DLPyError, Box, DLPyDict
+from dlpy.lr_scheduler import _LRScheduler, FixedLR, StepLR, FCMPLR
 from dlpy.network import Network
 
 
@@ -46,7 +47,6 @@ class Model(Network):
     train_tbl = None
     valid_tbl = None
     score_message_level = 'note'
-    
 
     def change_labels(self, label_file, id_column, label_column):
         '''
@@ -662,9 +662,6 @@ class Model(Network):
         if coord_type.lower() not in ['yolo', 'coco']:
             raise ValueError('coord_type, {}, is not supported'.format(coord_type))
 
-        self.conn.update(table=dict(name = self.model_name, where='_DLChrVal_ eq "iouThreshold"'),
-                         set=[{'var':'_DLNumVal_', 'value':'0.5'}])
-
         if detection_data is not None:
             input_tbl_opts = input_table_check(detection_data)
             det_tbl = self.conn.CASTable(**input_tbl_opts)
@@ -819,8 +816,9 @@ class Model(Network):
 
         return results
 
-    def predict(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=10,
-                mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None):
+    def predict(self, data, text_parms=None, layer_out=None, layers=None, layer_image_type=None, gpu=None,
+                buffer_size=10, mini_batch_buf_size=None, top_probs=None, use_best_weights=False,
+                n_threads=None, log_level=0):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -841,6 +839,12 @@ class Model(Network):
         layers : list of strings
             Specifies the names of the layers to include in the output
             layers table.
+        layer_image_type : string, optional
+            Specifies the image type to store in the output layers table.
+            JPG means a compressed image (e.g, jpg, png, and tiff)
+            WIDE means a pixel per column
+            Default: jpg
+            Valid Values: JPG, WIDE
         gpu : :class:`Gpu`, optional
             When specified, the action uses graphical processing
             unit hardware. The simplest way to use GPU processing is
@@ -876,6 +880,12 @@ class Model(Network):
         n_threads : int, optional
             Specifies the number of threads to use. If nothing is set then
             all of the cores available in the machine(s) will be used.
+        log_level : int, optional
+            specifies the reporting level for progress messages sent to the client.
+            The default level 0 indicates that no messages are sent.
+            Setting the value to 1 sends start and end messages.
+            Setting the value to 2 adds the iteration history to the client messaging.
+            default: 0
 
         Returns
         -------
@@ -904,22 +914,22 @@ class Model(Network):
             print('NOTE: Using the weights providing the smallest loss error.')
             res = self.score(table=input_table, model=self.model_table, init_weights=self.best_weights,
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
-                             text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
-                             mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads)
+                             text_parms=text_parms, layer_out=lo, layers=layers, layer_image_type=layer_image_type,
+                             gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs,
+                             buffer_size=buffer_size, n_threads=n_threads, log_level=log_level)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res
         else:
             res = self.score(table=input_table, model=self.model_table, init_weights=self.model_weights,
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
-                             text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
-                             mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads)
+                             text_parms=text_parms, layer_out=lo, layers=layers, layer_image_type=layer_image_type,
+                             gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs,
+                             buffer_size=buffer_size, n_threads=n_threads, log_level=log_level)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
-            return res    
-        
-    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None, 
-                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None, 
+            return res
+
+    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None,
+                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None,
                  use_best_weights=False, n_threads=None, casout=None):
         """
         Make forecasts based on deep learning models trained on `TimeseriesTable`.
@@ -1191,7 +1201,8 @@ class Model(Network):
     def score(self, table, model=None, init_weights=None, text_parms=None, layer_out=None,
               layer_image_type='jpg', layers=None, copy_vars=None, casout=None, gpu=None, buffer_size=10,
               mini_batch_buf_size=None, encode_name=False, random_flip='none', random_crop='none', top_probs=None,
-              random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None):
+              random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None,
+              log_level = None):
         """
         Inference of input data with the trained deep learning model
 
@@ -1279,6 +1290,12 @@ class Model(Network):
         n_threads : int, optional
             Specifies the number of threads to use. If nothing is set then
             all of the cores available in the machine(s) will be used.
+        log_level : int, optional
+            specifies the reporting level for progress messages sent to the client.
+            The default level 0 indicates that no messages are sent.
+            Setting the value to 1 sends start and end messages.
+            Setting the value to 2 adds the iteration history to the client messaging.
+            default: 0
 
         Returns
         -------
@@ -1291,17 +1308,18 @@ class Model(Network):
                                   layer_image_type=layer_image_type, layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
                                   layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
-                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
+                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation,
+                                  log_level = log_level)
         else:
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
                                   layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
                                   layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
-                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
+                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation,
+                                  log_level = log_level)
 
 
         return self._retrieve_('deeplearn.dlscore', message_level=self.score_message_level, **parameters)
-
 
     def plot_evaluate_res(self, cas_table=None, img_type='A', image_id=None, filename=None, n_images=5,
                           target='_label_', predicted_class=None, label_class=None, randomize=False,
@@ -1760,7 +1778,7 @@ class Model(Network):
         image_id_list = temp_table['_parentId_'].unique().tolist()
         n_masks = len(temp_table['_id_'].unique())
 
-        prob_tensor = np.empty((output_width, output_height, n_masks))
+        prob_tensor = np.empty((output_height, output_width, n_masks))
         prob_tensor[:] = np.nan
         model_explain_table = dict()
         count_for_subject = dict()
@@ -1930,7 +1948,6 @@ class Model(Network):
         plt.show()
 
 
-
 class FeatureMaps(object):
     '''
     Feature Maps object
@@ -2012,57 +2029,12 @@ class FeatureMaps(object):
         plt.show()
 
 
-class DLPyDict(collections.MutableMapping):
-    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
-
-    def __init__(self, *args, **kwargs):
-        for k in kwargs:
-            self.__setitem__(k, kwargs[k])
-
-    def __getitem__(self, key):
-        return self.__dict__[self.__keytransform__(key)]
-
-    def __setitem__(self, key, value):
-        if value is not None:
-            self.__dict__[self.__keytransform__(key)] = value
-        else:
-            if key in self.__dict__:
-                self.__delitem__[key]
-
-    def __delitem__(self, key):
-        del self.__dict__[self.__keytransform__(key)]
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __keytransform__(self, key):
-        return key.lower().replace("_", "")
-
-    def __str__(self):
-        return str(self.__dict__)
-
-
-class Solver(DLPyDict):
+class _Solver(DLPyDict):
     '''
     Solver object
 
     Parameters
     ----------
-    learning_rate : double, optional
-        Specifies the learning rate for the deep learning algorithm.
-    learning_rate_policy : string, optional
-        Specifies the learning rate policy for the deep learning algorithm.
-        Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
-        Default: FIXED
-    gamma : double, optional
-        Specifies the gamma for the learning rate policy.
-    step_size : int, optional
-        Specifies the step size when the learning rate policy is set to STEP.
-    power : double, optional
-        Specifies the power for the learning rate policy.
     use_locking : bool, optional
         When it is false, the gradients are computed asynchronously with
         multiple threads.
@@ -2072,23 +2044,63 @@ class Solver(DLPyDict):
     clip_grad_min : double, optional
         Specifies the minimum gradient value. All gradients that are less
         than the specified value are set to the specified value.
+    learning_rate : double, optional
+        Specifies the learning rate for the deep learning algorithm.
+    learning_rate_policy : string, optional
+        Specifies the learning rate policy for the deep learning algorithm.
+        Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
+    gamma : double, optional
+        Specifies the gamma for the learning rate policy.
+    step_size : int, optional
+        Specifies the step size when the learning rate policy is set to STEP.
+    power : double, optional
+        Specifies the power for the learning rate policy.
     steps : list-of-ints, optional
         specifies a list of epoch counts. When the current epoch matches one
         of the specified steps, the learning rate is multiplied by the value
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
     :class:`Solver`
 
     '''
-    def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
-        DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy, gamma=gamma,
-                          step_size=step_size, power=power, use_locking=use_locking, clip_grad_max=clip_grad_max,
-                          clip_grad_min=clip_grad_min, steps=steps)
+    def __init__(self, use_locking=None, clip_grad_max=None, clip_grad_min=None,
+                 learning_rate=None, learning_rate_policy=None, gamma=None, step_size=None, power=None,
+                 steps=None, fcmp_learning_rate=None, lr_scheduler=None):
+        args_wrapped_in_lr_scheduler = ['learning_rate', 'learning_rate_policy', 'gamma', 'step_size',
+                                        'power', 'steps', 'fcmp_learning_rate']
+        DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy,
+                          gamma=gamma, step_size=step_size, power=power, use_locking=use_locking,
+                          clip_grad_max=clip_grad_max, clip_grad_min=clip_grad_min, steps=steps,
+                          fcmp_learning_rate=fcmp_learning_rate)
+        # lr_scheduler default as None and if it is specified, it will overwrite lr option in _solver
+        if lr_scheduler is not None:
+            if not isinstance(lr_scheduler, _LRScheduler):
+                raise TypeError('{} is not an LRScheduler'.format(type(lr_scheduler).__name__))
+            not_none_args = [i for i in args_wrapped_in_lr_scheduler if self.get(i) is not None]
+            if lr_scheduler.get('fcmp_learning_rate'):
+                self.pop('learning_rate_policy', 0)
+            if len(not_none_args) > 0:
+                print('The following argument(s) {} are overwritten by the according arguments '
+                      'specified in lr_scheduler.'.format(', '.join(not_none_args)))
+            for key, value in lr_scheduler.items():
+                self.__setitem__(key, value)
 
     def set_method(self, method):
         '''
@@ -2119,14 +2131,24 @@ class Solver(DLPyDict):
         return super().__str__()
 
 
-class VanillaSolver(Solver):
+class VanillaSolver(_Solver):
     '''
     Vanilla solver object
 
     Parameters
     ----------
+    use_locking : bool, optional
+        When it is false, the gradients are computed asynchronously with
+        multiple threads.
+    clip_grad_max : double, optional
+        Specifies the maximum gradient value. All gradients that are greater
+        than the specified value are set to the specified value.
+    clip_grad_min : double, optional
+        Specifies the minimum gradient value. All gradients that are less
+        than the specified value are set to the specified value.
     learning_rate : double, optional
         Specifies the learning rate for the deep learning algorithm.
+        Default: 0.001
     learning_rate_policy : string, optional
         Specifies the learning rate policy for the deep learning algorithm.
         Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
@@ -2137,35 +2159,40 @@ class VanillaSolver(Solver):
         Specifies the step size when the learning rate policy is set to STEP.
     power : double, optional
         Specifies the power for the learning rate policy.
-    use_locking : bool, optional
-        When it is false, the gradients are computed asynchronously with
-        multiple threads.
-    clip_grad_max : double, optional
-        Specifies the maximum gradient value. All gradients that are greater
-        than the specified value are set to the specified value.
-    clip_grad_min : double, optional
-        Specifies the minimum gradient value. All gradients that are less
-        than the specified value are set to the specified value.
     steps : list-of-ints, optional
         specifies a list of epoch counts. When the current epoch matches
         one of the specified steps, the learning rate is multiplied by the
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
     :class:`VanillaSolver`
 
     '''
-    def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
-        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+    def __init__(self, use_locking=True, clip_grad_max=None, clip_grad_min=None,
+                 learning_rate=0.001, learning_rate_policy='fixed', gamma=None, step_size=None, power=None,
+                 steps=None, fcmp_learning_rate=None, lr_scheduler=None):
+        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min,learning_rate, learning_rate_policy,
+                         gamma, step_size, power, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('vanilla')
 
 
-class MomentumSolver(Solver):
+class MomentumSolver(_Solver):
     '''
     Momentum solver object
 
@@ -2175,6 +2202,7 @@ class MomentumSolver(Solver):
         Specifies the momentum for stochastic gradient descent.
     learning_rate : double, optional
         Specifies the learning rate for the deep learning algorithm.
+        Default: 0.001
     learning_rate_policy : string, optional
         Specifies the learning rate policy for the deep learning algorithm.
         Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
@@ -2200,21 +2228,35 @@ class MomentumSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth,
         ninth, and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
     :class:`MomentumSolver`
 
     '''
-    def __init__(self, momentum=0.9, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10,
-                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
-        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+    def __init__(self, use_locking=True, clip_grad_max=None, clip_grad_min=None, momentum=0.9,
+                 learning_rate=0.001, learning_rate_policy='fixed', gamma=None, step_size=None, power=None,
+                 steps=None, fcmp_learning_rate=None, lr_scheduler=None):
+        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min, learning_rate, learning_rate_policy,
+                         gamma, step_size, power, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('momentum')
         self.add_parameter('momentum', momentum)
 
 
-class AdamSolver(Solver):
+class AdamSolver(_Solver):
     '''
     Adam solver object
 
@@ -2226,8 +2268,18 @@ class AdamSolver(Solver):
     beta2 : double, optional
         Specifies the exponential decay rate for the second moment in
         the Adam learning algorithm.
+    use_locking : bool, optional
+        When it is false, the gradients are computed asynchronously with
+        multiple threads.
+    clip_grad_max : double, optional
+        Specifies the maximum gradient value. All gradients that are greater
+        than the specified value are set to the specified value.
+    clip_grad_min : double, optional
+        Specifies the minimum gradient value. All gradients that are less
+        than the specified value are set to the specified value.
     learning_rate : double, optional
         Specifies the learning rate for the deep learning algorithm.
+        Default: 0.001
     learning_rate_policy : string, optional
         Specifies the learning rate policy for the deep learning algorithm.
         Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
@@ -2238,37 +2290,42 @@ class AdamSolver(Solver):
         Specifies the step size when the learning rate policy is set to STEP.
     power : double, optional
         Specifies the power for the learning rate policy.
-    use_locking : bool, optional
-        When it is false, the gradients are computed asynchronously with
-        multiple threads.
-    clip_grad_max : double, optional
-        Specifies the maximum gradient value. All gradients that are greater
-        than the specified value are set to the specified value.
-    clip_grad_min : double, optional
-        Specifies the minimum gradient value. All gradients that are less
-        than the specified value are set to the specified value.
     steps : list-of-ints, optional
         specifies a list of epoch counts. When the current epoch matches
         one of the specified steps, the learning rate is multiplied by the
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
     :class:`AdamSolver`
 
     '''
-    def __init__(self, beta1=0.9, beta2=0.999, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
-        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+    def __init__(self, beta1=0.9, beta2=0.999, use_locking=True, clip_grad_max=None, clip_grad_min=None,
+                 learning_rate=0.001, learning_rate_policy='fixed', gamma=None, step_size=None, power=None,
+                 steps=None, fcmp_learning_rate=None, lr_scheduler=None):
+        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min, learning_rate, learning_rate_policy,
+                         gamma, step_size, power, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('adam')
         self.add_parameter('beta1', beta1)
         self.add_parameter('beta2', beta2)
 
 
-class LBFGSolver(Solver):
+class LBFGSolver(_Solver):
     '''
     LBFG solver object
 
@@ -2289,8 +2346,18 @@ class LBFGSolver(Solver):
         the maxEpochs= option.
     backtrack_ratio : double
         Specifies the backtrack ratio of line search iterations for L-BFGS solver.
+    use_locking : bool, optional
+        When it is false, the gradients are computed asynchronously with
+        multiple threads.
+    clip_grad_max : double, optional
+        Specifies the maximum gradient value. All gradients that are greater
+        than the specified value are set to the specified value.
+    clip_grad_min : double, optional
+        Specifies the minimum gradient value. All gradients that are less
+        than the specified value are set to the specified value.
     learning_rate : double, optional
         Specifies the learning rate for the deep learning algorithm.
+        Default: 0.001
     learning_rate_policy : string, optional
         Specifies the learning rate policy for the deep learning algorithm.
         Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
@@ -2301,32 +2368,36 @@ class LBFGSolver(Solver):
         Specifies the step size when the learning rate policy is set to STEP.
     power : double, optional
         Specifies the power for the learning rate policy.
-    use_locking : bool, optional
-        When it is false, the gradients are computed asynchronously with
-        multiple threads.
-    clip_grad_max : double, optional
-        Specifies the maximum gradient value. All gradients that are greater
-        than the specified value are set to the specified value.
-    clip_grad_min : double, optional
-        Specifies the minimum gradient value. All gradients that are less
-        than the specified value are set to the specified value.
     steps : list-of-ints, optional
         specifies a list of epoch counts. When the current epoch matches one
         of the specified steps, the learning rate is multiplied by the value
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
     :class:`LBFGSolver`
 
     '''
-    def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, learning_rate=0.001,
-                 learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75, use_locking=True,
-                 clip_grad_max=None, clip_grad_min=None, steps=None):
-        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+    def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, use_locking=True,
+                 clip_grad_max=None, clip_grad_min=None, learning_rate=0.001, learning_rate_policy='fixed',
+                 gamma=None, step_size=None, power=None, steps=None, fcmp_learning_rate=None, lr_scheduler=None):
+        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min, learning_rate, learning_rate_policy,
+                         gamma, step_size, power, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('lbfg')
         self.add_parameters('m', m)
         self.add_parameters('maxlinesearchiters', max_line_search_iters)
@@ -2334,7 +2405,7 @@ class LBFGSolver(Solver):
         self.add_parameters('backtrackratio', backtrack_ratio)
 
 
-class NatGradSolver(Solver):
+class NatGradSolver(_Solver):
     '''
     Natural gradient solver object
 
@@ -2342,8 +2413,18 @@ class NatGradSolver(Solver):
     ----------
     approximation_type : int, optional
         Specifies the approximate natural gradient type.
+    use_locking : bool, optional
+        When it is false, the gradients are computed asynchronously with
+        multiple threads.
+    clip_grad_max : double, optional
+        Specifies the maximum gradient value. All gradients that are greater
+        than the specified value are set to the specified value.
+    clip_grad_min : double, optional
+        Specifies the minimum gradient value. All gradients that are less
+        than the specified value are set to the specified value.
     learning_rate : double, optional
         Specifies the learning rate for the deep learning algorithm.
+        Default: 0.001
     learning_rate_policy : string, optional
         Specifies the learning rate policy for the deep learning algorithm.
         Valid Values: FIXED, STEP, POLY, INV, MULTISTEP
@@ -2354,31 +2435,36 @@ class NatGradSolver(Solver):
         Specifies the step size when the learning rate policy is set to STEP.
     power : double, optional
         Specifies the power for the learning rate policy.
-    use_locking : bool, optional
-        When it is false, the gradients are computed asynchronously with
-        multiple threads.
-    clip_grad_max : double, optional
-        Specifies the maximum gradient value. All gradients that are greater
-        than the specified value are set to the specified value.
-    clip_grad_min : double, optional
-        Specifies the minimum gradient value. All gradients that are less
-        than the specified value are set to the specified value.
     steps : list-of-ints, optional
         specifies a list of epoch counts. When the current epoch matches one
         of the specified steps, the learning rate is multiplied by the value
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
     :class:`NatGradSolver`
 
     '''
-    def __init__(self, approximation_type=1, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
-        Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+    def __init__(self, approximation_type=1, use_locking=True, clip_grad_max=None,
+                 clip_grad_min=None, learning_rate=0.001, learning_rate_policy='fixed',
+                 gamma=None, step_size=None, power=None, steps=None, fcmp_learning_rate=None, lr_scheduler=None):
+        _Solver.__init__(self, use_locking, clip_grad_max, clip_grad_min, learning_rate,
+                         learning_rate_policy, gamma, step_size, power, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('natgrad')
         self.add_parameter('approximationtype', approximation_type)
 
@@ -2471,9 +2557,14 @@ class Optimizer(DLPyDict):
     bn_src_layer_warnings : bool, optional
         Turns warning on or off, if batch normalization source layer has
         an atypical type, activation, or include_bias setting. Default: False
-        freeze_layers_to : string
+    freeze_layers_to : string
         Specifies a layer name to freeze this layer and all the layers before
         this layer.
+    freeze_batch_norm_stats : Boolean
+        When set to True, freezes the statistics of all batch normalization layers.
+        Default : False
+    freeze_layers : list of string
+        Specifies a list of layer names whose trainable parameters will be frozen.
     total_mini_batch_size : int, optional
         specifies the number of observations in a mini-batch. You can use
         this parameter to control the number of observations that the action
@@ -2505,14 +2596,16 @@ class Optimizer(DLPyDict):
     def __init__(self, algorithm=VanillaSolver(), mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
                  dropout=0, dropout_input=0, dropout_type='standard', stagnation=0, threshold=0.00000001, f_conv=0,
                  snapshot_freq=0, log_level=0, bn_src_layer_warnings=True, freeze_layers_to=None, flush_weights=False,
-                 total_mini_batch_size=None, mini_batch_buf_size=None):
+                 total_mini_batch_size=None, mini_batch_buf_size=None, freeze_layers = None,
+                 freeze_batch_norm_stats = False):
         DLPyDict.__init__(self, algorithm=algorithm, mini_batch_size=mini_batch_size, seed=seed, max_epochs=max_epochs,
                           reg_l1=reg_l1, reg_l2=reg_l2, dropout=dropout, dropout_input=dropout_input,
                           dropout_type=dropout_type, stagnation=stagnation, threshold=threshold, f_conv=f_conv,
                           snapshot_freq=snapshot_freq, log_level=log_level,
                           bn_src_layer_warnings=bn_src_layer_warnings, freeze_layers_to=freeze_layers_to,
                           flush_weights=flush_weights, total_mini_batch_size=total_mini_batch_size,
-                          mini_batch_buf_size=mini_batch_buf_size)
+                          mini_batch_buf_size=mini_batch_buf_size, freeze_layers=freeze_layers,
+                          freeze_batch_norm_stats=freeze_batch_norm_stats)
 
     def add_optimizer_mode(self, solver_mode_type='sync', sync_freq=None, alpha=None, damping=None):
         '''
@@ -2698,18 +2791,22 @@ class DataSpec(DLPyDict):
 
     Parameters
     -----------
-    type_ : string, optional
+    type_ : string
         Specifies the type of the input data in the data spec.
         Valid Values: NUMERICNOMINAL, NUMNOM, TEXT, IMAGE, OBJECTDETECTION
-    layer : string, optional
+    layer : string
         Specifies the name of the layer to data spec.
     data : list, optional
         Specifies the name of the columns/variables as the data, this might
         be input or output based on layer type.
+    data_layer : string, optional
+        Specifies the name of the input layer that binds to the output layer.
     nominals : list, optional
         Specifies the nominal input variables to use in the analysis.
     numeric_nominal_parms : :class:`DataSpecNumNomOpts`, optional
         Specifies the parameters for the numeric nominal data spec inputs.
+    loss_scale_factor : double, optional
+        Specifies the value to scale the loss for a given task layer. This option only affects the task layers.
 
     Returns
     -------
@@ -2717,9 +2814,10 @@ class DataSpec(DLPyDict):
         A dictionary of data spec parameters.
 
     """
-    def __init__(self, type_, layer, data, nominals=None, numeric_nominal_parms=None):
-        DLPyDict.__init__(self, type=type_, layer=layer, data=data, nominals=nominals,
-                          numeric_nominal_parms=numeric_nominal_parms)
+    def __init__(self, type_, layer, data=None, data_layer=None, nominals=None, numeric_nominal_parms=None,
+                 loss_scale_factor=1):
+        DLPyDict.__init__(self, type=type_, layer=layer, data_layer=data_layer, data=data, nominals=nominals,
+                          numeric_nominal_parms=numeric_nominal_parms, loss_scale_factor=loss_scale_factor)
 
 
 def _train_visualization(self):
