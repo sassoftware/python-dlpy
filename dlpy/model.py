@@ -2030,39 +2030,6 @@ class FeatureMaps(object):
         plt.show()
 
 
-class DLPyDict(collections.MutableMapping):
-    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
-
-    def __init__(self, *args, **kwargs):
-        for k in kwargs:
-            self.__setitem__(k, kwargs[k])
-
-    def __getitem__(self, key):
-        return self.__dict__[self.__keytransform__(key)]
-
-    def __setitem__(self, key, value):
-        if value is not None:
-            self.__dict__[self.__keytransform__(key)] = value
-        else:
-            if key in self.__dict__:
-                self.__delitem__[key]
-
-    def __delitem__(self, key):
-        del self.__dict__[self.__keytransform__(key)]
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __keytransform__(self, key):
-        return key.lower().replace("_", "")
-
-    def __str__(self):
-        return str(self.__dict__)
-
-
 class Solver(DLPyDict):
     '''
     Solver object
@@ -2116,10 +2083,31 @@ class Solver(DLPyDict):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
+
         DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy, gamma=gamma,
                           step_size=step_size, power=power, use_locking=use_locking, clip_grad_max=clip_grad_max,
-                          clip_grad_min=clip_grad_min, steps=steps)
+                          clip_grad_min=clip_grad_min, steps=steps, fcmp_learning_rate=fcmp_learning_rate)
+
+        # lr_scheduler default as None and if it is specified, it will overwrite lr option in _solver
+        if lr_scheduler is not None:
+            if not isinstance(lr_scheduler, _LRScheduler):
+                raise TypeError('{} is not an LRScheduler'.format(type(lr_scheduler).__name__))
+
+            if lr_scheduler.get('fcmp_learning_rate'):
+                self.pop('learning_rate_policy', 0)
+
+            args_wrapped_in_lr_scheduler = ['learning_rate', 'learning_rate_policy', 'gamma', 'step_size',
+                                            'power', 'steps', 'fcmp_learning_rate']
+
+            not_none_args = [i for i in args_wrapped_in_lr_scheduler if self.get(i) is not None]
+
+            if len(not_none_args) > 0:
+                print('The following argument(s) {} are overwritten by the according arguments '
+                      'specified in lr_scheduler.'.format(', '.join(not_none_args)))
+            for key, value in lr_scheduler.items():
+                self.__setitem__(key, value)
 
     def set_method(self, method):
         '''
@@ -2203,9 +2191,10 @@ class VanillaSolver(Solver):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('vanilla')
 
 
@@ -2264,9 +2253,10 @@ class MomentumSolver(Solver):
 
     '''
     def __init__(self, momentum=0.9, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10,
-                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('momentum')
         self.add_parameter('momentum', momentum)
 
@@ -2330,9 +2320,10 @@ class AdamSolver(Solver):
 
     '''
     def __init__(self, beta1=0.9, beta2=0.999, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('adam')
         self.add_parameter('beta1', beta1)
         self.add_parameter('beta2', beta2)
@@ -2407,9 +2398,9 @@ class LBFGSolver(Solver):
     '''
     def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, learning_rate=0.001,
                  learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75, use_locking=True,
-                 clip_grad_max=None, clip_grad_min=None, steps=None):
+                 clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('lbfg')
         self.add_parameters('m', m)
         self.add_parameters('maxlinesearchiters', max_line_search_iters)
@@ -2472,9 +2463,10 @@ class NatGradSolver(Solver):
 
     '''
     def __init__(self, approximation_type=1, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('natgrad')
         self.add_parameter('approximationtype', approximation_type)
 
