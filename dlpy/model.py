@@ -2584,6 +2584,14 @@ class Optimizer(DLPyDict):
         the bufferSize. The only disadvantage to specifying a small value is
         that run time can increase because multiple smaller matrices must be
         multiplied instead of a single large matrix multiply.
+    freeze_layers_to : string
+        Specifies a layer name to freeze this layer and all the layers before
+        this layer.
+    freeze_batch_norm_stats : Boolean
+        When set to True, freezes the statistics of all batch normalization layers.
+        Default : False
+    freeze_layers : list of string
+        Specifies a list of layer names whose trainable parameters will be frozen.
 
     Returns
     -------
@@ -2593,14 +2601,16 @@ class Optimizer(DLPyDict):
     def __init__(self, algorithm=VanillaSolver(), mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
                  dropout=0, dropout_input=0, dropout_type='standard', stagnation=0, threshold=0.00000001, f_conv=0,
                  snapshot_freq=0, log_level=0, bn_src_layer_warnings=True, freeze_layers_to=None, flush_weights=False,
-                 total_mini_batch_size=None, mini_batch_buf_size=None):
+                 total_mini_batch_size=None, mini_batch_buf_size=None,
+                 freeze_layers=None, freeze_batch_norm_stats=False):
         DLPyDict.__init__(self, algorithm=algorithm, mini_batch_size=mini_batch_size, seed=seed, max_epochs=max_epochs,
                           reg_l1=reg_l1, reg_l2=reg_l2, dropout=dropout, dropout_input=dropout_input,
                           dropout_type=dropout_type, stagnation=stagnation, threshold=threshold, f_conv=f_conv,
                           snapshot_freq=snapshot_freq, log_level=log_level,
                           bn_src_layer_warnings=bn_src_layer_warnings, freeze_layers_to=freeze_layers_to,
                           flush_weights=flush_weights, total_mini_batch_size=total_mini_batch_size,
-                          mini_batch_buf_size=mini_batch_buf_size)
+                          mini_batch_buf_size=mini_batch_buf_size,
+                          freeze_layers=freeze_layers, freeze_batch_norm_stats=freeze_batch_norm_stats)
 
     def add_optimizer_mode(self, solver_mode_type='sync', sync_freq=None, alpha=None, damping=None):
         '''
@@ -2786,18 +2796,22 @@ class DataSpec(DLPyDict):
 
     Parameters
     -----------
-    type_ : string, optional
+    type_ : string
         Specifies the type of the input data in the data spec.
         Valid Values: NUMERICNOMINAL, NUMNOM, TEXT, IMAGE, OBJECTDETECTION
-    layer : string, optional
+    layer : string
         Specifies the name of the layer to data spec.
     data : list, optional
         Specifies the name of the columns/variables as the data, this might
         be input or output based on layer type.
+    data_layer : string, optional
+        Specifies the name of the input layer that binds to the output layer.
     nominals : list, optional
         Specifies the nominal input variables to use in the analysis.
     numeric_nominal_parms : :class:`DataSpecNumNomOpts`, optional
         Specifies the parameters for the numeric nominal data spec inputs.
+    loss_scale_factor : double, optional
+        Specifies the value to scale the loss for a given task layer. This option only affects the task layers.
 
     Returns
     -------
@@ -2805,9 +2819,10 @@ class DataSpec(DLPyDict):
         A dictionary of data spec parameters.
 
     """
-    def __init__(self, type_, layer, data, nominals=None, numeric_nominal_parms=None):
-        DLPyDict.__init__(self, type=type_, layer=layer, data=data, nominals=nominals,
-                          numeric_nominal_parms=numeric_nominal_parms)
+    def __init__(self, type_, layer, data=None, data_layer=None, nominals=None, numeric_nominal_parms=None,
+                 loss_scale_factor=1):
+        DLPyDict.__init__(self, type=type_, layer=layer, data=data, data_layer=data_layer, nominals=nominals,
+                          numeric_nominal_parms=numeric_nominal_parms, loss_scale_factor=loss_scale_factor)
 
 
 def _train_visualization(self):
