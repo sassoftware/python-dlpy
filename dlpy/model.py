@@ -1778,7 +1778,7 @@ class Model(Network):
         image_id_list = temp_table['_parentId_'].unique().tolist()
         n_masks = len(temp_table['_id_'].unique())
 
-        prob_tensor = np.empty((output_width, output_height, n_masks))
+        prob_tensor = np.empty((output_height, output_width, n_masks))
         prob_tensor[:] = np.nan
         model_explain_table = dict()
         count_for_subject = dict()
