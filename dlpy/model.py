@@ -28,7 +28,8 @@ from .utils import image_blocksize, unify_keys, input_table_check, random_name, 
 from .utils import filter_by_image_id, filter_by_filename, isnotebook
 from dlpy.timeseries import TimeseriesTable
 from dlpy.timeseries import _get_first_obs, _get_last_obs, _combine_table, _prepare_next_input
-from dlpy.utils import DLPyError, Box
+from dlpy.utils import DLPyError, Box, DLPyDict
+from dlpy.lr_scheduler import _LRScheduler, FixedLR, StepLR, FCMPLR
 from dlpy.network import Network
 
 
@@ -46,7 +47,6 @@ class Model(Network):
     train_tbl = None
     valid_tbl = None
     score_message_level = 'note'
-    
 
     def change_labels(self, label_file, id_column, label_column):
         '''
@@ -1082,10 +1082,10 @@ class Model(Network):
 
                 if horizon == 1:
                     self.predict(test_table, layer_out=layer_out, layers=layers,
-                             gpu=gpu, buffer_size=buffer_size,
-                             mini_batch_buf_size=mini_batch_buf_size,
-                             use_best_weights=use_best_weights,
-                             n_threads=n_threads)
+                                 gpu=gpu, buffer_size=buffer_size,
+                                 mini_batch_buf_size=mini_batch_buf_size,
+                                 use_best_weights=use_best_weights,
+                                 n_threads=n_threads)
 
                     output_tbl = self.valid_res_tbl
 
@@ -1096,7 +1096,7 @@ class Model(Network):
                     output_tbl = _combine_table(output_tbl,  casout=casout)
                 else:
                     cur_input = _get_first_obs(test_table, self.train_tbl.timeid,
-                             groupby=self.train_tbl.groupby_var)
+                                               groupby=self.train_tbl.groupby_var)
 
                     for i in range(horizon):
                         if i > 0:
@@ -1136,7 +1136,7 @@ class Model(Network):
                 train_valid_tbl = _combine_table(self.train_tbl, self.valid_tbl)
 
                 cur_results = _get_last_obs(train_valid_tbl, self.train_tbl.timeid,
-                                         groupby=self.train_tbl.groupby_var)
+                                            groupby=self.train_tbl.groupby_var)
 
                 self.conn.retrieve('table.droptable', _messagelevel='error', name=train_valid_tbl.name)
 
@@ -1182,7 +1182,6 @@ class Model(Network):
                         output_tbl = _combine_table(output_tbl,  casout=casout)
                     else:
                         output_tbl = _combine_table(output_tbl, cur_results, casout=output_tbl)
-
 
         self.score_message_level = 'note'
 
@@ -1299,9 +1298,7 @@ class Model(Network):
                                   layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
                                   random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
 
-
         return self._retrieve_('deeplearn.dlscore', message_level=self.score_message_level, **parameters)
-
 
     def plot_evaluate_res(self, cas_table=None, img_type='A', image_id=None, filename=None, n_images=5,
                           target='_label_', predicted_class=None, label_class=None, randomize=False,
@@ -2012,39 +2009,6 @@ class FeatureMaps(object):
         plt.show()
 
 
-class DLPyDict(collections.MutableMapping):
-    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
-
-    def __init__(self, *args, **kwargs):
-        for k in kwargs:
-            self.__setitem__(k, kwargs[k])
-
-    def __getitem__(self, key):
-        return self.__dict__[self.__keytransform__(key)]
-
-    def __setitem__(self, key, value):
-        if value is not None:
-            self.__dict__[self.__keytransform__(key)] = value
-        else:
-            if key in self.__dict__:
-                self.__delitem__[key]
-
-    def __delitem__(self, key):
-        del self.__dict__[self.__keytransform__(key)]
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __keytransform__(self, key):
-        return key.lower().replace("_", "")
-
-    def __str__(self):
-        return str(self.__dict__)
-
-
 class Solver(DLPyDict):
     '''
     Solver object
@@ -2078,6 +2042,19 @@ class Solver(DLPyDict):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2085,10 +2062,31 @@ class Solver(DLPyDict):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
+
         DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy, gamma=gamma,
                           step_size=step_size, power=power, use_locking=use_locking, clip_grad_max=clip_grad_max,
-                          clip_grad_min=clip_grad_min, steps=steps)
+                          clip_grad_min=clip_grad_min, steps=steps, fcmp_learning_rate=fcmp_learning_rate)
+
+        # lr_scheduler default as None and if it is specified, it will overwrite lr option in _solver
+        if lr_scheduler is not None:
+            if not isinstance(lr_scheduler, _LRScheduler):
+                raise TypeError('{} is not an LRScheduler'.format(type(lr_scheduler).__name__))
+
+            if lr_scheduler.get('fcmp_learning_rate'):
+                self.pop('learning_rate_policy', 0)
+
+            args_wrapped_in_lr_scheduler = ['learning_rate', 'learning_rate_policy', 'gamma', 'step_size',
+                                            'power', 'steps', 'fcmp_learning_rate']
+
+            not_none_args = [i for i in args_wrapped_in_lr_scheduler if self.get(i) is not None]
+
+            if len(not_none_args) > 0:
+                print('The following argument(s) {} are overwritten by the according arguments '
+                      'specified in lr_scheduler.'.format(', '.join(not_none_args)))
+            for key, value in lr_scheduler.items():
+                self.__setitem__(key, value)
 
     def set_method(self, method):
         '''
@@ -2152,6 +2150,19 @@ class VanillaSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2159,9 +2170,10 @@ class VanillaSolver(Solver):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('vanilla')
 
 
@@ -2200,6 +2212,19 @@ class MomentumSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth,
         ninth, and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2207,9 +2232,10 @@ class MomentumSolver(Solver):
 
     '''
     def __init__(self, momentum=0.9, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10,
-                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('momentum')
         self.add_parameter('momentum', momentum)
 
@@ -2253,6 +2279,19 @@ class AdamSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2260,9 +2299,10 @@ class AdamSolver(Solver):
 
     '''
     def __init__(self, beta1=0.9, beta2=0.999, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('adam')
         self.add_parameter('beta1', beta1)
         self.add_parameter('beta2', beta2)
@@ -2316,6 +2356,19 @@ class LBFGSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2324,9 +2377,9 @@ class LBFGSolver(Solver):
     '''
     def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, learning_rate=0.001,
                  learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75, use_locking=True,
-                 clip_grad_max=None, clip_grad_min=None, steps=None):
+                 clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('lbfg')
         self.add_parameters('m', m)
         self.add_parameters('maxlinesearchiters', max_line_search_iters)
@@ -2369,6 +2422,19 @@ class NatGradSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2376,9 +2442,10 @@ class NatGradSolver(Solver):
 
     '''
     def __init__(self, approximation_type=1, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('natgrad')
         self.add_parameter('approximationtype', approximation_type)
 
