@@ -53,8 +53,9 @@ class _LRScheduler(DLPyDict):
     """
     def __init__(self, learning_rate_policy=None, learning_rate=None, gamma=None, steps=None, step_size=None,
                  power=None, fcmp_learning_rate=None):
-        super(_LRScheduler, self).__init__(learning_rate_policy=learning_rate_policy, learning_rate=learning_rate, gamma=gamma,
-                                           steps=steps, step_size=step_size, power=power, fcmp_learning_rate=fcmp_learning_rate)
+        super(_LRScheduler, self).__init__(learning_rate_policy=learning_rate_policy, learning_rate=learning_rate,
+                                           gamma=gamma, steps=steps, step_size=step_size, power=power,
+                                           fcmp_learning_rate=fcmp_learning_rate)
 
 
 class FCMPLR(_LRScheduler):
@@ -81,12 +82,12 @@ class FCMPLR(_LRScheduler):
     """
     def __init__(self, conn, fcmp_learning_rate, learning_rate=0.001, gamma=0.1, step_size=10):
         if not conn.has_actionset('fcmpact'):
-            conn.loadactionset(actionSet = 'fcmpact', _messagelevel = 'error')
-        active_caslib_name = conn.caslibinfo(active = True).CASLibInfo.loc[0]['Name']
+            conn.loadactionset(actionSet='fcmpact', _messagelevel='error')
+        active_caslib_name = conn.caslibinfo(active=True).CASLibInfo.loc[0]['Name']
         active_caslib_name = 'CASUSER' if active_caslib_name.startswith('CASUSER(') else active_caslib_name
-        conn.sessionProp.setsessopt(cmplib = active_caslib_name+'.'+fcmp_learning_rate)
-        super(FCMPLR, self).__init__(fcmp_learning_rate=fcmp_learning_rate, learning_rate = learning_rate, gamma=gamma,
-                                     step_size=step_size)
+        conn.sessionProp.setsessopt(cmplib=active_caslib_name+'.'+fcmp_learning_rate)
+        super(FCMPLR, self).__init__(fcmp_learning_rate=fcmp_learning_rate, learning_rate=learning_rate,
+                                     gamma=gamma, step_size=step_size)
 
 
 class FixedLR(_LRScheduler):
@@ -126,8 +127,8 @@ class StepLR(_LRScheduler):
 
     """
     def __init__(self, learning_rate=0.001, gamma=0.1, step_size=10):
-        _LRScheduler.__init__(self, learning_rate_policy='STEP', learning_rate=learning_rate, gamma=gamma,
-                              step_size=step_size)
+        _LRScheduler.__init__(self, learning_rate_policy='STEP', learning_rate=learning_rate,
+                              gamma=gamma, step_size=step_size)
 
 
 class MultiStepLR(_LRScheduler):
@@ -153,8 +154,8 @@ class MultiStepLR(_LRScheduler):
 
     """
     def __init__(self, learning_rate, gamma, steps):
-        _LRScheduler.__init__(self, learning_rate_policy='MULTISTEP', learning_rate=learning_rate, gamma=gamma,
-                              steps=steps)
+        _LRScheduler.__init__(self, learning_rate_policy='MULTISTEP', learning_rate=learning_rate,
+                              gamma=gamma, steps=steps)
 
 
 class PolynomialLR(_LRScheduler):
@@ -200,10 +201,10 @@ class ReduceLROnPlateau(FCMPLR):
 
     """
     def __init__(self, conn, learning_rate, gamma=0.1, cool_down_iters=10, patience=10):
-        super(ReduceLROnPlateau, self).__init__(conn, learning_rate = learning_rate, gamma = gamma,
-                                                fcmp_learning_rate = 'reduce_lr_on_plateau')
+        super(ReduceLROnPlateau, self).__init__(conn, learning_rate=learning_rate, gamma=gamma,
+                                                fcmp_learning_rate='reduce_lr_on_plateau')
         conn.addRoutines(
-            routineCode = '''
+            routineCode='''
                         function reduce_lr_on_plateau(rate, initRate, gamma, loss[*]);
                             len = dim(loss);
                             temp_rate = initRate;
@@ -233,8 +234,8 @@ class ReduceLROnPlateau(FCMPLR):
                             return(rate);
                         endsub;
                         '''.format(cool_down_iters, patience),
-            package = 'pkg',
-            funcTable = dict(name = 'reduce_lr_on_plateau', replace = 1)
+            package='pkg',
+            funcTable=dict(name='reduce_lr_on_plateau', replace=1)
         )
 
 
@@ -272,7 +273,7 @@ class CyclicLR(FCMPLR):
         num_batch_per_epoch = math.ceil(conn.numrows(data).numrows / batch_size)
         step_size = int(num_batch_per_epoch * factor)
         conn.addRoutines(
-            routineCode = '''
+            routineCode='''
                         function cyclic_lr(rate, iterNum, batch, initRate);
                             batch_cum = {0} * iterNum + batch;
                             cycle = floor(batch_cum / (2 * {1}) + 1);
@@ -281,7 +282,7 @@ class CyclicLR(FCMPLR):
                             return(rate);
                         endsub;
                         '''.format(num_batch_per_epoch, step_size, max_lr),
-            package = 'pkg',
-            funcTable = dict(name = 'cyclic_lr', replace = 1)
+            package='pkg',
+            funcTable=dict(name='cyclic_lr', replace=1)
         )
 

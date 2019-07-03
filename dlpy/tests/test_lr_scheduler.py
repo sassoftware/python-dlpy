@@ -97,8 +97,10 @@ class TestLRScheduler(unittest.TestCase):
         self.s.table.loadtable(caslib = caslib,
                                casout = {'name': 'eee', 'replace': True},
                                path = path)
-        solver = VanillaSolver(lr_scheduler=CyclicLR(self.s, 'eee', 4, 1.0, 0.0000001, 0.01))
+        lrs = CyclicLR(self.s, 'eee', 4, 1.0, 0.0000001, 0.01)
+        solver = VanillaSolver(lr_scheduler=lrs)
         self.assertTrue(self.sample_syntax['CyclicLR'] == solver)
+
         optimizer = Optimizer(algorithm = solver, log_level = 3, max_epochs = 4, mini_batch_size = 2)
         r = model1.fit(data = 'eee', inputs = '_image_', target = '_label_', optimizer = optimizer, n_threads=2)
         if r.severity > 0:
@@ -107,7 +109,7 @@ class TestLRScheduler(unittest.TestCase):
         self.assertTrue(r.severity <= 1)
 
     def test_ReduceLROnPlateau(self):
-        model1 = Sequential(self.s, model_table = 'Simple_CNN1')
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
         model1.add(Conv2d(8, 7))
         model1.add(Pooling(2))
