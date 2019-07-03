@@ -820,7 +820,8 @@ class Model(Network):
         return results
 
     def predict(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=10,
-                mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None):
+                mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None,
+                layer_image_type=None, log_level=0):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -876,7 +877,18 @@ class Model(Network):
         n_threads : int, optional
             Specifies the number of threads to use. If nothing is set then
             all of the cores available in the machine(s) will be used.
-
+        layer_image_type : string, optional
+            Specifies the image type to store in the output layers table.
+            JPG means a compressed image (e.g, jpg, png, and tiff)
+            WIDE means a pixel per column
+            Default: jpg
+            Valid Values: JPG, WIDE
+        log_level : int, optional
+            specifies the reporting level for progress messages sent to the client.
+            The default level 0 indicates that no messages are sent.
+            Setting the value to 1 sends start and end messages.
+            Setting the value to 2 adds the iteration history to the client messaging.
+            default: 0
         Returns
         -------
         :class:`CASResults`
@@ -906,7 +918,7 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads)
+                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res
         else:
@@ -914,12 +926,12 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads)
+                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res    
         
-    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None, 
-                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None, 
+    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None,
+                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None,
                  use_best_weights=False, n_threads=None, casout=None):
         """
         Make forecasts based on deep learning models trained on `TimeseriesTable`.
@@ -1190,7 +1202,8 @@ class Model(Network):
     def score(self, table, model=None, init_weights=None, text_parms=None, layer_out=None,
               layer_image_type='jpg', layers=None, copy_vars=None, casout=None, gpu=None, buffer_size=10,
               mini_batch_buf_size=None, encode_name=False, random_flip='none', random_crop='none', top_probs=None,
-              random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None):
+              random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None,
+              log_level=None):
         """
         Inference of input data with the trained deep learning model
 
@@ -1278,6 +1291,12 @@ class Model(Network):
         n_threads : int, optional
             Specifies the number of threads to use. If nothing is set then
             all of the cores available in the machine(s) will be used.
+        log_level : int, optional
+            specifies the reporting level for progress messages sent to the client.
+            The default level 0 indicates that no messages are sent.
+            Setting the value to 1 sends start and end messages.
+            Setting the value to 2 adds the iteration history to the client messaging.
+            default: 0
 
         Returns
         -------
@@ -1289,14 +1308,16 @@ class Model(Network):
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
                                   layer_image_type=layer_image_type, layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
-                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
-                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
+                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
+                                  random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,
+                                  random_mutation=random_mutation, log_level=log_level)
         else:
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
                                   layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
-                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
-                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
+                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
+                                  random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,
+                                  random_mutation=random_mutation, log_level=log_level)
 
         return self._retrieve_('deeplearn.dlscore', message_level=self.score_message_level, **parameters)
 
