@@ -20,16 +20,43 @@
 
 import os
 import warnings
+import six
 
 from .sequential import Sequential
 from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
 from .caffe_models import (model_vgg16, model_vgg19, model_resnet50,
                            model_resnet101, model_resnet152)
 from .keras_models import model_inceptionv3
-from .layers import (InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer, Detection, Concat, Reshape, Recurrent,
-                     GlobalAveragePooling2D, GroupConv2d, Conv2DTranspose)
+from .layers import (Input, InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer, Detection, Concat, Reshape, Recurrent,
+                     RegionProposal, ROIPooling, FastRCNN, GlobalAveragePooling2D)
 from .model import Model
 from .utils import random_name, DLPyError
+
+input_layer_options = ['n_channels', 'width', 'height', 'nominals', 'std', 'scale', 'offsets',
+                       'dropout', 'random_flip', 'random_crop', 'random_mutation', 'norm_stds']
+rpn_layer_options = ['anchor_ratio', 'anchor_scale', 'anchor_num_to_sample', 'base_anchor_size',
+                     'coord_type', 'do_RPN_only', 'max_label_per_image', 'proposed_roi_num_score',
+                     'proposed_roi_num_train', 'roi_train_sample_num']
+fast_rcnn_options = ['detection_threshold', 'max_label_per_image', 'max_object_num', 'nms_iou_threshold']
+
+
+def _get_layer_options(layer_options, local_options):
+    """
+    Get parameters belonging to certain type of layer.
+
+    Parameters
+    ----------
+    layer_options : list of String
+        Specifies parameters of the layer.
+    local_options : list of dictionary
+        Specifies local parameters in a model function.
+
+    """
+    layer_options_dict = {}
+    for key, value in six.iteritems(local_options):
+        if key in layer_options:
+            layer_options_dict[key] = value
+    return layer_options_dict
 
 
 def TextClassification(conn, model_table='text_classifier', neurons=10, n_blocks=3, rnn_type='gru'):
@@ -4001,3 +4028,147 @@ def InceptionV3(conn, model_table='InceptionV3',
             model = Model.from_table(conn.CASTable(model_table))
 
             return model
+
+
+def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, height=496, scale=1,
+                norm_stds=None, offsets=(102.9801, 115.9465, 122.7717), random_mutation = 'none',
+                n_classes=20, anchor_num_to_sample = 256, anchor_ratio = [0.5, 1, 2], anchor_scale = [8, 16, 32],
+                base_anchor_size = 16, coord_type = 'coco', max_label_per_image = 200, proposed_roi_num_train = 2000,
+                proposed_roi_num_score = 300, roi_train_sample_num = 128, roi_pooling_height = 7, roi_pooling_width = 7,
+                nms_iou_threshold = 0.3, detection_threshold = 0.5, max_object_num = 50):
+    '''
+    Generates a deep learning model with the faster RCNN architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the connection of the CAS connection.
+    model_table : string, optional
+        Specifies the name of CAS table to store the model.
+    n_channels : int, optional
+        Specifies the number of the channels (i.e., depth) of the input layer.
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer.
+        Default: 1000
+    height : int, optional
+        Specifies the height of the input layer.
+        Default: 496
+    scale : double, optional
+        Specifies a scaling factor to be applied to each pixel intensity values.
+        Default: 1
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the
+        input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 20
+    anchor_num_to_sample : int, optional
+        Specifies the number of anchors to sample for training the region proposal network
+        Default: 256
+    anchor_ratio : iter-of-float
+        Specifies the anchor height and width ratios (h/w) used.
+    anchor_scale : iter-of-float
+        Specifies the anchor scales used based on base_anchor_size
+    base_anchor_size : int, optional
+        Specifies the basic anchor size in width and height (in pixels) in the original input image dimension
+        Default: 16
+    coord_type : int, optional
+        Specifies the coordinates format type in the input label and detection result.
+        Valid Values: RECT, COCO, YOLO
+        Default: COCO
+    proposed_roi_num_score: int, optional
+        Specifies the number of ROI (Region of Interest) to propose in the scoring phase
+        Default: 300
+    proposed_roi_num_train: int, optional
+        Specifies the number of ROI (Region of Interest) to propose used for RPN training, and also the pool to
+        sample from for FastRCNN Training in the training phase
+        Default: 2000
+    roi_train_sample_num: int, optional
+        Specifies the number of ROIs(Regions of Interests) to sample after NMS(Non-maximum Suppression)
+        is performed in the training phase.
+        Default: 128
+    roi_pooling_height : int, optional
+        Specifies the output height of the region pooling layer.
+        Default: 7
+    roi_pooling_width : int, optional
+        Specifies the output width of the region pooling layer.
+        Default: 7
+    max_label_per_image : int, optional
+        Specifies the maximum number of labels per image in the training.
+        Default: 200
+    nms_iou_threshold: float, optional
+        Specifies the IOU threshold of maximum suppression in object detection
+        Default: 0.3
+    detection_threshold : float, optional
+        Specifies the threshold for object detection.
+        Default: 0.5
+    max_object_num: int, optional
+        Specifies the maximum number of object to detect
+        Default: 50
+
+    Returns
+    -------
+    :class:`Sequential`
+
+    References
+    ----------
+    https://arxiv.org/abs/1506.01497
+
+    '''
+    num_anchors = len(anchor_ratio) * len(anchor_scale)
+    parameters = locals()
+    input_parameters = _get_layer_options(input_layer_options, parameters)
+    rpn_parameters = _get_layer_options(rpn_layer_options, parameters)
+    fast_rcnn_parameters = _get_layer_options(fast_rcnn_options, parameters)
+    inp = Input(**input_parameters, name='data')
+
+    conv1_1 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_1')(inp)
+    conv1_2 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_2')(conv1_1)
+    pool1 = Pooling(width = 2, height = 2, stride = 2, pool = 'max', name='pool1')(conv1_2)
+
+    conv2_1 = Conv2d(n_filters = 128, width = 3, height = 3, stride = 1, name = 'conv2_1')(pool1)
+    conv2_2 = Conv2d(n_filters = 128, width = 3, height = 3, stride = 1, name = 'conv2_2')(conv2_1)
+    pool2 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv2_2)
+
+    conv3_1 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_1')(pool2)
+    conv3_2 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_2')(conv3_1)
+    conv3_3 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_3')(conv3_2)
+    pool3 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv3_3)
+
+    conv4_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_1')(pool3)
+    conv4_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_2')(conv4_1)
+    conv4_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_3')(conv4_2)
+    pool4 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv4_3)
+
+    conv5_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_1')(pool4)
+    conv5_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_2')(conv5_1)
+    conv5_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_3')(conv5_2)
+
+    rpn_conv = Conv2d(width = 3, n_filters = 512, name = 'rpn_conv_3x3')(conv5_3)
+    rpn_score = Conv2d(act = 'identity', width = 1, n_filters = ((1 + 1 + 4) * num_anchors),
+                       name = 'rpn_score')(rpn_conv)
+
+    rp1 = RegionProposal(**rpn_parameters, name = 'rois')(rpn_score)
+    roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                          spatial_scale=conv5_3.shape[0]/width,
+                          name = 'roi_pooling')([conv5_3, rp1])
+
+    fc6 = Dense(n = 4096, act = 'relu', name = 'fc6')(roipool1)
+    fc7 = Dense(n = 4096, act = 'relu', name = 'fc7')(fc6)
+    cls1 = Dense(n = n_classes+1, act = 'identity', name = 'cls_score')(fc7)
+    reg1 = Dense(n = (n_classes+1)*4, act = 'identity', name = 'bbox_pred')(fc7)
+    fr1 = FastRCNN(**fast_rcnn_parameters, class_number = n_classes, name = 'fastrcnn')([cls1, reg1, rp1])
+    faster_rcnn = Model(conn, inp, fr1, model_table = model_table)
+    faster_rcnn.compile()
+    return faster_rcnn
+
