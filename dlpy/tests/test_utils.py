@@ -291,3 +291,11 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(my_box.x_max==3)
         self.assertTrue(my_box.y_min==4)
         self.assertTrue(my_box.y_max==5)
+
+    def test_plot_anchors(self):
+        base_anchor_size = 16
+        anchor_scale = [1.0, 2.0, 3.5]
+        anchor_ratio = [4, 1, 2]
+        image_size = (2000, 321)
+        plot_anchors(base_anchor_size, anchor_scale, anchor_ratio, image_size)
+
