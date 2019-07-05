@@ -27,6 +27,7 @@ import swat
 import swat.utils.testing as tm
 from dlpy.applications import *
 import unittest
+import json
 
 
 class TestApplications(unittest.TestCase):
@@ -53,6 +54,13 @@ class TestApplications(unittest.TestCase):
             if cls.data_dir.endswith(cls.server_sep):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
+
+        filename = os.path.join('datasources', 'sample_syntax_for_test.json')
+        project_path = os.path.dirname(os.path.abspath(__file__))
+        full_filename = os.path.join(project_path, filename)
+        with open(full_filename) as f:
+            cls.sample_syntax = json.load(f)
+
 
     @classmethod
     def tearDownClass(cls):
@@ -570,4 +578,15 @@ class TestApplications(unittest.TestCase):
     def test_fast_rcnn(self):
         from dlpy.applications import Faster_RCNN
         model = Faster_RCNN(self.s)
+        model.print_summary()
+
+    def test_fast_rcnn_2(self):
+        from dlpy.applications import Faster_RCNN
+        anchor_num_to_sample = 64
+        anchor_ratio = [2312312, 2, 2]
+        anchor_scale = [1.2, 2.3, 3.4, 5.6]
+        coord_type = 'rect'
+        model = Faster_RCNN(self.s, model_table = 'fast', anchor_num_to_sample = anchor_num_to_sample,
+                            anchor_ratio = anchor_ratio, anchor_scale = anchor_scale, coord_type = coord_type)
+        self.assertTrue(model.layers[20].config == self.sample_syntax['faster_rcnn1'])
         model.print_summary()

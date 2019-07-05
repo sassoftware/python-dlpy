@@ -1464,13 +1464,14 @@ def plot_anchors(base_anchor_size, anchor_scale, anchor_ratio, image_size, fig_s
         Specifies the size of figure.
 
     '''
+    # color map to draw anchor boxes
     color_map = ['b', 'g', 'r', 'c', 'm', 'y']
     img_height = image_size[0]
     img_width = image_size[1]
     anchors = []
     max_anchor_height = image_size[0]
     max_anchor_width = image_size[1]
-
+    # generate all of anchors based on base_anchor_size, anchor scale and anchor ratio
     for ratio in anchor_ratio:
         for scale in anchor_scale:
             len_size = base_anchor_size * scale
@@ -1478,18 +1479,20 @@ def plot_anchors(base_anchor_size, anchor_scale, anchor_ratio, image_size, fig_s
             height = math.sqrt(area * ratio)
             width = height / ratio
             anchors.append((height, width))
-    # find max height, width
+    # get background height/width that is the largest value in the shape of the image and the largest anchor box.
     for an in anchors:
         max_anchor_height = max(max_anchor_height, an[0])
         max_anchor_width = max(max_anchor_width, an[1])
     fig, ax = plt.subplots(1, figsize = fig_size)
     plt.xticks([]), plt.yticks([])
+    # draw the background
     background = np.tile((255, 255, 255), (int(max_anchor_height), int(max_anchor_width), 1))
+    # draw the image region
     image_region = (int((max_anchor_height - img_height) / 2), int((max_anchor_height + img_height) / 2),
                     int((max_anchor_width - img_width) / 2), int((max_anchor_width + img_width) / 2))
     background[image_region[0]: image_region[1], image_region[2]: image_region[3], :] = np.array((244, 203, 66))
     ax.imshow(background)
-
+    # draw the anchor boxes
     for i, anchor in enumerate(anchors):
         centric_x = (max_anchor_width - anchor[1]) / 2  # x
         centric_y = (max_anchor_height - anchor[0]) / 2  # y

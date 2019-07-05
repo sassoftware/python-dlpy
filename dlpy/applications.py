@@ -32,17 +32,20 @@ from .layers import (Input, InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer,
 from .model import Model
 from .utils import random_name, DLPyError
 
+# input layer option will be found in model function's local parameters
 input_layer_options = ['n_channels', 'width', 'height', 'nominals', 'std', 'scale', 'offsets',
                        'dropout', 'random_flip', 'random_crop', 'random_mutation', 'norm_stds']
+# RPN layer option will be found in model function's local parameters
 rpn_layer_options = ['anchor_ratio', 'anchor_scale', 'anchor_num_to_sample', 'base_anchor_size',
                      'coord_type', 'do_RPN_only', 'max_label_per_image', 'proposed_roi_num_score',
                      'proposed_roi_num_train', 'roi_train_sample_num']
+# Fast RCNN option will be found in model function's local parameters
 fast_rcnn_options = ['detection_threshold', 'max_label_per_image', 'max_object_num', 'nms_iou_threshold']
 
 
 def _get_layer_options(layer_options, local_options):
     """
-    Get parameters belonging to certain type of layer.
+    Get parameters belonging to a certain type of layer.
 
     Parameters
     ----------
@@ -4125,13 +4128,15 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     https://arxiv.org/abs/1506.01497
 
     '''
+    # calculate number of anchors that equal to product of length of anchor_ratio and length of anchor_scale
     num_anchors = len(anchor_ratio) * len(anchor_scale)
     parameters = locals()
+    # get parameters of input, rpn, fast_rcnn layer
     input_parameters = _get_layer_options(input_layer_options, parameters)
     rpn_parameters = _get_layer_options(rpn_layer_options, parameters)
     fast_rcnn_parameters = _get_layer_options(fast_rcnn_options, parameters)
     inp = Input(**input_parameters, name='data')
-
+    # backbone is VGG16 model
     conv1_1 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_1')(inp)
     conv1_2 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_2')(conv1_1)
     pool1 = Pooling(width = 2, height = 2, stride = 2, pool = 'max', name='pool1')(conv1_2)
@@ -4152,21 +4157,26 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
 
     conv5_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_1')(pool4)
     conv5_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_2')(conv5_1)
+    # feature of Conv5_3 is used to generate region proposals
     conv5_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_3')(conv5_2)
-
+    # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
     rpn_conv = Conv2d(width = 3, n_filters = 512, name = 'rpn_conv_3x3')(conv5_3)
     rpn_score = Conv2d(act = 'identity', width = 1, n_filters = ((1 + 1 + 4) * num_anchors),
                        name = 'rpn_score')(rpn_conv)
-
+    # propose anchors, NMS, select anchors to train RPN, produce ROIs
     rp1 = RegionProposal(**rpn_parameters, name = 'rois')(rpn_score)
+    # given ROIs, crop on conv5_3 and resize the feature to the same size
     roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
                           spatial_scale=conv5_3.shape[0]/width,
                           name = 'roi_pooling')([conv5_3, rp1])
-
+    # fully connect layer to extract the feature of ROIs
     fc6 = Dense(n = 4096, act = 'relu', name = 'fc6')(roipool1)
     fc7 = Dense(n = 4096, act = 'relu', name = 'fc7')(fc6)
+    # classification tensor
     cls1 = Dense(n = n_classes+1, act = 'identity', name = 'cls_score')(fc7)
+    # regression tensor(second stage bounding box regression)
     reg1 = Dense(n = (n_classes+1)*4, act = 'identity', name = 'bbox_pred')(fc7)
+    # task layer receive cls1, reg1 and rp1(ground truth). Train the second stage.
     fr1 = FastRCNN(**fast_rcnn_parameters, class_number = n_classes, name = 'fastrcnn')([cls1, reg1, rp1])
     faster_rcnn = Model(conn, inp, fr1, model_table = model_table)
     faster_rcnn.compile()
