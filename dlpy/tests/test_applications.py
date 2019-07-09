@@ -590,3 +590,25 @@ class TestApplications(unittest.TestCase):
                             anchor_ratio = anchor_ratio, anchor_scale = anchor_scale, coord_type = coord_type)
         self.assertTrue(model.layers[20].config == self.sample_syntax['faster_rcnn1'])
         model.print_summary()
+
+    def test_mobilenetv1(self):
+        from dlpy.applications import MobileNetV1
+        model = MobileNetV1(self.s, n_classes = 2, n_channels = 3, depth_multiplier = 10, alpha = 2)
+        self.assertTrue(len(model.layers) == 57)
+        self.assertTrue(model.layers[49]._output_size == (7, 7, 2048))
+        model.print_summary()
+
+    def test_mobilenetv2(self):
+        from dlpy.applications import MobileNetV2
+        model = MobileNetV2(self.s, n_classes = 2, n_channels = 3, alpha = 2)
+        self.assertTrue(len(model.layers) == 117)
+        self.assertTrue(model.layers[112]._output_size == (7, 7, 640))
+        model.print_summary()
+
+    def test_shufflenetv1(self):
+        from dlpy.applications import ShuffleNetV1
+        model = ShuffleNetV1(self.s, n_classes = 2, n_channels = 3, scale_factor=2, num_shuffle_units=[2, 2, 3, 4],
+                             bottleneck_ratio = 0.4, groups=2)
+        self.assertTrue(len(model.layers) == 130)
+        self.assertTrue(model.layers[127]._output_size == (4, 4, 3200))
+        model.print_summary()
