@@ -819,6 +819,242 @@ class Model(Network):
 
         return results
 
+    def evaluate_object_detection_2(self, ground_truth, coord_type, detection_data=None, classes=None,
+                                  iou_thresholds=np.linspace(0.5, 0.95, 10, endpoint=True),
+                                  return_boxes=False, confidence_threshold=None, k=None):
+        """
+        Evaluate the deep learning model on a specified validation data set.
+        Parameters
+        ----------
+        ground_truth : string or CASTable, optional
+            Specifies a ground truth table to evaluate its corresponding
+            prediction results
+        coord_type : string, optional
+            Specifies the format of how ground_truth table to represent
+            bounding boxes.
+            Valid Values: 'yolo', 'coco'
+        detection_data : string or CASTable, optional
+            Perform evaluation on the table. If the parameter is not specified,
+            the function evaluates the last prediction performed
+            by the model.
+        classes : string or list-of-strings, optional
+            The classes are selected to be evaluated. If you never set it,
+            then it will perform on all of classes in ground truth table
+            and detection_data table.
+        iou_thresholds : float or list-of-floats, optional
+            Specifying an iou threshold or a list of iou thresholds that
+            determines what is counted as a model predicted positive
+            detection of the classes defined by classes parameter.
+        return_boxes : boolean, optional
+            Specifies whether lists of the true and false positive bounding 
+            boxes are returned
+        confidence_threshold : float, optional
+             If specified, the precision, recall, and f1 score for the given
+             confidence threshold will be returned
+        k : int, optional
+            Specifies the max number of predicted boxes to keep per image 
+            
+        Returns
+        -------
+        list containing calculated results.
+        """
+        
+        def get_k_boxes(det_bb_list, k=1):
+            det_bb_list.sort(key=lambda bb: bb.confidence, reverse=True)
+            num_box_dict={}
+            top_k_bb_list = det_bb_list.copy()
+            for bb in det_bb_list:
+                if bb.image_name not in num_box_dict:
+                    num_box_dict[bb.image_name] = 0
+                num_box_dict[bb.image_name] = num_box_dict[bb.image_name] + 1
+                if num_box_dict[bb.image_name] > k:
+                    top_k_bb_list.remove(bb)
+            return top_k_bb_list
+        
+        if coord_type.lower() not in ['yolo', 'coco']:
+            raise ValueError('coord_type, {}, is not supported'.format(coord_type))
+        if detection_data is not None:
+            input_tbl_opts = input_table_check(detection_data)
+            det_tbl = self.conn.CASTable(**input_tbl_opts)
+        elif self.valid_res_tbl is not None:
+            det_tbl = self.valid_res_tbl
+        else:
+            raise DLPyError('Specify detection_data option or do predict() before processing the function')
+        det_bb_list = []
+        if '_image_' in det_tbl.columns.tolist():
+            det_tbl.drop(['_image_'], axis=1, inplace=1)
+
+        freq_variable = []
+        max_num_det = int(det_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])
+        if max_num_det == 0:
+            print('NOTE: Cannot find any object in detection_data or predict() cannot detect any object.')
+            return
+        for i in range(max_num_det):
+            freq_variable.append('_Object{}_'.format(i))
+        use_all_class = False
+        if classes is None:
+            use_all_class = True
+            classes = set(self.conn.freq(det_tbl, inputs = freq_variable).Frequency['FmtVar'])
+            classes = sorted(classes)
+            classes = [x for x in classes if not (x is '' or x.startswith('NoObject'))]
+        elif isinstance(classes, str):
+            classes = [classes]
+        nrof_classes = len(classes)
+
+        for idx, row in det_tbl.iterrows():
+            if coord_type.lower() == 'yolo':
+                [det_bb_list.append(Box(row.loc['_Object{}_x'.format(i)],
+                                        row.loc['_Object{}_y'.format(i)],
+                                        row.loc['_Object{}_width'.format(i)],
+                                        row.loc['_Object{}_height'.format(i)],
+                                        row.loc['_Object{}_'.format(i)],
+                                        row.loc['_P_Object{}_'.format(i)],
+                                        row.loc['idjoin'])) for i in range(int(row.loc['_nObjects_']))]
+            elif coord_type.lower() == 'coco':
+                [det_bb_list.append(Box(row.loc['_Object{}_xmin'.format(i)],
+                                        row.loc['_Object{}_ymin'.format(i)],
+                                        row.loc['_Object{}_xmax'.format(i)],
+                                        row.loc['_Object{}_ymax'.format(i)],
+                                        row.loc['_Object{}_'.format(i)],
+                                        row.loc['_P_Object{}_'.format(i)],
+                                        row.loc['idjoin'], 'xyxy')) for i in range(int(row.loc['_nObjects_']))]
+                
+        if k is not None:
+            det_bb_list = get_k_boxes(det_bb_list, k=k)
+
+        input_tbl_opts = input_table_check(ground_truth)
+        gt_tbl = self.conn.CASTable(**input_tbl_opts)
+        gt_bb_list = []
+        if '_image_' in gt_tbl.columns.tolist():
+            gt_tbl.drop(['_image_'], axis=1, inplace=1)
+
+        freq_variable = []
+        max_num_gt = int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])
+        if max_num_gt == 0:
+            print('NOTE: Cannot find any object in ground_truth.')
+            return
+        for i in range(int(gt_tbl.max(axis = 1, numeric_only = True)['_nObjects_'])):
+            freq_variable.append('_Object{}_'.format(i))
+        classes_gt = set(self.conn.freq(gt_tbl, inputs = freq_variable).Frequency['FmtVar'])
+        classes_gt = sorted(classes_gt)
+        classes_gt = [x for x in classes_gt if not (x is '' or x.startswith('NoObject'))]
+
+        for idx, row in gt_tbl.iterrows():
+            if coord_type.lower() == 'yolo':
+                [gt_bb_list.append(Box(row.loc['_Object{}_x'.format(i)],
+                                       row.loc['_Object{}_y'.format(i)],
+                                       row.loc['_Object{}_width'.format(i)],
+                                       row.loc['_Object{}_height'.format(i)],
+                                       row.loc['_Object{}_'.format(i)],
+                                       1.0,
+                                       row.loc['idjoin'])) for i in range(int(row.loc['_nObjects_']))]
+            elif coord_type.lower() == 'coco':
+                [gt_bb_list.append(Box(row.loc['_Object{}_xmin'.format(i)],
+                                       row.loc['_Object{}_ymin'.format(i)],
+                                       row.loc['_Object{}_xmax'.format(i)],
+                                       row.loc['_Object{}_ymax'.format(i)],
+                                       row.loc['_Object{}_'.format(i)],
+                                       1.0,
+                                       row.loc['idjoin'], 'xyxy')) for i in range(int(row.loc['_nObjects_']))]
+
+        classes_not_detected = [x for x in classes_gt if x not in classes]
+
+        if not isinstance(iou_thresholds, collections.Iterable):
+            iou_thresholds = [iou_thresholds]
+        results = []
+        for iou_threshold in iou_thresholds:
+            results_iou = []
+            for i, cls in enumerate(classes):
+                if cls not in classes_gt:
+                    print('Predictions contain the class, {}, that is not in ground truth'.format(cls))
+                    continue
+                det_bb_cls_list = []
+                [det_bb_cls_list.append(bb) for bb in det_bb_list if bb.class_type == cls]  # all of detections of the class
+                gt_bb_cls_list = []
+                [gt_bb_cls_list.append(bb) for bb in gt_bb_list if bb.class_type == cls]
+                det_bb_cls_list = sorted(det_bb_cls_list, key=lambda bb: bb.confidence, reverse=True)
+                tp = np.zeros(len(det_bb_cls_list))  # the detections of the class
+                fp = np.zeros(len(det_bb_cls_list))
+                if return_boxes==True:
+                    tp_bb_list = []
+                    fp_bb_list = []
+                gt_image_index_list = collections.Counter([bb.image_name for bb in gt_bb_cls_list])
+                for key, val in gt_image_index_list.items():
+                    gt_image_index_list[key] = np.zeros(val)
+                print("Evaluating class: %s (%d detections)" % (str(cls), len(det_bb_cls_list)))
+                th_idx=len(det_bb_cls_list)-1
+                for idx, det_bb in enumerate(det_bb_cls_list):
+                    if confidence_threshold is not None and th_idx!=(len(det_bb_cls_list)-1):
+                        if det_bb.confidence < confidence_threshold:
+                            th_idx=idx-1
+                    gt_cls_image_list = [bb for bb in gt_bb_cls_list if bb.image_name == det_bb.image_name]
+                    iou_max = sys.float_info.min
+                    for j, gt_bb in enumerate(gt_cls_image_list):
+                        if Box.iou(det_bb, gt_bb) > iou_max:
+                            match_idx = j
+                            iou_max = Box.iou(det_bb, gt_bb)
+                    if iou_max >= iou_threshold:
+                        if gt_image_index_list[det_bb.image_name][match_idx] == 0:
+                            tp[idx] = 1
+                            if return_boxes==True:
+                                tp_bb_list.append(det_bb)
+                        gt_image_index_list[det_bb.image_name][match_idx] = 1
+                    else:
+                        fp[idx] = 1
+                        if return_boxes==True:
+                            fp_bb_list.append(det_bb)
+                acc_tp = np.cumsum(tp)
+                acc_fp = np.cumsum(fp)
+                precision = np.divide(acc_tp, (acc_tp + acc_fp))
+                recall = np.divide(acc_tp, len(gt_bb_cls_list))
+
+                interpolated_precision = [0]
+                [interpolated_precision.append(i) for i in precision]
+                interpolated_precision.append(0)
+                for i in range(len(interpolated_precision) - 1, 0, -1):
+                    interpolated_precision[i - 1] = max(interpolated_precision[i - 1], interpolated_precision[i])
+                interpolated_precision = interpolated_precision[1:-1]
+
+                recall_level = [i / 10.0 for i in range(10)]
+                interpolated_ap = np.interp([i for i in recall_level if i < recall[-1]], recall, interpolated_precision)
+                ap_cls = np.sum(interpolated_ap) / 11
+                results_class = {
+                    'class': cls,
+                    'precision': precision,
+                    'recall': recall,
+                    'AP': ap_cls,
+                    'interpolated precision': interpolated_ap,
+                    'interpolated recall': recall_level,
+                    'total positives': len(gt_bb_cls_list),
+                    'total TP': np.sum(tp),
+                    'total FP': np.sum(fp)
+                }
+                if return_boxes==True:
+                    results_class['TP boxes']=tp_bb_list
+                    results_class['FP boxes']=fp_bb_list
+                if confidence_threshold is not None:
+                    try:
+                        th_prec=precision[th_idx]
+                        th_rec=recall[th_idx]
+                    except IndexError:
+                        th_prec=precision[0]
+                        th_rec=recall[0]
+                    results_class['precision for given threshold']=th_prec
+                    results_class['recall for given threshold']=th_rec
+                    results_class['f1 score for given threshold']=2*th_prec*th_rec/(th_prec+th_rec)
+                results_iou.append(results_class)
+            ap_sum = 0
+            for i in results_iou:
+                ap_sum += i['AP']
+            if use_all_class:
+                mean_ap = ap_sum / (nrof_classes + len(classes_not_detected))
+            else:
+                mean_ap = ap_sum / nrof_classes
+            results.append({'IoU Threshold': iou_threshold, 'Class Evaluation': results_iou, 
+                            'AP': mean_ap, 'Boxes kept per image':k})
+
+        return results
+
     def predict(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=10,
                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None,
                 layer_image_type=None, log_level=0):
