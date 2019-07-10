@@ -62,7 +62,6 @@ class TestApplications(unittest.TestCase):
         with open(full_filename) as f:
             cls.sample_syntax = json.load(f)
 
-
     @classmethod
     def tearDownClass(cls):
         # tear down tests
@@ -132,21 +131,20 @@ class TestApplications(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='unique')
+                                pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='unique')
         model.print_summary()
 
-
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop=None,
-                               offsets=None)
+                                pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop=None,
+                                offsets=None)
         model.print_summary()
 
 
