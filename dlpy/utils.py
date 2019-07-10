@@ -1819,6 +1819,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
 
+
 def _ntuple(n):
     '''
     create a function used to generate a tuple with length of n

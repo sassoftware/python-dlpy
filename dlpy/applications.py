@@ -1498,7 +1498,7 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop', 'randomresized', 'resizethencrop'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
