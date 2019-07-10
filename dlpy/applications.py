@@ -4615,10 +4615,10 @@ def InceptionV3(conn, model_table='InceptionV3',
 
 def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, height=496, scale=1,
                 norm_stds=None, offsets=(102.9801, 115.9465, 122.7717), random_mutation = 'none',
-                n_classes=20, anchor_num_to_sample = 256, anchor_ratio = [0.5, 1, 2], anchor_scale = [8, 16, 32],
-                base_anchor_size = 16, coord_type = 'coco', max_label_per_image = 200, proposed_roi_num_train = 2000,
-                proposed_roi_num_score = 300, roi_train_sample_num = 128, roi_pooling_height = 7, roi_pooling_width = 7,
-                nms_iou_threshold = 0.3, detection_threshold = 0.5, max_object_num = 50):
+                n_classes=20, anchor_num_to_sample=256, anchor_ratio=[0.5, 1, 2], anchor_scale=[8, 16, 32],
+                base_anchor_size=16, coord_type='coco', max_label_per_image=200, proposed_roi_num_train=2000,
+                proposed_roi_num_score=300, roi_train_sample_num=128, roi_pooling_height=7, roi_pooling_width=7,
+                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50):
     '''
     Generates a deep learning model with the faster RCNN architecture.
 
