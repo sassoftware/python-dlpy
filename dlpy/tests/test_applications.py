@@ -28,6 +28,7 @@ import swat.utils.testing as tm
 from dlpy.applications import *
 import unittest
 import json
+import os
 
 
 class TestApplications(unittest.TestCase):

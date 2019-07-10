@@ -19,7 +19,6 @@
 ''' Pre-built deep learning models '''
 
 import warnings
-import numpy as np
 import six
 
 from .sequential import Sequential
@@ -2618,6 +2617,11 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
         return ret
 
     out_dim_stage_two = {1: 144, 2: 200, 3: 240, 4: 272, 8: 384}
+    try:
+        import numpy as np
+    except:
+        raise DLPyError('Please install numpy to use this architecture.')
+
     exp = np.insert(np.arange(0, len(num_shuffle_units), dtype = np.float32), 0, 0)
     out_channels_in_stage = 2 ** exp
     out_channels_in_stage *= out_dim_stage_two[groups]  # calculate output channels for each stage
