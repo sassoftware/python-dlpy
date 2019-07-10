@@ -147,15 +147,13 @@ class TestApplications(unittest.TestCase):
                                 offsets=None)
         model.print_summary()
 
-
-        self.assertRaises(ValueError, 
-                               lambda:ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='wrong_val'))
-
+        self.assertRaises(ValueError,
+                          lambda:ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                                                 pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                                                 pre_trained_weights=True,
+                                                 include_top=False,
+                                                 n_classes=120,
+                                                 random_crop='wrong_val'))
 
     def test_resnet152_caffe(self):
 
