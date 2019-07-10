@@ -984,7 +984,7 @@ class Model(Network):
                 print("Evaluating class: %s (%d detections)" % (str(cls), len(det_bb_cls_list)))
                 th_idx=len(det_bb_cls_list)-1
                 for idx, det_bb in enumerate(det_bb_cls_list):
-                    if confidence_threshold is not None and th_idx!=(len(det_bb_cls_list)-1):
+                    if (confidence_threshold!= None) and (th_idx==(len(det_bb_cls_list)-1)):
                         if det_bb.confidence < confidence_threshold:
                             th_idx=idx-1
                     gt_cls_image_list = [bb for bb in gt_bb_cls_list if bb.image_name == det_bb.image_name]
@@ -1034,14 +1034,20 @@ class Model(Network):
                     results_class['FP boxes']=fp_bb_list
                 if confidence_threshold is not None:
                     try:
-                        th_prec=precision[th_idx]
-                        th_rec=recall[th_idx]
+                        th_prec = precision[th_idx]
+                        th_rec = recall[th_idx]
+                        th_tp = acc_tp[th_idx]
+                        th_fp = acc_fp[th_idx]
                     except IndexError:
-                        th_prec=precision[0]
-                        th_rec=recall[0]
-                    results_class['precision for given threshold']=th_prec
-                    results_class['recall for given threshold']=th_rec
-                    results_class['f1 score for given threshold']=2*th_prec*th_rec/(th_prec+th_rec)
+                        th_prec = precision[0]
+                        th_rec = recall[0]
+                        th_tp = acc_tp[0]
+                        th_fp = acc_fp[0]
+                    results_class['precision for given threshold'] = th_prec
+                    results_class['recall for given threshold'] = th_rec
+                    results_class['f1 score for given threshold'] = 2*th_prec*th_rec/(th_prec+th_rec)
+                    results_class['TP for given threshold'] = th_tp
+                    results_class['FP for given threshold'] = th_fp
                 results_iou.append(results_class)
             ap_sum = 0
             for i in results_iou:
@@ -1050,6 +1056,8 @@ class Model(Network):
                 mean_ap = ap_sum / (nrof_classes + len(classes_not_detected))
             else:
                 mean_ap = ap_sum / nrof_classes
+            if k==None:
+                k='All detected boxes'            
             results.append({'IoU Threshold': iou_threshold, 'Class Evaluation': results_iou, 
                             'AP': mean_ap, 'Boxes kept per image':k})
 
