@@ -18,7 +18,6 @@
 
 ''' Pre-built deep learning models '''
 
-import os
 import warnings
 import numpy as np
 import six
