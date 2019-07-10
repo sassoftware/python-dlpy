@@ -279,7 +279,7 @@ def LeNet5(conn, model_table='LENET5', n_classes=10, n_channels=1, width=28, hei
         is used. Images are cropped to the values that are specified in the
         width and height parameters. Only the images with one or both
         dimensions that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -354,7 +354,7 @@ def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -441,7 +441,7 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -540,7 +540,7 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -685,7 +685,7 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -840,7 +840,7 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -939,7 +939,7 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1039,7 +1039,7 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1137,7 +1137,7 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1240,7 +1240,7 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1342,7 +1342,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1498,7 +1498,7 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1598,7 +1598,7 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1754,7 +1754,7 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1854,7 +1854,7 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2019,7 +2019,7 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2112,7 +2112,7 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
@@ -2143,7 +2143,8 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
 
     '''
     def _conv_block(inputs, filters, alpha, kernel = 3, stride = 1):
-        """Adds an initial convolution layer (with batch normalization
+        """
+        Adds an initial convolution layer (with batch normalization
 
         inputs:
             Input tensor
@@ -2206,6 +2207,9 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
     parameters = locals()
     input_parameters = _get_layer_options(input_layer_options, parameters)
     inp = Input(**input_parameters, name = 'data')
+    # the model down-sampled for 5 times by performing stride=2 convolution on
+    # conv_dw_1, conv_dw_2, conv_dw_4, conv_dw_6, conv_dw_12
+    # for each block, we use depthwise convolution with kernel=3 and point-wise convolution to save computation
     x, depth = _conv_block(inp, 32, alpha, stride = 2)
     x, depth = _depthwise_conv_block(x, depth, 64, alpha, depth_multiplier, block_id = 1)
 
@@ -2282,7 +2286,7 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
@@ -2357,7 +2361,7 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
 
         # Project
         x = Conv2d(pointwise_filters, 1, include_bias = False, act = 'identity', name = prefix + 'project')(x)
-        x = BN(name = prefix + 'project_BN', act = 'identity')(x)
+        x = BN(name = prefix + 'project_BN', act = 'identity')(x)  # identity activation on narrow tensor
 
         if in_channels == pointwise_filters and stride == 1:
             return Res(name = prefix + 'add')([inputs, x]), pointwise_filters
@@ -2366,6 +2370,10 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
     parameters = locals()
     input_parameters = _get_layer_options(input_layer_options, parameters)
     inp = Input(**input_parameters, name = 'data')
+    # compared with mobilenetv1, v2 introduces inverted residual structure.
+    # and Non-linearities in narrow layers are removed.
+    # inverted residual block does three convolutins: first is 1*1 convolution, second is depthwise convolution,
+    # third is 1*1 convolution but without any non-linearity
     first_block_filters = _make_divisible(32 * alpha, 8)
     x = Conv2d(first_block_filters, 3, stride = 2, include_bias = False, name = 'Conv1', act = 'identity')(inp)
     x = BN(name = 'bn_Conv1', act='relu')(x)
@@ -2475,7 +2483,7 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
@@ -2693,7 +2701,7 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2785,7 +2793,7 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2893,7 +2901,7 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'unique'
 
     Returns
@@ -2991,7 +2999,7 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'unique'
 
     Returns
@@ -4019,7 +4027,7 @@ def InceptionV3(conn, model_table='InceptionV3',
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
