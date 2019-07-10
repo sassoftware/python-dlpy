@@ -3489,15 +3489,15 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
-                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
 
     return model
 
