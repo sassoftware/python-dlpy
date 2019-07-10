@@ -2635,8 +2635,8 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
 
     # create shufflenet architecture
     x = Conv2d(out_channels_in_stage[0], 3, include_bias=False, stride=2, act="identity", name="conv1")(inp)
-    x = BN(act = 'relu', name = 'bn1')(x)
-    x = Pooling(width = 3, height = 3, stride=2, name="maxpool1")(x)
+    x = BN(act='relu', name = 'bn1')(x)
+    x = Pooling(width=3, height=3, stride=2, name="maxpool1")(x)
 
     # create stages containing shufflenet units beginning at stage 2
     for stage in range(0, len(num_shuffle_units)):
@@ -2646,9 +2646,9 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
                    groups=groups, stage=stage + 2)
 
     x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
-    x = OutputLayer(n = n_classes)(x)
+    x = OutputLayer(n=n_classes)(x)
 
-    model = Model(conn, inputs=inp, outputs=x, model_table = model_table)
+    model = Model(conn, inputs=inp, outputs=x, model_table=model_table)
     model.compile()
 
     return model
@@ -3272,15 +3272,15 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
-                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
 
     return model
 
