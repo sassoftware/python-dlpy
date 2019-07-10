@@ -4735,14 +4735,14 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     conv4_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv4_3')(conv4_2)
     pool4 = Pooling(width=2, height=2, stride=2, pool='max')(conv4_3)
 
-    conv5_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_1')(pool4)
-    conv5_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_2')(conv5_1)
+    conv5_1 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_1')(pool4)
+    conv5_2 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_2')(conv5_1)
     # feature of Conv5_3 is used to generate region proposals
-    conv5_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_3')(conv5_2)
+    conv5_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
     # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
-    rpn_conv = Conv2d(width = 3, n_filters = 512, name = 'rpn_conv_3x3')(conv5_3)
-    rpn_score = Conv2d(act = 'identity', width = 1, n_filters = ((1 + 1 + 4) * num_anchors),
-                       name = 'rpn_score')(rpn_conv)
+    rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(conv5_3)
+    rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors),
+                       name='rpn_score')(rpn_conv)
     # propose anchors, NMS, select anchors to train RPN, produce ROIs
     rp1 = RegionProposal(**rpn_parameters, name = 'rois')(rpn_score)
     # given ROIs, crop on conv5_3 and resize the feature to the same size
@@ -4750,15 +4750,15 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                           spatial_scale=conv5_3.shape[0]/width,
                           name = 'roi_pooling')([conv5_3, rp1])
     # fully connect layer to extract the feature of ROIs
-    fc6 = Dense(n = 4096, act = 'relu', name = 'fc6')(roipool1)
-    fc7 = Dense(n = 4096, act = 'relu', name = 'fc7')(fc6)
+    fc6 = Dense(n=4096, act='relu', name='fc6')(roipool1)
+    fc7 = Dense(n=4096, act='relu', name='fc7')(fc6)
     # classification tensor
-    cls1 = Dense(n = n_classes+1, act = 'identity', name = 'cls_score')(fc7)
+    cls1 = Dense(n=n_classes+1, act='identity', name='cls_score')(fc7)
     # regression tensor(second stage bounding box regression)
-    reg1 = Dense(n = (n_classes+1)*4, act = 'identity', name = 'bbox_pred')(fc7)
+    reg1 = Dense(n=(n_classes+1)*4, act='identity', name='bbox_pred')(fc7)
     # task layer receive cls1, reg1 and rp1(ground truth). Train the second stage.
-    fr1 = FastRCNN(**fast_rcnn_parameters, class_number = n_classes, name = 'fastrcnn')([cls1, reg1, rp1])
-    faster_rcnn = Model(conn, inp, fr1, model_table = model_table)
+    fr1 = FastRCNN(**fast_rcnn_parameters, class_number=n_classes, name='fastrcnn')([cls1, reg1, rp1])
+    faster_rcnn = Model(conn, inp, fr1, model_table=model_table)
     faster_rcnn.compile()
     return faster_rcnn
 
