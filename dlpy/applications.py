@@ -3979,14 +3979,14 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
 
     model.add(Dense(n=(n_classes + (5 * predictions_per_grid)) * grid_number * grid_number, act='identity'))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov1',
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes))
+    model.add(Detection(act=act_detection, detection_model_type='yolov1',
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes))
 
     return model
 
