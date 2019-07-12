@@ -302,6 +302,266 @@ class Model(Network):
 
         return r
 
+    def fit_and_visualize(self, data, inputs=None, target=None, data_specs=None, mini_batch_size=1, max_epochs=5,
+                          lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None,
+                          text_parms=None, valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None,
+                          seed=0, record_seed=0, missing='mean', target_missing='mean', repeat_weight_table=False,
+                          force_equal_padding=None, save_best_weights=False, n_threads=None, target_order='ascending',
+                          visualize_freq=100):
+        """
+        Fitting a deep learning model while visulizing the fit and loss at each iteration.
+        This is exactly the same as the "fit()" function and if called, the training history, fiterror and loss,
+        in the iteration level is visualized with a line chart. This setting overrides the log-level and sets it
+        to 3 as it is the only level with iteration training history. It drops a point to the
+        graph for every visualize_freq (default=100).
+
+        NOTE THAT this function is experimental only as I did a lot of work-arounds to make it work
+        in Jupyter notebooks.
+
+        Parameters
+        ----------
+
+        data : string
+            This is the input data. It might be a string that is the
+            name of a cas table. Alternatively, this might be a cas table.
+        inputs : string or list-of-strings, optional
+            Specifies the input variables to use in the analysis.
+        target : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        data_specs : :class:`DataSpec`, optional
+            Specifies the parameters for the multiple input cases.
+        mini_batch_size : int, optional
+            Specifies the number of observations per thread in a
+            mini-batch. You can use this parameter to control the number of
+            observations that the action uses on each worker for each thread
+            to compute the gradient prior to updating the weights. Larger
+            values use more memory. When synchronous SGD is used (the
+            default), the total mini-batch size is equal to
+            miniBatchSize * number of threads * number of workers. When
+            asynchronous SGD is used (by specifying the elasticSyncFreq
+            parameter), each worker trains its own local model. In this case,
+            the total mini-batch size for each worker is
+            miniBatchSize * number of threads.
+        max_epochs : int, optional
+            specifies the maximum number of epochs. For SGD with a
+            single-machine server or a session that uses one worker on a
+            distributed server, one epoch is reached when the action passes
+            through the data one time. For a session that uses more than one
+            worker, one epoch is reached when all the workers exchange the
+            weights with the controller one time. The syncFreq parameter
+            specifies the number of times each worker passes through the
+            data before exchanging weights with the controller. For L-BFGS
+            with full batch, each L-BFGS iteration might process more than
+            one epoch, and final number of epochs might exceed the maximum
+            number of epochs.
+        log_level : int, optional
+            Specifies how progress messages are sent to the client. The
+            default value, 0, indicates that no messages are sent. Specify 1
+            to receive start and end messages. Specify 2 to include the
+            iteration history.
+        lr : double, optional
+            Specifies the learning rate.
+        optimizer : :class:`Optimizer`, optional
+            Specifies the parameters for the optimizer.
+        nominals : string or list-of-strings, optional
+            Specifies the nominal input variables to use in the analysis.
+        texts : string or list-of-strings, optional
+            Specifies the character variables to treat as raw text.
+            These variables must be specified in the inputs parameter.
+        target_sequence : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        sequence : :class:`Sequence`, optional
+            Specifies the settings for sequence data.
+        text_parms : :class:`TextParms`, optional
+            Specifies the parameters for the text inputs.
+        valid_table : string or CASTable, optional
+            Specifies the table with the validation data. The validation
+            table must have the same columns and data types as the training table.
+        valid_freq : int, optional
+            Specifies the frequency for scoring the validation table.
+        gpu : :class:`Gpu`, optional
+            When specified, the action uses graphical processing unit hardware.
+            The simplest way to use GPU processing is to specify "gpu=1".
+            In this case, the default values of other GPU parameters are used.
+            Setting gpu=1 enables all available GPU devices for use. Setting
+            gpu=0 disables GPU processing.
+        attributes : string or list-of-strings, optional
+            Specifies temporary attributes, such as a format, to apply to
+            input variables.
+        weight : string, optional
+            Specifies the variable/column name in the input table containing the
+            prior weights for the observation.
+        seed : double, optional
+            specifies the random number seed for the random number generator
+            in SGD. The default value, 0, and negative values indicate to use
+            random number streams based on the computer clock. Specify a value
+            that is greater than 0 for a reproducible random number sequence.
+        record_seed : double, optional
+            specifies the random number seed for the random record selection
+            within a worker. The default value 0 disables random record selection.
+            Records are read as they are laid out in memory.
+            Negative values indicate to use random number streams based on the
+            computer clock.
+        missing : string, optional
+            Specifies the policy for replacing missing values with imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        target_missing : string, optional
+            Specifies the policy for replacing target missing values with
+            imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        repeat_weight_table : bool, optional
+            Replicates the entire weight table on each worker node when saving
+            weights.
+            Default: False
+        force_equal_padding : bool, optional
+            For convolution or pooling layers, this setting forces left padding
+            to equal right padding, and top padding to equal bottom padding.
+            This setting might result in an output image that is
+            larger than the input image.
+            Default: False
+        save_best_weights : bool, optional
+            When set to True, it keeps the weights that provide the smallest
+            loss error.
+        n_threads : int, optional
+            Specifies the number of threads to use. If nothing is set then
+            all of the cores available in the machine(s) will be used.
+        target_order : string, optional
+            Specifies the order of the labels. It can follow the natural order
+            of the labels or order them in the order they are recieved with
+            training data samples.
+            Valid Values: 'ascending', 'descending', 'hash'
+            Default: 'ascending'
+        visualize_freq: int, optional
+            Specifies the frequency of the points in the visualization history. Note that the chart will
+            get crowded, and possibly get slower, with more points.
+            Default: 100
+
+        Returns
+        --------
+        :class:`CASResults`
+
+        """
+        # set reference to the training and validation table
+        self.train_tbl = data
+        self.valid_tbl = valid_table
+
+        input_tbl_opts = input_table_check(data)
+        input_table = self.conn.CASTable(**input_tbl_opts)
+
+        if data_specs is None and inputs is None:
+            from dlpy.images import ImageTable
+            if isinstance(input_table, ImageTable):
+                inputs = input_table.running_image_column
+            elif '_image_' in input_table.columns.tolist():
+                print('NOTE: Inputs=_image_ is used')
+                inputs = '_image_'
+            else:
+                raise DLPyError('either dataspecs or inputs need to be non-None')
+
+        if optimizer is None:
+            optimizer = Optimizer(algorithm=VanillaSolver(learning_rate=lr),  mini_batch_size=mini_batch_size,
+                                  max_epochs=max_epochs, log_level=3)
+        else:
+            if not isinstance(optimizer, Optimizer):
+                raise DLPyError('optimizer should be an Optimizer object')
+
+        max_epochs = optimizer['maxepochs']
+
+        if target is None and '_label_' in input_table.columns.tolist():
+            target = '_label_'
+
+        if self.model_weights.to_table_params()['name'].upper() in \
+                list(self._retrieve_('table.tableinfo').TableInfo.Name):
+            print('NOTE: Training based on existing weights.')
+            init_weights = self.model_weights
+        else:
+            print('NOTE: Training from scratch.')
+            init_weights = None
+
+        if save_best_weights and self.best_weights is None:
+            self.best_weights = random_name('model_best_weights', 6)
+
+        if isnotebook() is True:
+            # prep work for visualization
+            freq=[]
+            freq.append(visualize_freq)
+            x = []
+            y = []
+            y_loss = []
+            e = []
+            total_sample_size = []
+            iter_history = []
+            status = []
+            status.append(0)
+
+            self._train_visualize(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
+                                  optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
+                                  sequence=sequence, text_parms=text_parms, valid_table=valid_table,
+                                  valid_freq=valid_freq, gpu=gpu, attributes=attributes, weight=weight, seed=seed,
+                                  record_seed=record_seed, missing=missing, target_missing=target_missing,
+                                  repeat_weight_table=repeat_weight_table, force_equal_padding=force_equal_padding,
+                                  init_weights=init_weights, target_order=target_order, best_weights=self.best_weights,
+                                  model=self.model_table, n_threads=n_threads,
+                                  model_weights=dict(replace=True, **self.model_weights.to_table_params()),
+                                  x=x, y=y, y_loss=y_loss, total_sample_size=total_sample_size, e=e,
+                                  iter_history=iter_history, freq=freq, status=status)
+            if status[0] == 0:
+                try:
+                    temp = iter_history[0]
+                    temp.Epoch += 1  # Epochs should start from 1
+                    temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
+
+                    if self.n_epochs == 0:
+                        self.n_epochs = max_epochs
+                        self.training_history = temp
+                    else:
+                        temp.Epoch += self.n_epochs
+                        self.training_history = self.training_history.append(temp)
+                        self.n_epochs += max_epochs
+
+                    self.training_history.index = range(0, self.n_epochs)
+                except:
+                    pass
+            else:
+                print('Could not train the model')
+        else:
+            print('DLPy supports training history visualization in only Jupyter notebooks. '
+                  'We are calling the fit method in anyways')
+
+            r = self.train(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
+                           optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
+                           sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
+                           gpu=gpu, attributes=attributes, weight=weight, seed=seed, record_seed=record_seed,
+                           missing=missing, target_missing=target_missing, repeat_weight_table=repeat_weight_table,
+                           force_equal_padding=force_equal_padding, init_weights=init_weights,
+                           target_order=target_order, best_weights=self.best_weights, model=self.model_table,
+                           n_threads=n_threads,
+                           model_weights=dict(replace=True, **self.model_weights.to_table_params()))
+
+            try:
+                temp = r.OptIterHistory
+                temp.Epoch += 1  # Epochs should start from 1
+                temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
+
+                if self.n_epochs == 0:
+                    self.n_epochs = max_epochs
+                    self.training_history = temp
+                else:
+                    temp.Epoch += self.n_epochs
+                    self.training_history = self.training_history.append(temp)
+                    self.n_epochs += max_epochs
+
+                self.training_history.index = range(0, self.n_epochs)
+            except:
+                pass
+
+            if r.severity < 2:
+                self.target = target
+
+            return r
+
     def train(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None, valid_freq=1,
               model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
               sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
@@ -1321,6 +1581,148 @@ class Model(Network):
 
         return self._retrieve_('deeplearn.dlscore', message_level=self.score_message_level, **parameters)
 
+    def _train_visualize(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None,
+                         valid_freq=1, model=None, init_weights=None, model_weights=None, target=None,
+                         target_sequence=None, sequence=None, text_parms=None, weight=None, gpu=None, seed=0,
+                         record_seed=None, missing='mean', optimizer=None, target_missing='mean', best_weights=None,
+                         repeat_weight_table=False, force_equal_padding=None, data_specs=None, n_threads=None,
+                         target_order='ascending', x=None, y=None, y_loss=None, total_sample_size=None, e=None,
+                         iter_history=None, freq=None, status=None):
+        """
+        Function that calls the training action enriched with training history visualization.
+        This is an internal private function and for documentation, please refer to fit() or train()
+
+        """
+        self._train_visualization()
+
+        b_w = None
+        if best_weights is not None:
+            b_w = dict(replace=True, name=best_weights)
+        if optimizer is not None:
+            optimizer['log_level'] = 3
+        else:
+            optimizer=Optimizer(log_level=3)
+
+        parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
+                              valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
+                              model_weights=model_weights, target=target, target_sequence=target_sequence,
+                              sequence=sequence, text_parms=text_parms, weight=weight, gpu=gpu, seed=seed,
+                              record_seed=record_seed, missing=missing, optimizer=optimizer,
+                              target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
+                              force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
+                              target_order=target_order)
+        import swat
+        from ipykernel.comm import Comm
+        comm = Comm(target_name='%(plot_id)s_comm' % dict(plot_id='foo'))
+
+        with swat.option_context(print_messages=False):
+            self._retrieve_('deeplearn.dltrain', message_level='note',
+                            responsefunc=_pre_parse_results(x, y, y_loss, total_sample_size,
+                                                            e, comm, iter_history, freq, status),
+                            **parameters)
+
+        if status[0] == 0:
+            self.model_ever_trained = True
+            return iter_history[0]
+        else:
+            return None
+
+    def _train_visualization(self):
+        from IPython.display import display, HTML
+        display(HTML('''
+        <canvas id='%(plot_id)s_canvas' style='width: %(plot_width)spx; height: %(plot_height)spx'></canvas>
+
+        <script language='javascript'>
+        <!--
+        requirejs.config({
+            paths: {
+                Chart: ['//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min']
+            }
+        });
+
+        require(['jquery', 'Chart'], function($, Chart) {
+
+            var comm = Jupyter.notebook.kernel.comm_manager.new_comm('%(plot_id)s_comm')
+            var ctx = document.getElementById('%(plot_id)s_canvas').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'FitError',
+                        borderColor: '#FF0000',
+                        backgroundColor: '#FF0000',
+                        fill: false,
+                        data: [],
+                        yAxisID: 'y-axis-1'
+                    }, {
+                        label: 'Loss',
+                        borderColor: '#0000FF',
+                        backgroundColor: '#0000FF',
+                        fill: false,
+                        data: [],
+                        yAxisID: 'y-axis-2'
+                    }],
+                },
+                options: {
+                    stacked: false,
+                    scales: {
+                        yAxes: [{
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-axis-1',
+                            data: []
+                        }, {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-axis-2',
+                            data: [],
+
+                            // grid line settings
+                            gridLines: {
+                                drawOnChartArea: false, // only want the grid lines for one axis to show up
+                            },
+                        }],
+                    }
+                }
+            });
+
+            Jupyter.notebook.kernel.comm_manager.register_target('%(plot_id)s_comm',
+                function(comm, msg) {
+                    comm.on_msg(function(msg) {
+                        var data = msg.content.data;
+                        chart.data.labels.push(data.label);
+                        for ( var i = 0; i < chart.data.datasets.length; i++ ) {
+                            chart.data.datasets[i].data.push(data.data[i]);
+                        }
+                        chart.update(0);
+                    })
+
+                    comm.on_close(function() {
+                        comm.send({'command': 'stop'});
+                    })
+
+                    // Send message when plot is removed
+                    $.event.special.destroyed = {
+                        remove: function(o) {
+                            if (o.handler) {
+                                o.handler()
+                            }
+                        }
+                    }
+
+                    $('#%(plot_id)s_canvas').bind('destroyed', function() {
+                        comm.send({'command': 'stop'});
+                    });
+                }
+            );
+
+        });
+        //-->
+        </script>''' % dict(plot_id='foo', plot_width='950', plot_height='400')))
+
     def plot_evaluate_res(self, cas_table=None, img_type='A', image_id=None, filename=None, n_images=5,
                           target='_label_', predicted_class=None, label_class=None, randomize=False,
                           seed=-1):
@@ -1946,7 +2348,6 @@ class Model(Network):
         plt.colorbar(color_bar, cax=ax3)
 
         plt.show()
-
 
 
 class FeatureMaps(object):
@@ -2825,103 +3226,6 @@ class DataSpec(DLPyDict):
                           numeric_nominal_parms=numeric_nominal_parms, loss_scale_factor=loss_scale_factor)
 
 
-def _train_visualization(self):
-    from IPython.display import display, HTML
-    display(HTML('''
-        <canvas id='%(plot_id)s_canvas' style='width: %(plot_width)spx; height: %(plot_height)spx'></canvas>
-
-        <script language='javascript'>
-        <!--
-        requirejs.config({
-            paths: {
-                Chart: ['//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min']
-            }
-        });
-
-        require(['jquery', 'Chart'], function($, Chart) {
-
-            var comm = Jupyter.notebook.kernel.comm_manager.new_comm('%(plot_id)s_comm')
-            var ctx = document.getElementById('%(plot_id)s_canvas').getContext('2d');
-            var chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: 'FitError',
-                        borderColor: '#FF0000',
-                        backgroundColor: '#FF0000',
-                        fill: false,
-                        data: [],
-                        yAxisID: 'y-axis-1'
-                    }, {
-                        label: 'Loss',
-                        borderColor: '#0000FF',
-                        backgroundColor: '#0000FF',
-                        fill: false,
-                        data: [],
-                        yAxisID: 'y-axis-2'
-                    }],
-                },
-                options: {
-                    stacked: false,
-                    scales: {
-                        yAxes: [{
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            id: 'y-axis-1',
-                            data: []
-                        }, {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            id: 'y-axis-2',
-                            data: [],
-
-                            // grid line settings
-                            gridLines: {
-                                drawOnChartArea: false, // only want the grid lines for one axis to show up
-                            },
-                        }],
-                    }
-                }
-            });
-
-            Jupyter.notebook.kernel.comm_manager.register_target('%(plot_id)s_comm',
-                function(comm, msg) {
-                    comm.on_msg(function(msg) {
-                        var data = msg.content.data;
-                        chart.data.labels.push(data.label);
-                        for ( var i = 0; i < chart.data.datasets.length; i++ ) {
-                            chart.data.datasets[i].data.push(data.data[i]);
-                        }
-                        chart.update(0);
-                    })
-
-                    comm.on_close(function() {
-                        comm.send({'command': 'stop'});
-                    })
-
-                    // Send message when plot is removed
-                    $.event.special.destroyed = {
-                        remove: function(o) {
-                            if (o.handler) {
-                                o.handler()
-                            }
-                        }
-                    }
-
-                    $('#%(plot_id)s_canvas').bind('destroyed', function() {
-                        comm.send({'command': 'stop'});
-                    });
-                }
-            );
-
-        });
-        //-->
-        </script>''' % dict(plot_id='foo', plot_width='950', plot_height='400')))
-
-
 def _pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, freq, status):
 
     def parse_results(response, connection, userdata):
@@ -2936,8 +3240,11 @@ def _pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, f
             for l in line:
                 if len(l.strip()) > 0 and l.strip().replace('.','',1).isdigit():
                     numbers.append( float(l.strip()))
+
+            #print(line)
             if len(numbers) == 5:
                 t = 1 # this is for when epoch history hits
+                #print('geldi')
                 # TODO: do something with epoch values, maybe another graph
             elif len(numbers) >= 6:
                 batch_id = numbers[0]
@@ -2978,47 +3285,3 @@ def _pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, f
             print(response.disposition.debug)
 
     return parse_results
-
-
-def _train_visualize(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None, valid_freq=1,
-                     model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
-                     sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
-                     optimizer=None, target_missing='mean', best_weights=None, repeat_weight_table=False,
-                     force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending', x=None, y=None, y_loss=None,
-                     total_sample_size=None, e=None, iter_history=None, freq=None, status=None):
-    """
-    Function that calls the training action enriched with training history visualization.
-    This is an internal private function and for documentation, please refer to fit() or train()
-
-    """
-    self._train_visualization()
-
-    b_w = None
-    if best_weights is not None:
-        b_w = dict(replace=True, name=best_weights)
-    if optimizer is not None:
-        optimizer['log_level'] = 3
-    else:
-        optimizer=Optimizer(log_level=3)
-
-    parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
-                          valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
-                          model_weights=model_weights, target=target, target_sequence=target_sequence,
-                          sequence=sequence, text_parms=text_parms, weight=weight, gpu=gpu, seed=seed,
-                          record_seed=record_seed, missing=missing, optimizer=optimizer,
-                          target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
-                          force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
-                          target_order=target_order)
-    import swat
-    from ipykernel.comm import Comm
-    comm = Comm(target_name='%(plot_id)s_comm' % dict(plot_id='foo'))
-    with swat.option_context(print_messages=False):
-        self._retrieve_('deeplearn.dltrain', message_level='note',
-                        responsefunc=_pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, freq, status),
-                        **parameters)
-
-    if status[0] == 0:
-        self.model_ever_trained = True
-        return iter_history[0]
-    else:
-        return None

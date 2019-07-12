@@ -18,9 +18,7 @@
 
 ''' Pre-built deep learning models '''
 
-import os
 import warnings
-import numpy as np
 import six
 
 from .sequential import Sequential
@@ -1498,7 +1496,7 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop', 'randomresized', 'resizethencrop'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2081,7 +2079,8 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
                 alpha=1, depth_multiplier=1):
     '''
     Generates a deep learning model with the MobileNetV1 architecture.
-    The implementation is revised based on https://github.com/keras-team/keras-applications/blob/master/keras_applications/mobilenet.py
+    The implementation is revised based on
+    https://github.com/keras-team/keras-applications/blob/master/keras_applications/mobilenet.py
 
     Parameters
     ----------
@@ -2142,7 +2141,7 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
     https://arxiv.org/pdf/1605.07146.pdf
 
     '''
-    def _conv_block(inputs, filters, alpha, kernel = 3, stride = 1):
+    def _conv_block(inputs, filters, alpha, kernel=3, stride=1):
         """
         Adds an initial convolution layer (with batch normalization
 
@@ -2199,9 +2198,9 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
                         include_bias = False, name = 'conv_dw_%d' % block_id)(inputs)
         x = BN(name = 'conv_dw_%d_bn' % block_id, act = 'relu')(x)
 
-        x = Conv2d(pointwise_conv_filters, 1, act = 'identity', include_bias = False, stride = 1,
-                   name = 'conv_pw_%d' % block_id)(x)
-        x = BN(name = 'conv_pw_%d_bn' % block_id, act = 'relu')(x)
+        x = Conv2d(pointwise_conv_filters, 1, act='identity', include_bias=False, stride=1,
+                   name='conv_pw_%d' % block_id)(x)
+        x = BN(name='conv_pw_%d_bn' % block_id, act='relu')(x)
         return x, pointwise_conv_filters
 
     parameters = locals()
@@ -2210,28 +2209,28 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
     # the model down-sampled for 5 times by performing stride=2 convolution on
     # conv_dw_1, conv_dw_2, conv_dw_4, conv_dw_6, conv_dw_12
     # for each block, we use depthwise convolution with kernel=3 and point-wise convolution to save computation
-    x, depth = _conv_block(inp, 32, alpha, stride = 2)
-    x, depth = _depthwise_conv_block(x, depth, 64, alpha, depth_multiplier, block_id = 1)
+    x, depth = _conv_block(inp, 32, alpha, stride=2)
+    x, depth = _depthwise_conv_block(x, depth, 64, alpha, depth_multiplier, block_id=1)
 
     x, depth = _depthwise_conv_block(x, depth, 128, alpha, depth_multiplier,
-                                     stride = 2, block_id = 2)
-    x, depth = _depthwise_conv_block(x, depth, 128, alpha, depth_multiplier, block_id = 3)
+                                     stride=2, block_id=2)
+    x, depth = _depthwise_conv_block(x, depth, 128, alpha, depth_multiplier, block_id=3)
 
     x, depth = _depthwise_conv_block(x, depth, 256, alpha, depth_multiplier,
-                                     stride = 2, block_id = 4)
-    x, depth = _depthwise_conv_block(x, depth, 256, alpha, depth_multiplier, block_id = 5)
+                                     stride=2, block_id=4)
+    x, depth = _depthwise_conv_block(x, depth, 256, alpha, depth_multiplier, block_id=5)
 
     x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier,
-                                     stride = 2, block_id = 6)
-    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id = 7)
-    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id = 8)
-    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id = 9)
-    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id = 10)
-    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id = 11)
+                                     stride=2, block_id=6)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=7)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=8)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=9)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=10)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=11)
 
     x, depth = _depthwise_conv_block(x, depth, 1024, alpha, depth_multiplier,
-                                     stride = 2, block_id = 12)
-    x, depth = _depthwise_conv_block(x, depth, 1024, alpha, depth_multiplier, block_id = 13)
+                                     stride=2, block_id=12)
+    x, depth = _depthwise_conv_block(x, depth, 1024, alpha, depth_multiplier, block_id=13)
 
     x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
     x = OutputLayer(n=n_classes)(x)
@@ -2247,7 +2246,8 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
                 random_flip='none', random_crop='none', random_mutation='none', alpha=1):
     '''
     Generates a deep learning model with the MobileNetV2 architecture.
-    The implementation is revised based on https://github.com/keras-team/keras-applications/blob/master/keras_applications/mobilenet_v2.py
+    The implementation is revised based on
+    https://github.com/keras-team/keras-applications/blob/master/keras_applications/mobilenet_v2.py
 
     Parameters
     ----------
@@ -2307,7 +2307,7 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
     https://arxiv.org/abs/1801.04381
 
     '''
-    def _make_divisible(v, divisor, min_value = None):
+    def _make_divisible(v, divisor, min_value=None):
         # make number of channel divisible
         if min_value is None:
             min_value = divisor
@@ -2348,76 +2348,76 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
         if block_id:
             # Expand
             n_groups = expansion * in_channels
-            x = Conv2d(expansion * in_channels, 1, include_bias = False, act = 'identity',
+            x = Conv2d(expansion * in_channels, 1, include_bias=False, act='identity',
                        name = prefix + 'expand')(x)
-            x = BN(name = prefix + 'expand_BN', act = 'identity')(x)
+            x = BN(name = prefix + 'expand_BN', act='identity')(x)
         else:
             prefix = 'expanded_conv_'
 
         # Depthwise
-        x = GroupConv2d(n_groups, n_groups, 3, stride = stride, act = 'identity',
-                        include_bias = False, name = prefix + 'depthwise')(x)
-        x = BN(name = prefix + 'depthwise_BN', act = 'relu')(x)
+        x = GroupConv2d(n_groups, n_groups, 3, stride=stride, act='identity',
+                        include_bias=False, name=prefix + 'depthwise')(x)
+        x = BN(name = prefix + 'depthwise_BN', act='relu')(x)
 
         # Project
-        x = Conv2d(pointwise_filters, 1, include_bias = False, act = 'identity', name = prefix + 'project')(x)
-        x = BN(name = prefix + 'project_BN', act = 'identity')(x)  # identity activation on narrow tensor
+        x = Conv2d(pointwise_filters, 1, include_bias=False, act='identity', name=prefix + 'project')(x)
+        x = BN(name=prefix + 'project_BN', act='identity')(x)  # identity activation on narrow tensor
 
         if in_channels == pointwise_filters and stride == 1:
-            return Res(name = prefix + 'add')([inputs, x]), pointwise_filters
+            return Res(name=prefix + 'add')([inputs, x]), pointwise_filters
         return x, pointwise_filters
 
     parameters = locals()
     input_parameters = _get_layer_options(input_layer_options, parameters)
-    inp = Input(**input_parameters, name = 'data')
+    inp = Input(**input_parameters, name='data')
     # compared with mobilenetv1, v2 introduces inverted residual structure.
     # and Non-linearities in narrow layers are removed.
     # inverted residual block does three convolutins: first is 1*1 convolution, second is depthwise convolution,
     # third is 1*1 convolution but without any non-linearity
     first_block_filters = _make_divisible(32 * alpha, 8)
-    x = Conv2d(first_block_filters, 3, stride = 2, include_bias = False, name = 'Conv1', act = 'identity')(inp)
-    x = BN(name = 'bn_Conv1', act='relu')(x)
+    x = Conv2d(first_block_filters, 3, stride=2, include_bias=False, name='Conv1', act='identity')(inp)
+    x = BN(name='bn_Conv1', act='relu')(x)
 
-    x, n_channels = _inverted_res_block(x, first_block_filters, filters = 16, alpha = alpha, stride = 1,
-                                        expansion = 1, block_id = 0)
+    x, n_channels = _inverted_res_block(x, first_block_filters, filters=16, alpha=alpha, stride=1,
+                                        expansion=1, block_id=0)
 
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 24, alpha = alpha, stride = 2,
-                                        expansion = 6, block_id = 1)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 24, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 2)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=24, alpha=alpha, stride=2,
+                                        expansion=6, block_id=1)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=24, alpha=alpha, stride=1,
+                                        expansion=6, block_id=2)
 
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 32, alpha = alpha, stride = 2,
-                                        expansion = 6, block_id = 3)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 32, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 4)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 32, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 5)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=32, alpha=alpha, stride=2,
+                                        expansion=6, block_id=3)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=32, alpha=alpha, stride=1,
+                                        expansion=6, block_id=4)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=32, alpha=alpha, stride=1,
+                                        expansion=6, block_id=5)
 
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 64, alpha = alpha, stride = 2,
-                                        expansion = 6, block_id = 6)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 64, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 7)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 64, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 8)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 64, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 9)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=2,
+                                        expansion=6, block_id=6)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=1,
+                                        expansion=6, block_id=7)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=1,
+                                        expansion=6, block_id=8)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=1,
+                                        expansion=6, block_id=9)
 
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 96, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 10)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 96, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 11)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 96, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 12)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=96, alpha=alpha, stride=1,
+                                        expansion=6, block_id=10)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=96, alpha=alpha, stride=1,
+                                        expansion=6, block_id=11)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=96, alpha=alpha, stride=1,
+                                        expansion=6, block_id=12)
 
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 160, alpha = alpha, stride = 2,
-                                        expansion = 6, block_id = 13)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 160, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 14)
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 160, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 15)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=160, alpha=alpha, stride=2,
+                                        expansion=6, block_id=13)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=160, alpha=alpha, stride=1,
+                                        expansion=6, block_id=14)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=160, alpha=alpha, stride=1,
+                                        expansion=6, block_id=15)
 
-    x, n_channels = _inverted_res_block(x, n_channels, filters = 320, alpha = alpha, stride = 1,
-                                        expansion = 6, block_id = 16)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=320, alpha=alpha, stride=1,
+                                        expansion=6, block_id=16)
 
     # no alpha applied to last conv as stated in the paper:
     # if the width multiplier is greater than 1 we increase the number of output channels
@@ -2426,11 +2426,11 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
     else:
         last_block_filters = 1280
 
-    x = Conv2d(last_block_filters, 1, include_bias = False, name = 'Conv_1', act = 'identity')(x)
-    x = BN(name = 'Conv_1_bn', act = 'relu')(x)
+    x = Conv2d(last_block_filters, 1, include_bias=False, name='Conv_1', act='identity')(x)
+    x = BN(name='Conv_1_bn', act='relu')(x)
 
-    x = GlobalAveragePooling2D(name = "Global_avg_pool")(x)
-    x = OutputLayer(n = n_classes)(x)
+    x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
+    x = OutputLayer(n=n_classes)(x)
 
     model = Model(conn, inp, x, model_table)
     model.compile()
@@ -2619,6 +2619,11 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
         return ret
 
     out_dim_stage_two = {1: 144, 2: 200, 3: 240, 4: 272, 8: 384}
+    try:
+        import numpy as np
+    except:
+        raise DLPyError('Please install numpy to use this architecture.')
+
     exp = np.insert(np.arange(0, len(num_shuffle_units), dtype = np.float32), 0, 0)
     out_channels_in_stage = 2 ** exp
     out_channels_in_stage *= out_dim_stage_two[groups]  # calculate output channels for each stage
@@ -2632,8 +2637,8 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
 
     # create shufflenet architecture
     x = Conv2d(out_channels_in_stage[0], 3, include_bias=False, stride=2, act="identity", name="conv1")(inp)
-    x = BN(act = 'relu', name = 'bn1')(x)
-    x = Pooling(width = 3, height = 3, stride=2, name="maxpool1")(x)
+    x = BN(act='relu', name = 'bn1')(x)
+    x = Pooling(width=3, height=3, stride=2, name="maxpool1")(x)
 
     # create stages containing shufflenet units beginning at stage 2
     for stage in range(0, len(num_shuffle_units)):
@@ -2643,9 +2648,9 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
                    groups=groups, stage=stage + 2)
 
     x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
-    x = OutputLayer(n = n_classes)(x)
+    x = OutputLayer(n=n_classes)(x)
 
-    model = Model(conn, inputs=inp, outputs=x, model_table = model_table)
+    model = Model(conn, inputs=inp, outputs=x, model_table=model_table)
     model.compile()
 
     return model
@@ -3269,15 +3274,15 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
-                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
 
     return model
 
@@ -3486,15 +3491,15 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
-                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
 
     return model
 
@@ -3976,14 +3981,14 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
 
     model.add(Dense(n=(n_classes + (5 * predictions_per_grid)) * grid_number * grid_number, act='identity'))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov1',
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes))
+    model.add(Detection(act=act_detection, detection_model_type='yolov1',
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes))
 
     return model
 
@@ -4612,10 +4617,10 @@ def InceptionV3(conn, model_table='InceptionV3',
 
 def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, height=496, scale=1,
                 norm_stds=None, offsets=(102.9801, 115.9465, 122.7717), random_mutation = 'none',
-                n_classes=20, anchor_num_to_sample = 256, anchor_ratio = [0.5, 1, 2], anchor_scale = [8, 16, 32],
-                base_anchor_size = 16, coord_type = 'coco', max_label_per_image = 200, proposed_roi_num_train = 2000,
-                proposed_roi_num_score = 300, roi_train_sample_num = 128, roi_pooling_height = 7, roi_pooling_width = 7,
-                nms_iou_threshold = 0.3, detection_threshold = 0.5, max_object_num = 50):
+                n_classes=20, anchor_num_to_sample=256, anchor_ratio=[0.5, 1, 2], anchor_scale=[8, 16, 32],
+                base_anchor_size=16, coord_type='coco', max_label_per_image=200, proposed_roi_num_train=2000,
+                proposed_roi_num_score=300, roi_train_sample_num=128, roi_pooling_height=7, roi_pooling_width=7,
+                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50):
     '''
     Generates a deep learning model with the faster RCNN architecture.
 
@@ -4714,32 +4719,32 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     fast_rcnn_parameters = _get_layer_options(fast_rcnn_options, parameters)
     inp = Input(**input_parameters, name='data')
     # backbone is VGG16 model
-    conv1_1 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_1')(inp)
-    conv1_2 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_2')(conv1_1)
-    pool1 = Pooling(width = 2, height = 2, stride = 2, pool = 'max', name='pool1')(conv1_2)
+    conv1_1 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_1')(inp)
+    conv1_2 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_2')(conv1_1)
+    pool1 = Pooling(width=2, height=2, stride=2, pool='max', name='pool1')(conv1_2)
 
-    conv2_1 = Conv2d(n_filters = 128, width = 3, height = 3, stride = 1, name = 'conv2_1')(pool1)
-    conv2_2 = Conv2d(n_filters = 128, width = 3, height = 3, stride = 1, name = 'conv2_2')(conv2_1)
-    pool2 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv2_2)
+    conv2_1 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_1')(pool1)
+    conv2_2 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_2')(conv2_1)
+    pool2 = Pooling(width=2, height=2, stride=2, pool='max')(conv2_2)
 
-    conv3_1 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_1')(pool2)
-    conv3_2 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_2')(conv3_1)
-    conv3_3 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_3')(conv3_2)
-    pool3 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv3_3)
+    conv3_1 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_1')(pool2)
+    conv3_2 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_2')(conv3_1)
+    conv3_3 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_3')(conv3_2)
+    pool3 = Pooling(width=2, height=2, stride=2, pool='max')(conv3_3)
 
-    conv4_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_1')(pool3)
-    conv4_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_2')(conv4_1)
-    conv4_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_3')(conv4_2)
-    pool4 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv4_3)
+    conv4_1 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_1')(pool3)
+    conv4_2 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_2')(conv4_1)
+    conv4_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv4_3')(conv4_2)
+    pool4 = Pooling(width=2, height=2, stride=2, pool='max')(conv4_3)
 
-    conv5_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_1')(pool4)
-    conv5_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_2')(conv5_1)
+    conv5_1 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_1')(pool4)
+    conv5_2 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_2')(conv5_1)
     # feature of Conv5_3 is used to generate region proposals
-    conv5_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_3')(conv5_2)
+    conv5_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
     # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
-    rpn_conv = Conv2d(width = 3, n_filters = 512, name = 'rpn_conv_3x3')(conv5_3)
-    rpn_score = Conv2d(act = 'identity', width = 1, n_filters = ((1 + 1 + 4) * num_anchors),
-                       name = 'rpn_score')(rpn_conv)
+    rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(conv5_3)
+    rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors),
+                       name='rpn_score')(rpn_conv)
     # propose anchors, NMS, select anchors to train RPN, produce ROIs
     rp1 = RegionProposal(**rpn_parameters, name = 'rois')(rpn_score)
     # given ROIs, crop on conv5_3 and resize the feature to the same size
@@ -4747,15 +4752,15 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                           spatial_scale=conv5_3.shape[0]/width,
                           name = 'roi_pooling')([conv5_3, rp1])
     # fully connect layer to extract the feature of ROIs
-    fc6 = Dense(n = 4096, act = 'relu', name = 'fc6')(roipool1)
-    fc7 = Dense(n = 4096, act = 'relu', name = 'fc7')(fc6)
+    fc6 = Dense(n=4096, act='relu', name='fc6')(roipool1)
+    fc7 = Dense(n=4096, act='relu', name='fc7')(fc6)
     # classification tensor
-    cls1 = Dense(n = n_classes+1, act = 'identity', name = 'cls_score')(fc7)
+    cls1 = Dense(n=n_classes+1, act='identity', name='cls_score')(fc7)
     # regression tensor(second stage bounding box regression)
-    reg1 = Dense(n = (n_classes+1)*4, act = 'identity', name = 'bbox_pred')(fc7)
+    reg1 = Dense(n=(n_classes+1)*4, act='identity', name='bbox_pred')(fc7)
     # task layer receive cls1, reg1 and rp1(ground truth). Train the second stage.
-    fr1 = FastRCNN(**fast_rcnn_parameters, class_number = n_classes, name = 'fastrcnn')([cls1, reg1, rp1])
-    faster_rcnn = Model(conn, inp, fr1, model_table = model_table)
+    fr1 = FastRCNN(**fast_rcnn_parameters, class_number=n_classes, name='fastrcnn')([cls1, reg1, rp1])
+    faster_rcnn = Model(conn, inp, fr1, model_table=model_table)
     faster_rcnn.compile()
     return faster_rcnn
 

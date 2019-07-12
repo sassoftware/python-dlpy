@@ -1608,7 +1608,6 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     '''
     This is an alternative function to create object detection table. This function is especially good if you are
     using Ethem's annotation tool (this one creates txt files directly).
-
     conn : CAS connection
         CAS connection object
     data_path : string
@@ -1622,7 +1621,6 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
         or DLPy.
     image_size: int
         Specifies the size of the image size.
-
     '''
 
     conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
@@ -1820,6 +1818,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                                                                                                  len(data_path.split('\\')) - 2)
     img_tbl = conn.CASTable(det_img_table, computedvars=['idjoin'], computedvarsprogram=image_sas_code, vars=[{'name': '_image_'}])
+
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin',
                                 casout={'name': output, 'replace': True, 'replication': 0})
@@ -1857,7 +1856,7 @@ _pair = _ntuple(2)
 _triple = _ntuple(3)
 
 
-def isnotebook(self):
+def isnotebook():
     try:
         shell = get_ipython().__class__.__name__
         if shell == 'ZMQInteractiveShell':

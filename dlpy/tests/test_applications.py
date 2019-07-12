@@ -28,6 +28,7 @@ import swat.utils.testing as tm
 from dlpy.applications import *
 import unittest
 import json
+import os
 
 
 class TestApplications(unittest.TestCase):
@@ -114,6 +115,7 @@ class TestApplications(unittest.TestCase):
 
         model.print_summary()
 
+
     def test_resnet50_layerid(self):
 
         if self.data_dir is None:
@@ -129,31 +131,29 @@ class TestApplications(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='unique')
+                                pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='unique')
         model.print_summary()
-
 
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop=None,
-                               offsets=None)
+                                pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop=None,
+                                offsets=None)
         model.print_summary()
 
-
-        self.assertRaises(ValueError, 
-                               lambda:ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='wrong_val'))
+        self.assertRaises(ValueError,
+                          lambda:ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                                                 pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
+                                                 pre_trained_weights=True,
+                                                 include_top=False,
+                                                 n_classes=120,
+                                                 random_crop='wrong_val'))
 
     def test_resnet152_caffe(self):
 
@@ -161,31 +161,29 @@ class TestApplications(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='unique')
+                                pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='unique')
         model.print_summary()
-
 
         model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop=None,
-                               offsets=None)
+                                pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop=None,
+                                offsets=None)
         model.print_summary()
-
 
         self.assertRaises(ValueError, 
                                lambda:ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='wrong_val'))
+                                                      pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
+                                                      pre_trained_weights=True,
+                                                      include_top=False,
+                                                      n_classes=120,
+                                                      random_crop='wrong_val'))
 
     def test_lenet5(self):
         from dlpy.applications import LeNet5
@@ -218,7 +216,6 @@ class TestApplications(unittest.TestCase):
                        pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
                        include_top=True)
 
-
         model2 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
                        offsets=None,
@@ -228,13 +225,13 @@ class TestApplications(unittest.TestCase):
                        include_top=True)
 
         self.assertRaises(ValueError, 
-                               lambda:VGG16(self.s, model_table='VGG16', 
-                               n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                               offsets=None,
-                               random_crop='wrong_val',
-                               pre_trained_weights=True,
-                               pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
-                               include_top=True))
+                               lambda:VGG16(self.s, model_table='VGG16',
+                                            n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+                                            offsets=None,
+                                            random_crop='wrong_val',
+                                            pre_trained_weights=True,
+                                            pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
+                                            include_top=True))
 
     def test_vgg19(self):
         from dlpy.applications import VGG19
@@ -261,13 +258,13 @@ class TestApplications(unittest.TestCase):
                        include_top=True)
 
         self.assertRaises(ValueError, 
-                               lambda:VGG19(self.s, model_table='VGG19', 
-                               n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                               offsets=None,
-                               random_crop='wrong_val',
-                               pre_trained_weights=True,
-                               pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
-                               include_top=True))
+                               lambda:VGG19(self.s, model_table='VGG19',
+                                            n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+                                            offsets=None,
+                                            random_crop='wrong_val',
+                                            pre_trained_weights=True,
+                                            pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
+                                            include_top=True))
 
     def test_resnet18(self):
         from dlpy.applications import ResNet18_SAS
