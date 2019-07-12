@@ -1603,24 +1603,44 @@ def int_to_double(conn, tbl_colinfo, input_tbl_name,
     conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
 
 
-def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None, image_size=416):
-
+def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None,
+                                         image_size=(416, 416)):
     '''
     This is an alternative function to create object detection table. This function is especially good if you are
     using Ethem's annotation tool (this one creates txt files directly).
-    conn : CAS connection
+
+    Parameters
+    ----------
+    conn : session
         CAS connection object
     data_path : string
-        Specifies the location of the images. The CAS server has to have access to this folder.
+        Specifies a location where annotation files and image files are stored.
+        Annotation files should be XML file based on Pascal VOC format
+        Notice that the path should be accessible by CAS server.
     coord_type : string
-        Specifies coordinate type of input table
-    output: string
-        Specifies the name of the output table.
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    output : string
+        Specifies the name of the object detection table.
     annotation_path: string
         Specifies the location of the annotations. This folder needs to be accessed by either the CAS server
         or DLPy.
-    image_size: int
-        Specifies the size of the image size.
+    image_size : tuple or integer, optional
+        Specifies the size of images to resize.
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
+
+    Returns
+    -------
+    A list of variables that are the labels of the object detection table
+
     '''
 
     conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
@@ -1678,6 +1698,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                                                                           'path is accessible from'
                                                                           'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
     det_img_table = random_name('DET_IMG')
+    image_size = _pair(image_size)  # ensure image_size is a pair
     with sw.option_context(print_messages=False):
         res = conn.image.loadImages(path=path_after_caslib,
                                     recurse=True,
@@ -1694,8 +1715,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
         res = conn.image.processImages(table={'name': det_img_table},
                                        imagefunctions=[
                                            {'options': {'functiontype': 'RESIZE',
-                                                        'height': image_size,
-                                                        'width': image_size}}
+                                                        'height': image_size[1],
+                                                        'width': image_size[0]}}
                                        ],
                                        casout={'name': det_img_table, 'replace': True})
 
@@ -1784,13 +1805,17 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                            casout=dict(name='output{}'.format(var), replace=1))
             conn.altertable(name='output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
     # dljoin the five columns
-    conn.deeplearn.dljoin(table='output{}'.format(var_name[0]), id='idjoin',
+    res = conn.deeplearn.dljoin(table='output{}'.format(var_name[0]), id='idjoin',
                           annotatedtable='output{}'.format(var_name[1]),
                           casout=dict(name=output, replace=True), _messagelevel='error')
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     for var in var_name[2:]:
-        conn.deepLearn.dljoin(table=output, id='idjoin', annotatedtable='output{}'.format(var),
+        res = conn.deepLearn.dljoin(table=output, id='idjoin', annotatedtable='output{}'.format(var),
                               casout=dict(name=output, replace=True))
+        if res.severity > 0:
+            raise DLPyError('ERROR: Fail to create the object detection table.')
     # get number of objects in each image
     code = '''
             data {0};
@@ -1822,6 +1847,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin',
                                 casout={'name': output, 'replace': True, 'replication': 0})
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     with sw.option_context(print_messages=False):
         for name in input_tbl_name:
