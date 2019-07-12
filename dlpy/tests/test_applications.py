@@ -61,7 +61,6 @@ class TestApplications(unittest.TestCase):
         with open(full_filename) as f:
             cls.sample_syntax = json.load(f)
 
-
     @classmethod
     def tearDownClass(cls):
         # tear down tests
@@ -115,7 +114,6 @@ class TestApplications(unittest.TestCase):
 
         model.print_summary()
 
-
     def test_resnet50_layerid(self):
 
         if self.data_dir is None:
@@ -156,7 +154,6 @@ class TestApplications(unittest.TestCase):
                                include_top=False,
                                n_classes=120,
                                random_crop='wrong_val'))
-
 
     def test_resnet152_caffe(self):
 
@@ -244,7 +241,6 @@ class TestApplications(unittest.TestCase):
         model = VGG19(self.s)
         model.print_summary()
 
-
     def test_vgg19_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -272,7 +268,6 @@ class TestApplications(unittest.TestCase):
                                pre_trained_weights=True,
                                pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
                                include_top=True))
-
 
     def test_resnet18(self):
         from dlpy.applications import ResNet18_SAS

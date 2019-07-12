@@ -1299,13 +1299,17 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                            casout = dict(name = 'output{}'.format(var), replace = 1))
             conn.altertable(name = 'output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
     # dljoin the five label columns
-    conn.deeplearn.dljoin(table = 'output{}'.format(var_name[0]), id = 'idjoin',
-                          annotatedtable = 'output{}'.format(var_name[1]),
-                          casout = dict(name = output, replace = True), _messagelevel = 'error')
+    res = conn.deeplearn.dljoin(table = 'output{}'.format(var_name[0]), id = 'idjoin',
+                                annotatedtable = 'output{}'.format(var_name[1]),
+                                casout = dict(name = output, replace = True), _messagelevel = 'error')
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     for var in var_name[2:]:
-        conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
-                    casout = dict(name = output, replace = True))
+        res = conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
+                                    casout = dict(name = output, replace = True))
+        if res.severity > 0:
+            raise DLPyError('ERROR: Fail to create the object detection table.')
     # get number of objects in each image
     code = '''
             data {0};
@@ -1322,8 +1326,11 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             var_order.append('_Object'+str(i)+var)
     # change order of columns and unify the formattedlength of class columns
     format_ = '${}.'.format(cls_col_format_length)
-    conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
-                                              for i in range(max_instance)])
+    res = conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
+                                                    for i in range(max_instance)])
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
+
     # parse and create dljoin id column
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
@@ -1334,6 +1341,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     with sw.option_context(print_messages=False):
         for name in input_tbl_name:
