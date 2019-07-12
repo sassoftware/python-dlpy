@@ -1345,7 +1345,11 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                 len(data_path.split('\\')) - 2)
-    img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code, vars = [{'name': '_image_'}])
+    img_tbl = conn.CASTable(det_img_table,
+                            computedvars = ['idjoin'],
+                            computedvarsprogram = image_sas_code,
+                            vars = [{'name': '_image_'}])
+    
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
