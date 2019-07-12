@@ -133,6 +133,22 @@ class TestUtils(unittest.TestCase):
                                       coord_type = 'invalid_val',
                                       output = 'output'))
 
+    def test_create_object_detection_table_non_square(self):
+        # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        # non square image
+        create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type = 'yolo',
+                                      output = 'output', image_size = (416, 512))
+        # there are 11 images where all contains 3 instance.
+        # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
+        a = self.s.CASTable('output')
+        self.assertTrue(self.s.fetch('output', fetchvars='_nObjects_').Fetch['_nObjects_'].tolist() == [3.0]*len(a))
+        # check if the output size is correct
+        self.assertEqual(self.s.image.summarizeimages('output').Summary.values[0][6], 416)
+        self.assertEqual(self.s.image.summarizeimages('output').Summary.values[0][7], 512)
+
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
             if self.data_dir is None or self.data_dir_local is None:
@@ -163,6 +179,12 @@ class TestUtils(unittest.TestCase):
 
         # If there are no xml files under data_path, an error should be thrown
         self.assertRaises(DLPyError, lambda:get_txt_annotation(self.data_dir_local+'vgg', 'yolo', 416))
+
+    def test_get_txt_annotation_non_square(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', (416, 512))
+        get_txt_annotation(self.data_dir_local + 'dlpy_obj_det_test', 'coco', (416, 512))
 
     def test_unify_keys(self):
         dict_1={

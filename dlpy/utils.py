@@ -969,8 +969,8 @@ def _convert_yolo(size, box):
 
 
 def _convert_coco(size, box, resize):
-    w_ratio = float(resize) / size[0]
-    h_ratio = float(resize) / size[1]
+    w_ratio = float(resize[0]) / size[0]
+    h_ratio = float(resize[1]) / size[1]
     x_min = box[0] * w_ratio
     y_min = box[1] * h_ratio
     x_max = box[2] * w_ratio
@@ -981,17 +981,23 @@ def _convert_coco(size, box, resize):
 def _convert_xml_annotation(filename, coord_type, resize):
     in_file = open(filename)
     filename, file_extension = os.path.splitext(filename)
-    out_file = open(filename+".txt", 'w')
     tree = ET.parse(in_file)
     root = tree.getroot()
+    object_ = root.find('object')
+    # if a xml is empty, just skip it.
+    if object_ is None:
+        in_file.close()
+        return
     size = root.find('size')
     width = int(size.find('width').text)
     height = int(size.find('height').text)
+    out_file = open(filename + ".txt", 'w')  # write to test files
     for obj in root.iter('object'):
         cls = obj.find('name').text
         xmlbox = obj.find('bndbox')
         boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
                  float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
+        # convert to two formats
         if coord_type == 'yolo':
             boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
@@ -1073,7 +1079,7 @@ def convert_txt_to_xml(path):
     os.chdir(cwd)
 
 
-def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = None):
+def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_files = None):
     '''
     Parse object detection annotation files based on Pascal VOC format and save as txt files.
 
@@ -1092,21 +1098,22 @@ def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = N
         bounding boxes.
         The values are relative to parameter image_size.
         Valid Values: yolo, coco
-    image_size : integer, optional
+    image_size : tuple or integer, optional
         Specifies the size of images to resize.
-        Default: 416
+        Default: (416, 416)
     label_files : list, optional
         Specifies the list of filename with XML extension under local_path to be parsed.
         If label_files is not specified, all of XML files under local_path will be parsed .
         Default: None
 
     '''
-
     cwd = os.getcwd()
     os.chdir(local_path)
+    image_size = _pair(image_size)  # ensure image_size is a pair
     # if label_files = None, that means we call it directly and parse annotation files.
     if label_files is None:
         label_files = os.listdir(local_path)
+    # find all of label files
     label_files = [x for x in label_files if x.endswith('.xml')]
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
@@ -1116,7 +1123,7 @@ def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = N
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
-                                  local_path=None, image_size=416):
+                                  local_path=None, image_size=(416, 416)):
     '''
     Create an object detection table
 
@@ -1153,9 +1160,10 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         Linux clients with Windows CAS Server:
         data_path=\\path\to\data\path
         local_path=/path/to/data/path
-    image_size : integer, optional
+    image_size : tuple or integer, optional
         Specifies the size of images to resize.
-        Default: 416
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
 
     Returns
     -------
@@ -1189,7 +1197,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         var_name = yolo_var_name
     elif coord_type.lower() == 'coco':
         var_name = coco_var_name
-
+    image_size = _pair(image_size)  # ensure image_size is a pair
     det_img_table = random_name('DET_IMG')
 
     caslib, path_after_caslib, tmp_caslib = caslibify(conn, data_path, task='load')
@@ -1211,8 +1219,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         res = conn.image.processImages(table={'name': det_img_table},
                                        imagefunctions=[
                                            {'options': {'functiontype': 'RESIZE',
-                                                        'height': image_size,
-                                                        'width': image_size}}
+                                                        'height': image_size[1],
+                                                        'width': image_size[0]}}
                                        ],
                                        casout={'name': det_img_table, 'replace': True})
 
