@@ -1,0 +1,359 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.model.Model.forecast &mdash; DLPy 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.model.Model.evaluate" href="dlpy.model.Model.evaluate.html"/>
+        <link rel="prev" title="dlpy.model.Model.predict" href="dlpy.model.Model.predict.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#model">Model</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id6">Constructors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#model-setup">Model Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#training">Training</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#inference-evaluation-and-analysis">Inference, Evaluation, and Analysis</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.predict.html">dlpy.model.Model.predict</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">dlpy.model.Model.forecast</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.evaluate.html">dlpy.model.Model.evaluate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.evaluate_object_detection.html">dlpy.model.Model.evaluate_object_detection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.plot_evaluate_res.html">dlpy.model.Model.plot_evaluate_res</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.get_feature_maps.html">dlpy.model.Model.get_feature_maps</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.get_features.html">dlpy.model.Model.get_features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.heat_map_analysis.html">dlpy.model.Model.heat_map_analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.plot_heat_map.html">dlpy.model.Model.plot_heat_map</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id7">Saving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#architecture-information">Architecture Information</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.model.Model.forecast</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.model.Model.forecast.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-model-model-forecast">
+<h1>dlpy.model.Model.forecast<a class="headerlink" href="#dlpy-model-model-forecast" title="Permalink to this headline">¶</a></h1>
+<dl class="method">
+<dt id="dlpy.model.Model.forecast">
+<code class="descclassname">Model.</code><code class="descname">forecast</code><span class="sig-paren">(</span><em>test_table=None</em>, <em>horizon=1</em>, <em>train_table=None</em>, <em>layer_out=None</em>, <em>layers=None</em>, <em>gpu=None</em>, <em>buffer_size=10</em>, <em>mini_batch_buf_size=None</em>, <em>use_best_weights=False</em>, <em>n_threads=None</em>, <em>casout=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model.forecast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make forecasts based on deep learning models trained on <cite>TimeseriesTable</cite>.</p>
+<p>This method performs either one-step-ahead forecasting or multi-step-ahead 
+forecasting determined by the <cite>horizon</cite> parameter. If the model is autoregressive 
+(the value of the response variable depends on its values at earlier time steps), 
+it performs one-step-ahead forecasting recursively to achieve multi-step-ahead 
+forecasting. More specifically, the predicted value at the previous 
+time step is inserted into the input vector for predicting the next time step.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>test_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or <strong>CASTable</strong></span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the test table. If <cite>test_table=None</cite>, the model cannot have 
+additional static covariates or predictor timeseries, and can only 
+be a autoregressive model. In this case, the forecast extends the 
+timeseries from the last timestamp found in the training/validation set. 
+If the model contains additional static covariates or predictor 
+timeseries (that are available for predicting the target timeseries), 
+the test table has to be provided, and the forecast starts from the 
+first timestamp in the test data. If the model is autoregressive, and 
+the test data columns do not include all the required preceeding 
+time points of the target series (the lagged target variables), 
+the forecast will be extended from the last time timestamp in 
+training/validation set and only use the static covariates or 
+predictor timeseries information from the test data if they are 
+available for the corresponding time points. 
+Default : <cite>None</cite></p>
+</dd>
+<dt><strong>horizon</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional.</span></dt>
+<dd><p class="first last">Specifies the forecasting horizon. If <cite>horizon=1</cite> and test data 
+is provided, it will make one-step-ahead forecasts for all timestamps 
+in the test data.(given the test data has all the columns required 
+to make prediction.) Otherwise, it will only make one forecasted series 
+per by-group, with the length specified by the <cite>horizon</cite> parameter. 
+Default : 1</p>
+</dd>
+<dt><strong>train_table</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><strong>TimeseriesTable</strong>, optional.</span></dt>
+<dd><p class="first last">If model has been fitted with a TimeseriesTable, this argument is ignored. 
+Otherwise, this argument is required, and reference to the TimeseriesTable 
+used for model training, as it contains information regarding when to 
+extend the forecast from, and sequence length etc.</p>
+</dd>
+<dt><strong>layer_out</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the settings for an output table that includes
+layer output values. By default, all layers are included.
+You can filter the list with the layers parameter.</p>
+</dd>
+<dt><strong>layers</strong> <span class="classifier-delimiter">:</span> <span class="classifier">list of strings</span></dt>
+<dd><p class="first last">Specifies the names of the layers to include in the output
+layers table.</p>
+</dd>
+<dt><strong>gpu</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference internal" href="dlpy.model.Gpu.html#dlpy.model.Gpu" title="dlpy.model.Gpu"><strong>Gpu</strong></a></span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">When specified, the action uses graphical processing
+unit hardware. The simplest way to use GPU processing is
+to specify “gpu=1”. In this case, the default values of
+other GPU parameters are used. Setting gpu=1 enables all
+available GPU devices for use. Setting gpu=0 disables GPU
+processing.</p>
+</dd>
+<dt><strong>buffer_size</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of observations to score in a single
+batch. Larger values use more memory.
+<br/><strong class="param-meta">Default:</strong> 10</p>
+</dd>
+<dt><strong>mini_batch_buf_size</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the size of a buffer that is used to save input
+data and intermediate calculations. By default, each layer
+allocates an input buffer that is equal to the number of
+input channels multiplied by the input feature map size
+multiplied by the bufferSize value. You can reduce memory
+usage by specifying a value that is smaller than the
+bufferSize. The only disadvantage to specifying a small
+value is that run time can increase because multiple smaller
+matrices must be multiplied instead of a single large
+matrix multiply.</p>
+</dd>
+<dt><strong>use_best_weights</strong> <span class="classifier-delimiter">:</span> <span class="classifier">bool</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">When set to True, the weights that provides the smallest loss
+error saved during a previous training is used while scoring
+input data rather than the final weights from the training.
+<br/><strong class="param-meta">Default:</strong> False</p>
+</dd>
+<dt><strong>n_threads</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of threads to use. If nothing is set then
+all of the cores available in the machine(s) will be used.</p>
+</dd>
+<dt><strong>casout</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict or <strong>CASTable</strong></span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">If it is dict, it specifies the output CASTable parameters.
+If it is CASTable, it is the CASTable that will be overwritten.
+None means a new CASTable with random name will be generated.
+<br/><strong class="param-meta">Default:</strong> None</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>CASTable</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.model.Model.evaluate.html" class="btn btn-neutral float-right" title="dlpy.model.Model.evaluate" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.model.Model.predict.html" class="btn btn-neutral" title="dlpy.model.Model.predict" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

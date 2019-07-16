@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.metrics.explained_variance_score &mdash; DLPy 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.metrics.mean_absolute_error" href="dlpy.metrics.mean_absolute_error.html"/>
+        <link rel="prev" title="dlpy.metrics.f1_score" href="dlpy.metrics.f1_score.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#metrics">Metrics</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.accuracy_score.html">dlpy.metrics.accuracy_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.confusion_matrix.html">dlpy.metrics.confusion_matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.plot_roc.html">dlpy.metrics.plot_roc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.plot_precision_recall.html">dlpy.metrics.plot_precision_recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.roc_auc_score.html">dlpy.metrics.roc_auc_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.average_precision_score.html">dlpy.metrics.average_precision_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.f1_score.html">dlpy.metrics.f1_score</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.metrics.explained_variance_score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.mean_absolute_error.html">dlpy.metrics.mean_absolute_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.mean_squared_error.html">dlpy.metrics.mean_squared_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.mean_squared_log_error.html">dlpy.metrics.mean_squared_log_error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.metrics.r2_score.html">dlpy.metrics.r2_score</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.metrics.explained_variance_score</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.metrics.explained_variance_score.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-metrics-explained-variance-score">
+<h1>dlpy.metrics.explained_variance_score<a class="headerlink" href="#dlpy-metrics-explained-variance-score" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="dlpy.metrics.explained_variance_score">
+<code class="descclassname">dlpy.metrics.</code><code class="descname">explained_variance_score</code><span class="sig-paren">(</span><em>y_true</em>, <em>y_pred</em>, <em>castable=None</em>, <em>id_vars=None</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.metrics.explained_variance_score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the explained variance score for a regression task. It is the 
+fraction of the target variable variance that is explained by the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>y_true</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or <strong>CASColumn</strong></span></dt>
+<dd><p class="first last">The column of the ground truth target values. If it is a string, then 
+y_pred has to be a string and they both belongs to the same CASTable specified 
+by the castable argument. If it is a <strong>CASColumn</strong>, then y_pred has to be 
+a <strong>CASColumn</strong>, and the castable argument is ignored. When both y_pred 
+and y_true are <strong>CASColumn</strong>, they can be in different CASTables.</p>
+</dd>
+<dt><strong>y_pred</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or <strong>CASColumn</strong></span></dt>
+<dd><p class="first last">The column of the predicted target values. If it is a string, then 
+y_true has to be a string and they both belongs to the same CASTable specified 
+by the castable argument. If it is a <strong>CASColumn</strong>, then y_true has to be 
+a <strong>CASColumn</strong>, and the castable argument is ignored. When both y_pred 
+and y_true are <strong>CASColumn</strong>, they can be in different CASTables.</p>
+</dd>
+<dt><strong>castable</strong> <span class="classifier-delimiter">:</span> <span class="classifier"><strong>CASTable</strong></span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">The CASTable object to use as the source if the y_pred and y_true are strings.
+Default = None</p>
+</dd>
+<dt><strong>id_vars</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string or list of strings</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Column names that serve as unique id for y_true and y_pred if they are 
+from different CASTables. The column names need to appear in both CASTables, 
+and they serve to match y_true and y_pred appropriately, since observation 
+orders can be shuffled in distributed computing environment.
+Default = None.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>score</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.metrics.mean_absolute_error.html" class="btn btn-neutral float-right" title="dlpy.metrics.mean_absolute_error" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.metrics.f1_score.html" class="btn btn-neutral" title="dlpy.metrics.f1_score" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

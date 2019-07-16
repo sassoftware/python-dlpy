@@ -1,0 +1,6 @@
+dlpy.metrics.confusion\_matrix
+==============================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: confusion_matrix

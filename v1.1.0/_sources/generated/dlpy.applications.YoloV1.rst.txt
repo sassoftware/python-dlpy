@@ -1,0 +1,6 @@
+dlpy.applications.YoloV1
+========================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: YoloV1

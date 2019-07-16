@@ -1,0 +1,6 @@
+dlpy.metrics.mean\_squared\_log\_error
+======================================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: mean_squared_log_error

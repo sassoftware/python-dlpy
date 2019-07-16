@@ -1,0 +1,6 @@
+dlpy.model.Model.forecast
+=========================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.forecast

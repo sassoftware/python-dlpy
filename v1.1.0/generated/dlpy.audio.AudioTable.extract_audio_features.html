@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.audio.AudioTable.extract_audio_features &mdash; DLPy 1.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="DLPy 1.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="API Reference" href="../api.html"/>
+        <link rel="next" title="dlpy.audio.AudioTable.load_audio_metadata" href="dlpy.audio.AudioTable.load_audio_metadata.html"/>
+        <link rel="prev" title="dlpy.audio.AudioTable.load_audio_files" href="dlpy.audio.AudioTable.load_audio_files.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#audiotable">AudioTable</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id3">Constructors</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#audio-processing">Audio Processing</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">dlpy.audio.AudioTable.extract_audio_features</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.audio.AudioTable.load_audio_metadata.html">dlpy.audio.AudioTable.load_audio_metadata</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.audio.AudioTable.load_audio_metadata_speechrecognition.html">dlpy.audio.AudioTable.load_audio_metadata_speechrecognition</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">DLPy</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+      
+    <li>dlpy.audio.AudioTable.extract_audio_features</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/generated/dlpy.audio.AudioTable.extract_audio_features.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-audio-audiotable-extract-audio-features">
+<h1>dlpy.audio.AudioTable.extract_audio_features<a class="headerlink" href="#dlpy-audio-audiotable-extract-audio-features" title="Permalink to this headline">¶</a></h1>
+<dl class="classmethod">
+<dt id="dlpy.audio.AudioTable.extract_audio_features">
+<em class="property">classmethod </em><code class="descclassname">AudioTable.</code><code class="descname">extract_audio_features</code><span class="sig-paren">(</span><em>conn</em>, <em>table</em>, <em>frame_shift=10</em>, <em>frame_length=25</em>, <em>n_bins=40</em>, <em>n_ceps=40</em>, <em>feature_scaling_method='STANDARDIZATION'</em>, <em>n_output_frames=500</em>, <em>casout=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.audio.AudioTable.extract_audio_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts audio features from the audio files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>conn</strong> <span class="classifier-delimiter">:</span> <span class="classifier">CAS</span></dt>
+<dd><p class="first last">A connection object to the current session.</p>
+</dd>
+<dt><strong>table</strong> <span class="classifier-delimiter">:</span> <span class="classifier">AudioTable</span></dt>
+<dd><p class="first last">An audio table containing the audio files.</p>
+</dd>
+<dt><strong>frame_shift</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the time difference (in milliseconds) between the beginnings of consecutive frames.
+<br/><strong class="param-meta">Default:</strong> 10</p>
+</dd>
+<dt><strong>frame_length</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the length of a frame (in milliseconds).
+<br/><strong class="param-meta">Default:</strong> 25</p>
+</dd>
+<dt><strong>n_bins</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of triangular mel-frequency bins.
+<br/><strong class="param-meta">Default:</strong> 40</p>
+</dd>
+<dt><strong>n_ceps</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the number of cepstral coefficients in each MFCC feature frame (including C0).
+<br/><strong class="param-meta">Default:</strong> 40</p>
+</dd>
+<dt><strong>feature_scaling_method</strong> <span class="classifier-delimiter">:</span> <span class="classifier">string</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the feature scaling method to apply to the computed feature vectors.
+<br/><strong class="param-meta">Default:</strong> ‘standardization’</p>
+</dd>
+<dt><strong>n_output_frames</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Specifies the exact number of frames to include in the output table (extra frames are dropped and missing
+frames are padded with zeros).
+<br/><strong class="param-meta">Default:</strong> 500</p>
+</dd>
+<dt><strong>casout</strong> <span class="classifier-delimiter">:</span> <span class="classifier">dict or string or CASTable</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">CAS Output table</p>
+</dd>
+<dt><strong>kwargs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">keyword-arguments</span><span class="opt-sep">, </span><span class="optional">optional</span></dt>
+<dd><p class="first last">Additional parameter for feature extraction.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong><a href="dlpy.audio.AudioTable.html">AudioTable</a></strong></dt>
+<dd><p class="first last">If table exists</p>
+</dd>
+<dt><strong>None</strong></dt>
+<dd><p class="first last">If no table exists</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.audio.AudioTable.load_audio_metadata.html" class="btn btn-neutral float-right" title="dlpy.audio.AudioTable.load_audio_metadata" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.audio.AudioTable.load_audio_files.html" class="btn btn-neutral" title="dlpy.audio.AudioTable.load_audio_files" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved..
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'1.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

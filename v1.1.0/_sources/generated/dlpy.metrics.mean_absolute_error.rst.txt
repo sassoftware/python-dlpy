@@ -1,0 +1,6 @@
+dlpy.metrics.mean\_absolute\_error
+==================================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: mean_absolute_error

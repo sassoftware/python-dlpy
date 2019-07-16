@@ -1,0 +1,6 @@
+dlpy.model.Model.get\_model\_info
+=================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.get_model_info

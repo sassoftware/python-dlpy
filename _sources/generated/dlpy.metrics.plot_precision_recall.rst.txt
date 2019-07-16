@@ -1,0 +1,6 @@
+dlpy.metrics.plot\_precision\_recall
+====================================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: plot_precision_recall

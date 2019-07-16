@@ -1,0 +1,32 @@
+dlpy.blocks.Bidirectional
+=========================
+
+.. currentmodule:: dlpy.blocks
+
+.. autoclass:: Bidirectional
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Bidirectional.__init__
+      ~Bidirectional.add_layers
+      ~Bidirectional.compile
+      ~Bidirectional.get_last_layers
+      ~Bidirectional.get_layers
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Bidirectional.type
+   
+   
