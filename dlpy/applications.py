@@ -4658,6 +4658,9 @@ def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, heigh
         Specifies the initialization scheme for convolution layers.
         Valid Values: XAVIER, UNIFORM, NORMAL, CAUCHY, XAVIER1, XAVIER2, MSRA, MSRA1, MSRA2
         Default: None
+    bn_after_convolutions : Boolean
+        If set to True, a batch normalization layer is added after a convolution (the last one if there
+        are consecutive ones) layer.
 
     Returns
     -------
