@@ -18,7 +18,6 @@
 
 ''' Pre-built deep learning models '''
 
-import os
 import warnings
 import six
 
@@ -28,7 +27,8 @@ from .caffe_models import (model_vgg16, model_vgg19, model_resnet50,
                            model_resnet101, model_resnet152)
 from .keras_models import model_inceptionv3
 from .layers import (Input, InputLayer, Conv2d, Pooling, Dense, BN, OutputLayer, Detection, Concat, Reshape, Recurrent,
-                     RegionProposal, ROIPooling, FastRCNN, GlobalAveragePooling2D)
+                     RegionProposal, ROIPooling, FastRCNN, GlobalAveragePooling2D, GroupConv2d, ChannelShuffle, Res,
+                     Segmentation, Conv2DTranspose)
 from .model import Model
 from .utils import random_name, DLPyError
 
@@ -278,7 +278,7 @@ def LeNet5(conn, model_table='LENET5', n_classes=10, n_channels=1, width=28, hei
         is used. Images are cropped to the values that are specified in the
         width and height parameters. Only the images with one or both
         dimensions that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -353,7 +353,7 @@ def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
@@ -440,7 +440,7 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -539,7 +539,7 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -684,7 +684,7 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -839,7 +839,7 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -938,7 +938,7 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1038,7 +1038,7 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1136,7 +1136,7 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1239,7 +1239,7 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1296,7 +1296,7 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
     return model
 
 
-def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    batch_norm_first=False, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
                    pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
     '''
@@ -1308,6 +1308,10 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
         Specifies the CAS connection object.
     model_table : string or dict or CAS table, optional
         Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
     batch_norm_first : bool, optional
         Specifies whether to have batch normalization layer before the
         convolution layer in the residual block.  For a detailed discussion
@@ -1315,10 +1319,6 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
         mappings in deep residual networks." European Conference on Computer
         Vision. Springer International Publishing, 2016.
         Default: False
-     n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model will
-        automatically detect the number of classes based on the training set.
-        Default: 1000
     n_channels : int, optional
         Specifies the number of the channels (i.e., depth) of the input layer.
         Default: 3
@@ -1341,7 +1341,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE',  n_classes=1000, n_channe
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1497,7 +1497,7 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1597,7 +1597,7 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1753,7 +1753,7 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -1853,7 +1853,7 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2018,7 +2018,7 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2074,6 +2074,589 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
     return model
 
 
+def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, width=224, height=224,
+                random_flip='none', random_crop='none', random_mutation='none',
+                norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
+                alpha=1, depth_multiplier=1):
+    '''
+    Generates a deep learning model with the MobileNetV1 architecture.
+    The implementation is revised based on
+    https://github.com/keras-team/keras-applications/blob/master/keras_applications/mobilenet.py
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+    n_channels : int, optional
+        Specifies the number of the channels (i.e., depth) of the input layer.
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer.
+        Default: 32
+    height : int, optional
+        Specifies the height of the input layer.
+        Default: 32
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.229, 255*0.224, 255*0.225)
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.485, 255*0.456, 255*0.406)
+    alpha : int, optional
+        Specifies the width multiplier in the MobileNet paper
+        Default: 1
+    depth_multiplier : int, optional
+        Specifies the number of depthwise convolution output channels for each input channel.
+        Default: 1
+
+    Returns
+    -------
+    :class:`Model`
+
+    References
+    ----------
+    https://arxiv.org/pdf/1605.07146.pdf
+
+    '''
+    def _conv_block(inputs, filters, alpha, kernel=3, stride=1):
+        """
+        Adds an initial convolution layer (with batch normalization
+
+        inputs:
+            Input tensor
+        filters:
+            the dimensionality of the output space
+        alpha: controls the width of the network.
+            - If `alpha` < 1.0, proportionally decreases the number
+                of filters in each layer.
+            - If `alpha` > 1.0, proportionally increases the number
+                of filters in each layer.
+            - If `alpha` = 1, default number of filters from the paper
+                 are used at each layer.
+        kernel:
+            specifying the width and height of the 2D convolution window.
+        strides:
+            the strides of the convolution
+
+        """
+        filters = int(filters * alpha)
+        x = Conv2d(filters, kernel, act = 'identity', include_bias = False, stride = stride, name = 'conv1')(inputs)
+        x = BN(name = 'conv1_bn', act='relu')(x)
+        return x, filters
+
+    def _depthwise_conv_block(inputs, n_groups, pointwise_conv_filters, alpha,
+                              depth_multiplier = 1, stride = 1, block_id = 1):
+        """Adds a depthwise convolution block.
+
+        inputs:
+            Input tensor
+        n_groups : int
+            number of groups
+        pointwise_conv_filters:
+            the dimensionality of the output space
+        alpha: controls the width of the network.
+            - If `alpha` < 1.0, proportionally decreases the number
+                of filters in each layer.
+            - If `alpha` > 1.0, proportionally increases the number
+                of filters in each layer.
+            - If `alpha` = 1, default number of filters from the paper
+                 are used at each layer.
+        depth_multiplier:
+            The number of depthwise convolution output channels
+        strides: An integer or tuple/list of 2 integers,
+            specifying the strides of the convolution
+        block_id: Integer, a unique identification designating
+            the block number.
+
+        """
+        pointwise_conv_filters = int(pointwise_conv_filters * alpha)
+
+        x = GroupConv2d(n_groups*depth_multiplier, n_groups, 3, stride = stride, act = 'identity',
+                        include_bias = False, name = 'conv_dw_%d' % block_id)(inputs)
+        x = BN(name = 'conv_dw_%d_bn' % block_id, act = 'relu')(x)
+
+        x = Conv2d(pointwise_conv_filters, 1, act='identity', include_bias=False, stride=1,
+                   name='conv_pw_%d' % block_id)(x)
+        x = BN(name='conv_pw_%d_bn' % block_id, act='relu')(x)
+        return x, pointwise_conv_filters
+
+    parameters = locals()
+    input_parameters = _get_layer_options(input_layer_options, parameters)
+    inp = Input(**input_parameters, name = 'data')
+    # the model down-sampled for 5 times by performing stride=2 convolution on
+    # conv_dw_1, conv_dw_2, conv_dw_4, conv_dw_6, conv_dw_12
+    # for each block, we use depthwise convolution with kernel=3 and point-wise convolution to save computation
+    x, depth = _conv_block(inp, 32, alpha, stride=2)
+    x, depth = _depthwise_conv_block(x, depth, 64, alpha, depth_multiplier, block_id=1)
+
+    x, depth = _depthwise_conv_block(x, depth, 128, alpha, depth_multiplier,
+                                     stride=2, block_id=2)
+    x, depth = _depthwise_conv_block(x, depth, 128, alpha, depth_multiplier, block_id=3)
+
+    x, depth = _depthwise_conv_block(x, depth, 256, alpha, depth_multiplier,
+                                     stride=2, block_id=4)
+    x, depth = _depthwise_conv_block(x, depth, 256, alpha, depth_multiplier, block_id=5)
+
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier,
+                                     stride=2, block_id=6)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=7)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=8)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=9)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=10)
+    x, depth = _depthwise_conv_block(x, depth, 512, alpha, depth_multiplier, block_id=11)
+
+    x, depth = _depthwise_conv_block(x, depth, 1024, alpha, depth_multiplier,
+                                     stride=2, block_id=12)
+    x, depth = _depthwise_conv_block(x, depth, 1024, alpha, depth_multiplier, block_id=13)
+
+    x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
+    x = OutputLayer(n=n_classes)(x)
+
+    model = Model(conn, inp, x, model_table)
+    model.compile()
+
+    return model
+
+
+def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, width=224, height=224,
+                norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
+                random_flip='none', random_crop='none', random_mutation='none', alpha=1):
+    '''
+    Generates a deep learning model with the MobileNetV2 architecture.
+    The implementation is revised based on
+    https://github.com/keras-team/keras-applications/blob/master/keras_applications/mobilenet_v2.py
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+    n_channels : int, optional
+        Specifies the number of the channels (i.e., depth) of the input layer.
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer.
+        Default: 32
+    height : int, optional
+        Specifies the height of the input layer.
+        Default: 32
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255 * 0.229, 255 * 0.224, 255 * 0.225)
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.485, 255*0.456, 255*0.406)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
+    alpha : int, optional
+        Specifies the width multiplier in the MobileNet paper
+        Default: 1
+
+    alpha : int, optional
+
+    Returns
+    -------
+    :class:`Model`
+
+    References
+    ----------
+    https://arxiv.org/abs/1801.04381
+
+    '''
+    def _make_divisible(v, divisor, min_value=None):
+        # make number of channel divisible
+        if min_value is None:
+            min_value = divisor
+        new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+        # Make sure that round down does not go down by more than 10%.
+        if new_v < 0.9 * v:
+            new_v += divisor
+        return new_v
+
+    def _inverted_res_block(inputs, in_channels, expansion, stride, alpha, filters, block_id):
+        """
+        Inverted Residual Block
+
+        Parameters
+        ----------
+        inputs:
+            Input tensor
+        in_channels:
+            Specifies the number of input tensor's channel
+        expansion:
+            expansion factor always applied to the input size.
+        stride:
+            the strides of the convolution
+        alpha:
+            width multiplier.
+        filters:
+            the dimensionality of the output space.
+        block_id:
+            block id used for naming layers
+
+        """
+        pointwise_conv_filters = int(filters * alpha)
+        pointwise_filters = _make_divisible(pointwise_conv_filters, 8)
+        x = inputs
+        prefix = 'block_{}_'.format(block_id)
+        n_groups = in_channels
+
+        if block_id:
+            # Expand
+            n_groups = expansion * in_channels
+            x = Conv2d(expansion * in_channels, 1, include_bias=False, act='identity',
+                       name = prefix + 'expand')(x)
+            x = BN(name = prefix + 'expand_BN', act='identity')(x)
+        else:
+            prefix = 'expanded_conv_'
+
+        # Depthwise
+        x = GroupConv2d(n_groups, n_groups, 3, stride=stride, act='identity',
+                        include_bias=False, name=prefix + 'depthwise')(x)
+        x = BN(name = prefix + 'depthwise_BN', act='relu')(x)
+
+        # Project
+        x = Conv2d(pointwise_filters, 1, include_bias=False, act='identity', name=prefix + 'project')(x)
+        x = BN(name=prefix + 'project_BN', act='identity')(x)  # identity activation on narrow tensor
+
+        if in_channels == pointwise_filters and stride == 1:
+            return Res(name=prefix + 'add')([inputs, x]), pointwise_filters
+        return x, pointwise_filters
+
+    parameters = locals()
+    input_parameters = _get_layer_options(input_layer_options, parameters)
+    inp = Input(**input_parameters, name='data')
+    # compared with mobilenetv1, v2 introduces inverted residual structure.
+    # and Non-linearities in narrow layers are removed.
+    # inverted residual block does three convolutins: first is 1*1 convolution, second is depthwise convolution,
+    # third is 1*1 convolution but without any non-linearity
+    first_block_filters = _make_divisible(32 * alpha, 8)
+    x = Conv2d(first_block_filters, 3, stride=2, include_bias=False, name='Conv1', act='identity')(inp)
+    x = BN(name='bn_Conv1', act='relu')(x)
+
+    x, n_channels = _inverted_res_block(x, first_block_filters, filters=16, alpha=alpha, stride=1,
+                                        expansion=1, block_id=0)
+
+    x, n_channels = _inverted_res_block(x, n_channels, filters=24, alpha=alpha, stride=2,
+                                        expansion=6, block_id=1)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=24, alpha=alpha, stride=1,
+                                        expansion=6, block_id=2)
+
+    x, n_channels = _inverted_res_block(x, n_channels, filters=32, alpha=alpha, stride=2,
+                                        expansion=6, block_id=3)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=32, alpha=alpha, stride=1,
+                                        expansion=6, block_id=4)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=32, alpha=alpha, stride=1,
+                                        expansion=6, block_id=5)
+
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=2,
+                                        expansion=6, block_id=6)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=1,
+                                        expansion=6, block_id=7)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=1,
+                                        expansion=6, block_id=8)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=64, alpha=alpha, stride=1,
+                                        expansion=6, block_id=9)
+
+    x, n_channels = _inverted_res_block(x, n_channels, filters=96, alpha=alpha, stride=1,
+                                        expansion=6, block_id=10)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=96, alpha=alpha, stride=1,
+                                        expansion=6, block_id=11)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=96, alpha=alpha, stride=1,
+                                        expansion=6, block_id=12)
+
+    x, n_channels = _inverted_res_block(x, n_channels, filters=160, alpha=alpha, stride=2,
+                                        expansion=6, block_id=13)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=160, alpha=alpha, stride=1,
+                                        expansion=6, block_id=14)
+    x, n_channels = _inverted_res_block(x, n_channels, filters=160, alpha=alpha, stride=1,
+                                        expansion=6, block_id=15)
+
+    x, n_channels = _inverted_res_block(x, n_channels, filters=320, alpha=alpha, stride=1,
+                                        expansion=6, block_id=16)
+
+    # no alpha applied to last conv as stated in the paper:
+    # if the width multiplier is greater than 1 we increase the number of output channels
+    if alpha > 1.0:
+        last_block_filters = _make_divisible(1280 * alpha, 8)
+    else:
+        last_block_filters = 1280
+
+    x = Conv2d(last_block_filters, 1, include_bias=False, name='Conv_1', act='identity')(x)
+    x = BN(name='Conv_1_bn', act='relu')(x)
+
+    x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
+    x = OutputLayer(n=n_classes)(x)
+
+    model = Model(conn, inp, x, model_table)
+    model.compile()
+
+    return model
+
+
+def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3, width=224, height=224,
+                 norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
+                 random_flip='none', random_crop='none', random_mutation='none', scale_factor=1.0,
+                 num_shuffle_units=[3, 7, 3], bottleneck_ratio=0.25, groups=3, block_act='identity'):
+    '''
+    Generates a deep learning model with the ShuffleNetV1 architecture.
+    The implementation is revised based on https://github.com/scheckmedia/keras-shufflenet/blob/master/shufflenet.py
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+    n_channels : int, optional
+        Specifies the number of the channels (i.e., depth) of the input layer.
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer.
+        Default: 32
+    height : int, optional
+        Specifies the height of the input layer.
+        Default: 32
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255 * 0.229, 255 * 0.224, 255 * 0.225)
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.485, 255*0.456, 255*0.406)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
+    scale_factor : double
+
+    num_shuffle_units: iter-of-int, optional
+        number of stages (list length) and the number of shufflenet units in a
+        stage beginning with stage 2 because stage 1 is fixed
+        e.g. idx 0 contains 3 + 1 (first shuffle unit in each stage differs) shufflenet units for stage 2
+        idx 1 contains 7 + 1 Shufflenet Units for stage 3 and
+        idx 2 contains 3 + 1 Shufflenet Units
+        Default: [3, 7, 3]
+    bottleneck_ratio : double
+        bottleneck ratio implies the ratio of bottleneck channels to output channels.
+        For example, bottleneck ratio = 1 : 4 means the output feature map is 4 times
+        the width of the bottleneck feature map.
+    groups: int
+        Specifies the number of groups per channel
+        Default : 3
+    block_act : str
+        Specifies the activation function after depth-wise convolution and batch normalization layer
+        Default : 'identity'
+
+    Returns
+    -------
+    :class:`Model`
+
+    References
+    ----------
+    https://arxiv.org/pdf/1707.01083
+
+    '''
+
+    def _block(x, channel_map, bottleneck_ratio, repeat = 1, groups = 1, stage = 1):
+        """
+        creates a bottleneck block
+
+        Parameters
+        ----------
+        x:
+            Input tensor
+        channel_map:
+            list containing the number of output channels for a stage
+        repeat:
+            number of repetitions for a shuffle unit with stride 1
+        groups:
+            number of groups per channel
+        bottleneck_ratio:
+            bottleneck ratio implies the ratio of bottleneck channels to output channels.
+        stage:
+            stage number
+
+        Returns
+        -------
+        """
+        x = _shuffle_unit(x, in_channels = channel_map[stage - 2],
+                          out_channels = channel_map[stage - 1], strides = 2,
+                          groups = groups, bottleneck_ratio = bottleneck_ratio,
+                          stage = stage, block = 1)
+
+        for i in range(1, repeat + 1):
+            x = _shuffle_unit(x, in_channels = channel_map[stage - 1],
+                              out_channels = channel_map[stage - 1], strides = 1,
+                              groups = groups, bottleneck_ratio = bottleneck_ratio,
+                              stage = stage, block = (i + 1))
+
+        return x
+
+    def _shuffle_unit(inputs, in_channels, out_channels, groups, bottleneck_ratio, strides = 2, stage = 1, block = 1):
+        """
+        create a shuffle unit
+
+        Parameters
+        ----------
+        inputs:
+            Input tensor of with `channels_last` data format
+        in_channels:
+            number of input channels
+        out_channels:
+            number of output channels
+        strides:
+            An integer or tuple/list of 2 integers,
+        groups:
+            number of groups per channel
+        bottleneck_ratio: float
+            bottleneck ratio implies the ratio of bottleneck channels to output channels.
+        stage:
+            stage number
+        block:
+            block number
+
+        """
+        prefix = 'stage%d/block%d' % (stage, block)
+
+        # if strides >= 2:
+        # out_channels -= in_channels
+
+        # default: 1/4 of the output channel of a ShuffleNet Unit
+        bottleneck_channels = int(out_channels * bottleneck_ratio)
+        groups = (1 if stage == 2 and block == 1 else groups)
+
+        # x = _group_conv(inputs, in_channels, out_channels = bottleneck_channels,
+        #                 groups = (1 if stage == 2 and block == 1 else groups),
+        #                 name = '%s/1x1_gconv_1' % prefix)
+
+        x = GroupConv2d(bottleneck_channels, n_groups = (1 if stage == 2 and block == 1 else groups), act = 'identity',
+                        width = 1, height = 1, stride = 1, include_bias = False,
+                        name = '%s/1x1_gconv_1' % prefix)(inputs)
+
+        x = BN(act = 'relu', name = '%s/bn_gconv_1' % prefix)(x)
+
+        x = ChannelShuffle(n_groups = groups, name = '%s/channel_shuffle' % prefix)(x)
+        # depthwise convolutioin
+        x = GroupConv2d(x.shape[-1], n_groups = x.shape[-1], width = 3, height = 3, include_bias = False,
+                        stride = strides, act = 'identity',
+                        name = '%s/1x1_dwconv_1' % prefix)(x)
+        x = BN(act = block_act, name = '%s/bn_dwconv_1' % prefix)(x)
+
+        out_channels = out_channels if strides == 1 else out_channels - in_channels
+        x = GroupConv2d(out_channels, n_groups = groups, width = 1, height = 1, stride=1, act = 'identity',
+                        include_bias = False, name = '%s/1x1_gconv_2' % prefix)(x)
+
+        x = BN(act = block_act, name = '%s/bn_gconv_2' % prefix)(x)
+
+        if strides < 2:
+            ret = Res(act = 'relu', name = '%s/add' % prefix)([x, inputs])
+        else:
+            avg = Pooling(width = 3, height = 3, stride = 2, pool = 'mean', name = '%s/avg_pool' % prefix)(inputs)
+            ret = Concat(act = 'relu', name = '%s/concat' % prefix)([x, avg])
+
+        return ret
+
+    out_dim_stage_two = {1: 144, 2: 200, 3: 240, 4: 272, 8: 384}
+    try:
+        import numpy as np
+    except:
+        raise DLPyError('Please install numpy to use this architecture.')
+
+    exp = np.insert(np.arange(0, len(num_shuffle_units), dtype = np.float32), 0, 0)
+    out_channels_in_stage = 2 ** exp
+    out_channels_in_stage *= out_dim_stage_two[groups]  # calculate output channels for each stage
+    out_channels_in_stage[0] = 24  # first stage has always 24 output channels
+    out_channels_in_stage *= scale_factor
+    out_channels_in_stage = out_channels_in_stage.astype(int)
+
+    parameters = locals()
+    input_parameters = _get_layer_options(input_layer_options, parameters)
+    inp = Input(**input_parameters, name = 'data')
+
+    # create shufflenet architecture
+    x = Conv2d(out_channels_in_stage[0], 3, include_bias=False, stride=2, act="identity", name="conv1")(inp)
+    x = BN(act='relu', name = 'bn1')(x)
+    x = Pooling(width=3, height=3, stride=2, name="maxpool1")(x)
+
+    # create stages containing shufflenet units beginning at stage 2
+    for stage in range(0, len(num_shuffle_units)):
+        repeat = num_shuffle_units[stage]
+        x = _block(x, out_channels_in_stage, repeat=repeat,
+                   bottleneck_ratio=bottleneck_ratio,
+                   groups=groups, stage=stage + 2)
+
+    x = GlobalAveragePooling2D(name="Global_avg_pool")(x)
+    x = OutputLayer(n=n_classes)(x)
+
+    model = Model(conn, inputs=inp, outputs=x, model_table=model_table)
+    model.compile()
+
+    return model
+
+
 def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, growth_rate=12, n_blocks=4,
              n_cells=4, n_channels=3, width=32, height=32, scale=1, random_flip='none', random_crop='none',
              offsets=(85, 111, 139)):
@@ -2124,7 +2707,7 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2216,7 +2799,7 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -2324,7 +2907,7 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'unique'
 
     Returns
@@ -2422,7 +3005,7 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'unique'
 
     Returns
@@ -2692,15 +3275,15 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
-                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
 
     return model
 
@@ -2909,15 +3492,15 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
     model.add(
         Conv2d((n_classes + 5) * predictions_per_grid, width=1, act='identity', include_bias=False, stride=1))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov2', anchors = anchors,
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes,
-                        match_anchor_size = match_anchor_size, num_to_force_coord = num_to_force_coord))
+    model.add(Detection(act=act_detection, detection_model_type='yolov2', anchors=anchors,
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes,
+                        match_anchor_size=match_anchor_size, num_to_force_coord=num_to_force_coord))
 
     return model
 
@@ -3399,14 +3982,14 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
 
     model.add(Dense(n=(n_classes + (5 * predictions_per_grid)) * grid_number * grid_number, act='identity'))
 
-    model.add(Detection(act = act_detection, detection_model_type = 'yolov1',
-                        softmax_for_class_prob = softmax_for_class_prob, coord_type = coord_type,
-                        class_number = n_classes, grid_number = grid_number,
-                        predictions_per_grid = predictions_per_grid, do_sqrt = do_sqrt, coord_scale = coord_scale,
-                        object_scale = object_scale, prediction_not_a_object_scale = prediction_not_a_object_scale,
-                        class_scale = class_scale, detection_threshold = detection_threshold,
-                        iou_threshold = iou_threshold, random_boxes = random_boxes,
-                        max_label_per_image = max_label_per_image, max_boxes = max_boxes))
+    model.add(Detection(act=act_detection, detection_model_type='yolov1',
+                        softmax_for_class_prob=softmax_for_class_prob, coord_type=coord_type,
+                        class_number=n_classes, grid_number=grid_number,
+                        predictions_per_grid=predictions_per_grid, do_sqrt=do_sqrt, coord_scale=coord_scale,
+                        object_scale=object_scale, prediction_not_a_object_scale=prediction_not_a_object_scale,
+                        class_scale=class_scale, detection_threshold=detection_threshold,
+                        iou_threshold=iou_threshold, random_boxes=random_boxes,
+                        max_label_per_image=max_label_per_image, max_boxes=max_boxes))
 
     return model
 
@@ -3450,7 +4033,7 @@ def InceptionV3(conn, model_table='InceptionV3',
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none', 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
@@ -4033,12 +4616,146 @@ def InceptionV3(conn, model_table='InceptionV3',
             return model
 
 
+def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, height=256, scale=1.0/255,
+         norm_stds=None, offsets=None, random_mutation=None, init=None, bn_after_convolutions=False):
+    '''
+    Generates a deep learning model with the U-Net architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the connection of the CAS connection.
+    model_table : string, optional
+        Specifies the name of CAS table to store the model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 2
+    n_channels : int, optional
+        Specifies the number of the channels (i.e., depth) of the input layer.
+        Default: 3
+    width : int, optional
+        Specifies the width of the input layer.
+        Default: 256
+    height : int, optional
+        Specifies the height of the input layer.
+        Default: 256
+    scale : double, optional
+        Specifies a scaling factor to be applied to each pixel intensity values.
+        Default: 1.0/255
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the
+        input layer.
+        Valid Values: 'none', 'random'
+        Default: NONE
+    init : str
+        Specifies the initialization scheme for convolution layers.
+        Valid Values: XAVIER, UNIFORM, NORMAL, CAUCHY, XAVIER1, XAVIER2, MSRA, MSRA1, MSRA2
+        Default: None
+    bn_after_convolutions : Boolean
+        If set to True, a batch normalization layer is added after each convolution layer.
+
+    Returns
+    -------
+    :class:`Sequential`
+
+    References
+    ----------
+    https://arxiv.org/pdf/1505.04597
+
+    '''
+    parameters = locals()
+    input_parameters = _get_layer_options(input_layer_options, parameters)
+    inp = Input(**input_parameters, name = 'data')
+    act_conv = 'relu'
+    bias_conv = True
+    if bn_after_convolutions:
+        act_conv = 'identity'
+        bias_conv = False
+    # The model follows UNet paper architecture. The network down-samples by performing max pooling with stride=2
+    conv1 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(inp)
+    conv1 = BN(act = 'relu')(conv1) if bn_after_convolutions else conv1
+    conv1 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(conv1)
+    conv1 = BN(act = 'relu')(conv1) if bn_after_convolutions else conv1
+    pool1 = Pooling(2)(conv1)
+
+    conv2 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(pool1)
+    conv2 = BN(act = 'relu')(conv2) if bn_after_convolutions else conv2
+    conv2 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(conv2)
+    conv2 = BN(act = 'relu')(conv2) if bn_after_convolutions else conv2
+    pool2 = Pooling(2)(conv2)
+
+    conv3 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(pool2)
+    conv3 = BN(act = 'relu')(conv3) if bn_after_convolutions else conv3
+    conv3 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(conv3)
+    conv3 = BN(act = 'relu')(conv3) if bn_after_convolutions else conv3
+    pool3 = Pooling(2)(conv3)
+
+    conv4 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(pool3)
+    conv4 = BN(act = 'relu')(conv4) if bn_after_convolutions else conv4
+    conv4 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(conv4)
+    conv4 = BN(act = 'relu')(conv4) if bn_after_convolutions else conv4
+    pool4 = Pooling(2)(conv4)
+
+    conv5 = Conv2d(1024, 3, act = act_conv, init = init, include_bias = bias_conv)(pool4)
+    conv5 = BN(act = 'relu')(conv5) if bn_after_convolutions else conv5
+    conv5 = Conv2d(1024, 3, act = act_conv, init = init, include_bias = bias_conv)(conv5)
+    conv5 = BN(act = 'relu')(conv5) if bn_after_convolutions else conv5
+    # the minimum is 1/2^4 of the original image size
+    # Our implementation applies Transpose convolution to upsample feature maps.
+    tconv6 = Conv2DTranspose(512, 3, stride = 2, act = 'relu', padding = 1, output_size = conv4.shape,
+                             init = init)(conv5)  # 64
+    # concatenation layers to combine encoder and decoder features
+    merge6 = Concat()([conv4, tconv6])
+    conv6 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(merge6)
+    conv6 = BN(act = 'relu')(conv6) if bn_after_convolutions else conv6
+    conv6 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(conv6)
+    conv6 = BN(act = 'relu')(conv6) if bn_after_convolutions else conv6
+
+    tconv7 = Conv2DTranspose(256, 3, stride = 2, act = 'relu', padding = 1, output_size = conv3.shape,
+                             init = init)(conv6)  # 128
+    merge7 = Concat()([conv3, tconv7])
+    conv7 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(merge7)
+    conv7 = BN(act = 'relu')(conv7) if bn_after_convolutions else conv7
+    conv7 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(conv7)
+    conv7 = BN(act = 'relu')(conv7) if bn_after_convolutions else conv7
+
+    tconv8 = Conv2DTranspose(128, stride = 2, act = 'relu', padding = 1, output_size = conv2.shape,
+                             init = init)(conv7)  # 256
+    merge8 = Concat()([conv2, tconv8])
+    conv8 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(merge8)
+    conv8 = BN(act = 'relu')(conv8) if bn_after_convolutions else conv8
+    conv8 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(conv8)
+    conv8 = BN(act = 'relu')(conv8) if bn_after_convolutions else conv8
+
+    tconv9 = Conv2DTranspose(64, stride = 2, act = 'relu', padding = 1, output_size = conv1.shape,
+                             init = init)(conv8)  # 512
+    merge9 = Concat()([conv1, tconv9])
+    conv9 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(merge9)
+    conv9 = BN(act = 'relu')(conv9) if bn_after_convolutions else conv9
+    conv9 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(conv9)
+    conv9 = BN(act = 'relu')(conv9) if bn_after_convolutions else conv9
+
+    conv9 = Conv2d(n_classes, 3, act = 'relu', init = init)(conv9)
+
+    seg1 = Segmentation(name = 'Segmentation_1')(conv9)
+    model = Model(conn, inputs = inp, outputs = seg1, model_table = model_table)
+    model.compile()
+    return model
+
+
 def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, height=496, scale=1,
                 norm_stds=None, offsets=(102.9801, 115.9465, 122.7717), random_mutation = 'none',
-                n_classes=20, anchor_num_to_sample = 256, anchor_ratio = [0.5, 1, 2], anchor_scale = [8, 16, 32],
-                base_anchor_size = 16, coord_type = 'coco', max_label_per_image = 200, proposed_roi_num_train = 2000,
-                proposed_roi_num_score = 300, roi_train_sample_num = 128, roi_pooling_height = 7, roi_pooling_width = 7,
-                nms_iou_threshold = 0.3, detection_threshold = 0.5, max_object_num = 50):
+                n_classes=20, anchor_num_to_sample=256, anchor_ratio=[0.5, 1, 2], anchor_scale=[8, 16, 32],
+                base_anchor_size=16, coord_type='coco', max_label_per_image=200, proposed_roi_num_train=2000,
+                proposed_roi_num_score=300, roi_train_sample_num=128, roi_pooling_height=7, roi_pooling_width=7,
+                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50):
     '''
     Generates a deep learning model with the faster RCNN architecture.
 
@@ -4137,32 +4854,32 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     fast_rcnn_parameters = _get_layer_options(fast_rcnn_options, parameters)
     inp = Input(**input_parameters, name='data')
     # backbone is VGG16 model
-    conv1_1 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_1')(inp)
-    conv1_2 = Conv2d(n_filters = 64, width = 3, height = 3, stride = 1, name='conv1_2')(conv1_1)
-    pool1 = Pooling(width = 2, height = 2, stride = 2, pool = 'max', name='pool1')(conv1_2)
+    conv1_1 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_1')(inp)
+    conv1_2 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_2')(conv1_1)
+    pool1 = Pooling(width=2, height=2, stride=2, pool='max', name='pool1')(conv1_2)
 
-    conv2_1 = Conv2d(n_filters = 128, width = 3, height = 3, stride = 1, name = 'conv2_1')(pool1)
-    conv2_2 = Conv2d(n_filters = 128, width = 3, height = 3, stride = 1, name = 'conv2_2')(conv2_1)
-    pool2 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv2_2)
+    conv2_1 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_1')(pool1)
+    conv2_2 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_2')(conv2_1)
+    pool2 = Pooling(width=2, height=2, stride=2, pool='max')(conv2_2)
 
-    conv3_1 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_1')(pool2)
-    conv3_2 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_2')(conv3_1)
-    conv3_3 = Conv2d(n_filters = 256, width = 3, height = 3, stride = 1, name = 'conv3_3')(conv3_2)
-    pool3 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv3_3)
+    conv3_1 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_1')(pool2)
+    conv3_2 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_2')(conv3_1)
+    conv3_3 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_3')(conv3_2)
+    pool3 = Pooling(width=2, height=2, stride=2, pool='max')(conv3_3)
 
-    conv4_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_1')(pool3)
-    conv4_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_2')(conv4_1)
-    conv4_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv4_3')(conv4_2)
-    pool4 = Pooling(width = 2, height = 2, stride = 2, pool = 'max')(conv4_3)
+    conv4_1 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_1')(pool3)
+    conv4_2 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_2')(conv4_1)
+    conv4_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv4_3')(conv4_2)
+    pool4 = Pooling(width=2, height=2, stride=2, pool='max')(conv4_3)
 
-    conv5_1 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_1')(pool4)
-    conv5_2 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_2')(conv5_1)
+    conv5_1 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_1')(pool4)
+    conv5_2 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_2')(conv5_1)
     # feature of Conv5_3 is used to generate region proposals
-    conv5_3 = Conv2d(n_filters = 512, width = 3, height = 3, stride = 1, name = 'conv5_3')(conv5_2)
+    conv5_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
     # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
-    rpn_conv = Conv2d(width = 3, n_filters = 512, name = 'rpn_conv_3x3')(conv5_3)
-    rpn_score = Conv2d(act = 'identity', width = 1, n_filters = ((1 + 1 + 4) * num_anchors),
-                       name = 'rpn_score')(rpn_conv)
+    rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(conv5_3)
+    rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors),
+                       name='rpn_score')(rpn_conv)
     # propose anchors, NMS, select anchors to train RPN, produce ROIs
     rp1 = RegionProposal(**rpn_parameters, name = 'rois')(rpn_score)
     # given ROIs, crop on conv5_3 and resize the feature to the same size
@@ -4170,15 +4887,15 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                           spatial_scale=conv5_3.shape[0]/width,
                           name = 'roi_pooling')([conv5_3, rp1])
     # fully connect layer to extract the feature of ROIs
-    fc6 = Dense(n = 4096, act = 'relu', name = 'fc6')(roipool1)
-    fc7 = Dense(n = 4096, act = 'relu', name = 'fc7')(fc6)
+    fc6 = Dense(n=4096, act='relu', name='fc6')(roipool1)
+    fc7 = Dense(n=4096, act='relu', name='fc7')(fc6)
     # classification tensor
-    cls1 = Dense(n = n_classes+1, act = 'identity', name = 'cls_score')(fc7)
+    cls1 = Dense(n=n_classes+1, act='identity', name='cls_score')(fc7)
     # regression tensor(second stage bounding box regression)
-    reg1 = Dense(n = (n_classes+1)*4, act = 'identity', name = 'bbox_pred')(fc7)
+    reg1 = Dense(n=(n_classes+1)*4, act='identity', name='bbox_pred')(fc7)
     # task layer receive cls1, reg1 and rp1(ground truth). Train the second stage.
-    fr1 = FastRCNN(**fast_rcnn_parameters, class_number = n_classes, name = 'fastrcnn')([cls1, reg1, rp1])
-    faster_rcnn = Model(conn, inp, fr1, model_table = model_table)
+    fr1 = FastRCNN(**fast_rcnn_parameters, class_number=n_classes, name='fastrcnn')([cls1, reg1, rp1])
+    faster_rcnn = Model(conn, inp, fr1, model_table=model_table)
     faster_rcnn.compile()
     return faster_rcnn
 
