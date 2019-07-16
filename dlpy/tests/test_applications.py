@@ -604,3 +604,19 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(len(model.layers) == 130)
         self.assertTrue(model.layers[127]._output_size == (4, 4, 3200))
         model.print_summary()
+
+    def test_unet(self):
+        from dlpy.applications import UNet
+        model = UNet(self.s, width = 1024, height = 1024, offsets = [1.25], scale = 0.0002)
+        self.assertTrue(len(model.layers) == 33)
+        self.assertTrue(model.layers[12].output_size == (64, 64, 512))
+        model.print_summary()
+
+    def test_unet_with_bn(self):
+        from dlpy.applications import UNet
+        # append bn layer right after conv
+        model = UNet(self.s, width = 1024, height = 1024, offsets = [1.25], scale = 0.0002,
+                     bn_after_convolutions = True)
+        self.assertTrue(len(model.layers) == 33+9*2)
+        self.assertTrue(model.layers[12].output_size == (256, 256, 256))
+        model.print_summary()
