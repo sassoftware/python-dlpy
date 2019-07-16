@@ -1349,7 +1349,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                             computedvars = ['idjoin'],
                             computedvarsprogram = image_sas_code,
                             vars = [{'name': '_image_'}])
-    
+
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
@@ -1605,6 +1605,199 @@ def int_to_double(conn, tbl_colinfo, input_tbl_name,
         '''.format(output_tbl_name, input_tbl_name)            
 
     conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
+
+
+def display_segmentation_images(conn, table, n_images=4, image_column='_image_',
+                                segmentation_labels_table=None, label_column='labels',
+                                fig_size=(50, 20)):
+    '''
+
+    This function is designed to display images of a castable. It also displays the segmentation labels
+    if it is set. Note that the ground truth (i.e., label) information in the segmentation task is also images.
+    On top of displaying images and labels, this function is also flexible enough to display the predictions.
+    It is always in the following order: images from the table table, images from the segmentation labels table
+    (if any), and images from the segmentation prediction table (if any).
+
+    conn : CAS
+        CAS connection object
+    table : string or CASTable
+        Specifies the input table that has an image column.
+    n_images : int
+        Specifies the number of images to be displayed.
+    image_column : string
+        Specifies the column name that holds the image data in the input table.
+    segmentation_labels_table : string or CASTable
+        Specifies the table that has the segmentation labels (or label images).
+    label_column : string
+        Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
+    fig_size : a list of two ints
+        Specifies the figure size.
+
+    '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
+    if not isinstance(table, CASTable):
+        tbl = conn.CASTable(table)
+    else:
+        tbl = table
+
+    images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                           table=tbl,
+                           to=n_images,
+                           image=image_column)
+
+    if len(images.Images) < 1:
+        raise DLPyError('input table does not have any images')
+
+    labels = None
+    if segmentation_labels_table is not None:
+        if not isinstance(segmentation_labels_table, CASTable):
+            seg_gt_tbl = conn.CASTable(segmentation_labels_table)
+        else:
+            seg_gt_tbl = segmentation_labels_table
+
+        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
+                               table=seg_gt_tbl,
+                               to=n_images,
+                               image=label_column)
+        if len(labels) == 0 or len(labels.Images) == 0:
+            print('WARNING: Something went wrong while extracting label images')
+
+    k = 1
+    n_row = 2
+    fig = plt.figure(figsize=fig_size)
+
+    for i in range(n_images):
+        ax = fig.add_subplot(n_row, n_images, k)
+        plt.imshow(images['Images']['Image'][i])
+        k += 1
+    if len(labels) > 0 and len(labels.Images) > 0:
+        for i in range(n_images):
+            ax = fig.add_subplot(n_row, n_images, k)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            k += 1
+
+
+def display_segmentation_results(conn, table, n_images=4, image_column='_image_',
+                                 segmentation_labels_table=None, label_column='labels',
+                                 segmentation_prediction_table=None, prediction_column=None,
+                                 filename_column=None,
+                                 fig_size=(15, 40)):
+    '''
+
+    This function is designed to display images of a castable. It also displays the segmentation labels
+    if it is set. Note that the ground truth (i.e., label) information in the segmentation task is also images.
+    On top of displaying images and labels, this function is also flexible enough to display the predictions.
+
+    conn : CAS
+        CAS connection object
+    table : string or CASTable
+        Specifies the input table that has an image column.
+    n_images : int
+        Specifies the number of images to be displayed.
+    image_column : string
+        Specifies the column name that holds the image data in the input table.
+    segmentation_labels_table : string or CASTable
+        Specifies the table that has the segmentation labels (or label images).
+    label_column : string
+        Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
+    segmentation_prediction_table : string or CASTable
+        Specifies the table that has the segmentation predictions.
+    prediction_column : string
+        Specifies the name of the column that holds the segmentation predictions in the segmentation prediction table.
+    filename_column : string
+        Specifies the name of the column that holds the filenames of the images. If this column set, the column names
+        will be displayed on top of each image.
+    fig_size : a list of two ints
+        Specifies the figure size.
+
+    '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
+    if not isinstance(table, CASTable):
+        tbl = conn.CASTable(table)
+    else:
+        tbl = table
+
+    images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                           table=tbl,
+                           to=n_images,
+                           image=image_column)
+
+    if len(images.Images) < 1:
+        raise DLPyError('input table does not have any images')
+
+    n_col = 1
+    labels = None
+    if segmentation_labels_table is not None:
+        if not isinstance(segmentation_labels_table, CASTable):
+            seg_gt_tbl = conn.CASTable(segmentation_labels_table)
+        else:
+            seg_gt_tbl = segmentation_labels_table
+
+        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
+                               table=seg_gt_tbl,
+                               to=n_images,
+                               image=label_column)
+        if len(labels) == 0 or len(labels.Images) == 0:
+            print('WARNING: Something went wrong while extracting label images')
+        else:
+            n_col += 1
+
+    predictions = None
+    if segmentation_prediction_table is not None:
+
+        if prediction_column is None:
+            raise DLPyError('Please set the prediction_column parameter')
+
+        if not isinstance(segmentation_prediction_table, CASTable):
+            seg_prediction_tbl = conn.CASTable(segmentation_prediction_table)
+        else:
+            seg_prediction_tbl = segmentation_prediction_table
+
+        if filename_column is not None:
+            predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
+                                        table=seg_prediction_tbl,
+                                        to=n_images,
+                                        fetchImagesVars=filename_column,
+                                        image=prediction_column)
+        else:
+            predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
+                                        table=seg_prediction_tbl,
+                                        to=n_images,
+                                        image=prediction_column)
+
+        if len(predictions) == 0 or len(predictions.Images) == 0:
+            print('WARNING: Something went wrong while extracting output (predicted) images')
+        else:
+            n_col += 1
+
+    k = 1
+    fig = plt.figure(figsize=fig_size)
+
+    for i in range(n_images):
+        ax = fig.add_subplot(n_images, n_col, k)
+        plt.imshow(images['Images']['Image'][i])
+        k += 1
+        if len(predictions) > 0 and len(predictions.Images) > 0:
+            plt.title(predictions.Images[filename_column][i] +' raw image')
+            plt.xticks([]), plt.yticks([])
+
+        if len(labels) > 0 and len(labels.Images) > 0:
+            ax = fig.add_subplot(n_images, n_col, k)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            k += 1
+            if len(predictions) > 0 and len(predictions.Images) > 0:
+                plt.title(predictions.Images[filename_column][i] +' ground truth')
+                plt.xticks([]), plt.yticks([])
+
+        if len(predictions) > 0 and len(predictions.Images) > 0:
+            ax = fig.add_subplot(n_images, n_col, k)
+            plt.imshow(np.array(predictions['Images']['Image'][i]))
+            k += 1
+            if len(predictions) > 0 and len(predictions.Images) > 0:
+                plt.title(predictions.Images[filename_column][i] +' prediction')
+                plt.xticks([]), plt.yticks([])
 
 
 def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None,
