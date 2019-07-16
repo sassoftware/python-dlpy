@@ -22,6 +22,7 @@ import io
 import os
 from setuptools import setup, find_packages
 
+
 def get_file(fname):
     with io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)), fname),
                  encoding='utf8') as infile:
@@ -29,7 +30,7 @@ def get_file(fname):
 
 setup(
     name='sas-dlpy',
-    version='1.0.3-dev',
+    version='1.1.0',
     description='SAS Deep Learning Interface',
     long_description=get_file('README.md'),
     long_description_content_type='text/markdown',
