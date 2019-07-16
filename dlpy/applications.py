@@ -4617,7 +4617,7 @@ def InceptionV3(conn, model_table='InceptionV3',
 
 
 def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, height=256, scale=1.0/255,
-         norm_stds=None, offsets=None, random_mutation=None, init=None):
+         norm_stds=None, offsets=None, random_mutation=None, init=None, bn_after_convolutions=False):
     '''
     Generates a deep learning model with the U-Net architecture.
 
@@ -4671,51 +4671,74 @@ def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, heigh
     parameters = locals()
     input_parameters = _get_layer_options(input_layer_options, parameters)
     inp = Input(**input_parameters, name = 'data')
+    act_conv = 'relu'
+    bias_conv = True
+    if bn_after_convolutions:
+        act_conv = 'identity'
+        bias_conv = False
     # The model follows UNet paper architecture. The network down-samples by performing max pooling with stride=2
-    conv1 = Conv2d(64, 3, act = 'relu', init = init)(inp)
-    conv1 = Conv2d(64, 3, act = 'relu', init = init)(conv1)
+    conv1 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(inp)
+    conv1 = BN(act = 'relu')(conv1) if bn_after_convolutions else conv1
+    conv1 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(conv1)
+    conv1 = BN(act = 'relu')(conv1) if bn_after_convolutions else conv1
     pool1 = Pooling(2)(conv1)
 
-    conv2 = Conv2d(128, 3, act = 'relu', init = init)(pool1)
-    conv2 = Conv2d(128, 3, act = 'relu', init = init)(conv2)
+    conv2 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(pool1)
+    conv2 = BN(act = 'relu')(conv2) if bn_after_convolutions else conv2
+    conv2 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(conv2)
+    conv2 = BN(act = 'relu')(conv2) if bn_after_convolutions else conv2
     pool2 = Pooling(2)(conv2)
 
-    conv3 = Conv2d(256, 3, act = 'relu', init = init)(pool2)
-    conv3 = Conv2d(256, 3, act = 'relu', init = init)(conv3)
+    conv3 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(pool2)
+    conv3 = BN(act = 'relu')(conv3) if bn_after_convolutions else conv3
+    conv3 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(conv3)
+    conv3 = BN(act = 'relu')(conv3) if bn_after_convolutions else conv3
     pool3 = Pooling(2)(conv3)
 
-    conv4 = Conv2d(512, 3, act = 'relu', init = init)(pool3)
-    conv4 = Conv2d(512, 3, act = 'relu', init = init)(conv4)
+    conv4 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(pool3)
+    conv4 = BN(act = 'relu')(conv4) if bn_after_convolutions else conv4
+    conv4 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(conv4)
+    conv4 = BN(act = 'relu')(conv4) if bn_after_convolutions else conv4
     pool4 = Pooling(2)(conv4)
 
-    conv5 = Conv2d(1024, 3, act = 'relu', init = init)(pool4)
-    conv5 = Conv2d(1024, 3, act = 'relu', init = init)(conv5)
+    conv5 = Conv2d(1024, 3, act = act_conv, init = init, include_bias = bias_conv)(pool4)
+    conv5 = BN(act = 'relu')(conv5) if bn_after_convolutions else conv5
+    conv5 = Conv2d(1024, 3, act = act_conv, init = init, include_bias = bias_conv)(conv5)
+    conv5 = BN(act = 'relu')(conv5) if bn_after_convolutions else conv5
     # the minimum is 1/2^4 of the original image size
     # Our implementation applies Transpose convolution to upsample feature maps.
     tconv6 = Conv2DTranspose(512, 3, stride = 2, act = 'relu', padding = 1, output_size = conv4.shape,
                              init = init)(conv5)  # 64
     # concatenation layers to combine encoder and decoder features
     merge6 = Concat()([conv4, tconv6])
-    conv6 = Conv2d(512, 3, act = 'relu', init = init)(merge6)
-    conv6 = Conv2d(512, 3, act = 'relu', init = init)(conv6)
+    conv6 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(merge6)
+    conv6 = BN(act = 'relu')(conv6) if bn_after_convolutions else conv6
+    conv6 = Conv2d(512, 3, act = act_conv, init = init, include_bias = bias_conv)(conv6)
+    conv6 = BN(act = 'relu')(conv6) if bn_after_convolutions else conv6
 
     tconv7 = Conv2DTranspose(256, 3, stride = 2, act = 'relu', padding = 1, output_size = conv3.shape,
                              init = init)(conv6)  # 128
     merge7 = Concat()([conv3, tconv7])
-    conv7 = Conv2d(256, 3, act = 'relu', init = init)(merge7)
-    conv7 = Conv2d(256, 3, act = 'relu', init = init)(conv7)
+    conv7 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(merge7)
+    conv7 = BN(act = 'relu')(conv7) if bn_after_convolutions else conv7
+    conv7 = Conv2d(256, 3, act = act_conv, init = init, include_bias = bias_conv)(conv7)
+    conv7 = BN(act = 'relu')(conv7) if bn_after_convolutions else conv7
 
     tconv8 = Conv2DTranspose(128, stride = 2, act = 'relu', padding = 1, output_size = conv2.shape,
                              init = init)(conv7)  # 256
     merge8 = Concat()([conv2, tconv8])
-    conv8 = Conv2d(128, 3, act = 'relu', init = init)(merge8)
-    conv8 = Conv2d(128, 3, act = 'relu', init = init)(conv8)
+    conv8 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(merge8)
+    conv8 = BN(act = 'relu')(conv8) if bn_after_convolutions else conv8
+    conv8 = Conv2d(128, 3, act = act_conv, init = init, include_bias = bias_conv)(conv8)
+    conv8 = BN(act = 'relu')(conv8) if bn_after_convolutions else conv8
 
     tconv9 = Conv2DTranspose(64, stride = 2, act = 'relu', padding = 1, output_size = conv1.shape,
                              init = init)(conv8)  # 512
     merge9 = Concat()([conv1, tconv9])
-    conv9 = Conv2d(64, 3, act = 'relu', init = init)(merge9)
-    conv9 = Conv2d(64, 3, act = 'relu', init = init)(conv9)
+    conv9 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(merge9)
+    conv9 = BN(act = 'relu')(conv9) if bn_after_convolutions else conv9
+    conv9 = Conv2d(64, 3, act = act_conv, init = init, include_bias = bias_conv)(conv9)
+    conv9 = BN(act = 'relu')(conv9) if bn_after_convolutions else conv9
 
     conv9 = Conv2d(n_classes, 3, act = 'relu', init = init)(conv9)
 
