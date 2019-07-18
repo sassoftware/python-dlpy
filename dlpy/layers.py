@@ -2191,6 +2191,16 @@ class RegionProposal(Layer):
         Default: 128
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
+    max_bounding_box_factor : double, optional
+        The proposed region bounding box width and height are calculated using the feature map output
+        values deltaHeight and deltaWidth. The bounding box width is calculated as exp(deltaWidth)*anchorBoxWidth.
+        The bounding box height is calculated as exp(deltaHeight)*anchorBoxHeight.
+        The maxBoundingBoxFactor parameter sets the upper bound, and it truncates the deltaHeight and deltaWidth values
+        for each region bounding box calculation.
+        The maxBoundingBoxFactor value should be large enough to allow sufficient correction to
+        the anchor box size, yet small enough to prevent a calculation floating-point exception.
+        A typical value to use for the maxBoundingBoxFactor property is 20.
+        Default: 20.0
 
     Returns
     -------
@@ -2205,7 +2215,8 @@ class RegionProposal(Layer):
 
     def __init__(self, anchor_ratio, anchor_scale, name=None, act='AUTO', anchor_num_to_sample=256, base_anchor_size=16,
                  coord_type='COCO', do_RPN_only=False, max_label_per_image=200, proposed_roi_num_score=300,
-                 proposed_roi_num_train=2000, roi_train_sample_num=128, src_layers=None, **kwargs):
+                 proposed_roi_num_train=2000, roi_train_sample_num=128, src_layers=None, max_bounding_box_factor = 20.0,
+                 **kwargs):
 
         if not __dev__ and len(kwargs) > 0:
             raise DLPyError('**kwargs can be used only in development mode.')

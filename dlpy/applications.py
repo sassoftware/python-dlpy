@@ -38,7 +38,7 @@ input_layer_options = ['n_channels', 'width', 'height', 'nominals', 'std', 'scal
 # RPN layer option will be found in model function's local parameters
 rpn_layer_options = ['anchor_ratio', 'anchor_scale', 'anchor_num_to_sample', 'base_anchor_size',
                      'coord_type', 'do_RPN_only', 'max_label_per_image', 'proposed_roi_num_score',
-                     'proposed_roi_num_train', 'roi_train_sample_num']
+                     'proposed_roi_num_train', 'roi_train_sample_num', 'max_bounding_box_factor']
 # Fast RCNN option will be found in model function's local parameters
 fast_rcnn_options = ['detection_threshold', 'max_label_per_image', 'max_object_num', 'nms_iou_threshold']
 
@@ -4755,7 +4755,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                 n_classes=20, anchor_num_to_sample=256, anchor_ratio=[0.5, 1, 2], anchor_scale=[8, 16, 32],
                 base_anchor_size=16, coord_type='coco', max_label_per_image=200, proposed_roi_num_train=2000,
                 proposed_roi_num_score=300, roi_train_sample_num=128, roi_pooling_height=7, roi_pooling_width=7,
-                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50):
+                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50, max_bounding_box_factor = 20.0):
     '''
     Generates a deep learning model with the faster RCNN architecture.
 
@@ -4835,6 +4835,18 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     max_object_num: int, optional
         Specifies the maximum number of object to detect
         Default: 50
+    max_bounding_box_factor : double, optional
+        max_bounding_box_factor : double, optional
+        The proposed region bounding box width and height are calculated using the feature map output
+        values deltaHeight and deltaWidth. The bounding box width is calculated as exp(deltaWidth)*anchorBoxWidth.
+        The bounding box height is calculated as exp(deltaHeight)*anchorBoxHeight.
+        The maxBoundingBoxFactor parameter sets the upper bound, and it truncates the deltaHeight and deltaWidth values
+        for each region bounding box calculation.
+        The maxBoundingBoxFactor value should be large enough to allow sufficient correction to
+        the anchor box size, yet small enough to prevent a calculation floating-point exception.
+        A typical value to use for the maxBoundingBoxFactor property is 20.
+        Default: 20.0
+        Default: 20.0
 
     Returns
     -------
