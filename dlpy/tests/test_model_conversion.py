@@ -384,6 +384,7 @@ class TestModelConversion(unittest.TestCase):
                   keras_to_sas() in sas_keras_parse.py
                   write_keras_hdf5_from_file() in write_keras_model_parm.py
                   all functions in model_conversion_utils.py
+                  all function in keras_utils.py
                   CNN-related function in write_sas_code.py
         '''
 
