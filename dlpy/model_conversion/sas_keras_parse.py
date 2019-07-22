@@ -28,7 +28,8 @@ if StrictVersion( keras.__version__) < '2.1.3':
     raise DLPyError('This keras version ('+keras.__version__+') is not supported, '
                                                              'please use a version >= 2.1.3')
 
-from .model_conversion_utils import replace_forward_slash, remove_layer_wrapper
+from .model_conversion_utils import replace_forward_slash
+from .keras_utils import remove_layer_wrapper
 from .write_keras_model_parm import write_keras_hdf5
 from .write_sas_code import (write_input_layer, write_convolution_layer,
                              write_batch_norm_layer, write_pooling_layer,

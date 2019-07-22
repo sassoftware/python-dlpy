@@ -927,31 +927,41 @@ class Network(Layer):
         use_gpu : boolean, optional
             Require GPU for processing model
 
-        '''
+        '''     
+        from dlpy.model_conversion.model_conversion_utils import query_action_parm
+
         cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
+        has_gpu_model,act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+        if (not has_gpu_model) and use_gpu:
+            raise DLPyError('A GPU model was specified, but your Viya installation does not support'
+                            'importing GPU models.')
+
         if data_spec:
-
-            # run action with dataSpec option
-            with sw.option_context(print_messages = False):
-                rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                    model=self.model_table,
-                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                    dataSpecs=data_spec,
-                                    gpuModel=use_gpu,
-                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                    );
-
-            # if error, may not support dataspec
-            if rt.severity > 1:
-
-                # check for error containing "dataSpecs"
-                data_spec_missing = False
-                for msg in rt.messages:
-                    if ('ERROR' in msg) and ('dataSpecs' in msg):
-                        data_spec_missing = True
-
-                if data_spec_missing:
+            
+            has_data_spec = query_action_parm(conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel') 
+            
+            if has_data_spec:
+                # run action with dataSpec option
+                if has_gpu_model:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                            model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            dataSpecs=data_spec,
+                                            gpuModel=use_gpu,
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            )
+                else:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                            model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            dataSpecs=data_spec,
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            )                
+            else:
+                if has_gpu_model:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                                             modelWeights=dict(replace=True,
@@ -960,25 +970,43 @@ class Network(Layer):
                                             gpuModel=use_gpu,
                                             caslib=cas_lib_name,
                                             )
-
-                # handle error or create necessary attributes
-                if rt.severity > 1:
-                    for msg in rt.messages:
-                        print(msg)
-                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
                 else:
-                    from dlpy.attribute_utils import create_extended_attributes
-                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True,
+                                                              name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name,
+                                            caslib=cas_lib_name,
+                                            )                
+
+            # handle error or create necessary attributes
+            if rt.severity > 1:
+                for msg in rt.messages:
+                    print(msg)
+                raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                
+            # create attributes if necessary
+            if not has_data_spec:
+                from dlpy.attribute_utils import create_extended_attributes
+                create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
 
         else:
             print("NOTE: no dataspec(s) provided - creating image classification model.")
-            self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                            modelWeights=dict(replace=True,
-                                              name=self.model_name + '_weights'),
-                            formatType=format_type, weightFilePath=file_name,
-                            gpuModel=use_gpu,
-                            caslib=cas_lib_name,
-                            )
+            if has_gpu_model:
+                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                modelWeights=dict(replace=True,
+                                                  name=self.model_name + '_weights'),
+                                formatType=format_type, weightFilePath=file_name,
+                                gpuModel=use_gpu,
+                                caslib=cas_lib_name,
+                                )
+            else:
+                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                modelWeights=dict(replace=True,
+                                                  name=self.model_name + '_weights'),
+                                formatType=format_type, weightFilePath=file_name,
+                                caslib=cas_lib_name,
+                                )            
 
         self.set_weights(self.model_name + '_weights')
 
@@ -1008,8 +1036,15 @@ class Network(Layer):
             Require GPU for processing model
 
         '''
+        from dlpy.model_conversion.model_conversion_utils import query_action_parm
+
         cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
+        has_gpu_model,act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+        if (not has_gpu_model) and use_gpu:
+            raise DLPyError('A GPU model was specified, but your Viya installation does not support'
+                            'importing GPU models.')
+            
         if (label_file_name):
             from dlpy.utils import get_user_defined_labels_table
             label_table = get_user_defined_labels_table(self.conn, label_file_name, label_length)
@@ -1019,52 +1054,72 @@ class Network(Layer):
 
         if (data_spec):
 
-            # run action with dataSpec option
-            with sw.option_context(print_messages = False):
-                rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                    model=self.model_table,
-                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                    dataSpecs=data_spec,
-                                    gpuModel=use_gpu,
-                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                    labelTable=label_table,
-                                    );
-
-            # if error, may not support dataspec
-            if rt.severity > 1:
-
-                # check for error containing "dataSpecs"
-                data_spec_missing = False
-                for msg in rt.messages:
-                    if ('ERROR' in msg) and ('dataSpecs' in msg):
-                        data_spec_missing = True
-
-                if data_spec_missing:
+            has_data_spec = query_action_parm(conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel') 
+            
+            if has_data_spec:
+                # run action with dataSpec option
+                if has_gpu_model:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                            model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            dataSpecs=data_spec,
+                                            gpuModel=use_gpu,
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            labelTable=label_table,
+                                            )
+                else:
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                            model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            dataSpecs=data_spec,
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            labelTable=label_table,
+                                            )              
+            else:
+                if has_gpu_model:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
                                             gpuModel=use_gpu,
                                             labelTable=label_table,
-                                            );
-
-                # handle error or create necessary attributes with Python function
-                if rt.severity > 1:
-                    for msg in rt.messages:
-                        print(msg)
-                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                                            )
                 else:
-                    from dlpy.attribute_utils import create_extended_attributes
-                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec, label_file_name)
+                    with sw.option_context(print_messages = False):
+                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                            labelTable=label_table,
+                                            )                
+
+            # handle error or create necessary attributes
+            if rt.severity > 1:
+                for msg in rt.messages:
+                    print(msg)
+                raise DLPyError('Cannot import model weights, there seems to be a problem.')
+                
+            # create attributes if necessary
+            if not has_data_spec:
+                from dlpy.attribute_utils import create_extended_attributes
+                create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
 
         else:
             print("NOTE: no dataspec(s) provided - creating image classification model.")
-            self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                            gpuModel=use_gpu,
-                            labelTable=label_table,
-                            );
+            if has_gpu_model:
+                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                gpuModel=use_gpu,
+                                labelTable=label_table,
+                                )
+            else:
+                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                labelTable=label_table,
+                                )
 
         self.set_weights(self.model_name + '_weights')
 
