@@ -932,7 +932,7 @@ class Network(Layer):
 
         cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
 
-        has_gpu_model,act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+        has_gpu_model, act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
         if (not has_gpu_model) and use_gpu:
             raise DLPyError('A GPU model was specified, but your Viya installation does not support'
                             'importing GPU models.')
@@ -962,20 +962,18 @@ class Network(Layer):
                 if has_gpu_model:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                            modelWeights=dict(replace=True,
+                                             modelWeights=dict(replace=True,
                                                               name=self.model_name + '_weights'),
-                                            formatType=format_type, weightFilePath=file_name,
-                                            gpuModel=use_gpu,
-                                            caslib=cas_lib_name,
-                                            )
+                                             formatType=format_type, weightFilePath=file_name,
+                                             gpuModel=use_gpu,
+                                             caslib=cas_lib_name)
                 else:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                            modelWeights=dict(replace=True,
+                                             modelWeights=dict(replace=True,
                                                               name=self.model_name + '_weights'),
-                                            formatType=format_type, weightFilePath=file_name,
-                                            caslib=cas_lib_name,
-                                            )                
+                                             formatType=format_type, weightFilePath=file_name,
+                                             caslib=cas_lib_name)
 
             # handle error or create necessary attributes
             if rt.severity > 1:
