@@ -944,7 +944,7 @@ class Network(Layer):
             if has_data_spec:
                 # run action with dataSpec option
                 if has_gpu_model:
-                    with sw.option_context(print_messages = False):
+                    with sw.option_context(print_messages=False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                              model=self.model_table,
                                              modelWeights=dict(replace=True, name=self.model_name + '_weights'),
@@ -952,7 +952,7 @@ class Network(Layer):
                                              gpuModel=use_gpu,
                                              formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
                 else:
-                    with sw.option_context(print_messages = False):
+                    with sw.option_context(print_messages=False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                              model=self.model_table,
                                              modelWeights=dict(replace=True, name=self.model_name + '_weights'),
@@ -960,18 +960,18 @@ class Network(Layer):
                                              formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
             else:
                 if has_gpu_model:
-                    with sw.option_context(print_messages = False):
+                    with sw.option_context(print_messages=False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                                              modelWeights=dict(replace=True,
-                                                              name=self.model_name + '_weights'),
+                                                               name=self.model_name + '_weights'),
                                              formatType=format_type, weightFilePath=file_name,
                                              gpuModel=use_gpu,
                                              caslib=cas_lib_name)
                 else:
-                    with sw.option_context(print_messages = False):
+                    with sw.option_context(print_messages=False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
                                              modelWeights=dict(replace=True,
-                                                              name=self.model_name + '_weights'),
+                                                               name=self.model_name + '_weights'),
                                              formatType=format_type, weightFilePath=file_name,
                                              caslib=cas_lib_name)
 
@@ -1042,14 +1042,14 @@ class Network(Layer):
             raise DLPyError('A GPU model was specified, but your Viya installation does not support'
                             'importing GPU models.')
             
-        if (label_file_name):
+        if label_file_name:
             from dlpy.utils import get_user_defined_labels_table
             label_table = get_user_defined_labels_table(self.conn, label_file_name, label_length)
         else:
             from dlpy.utils import get_imagenet_labels_table
             label_table = get_imagenet_labels_table(self.conn, label_length)            
 
-        if (data_spec):
+        if data_spec:
 
             has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
             
@@ -1058,38 +1058,36 @@ class Network(Layer):
                 if has_gpu_model:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                            model=self.model_table,
-                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                            dataSpecs=data_spec,
-                                            gpuModel=use_gpu,
-                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                            labelTable=label_table,
-                                            )
+                                             model=self.model_table,
+                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                             dataSpecs=data_spec,
+                                             gpuModel=use_gpu,
+                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                             labelTable=label_table)
                 else:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                            model=self.model_table,
-                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                            dataSpecs=data_spec,
-                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                            labelTable=label_table,
-                                            )              
+                                             model=self.model_table,
+                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                             dataSpecs=data_spec,
+                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                             labelTable=label_table)
             else:
                 if has_gpu_model:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                            gpuModel=use_gpu,
-                                            labelTable=label_table,
-                                            )
+                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                             gpuModel=use_gpu,
+                                             labelTable=label_table)
                 else:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                            labelTable=label_table,
-                                            )                
+                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                             formatType=format_type,
+                                             weightFilePath=file_name,
+                                             caslib=cas_lib_name,
+                                             labelTable=label_table)
 
             # handle error or create necessary attributes
             if rt.severity > 1:
