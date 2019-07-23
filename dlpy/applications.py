@@ -4887,22 +4887,33 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         conv5_1 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_1')(pool4)
         conv5_2 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_2')(conv5_1)
         # feature of Conv5_3 is used to generate region proposals
-        last_conv_in_backbone = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
+        last_layer_in_backbone = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
+        # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
 
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
 
+        # given ROIs, crop on conv5_3 and resize the feature to the same size
+        roipool1 = ROIPooling(output_height=roi_pooling_height,
+                              output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone.shape[0]/width,
+                              name='roi_pooling')([last_layer_in_backbone, rp1])
 
-    # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
-    rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_conv_in_backbone)
-    rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
-
-    # propose anchors, NMS, select anchors to train RPN, produce ROIs
-    rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
-
-    # given ROIs, crop on conv5_3 and resize the feature to the same size
-    roipool1 = ROIPooling(output_height=roi_pooling_height,
-                          output_width=roi_pooling_width,
-                          spatial_scale=last_conv_in_backbone.shape[0]/width,
-                          name='roi_pooling')([last_conv_in_backbone, rp1])
+    elif backbone.lower() == 'resnet50':
+        backbone = ResNet50_SAS(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=16/496,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
     # fully connect layer to extract the feature of ROIs
     if number_of_neurons_in_fc is None:
