@@ -733,7 +733,7 @@ class Network(Layer):
             elif layer_type == 5:
                 self.layers.append(extract_output_layer(layer_table=layer_table))
             elif layer_type == 6:
-                model.layers.append(extract_recurrent_layer(layer_table = layer_table))
+                self.layers.append(extract_recurrent_layer(layer_table = layer_table))
             elif layer_type == 8:
                 self.layers.append(extract_batchnorm_layer(layer_table=layer_table))
             elif layer_type == 9:
@@ -939,27 +939,25 @@ class Network(Layer):
 
         if data_spec:
             
-            has_data_spec = query_action_parm(conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel') 
+            has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
             
             if has_data_spec:
                 # run action with dataSpec option
                 if has_gpu_model:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                            model=self.model_table,
-                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                            dataSpecs=data_spec,
-                                            gpuModel=use_gpu,
-                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                            )
+                                             model=self.model_table,
+                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                             dataSpecs=data_spec,
+                                             gpuModel=use_gpu,
+                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
                 else:
                     with sw.option_context(print_messages = False):
                         rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                            model=self.model_table,
-                                            modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                            dataSpecs=data_spec,
-                                            formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                            )                
+                                             model=self.model_table,
+                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                             dataSpecs=data_spec,
+                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
             else:
                 if has_gpu_model:
                     with sw.option_context(print_messages = False):
@@ -1013,7 +1011,8 @@ class Network(Layer):
         if (cas_lib_name is not None) and tmp_caslib:
             self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
-    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None, label_length=None,
+    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None,
+                                           label_length=None,
                                            use_gpu=False):
         '''
         Load the model weights from a HDF5 file
@@ -1054,7 +1053,7 @@ class Network(Layer):
 
         if (data_spec):
 
-            has_data_spec = query_action_parm(conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel') 
+            has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
             
             if has_data_spec:
                 # run action with dataSpec option
