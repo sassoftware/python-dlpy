@@ -24,7 +24,8 @@ import h5py
 import numpy as np
 from keras import backend as K
 from dlpy.utils import DLPyError
-from .model_conversion_utils import replace_forward_slash, remove_layer_wrapper, create_cpu_compatible_layer
+from .model_conversion_utils import replace_forward_slash
+from .keras_utils import remove_layer_wrapper, create_cpu_compatible_layer
 
 rnn_cpu_layer_classes = ['simplernn', 'lstm', 'gru']
 rnn_gpu_layer_classes = ['cudnnlstm', 'cudnngru']

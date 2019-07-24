@@ -30,9 +30,11 @@ of [PyTorch](https://pytorch.org/) flavor.
 * New APIs for:
    * RNN based tasks: text classification, text generation, and sequence labeling
    * Object detection
+   * Image segmentation
    * Time series processing and modeling
 * Processing audio files and creating speech recognition models
-* Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, and Yolo
+* Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, Yolo, 
+FasterRCNN, U-Net, MobileNet, and ShuffleNet
 * Enhanced data visualization and metadata handling
 
 ### Prerequisites

@@ -9,9 +9,13 @@ What's New
 
 This document outlines features and improvements from each release.
 
-v1.0.2 (March 22, 2019)
+v1.1.0 (July 16, 2019)
 ==========================
 
+- New layers: transpose convolution and group convolution
+- New architectures: U-Net, MobileNet, and ShuffleNet
+- Supporting FasterRCNN for object detection
+- Supporting image segmentation
 - Various bug fixes
-- A new way of creating models
-- Multi-step forecasting
+- Improved documentation
+- Improved code coverage
