@@ -71,7 +71,7 @@ Below is the versions matrix.
 </table>
 
 The table above can be read as follows: DLPy versions between 1.0 (inclusive)
-to 1.1 (exclusive) are designed to work with the SAS Viya 3.4 and VDMML 8.4.
+to 1.1 (exclusive) are designed to work with the SAS Viya 3.4 and VDMML 8.3.
 
 #### External Libraries ####
 The following versions of external libraries are supported:
