@@ -4915,6 +4915,22 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                               spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
+    elif backbone.lower() == 'resnet18':
+        backbone = ResNet18_SAS(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
+    else:
+        raise DLPyError('We are not supporting this backbone yet.')
+
     # fully connect layer to extract the feature of ROIs
     if number_of_neurons_in_fc is None:
         fc6 = Dense(n=4096, act='relu', name='fc6')(roipool1)
