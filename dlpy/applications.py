@@ -4912,7 +4912,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         # propose anchors, NMS, select anchors to train RPN, produce ROIs
         rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
         roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                              spatial_scale=16/496,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
     # fully connect layer to extract the feature of ROIs
