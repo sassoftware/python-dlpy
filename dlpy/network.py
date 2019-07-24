@@ -616,6 +616,10 @@ class Network(Layer):
         else:
             return pd.concat([x.rnn_summary for x in self.layers], ignore_index = True)
 
+    @summary.setter
+    def summary(self, value):
+        self.summary = value
+
     def __load_layer_ids(self):
         try:
             model_table_rows = self.conn.table.fetch(self.model_table, maxrows = 1000000, to = 1000000).Fetch
