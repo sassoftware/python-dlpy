@@ -46,8 +46,8 @@ FasterRCNN, U-Net, MobileNet, and ShuffleNet
 - Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
 
 #### SAS Viya and VDMML versions vs. DLPY versions
-DLPy versions are aligned with SAS Viya and VDMML versions. 
-Below is the version matrix.
+DLPy versions are aligned with the SAS Viya and VDMML versions. 
+Below is the versions matrix.
 
 <table>
 <thead>
@@ -71,7 +71,7 @@ Below is the version matrix.
 </table>
 
 The table above can be read as follows: DLPy versions between 1.0 (inclusive)
-to 1.1 works with the SAS Viya 3.4 and VDMML 8.4.
+to 1.1 are designed to work with the SAS Viya 3.4 and VDMML 8.4.
 
 #### External Libraries ####
 The following versions of external libraries are supported:
