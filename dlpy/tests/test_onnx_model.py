@@ -23,7 +23,6 @@
 #       the CASPROTOCOL environment variable.
 
 import os
-#import onnx
 import swat
 import swat.utils.testing as tm
 from swat.cas.table import CASTable
@@ -179,7 +178,8 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        unittest.TestCase.skipTest(self, "Skipping temporarily due to server error.")
+        #
+        # unittest.TestCase.skipTest(self, "Skipping temporarily due to server error.")
 
         r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
         self.assertTrue(r.severity == 0)
