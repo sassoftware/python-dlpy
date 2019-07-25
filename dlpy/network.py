@@ -203,6 +203,19 @@ class Network(Layer):
         :class:`Model`
 
         '''
+        def _if_traverse_to_an_input(l):
+            # depth first traverse
+            for l_src in l.src_layers:
+                # if the layer is input layer return true
+                if l_src.type == 'input':
+                    return True
+                # encounter stop_layers, continue
+                if l_src in stop_layers:
+                    continue
+                # as long as encounter one input layer return true
+                if _if_traverse_to_an_input(l_src):
+                    return True
+
         copied_model = deepcopy(self)  # deepcopy the sequential model and don't touch the original one
         stop_layers = stop_layers or []
         input_tensors = []
@@ -224,8 +237,9 @@ class Network(Layer):
                     continue
                 # if all source layers of outbound_layer are visited(all in self.layers[:idx])
                 if all(src_layer in copied_model.layers[:idx] for src_layer in outbound_layer.src_layers):
-                    # skip if stop_layers are visited and add its src_layers's output tensors
+                    # skip if stop_layers are visited
                     if outbound_layer in stop_layers:
+                        # add src_layers's into output tensors
                         for src_layer in outbound_layer.src_layers:
                             output_tensors.append(src_layer.tensor)
                         continue
@@ -236,7 +250,11 @@ class Network(Layer):
                     except AttributeError:
                         continue
                     if outbound_layer.can_be_last_layer:
-                        output_tensors.append(outbound_layer.tensor)
+                        # see if output tensor can traverse to an input layer
+                        # if removing connections related to stop layers
+                        if _if_traverse_to_an_input(outbound_layer):
+                            output_tensors.append(outbound_layer.tensor)
+                            break
 
         return dlpy.model.Model(self.conn, input_tensors, output_tensors)
 

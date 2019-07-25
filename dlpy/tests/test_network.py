@@ -421,6 +421,19 @@ class TestNetwork(tm.TestCase):
         self.assertEqual(model.summary['Output Size'].values[-2], 3)
         model.print_summary()
 
+    def test_stop_layers1(self):
+        from dlpy.applications import MobileNetV1
+        backbone = MobileNetV1(self.s, width = 1248, height = 1248)
+        backbone_pure = backbone.to_functional_model(stop_layers = backbone.layers[-2])
+        # expect last layer to be a bn layer right before global average pooling
+        self.assertEqual(backbone_pure.output_layers[0].name, 'conv_pw_13_bn')
+
+    def test_stop_layers2(self):
+        from dlpy.applications import MobileNetV2
+        backbone = MobileNetV2(self.s, width = 1248, height = 1248)
+        backbone_pure = backbone.to_functional_model(stop_layers = backbone.layers[-14])
+        # expect to get two outputs since stop layer is in a branch
+        self.assertEqual(len(backbone_pure.output_layers), 2)
 
     @classmethod
     def tearDownClass(cls):
