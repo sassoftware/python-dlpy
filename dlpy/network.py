@@ -1817,7 +1817,7 @@ def extract_conv_layer(layer_table):
     if 'trunc_fact' in conv_layer_config:
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
-    if conv_layer_config.get('act') == 'Leaky Activation function':
+    if conv_layer_config.get('act').lower() == 'leaky activation function':
         conv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
@@ -1898,7 +1898,7 @@ def extract_batchnorm_layer(layer_table):
     bn_layer_config = dict()
     bn_layer_config.update(get_str_configs(['act'], 'bnopts', layer_table))
     bn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
-    if bn_layer_config.get('act') == 'Leaky Activation function':
+    if bn_layer_config.get('act').lower() == 'leaky activation function':
         bn_layer_config['act'] = 'Leaky'
 
     layer = BN(**bn_layer_config)
@@ -2044,7 +2044,7 @@ def extract_fc_layer(layer_table):
     if 'trunc_fact' in fc_layer_config:
         fc_layer_config['truncation_factor'] = fc_layer_config['trunc_fact']
         del fc_layer_config['trunc_fact']
-    if fc_layer_config.get('act') == 'Leaky Activation function':
+    if fc_layer_config.get('act').lower() == 'leaky activation function':
         fc_layer_config['act'] = 'Leaky'
 
     layer = Dense(**fc_layer_config)
@@ -2284,7 +2284,7 @@ def extract_groupconv_layer(layer_table):
     if 'trunc_fact' in grpconv_layer_config:
         grpconv_layer_config['truncation_factor'] = grpconv_layer_config['trunc_fact']
         del grpconv_layer_config['trunc_fact']
-    if grpconv_layer_config.get('act') == 'Leaky Activation function':
+    if grpconv_layer_config.get('act').lower() == 'leaky activation function':
         grpconv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
@@ -2333,7 +2333,7 @@ def extract_conv2dtranspose_layer(layer_table):
     if 'trunc_fact' in conv2dtranspose_layer_config:
         conv2dtranspose_layer_config['truncation_factor'] = conv2dtranspose_layer_config['trunc_fact']
         del conv2dtranspose_layer_config['trunc_fact']
-    if conv2dtranspose_layer_config.get('act') == 'Leaky Activation function':
+    if conv2dtranspose_layer_config.get('act').lower() == 'leaky activation function':
         conv2dtranspose_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
