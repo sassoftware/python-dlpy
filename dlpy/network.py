@@ -203,6 +203,19 @@ class Network(Layer):
         :class:`Model`
 
         '''
+        def _if_traverse_to_an_input(l):
+            # depth first traverse
+            for l_src in l.src_layers:
+                # if the layer is input layer return true
+                if l_src.type == 'input':
+                    return True
+                # encounter stop_layers, continue
+                if l_src in stop_layers:
+                    continue
+                # as long as encounter one input layer return true
+                if _if_traverse_to_an_input(l_src):
+                    return True
+
         copied_model = deepcopy(self)  # deepcopy the sequential model and don't touch the original one
         stop_layers = stop_layers or []
         input_tensors = []
@@ -224,8 +237,9 @@ class Network(Layer):
                     continue
                 # if all source layers of outbound_layer are visited(all in self.layers[:idx])
                 if all(src_layer in copied_model.layers[:idx] for src_layer in outbound_layer.src_layers):
-                    # skip if stop_layers are visited and add its src_layers's output tensors
+                    # skip if stop_layers are visited
                     if outbound_layer in stop_layers:
+                        # add src_layers's into output tensors
                         for src_layer in outbound_layer.src_layers:
                             output_tensors.append(src_layer.tensor)
                         continue
@@ -236,7 +250,11 @@ class Network(Layer):
                     except AttributeError:
                         continue
                     if outbound_layer.can_be_last_layer:
-                        output_tensors.append(outbound_layer.tensor)
+                        # see if output tensor can traverse to an input layer
+                        # if removing connections related to stop layers
+                        if _if_traverse_to_an_input(outbound_layer):
+                            output_tensors.append(outbound_layer.tensor)
+                            break
 
         return dlpy.model.Model(self.conn, input_tensors, output_tensors)
 
@@ -1799,7 +1817,7 @@ def extract_conv_layer(layer_table):
     if 'trunc_fact' in conv_layer_config:
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
-    if conv_layer_config.get('act') == 'Leaky Activation function':
+    if conv_layer_config.get('act').lower() == 'leaky activation function':
         conv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
@@ -1880,7 +1898,7 @@ def extract_batchnorm_layer(layer_table):
     bn_layer_config = dict()
     bn_layer_config.update(get_str_configs(['act'], 'bnopts', layer_table))
     bn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
-    if bn_layer_config.get('act') == 'Leaky Activation function':
+    if bn_layer_config.get('act').lower() == 'leaky activation function':
         bn_layer_config['act'] = 'Leaky'
 
     layer = BN(**bn_layer_config)
@@ -2026,7 +2044,7 @@ def extract_fc_layer(layer_table):
     if 'trunc_fact' in fc_layer_config:
         fc_layer_config['truncation_factor'] = fc_layer_config['trunc_fact']
         del fc_layer_config['trunc_fact']
-    if fc_layer_config.get('act') == 'Leaky Activation function':
+    if fc_layer_config.get('act').lower() == 'leaky activation function':
         fc_layer_config['act'] = 'Leaky'
 
     layer = Dense(**fc_layer_config)
@@ -2266,7 +2284,7 @@ def extract_groupconv_layer(layer_table):
     if 'trunc_fact' in grpconv_layer_config:
         grpconv_layer_config['truncation_factor'] = grpconv_layer_config['trunc_fact']
         del grpconv_layer_config['trunc_fact']
-    if grpconv_layer_config.get('act') == 'Leaky Activation function':
+    if grpconv_layer_config.get('act').lower() == 'leaky activation function':
         grpconv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
@@ -2315,7 +2333,7 @@ def extract_conv2dtranspose_layer(layer_table):
     if 'trunc_fact' in conv2dtranspose_layer_config:
         conv2dtranspose_layer_config['truncation_factor'] = conv2dtranspose_layer_config['trunc_fact']
         del conv2dtranspose_layer_config['trunc_fact']
-    if conv2dtranspose_layer_config.get('act') == 'Leaky Activation function':
+    if conv2dtranspose_layer_config.get('act').lower() == 'leaky activation function':
         conv2dtranspose_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']

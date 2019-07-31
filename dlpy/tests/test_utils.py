@@ -321,3 +321,21 @@ class TestUtils(unittest.TestCase):
         image_size = (2000, 321)
         plot_anchors(base_anchor_size, anchor_scale, anchor_ratio, image_size)
 
+    def test_create_metadata_table_1(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_metadata_table(self.s, folder=self.data_dir)
+
+    def test_create_metadata_table_2(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_metadata_table(self.s, folder=self.data_dir, extensions_to_filter=['.jpg'])
+
+    def test_create_metadata_table_3(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_metadata_table(self.s, folder='/random/location')
+        with self.assertRaises(DLPyError):
+            create_metadata_table(self.s, folder='dlpy', caslib='random_caslib')
+
+

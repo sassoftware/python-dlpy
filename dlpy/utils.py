@@ -2126,6 +2126,109 @@ def parameter_2d(param1, param2, param3, default_value):
             return (param2, param3)
 
 
+def create_metadata_table(conn, folder='', task='image_classification',
+                          extensions_to_filter=None, caslib=None, output_name='metadata_table'):
+    '''
+    Creates a metadata table from the specified folder or folder and caslib information.
+    The code traverses the given folder recursively and creates a dataframe, which is then uploaded
+    to the CAS server. The function returns a metadata table, in the format of CAS Table.
+
+    It currently supports the following tasks:
+        image_classification: the code assumes that folder name of an image file is its label
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    folder : string
+        Specifies the location of the images.
+    task : str
+        Specifies the task where we are creating the metadata table
+        Default: image_classification
+    extensions_to_filter : list of extensions in str
+        Specifies the extensions that we are interested in while traversing the folders.
+    caslib : str
+        Specifies the caslib of the folder
+    output_name : str
+        Specifies the name of the output cas table
+
+    Returns
+    -------
+    :class:`CASTable`
+
+    '''
+    tasks = ['image_classification']
+    rel_path = ''
+    if task in tasks:
+        if caslib is not None:
+            if not conn.table.querycaslib(caslib=caslib)[caslib]:
+                raise DLPyError('caslib='+caslib+' cannot be found in the server.')
+            r = conn.table.caslibinfo(caslib=caslib)
+            rel_path = r.CASLibInfo.Path[0]
+            folder = os.path.join(rel_path, folder)
+        if task is 'image_classification':
+            return create_image_classification_metadata_table(conn, folder,
+                                                               extensions_to_filter, output_name, rel_path)
+    else:
+        raise DLPyError('We do not support this task yet, supported tasks are as follows: '+str(tasks))
+
+
+def create_image_classification_metadata_table(conn, folder, extensions_to_filter, output_name, rel_path):
+    '''
+    Creates a metadata table from the specified folder or folder and caslib information.
+    The code traverses the given folder recursively and creates a dataframe, which is then uploaded
+    to the CAS server. The function returns a metadata table, in the format of CAS Table.
+    This function is specific to the image classification task. It can be also as a reference
+    if a custom data metadata creator needs to be implemented.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    folder : string
+        Specifies the location of the images.
+    extensions_to_filter : list of extensions in str
+        Specifies the extensions that we are interested in while traversing the folders.
+    output_name : str
+        Specifies the name of the output cas table
+    rel_path : str
+        Specifies the path of the caslib, this will be used to extract the relative path of an input file.
+
+    Returns
+    -------
+    :class:`CASTable`
+
+    '''
+    import os
+    try:
+        import pandas as pd
+    except:
+        raise DLPyError('pandas is not installed')
+
+    count = 0
+
+    data=[]
+    for root, dire, files in os.walk( folder):
+        for f in files:
+            if extensions_to_filter is None or any(f.endswith(end) for end in extensions_to_filter):
+                absolute_path = os.path.join(root, f)
+                dirname = os.path.dirname( absolute_path)
+                basename = os.path.basename( dirname)
+                fe = os.path.splitext(f)
+                fee = ''
+                if len(fe) > 1:
+                    fee = fe[0]
+                rp = ''
+                if len(rel_path) > 0:
+                    s = absolute_path.split(rel_path)
+                    if len(s) > 1:
+                        rp = s[1]
+                data.append([absolute_path, rp, f, fee, basename, count])
+                count +=1
+    df = pd.DataFrame(data, columns=['_filePath_', '_relativePath_', '_fileName_', '_fName_', '_label_', '_id_'])
+    return conn.upload_frame(df, casout=dict(name=output_name, replace=True))
+
+
 class DLPyDict(collections.MutableMapping):
     """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
 
