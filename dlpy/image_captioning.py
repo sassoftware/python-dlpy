@@ -313,9 +313,9 @@ def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
     return rnn_input
 
 def create_captioning_table(conn,image_table,features_model,captions_file,
-                            obj_detect_model=None,
-                            word_embeddings_file=None,num_captions=5,dense_layer='fc7',captions_delimiter='\t', caption_col_name='Var',
-                            embeddings_delimiter='\t',n_threads=None,gpu=None):
+                            obj_detect_model=None,word_embeddings_file=None,
+                            num_captions=5,dense_layer='fc7',captions_delimiter='\t', 
+                            caption_col_name='Var',embeddings_delimiter='\t',n_threads=None,gpu=None):
     '''
     Builds CASTable wtih all necessary info to train an image captioning model
 
@@ -449,7 +449,7 @@ def ImageCaptioning(conn,model_name='image_captioning',num_blocks=3,neurons=50,
     print('OutputLayer added named "output"')
     return model
 
-def show_predictions(conn,result_tbl,npreds=2,ncol=2,img_path=None,figsize=None):
+def display_predicted_image_captions(conn,result_tbl,npreds=2,ncol=2,img_path=None,figsize=None):
     '''
     Shows caption prediction for random images
 
