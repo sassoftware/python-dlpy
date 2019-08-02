@@ -20,6 +20,7 @@ from swat import *
 import pandas as pd
 from dlpy.model import *
 from dlpy.applications import *
+from dlpy.images import ImageTable
 import matplotlib.image as mpimg
 from dlpy.utils import DLPyError
 import random
@@ -44,10 +45,18 @@ def get_image_features(conn,model,image_table,dense_layer,target='_filename_0'):
 
     Returns
     -------
-    CASTable
+    :class:`CASTable`
 
     '''
+    width = model.summary['Output Size'][0][1]
+    height = model.summary['Output Size'][0][0]
+    image_table.resize(width=width,height=height)
+
+    if dense_layer not in list(model.summary['Layer']):
+        raise DLPyError('Specified dense_layer not a layer in model')
+
     X, y = model.get_features(data=image_table,dense_layer=dense_layer,target=target)
+
     # initialize dictionary with columns
     table_dict = {}
     for i in range(len(X[0])):
@@ -85,7 +94,7 @@ def create_captions_table(conn,captions_file,caption_col_name='Var',delimiter='\
 
     Returns
     -------
-    CASTable
+    :class:`CASTable`
 
     '''
     captions_dict = dict()
@@ -150,41 +159,58 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
         Default : '\t'
     Returns
     -------
-    CASTable
+    :class:`CASTable`
+
     '''
+    if not os.path.exists(word_embeddings_file):
+        raise DLPyError('word_embeddings_file does not exist')
+
+    if not isinstance(image_table,ImageTable):
+        raise DLPyError('image_table must be an ImageTable object')
+
     conn.loadactionset('deepLearn')
     conn.loadactionset('textparse')
 
-    scored = detection_model.predict(data=image_table,n_threads=n_threads,gpu=gpu)
-    if scored is None:
-        raise DLPyError('Something went wrong while scoring. Check GPU and image_table are correct')
-    else:
-        object_table = detection_model.valid_res_tbl
-        # combine first n objects into single column
-        first_objects = object_table.copy()
-        first_objects['first_objects'] = first_objects['_Object0_'] + ","
-        if max_objects>5:
-            max_objects = 5
-        for i in range(1,max_objects):
-            objects = first_objects['_Object{}_'.format(i)] + ","
-            first_objects['first_objects'] = first_objects['first_objects'].add(objects)
+    width = detection_model.summary['Output Size'][0][1]
+    height = detection_model.summary['Output Size'][0][0]
+    image_table.resize(width=width,height=height)
+    scoring_error = False
+    try:
+        scored = detection_model.predict(data=image_table,n_threads=n_threads,gpu=gpu)
+    except:
+        scoring_error = True
+    if scoring_error or scored is None:
+        raise DLPyError('Something went wrong while scoring the data.')
 
-        objects_numeric = numeric_parse_text(conn,first_objects,word_embeddings_file,word_delimiter=word_delimiter)
+    object_table = detection_model.valid_res_tbl
+    # combine first n objects into single column
+    first_objects = object_table.copy()
+    first_objects['first_objects'] = first_objects['_Object0_'] + ","
+    if max_objects>5:
+        max_objects = 5
+    for i in range(1,max_objects):
+        objects = first_objects['_Object{}_'.format(i)] + ","
+        first_objects['first_objects'] = first_objects['first_objects'].add(objects)
 
-        # merge objects table and numeric table
-        df1 = objects_numeric.to_frame()
-        df2 = first_objects.to_frame()
-        objects = pd.merge(df1, df2, left_on='_id_', right_on='_id_', how='left')
+    objects_numeric = numeric_parse_text(conn,
+                                         first_objects,
+                                         word_embeddings_file,
+                                         word_delimiter=word_delimiter)
 
-        objects = conn.upload_frame(objects,casout=dict(name='objects',replace=True))
-        # remove unnecessary columns
-        useful_vars = list(objects_numeric.columns)
-        useful_vars.append('_filename_0')
-        useful_vars.append('first_objects')
-        bad_columns = set(list(objects.columns)) - set(useful_vars)
-        final_objects = objects.drop(bad_columns, axis=1)
+    # merge objects table and numeric table
+    df1 = objects_numeric.to_frame()
+    df2 = first_objects.to_frame()
+    objects = pd.merge(df1, df2, left_on='_id_', right_on='_id_', how='left')
 
-        return final_objects
+    objects = conn.upload_frame(objects,casout=dict(name='objects',replace=True))
+    # remove unnecessary columns
+    useful_vars = list(objects_numeric.columns)
+    useful_vars.append('_filename_0')
+    useful_vars.append('first_objects')
+    bad_columns = set(list(objects.columns)) - set(useful_vars)
+    final_objects = objects.drop(bad_columns, axis=1)
+
+    return final_objects
 
 def numeric_parse_text(conn,table,word_embeddings_file,word_delimiter='\t',parse_column='first_objects'):
     '''
@@ -206,7 +232,7 @@ def numeric_parse_text(conn,table,word_embeddings_file,word_delimiter='\t',parse
         Default : 'first_objects'
     Returns
     -------
-    CASTable
+    :class:`CASTable`
 
     '''
     # parse object text into numeric data
@@ -243,12 +269,13 @@ def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
 
     Returns
     -------
-    CASTable
+    :class:`CASTable`
 
     '''
     # convert table to one caption per line
     columns = list(table.columns)
-
+    if '{}0'.format(caption_col_name) not in columns:
+        raise DLPyError('caption_col_name {} does not exist in the table'.format(caption_col_name))
     capt_idx_start = columns.index('{}0'.format(caption_col_name))
 
     # initialize new_tbl dictionary with columns
@@ -285,9 +312,10 @@ def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
 
     return rnn_input
 
-def create_captioning_table(conn,image_table,features_model,captions_file,obj_detect_model=None,
+def create_captioning_table(conn,image_table,features_model,captions_file,
+                            obj_detect_model=None,
                             word_embeddings_file=None,num_captions=5,dense_layer='fc7',captions_delimiter='\t', caption_col_name='Var',
-                            embeddings_delimiter='\t',objects_width=416,n_threads=None,gpu=None):
+                            embeddings_delimiter='\t',n_threads=None,gpu=None):
     '''
     Builds CASTable wtih all necessary info to train an image captioning model
 
@@ -323,9 +351,6 @@ def create_captioning_table(conn,image_table,features_model,captions_file,obj_de
     embeddings_delimiter : string, optional
         Specifies delimiter used in word embeddings file
         Default : '\t'
-    objects_width : int, optional
-        Specifies size to resize images to for scoring with the object detection model
-        Default : 416
     n_threads : int, optional
         Specifies the number of threads to use when scoring the table. All cores available used when
         nothing is set.
@@ -337,7 +362,7 @@ def create_captioning_table(conn,image_table,features_model,captions_file,obj_de
 
     Returns
     -------
-    CASTable
+    :class:`CASTable`
 
     '''
     # get all necessary tables
@@ -358,8 +383,6 @@ def create_captioning_table(conn,image_table,features_model,captions_file,obj_de
             raise DLPyError("word_embeddings_file required for object detection")
         else:
             # resize images for object detection scoring
-            image_table.resize(objects_width)
-
             detected_objects = create_embeddings_from_object_detection(conn,image_table,obj_detect_model,word_embeddings_file,word_delimiter=embeddings_delimiter,
                                                       n_threads=n_threads,gpu=gpu)
             # conn.dljoin(table=dict(name='captions_features'),annotatedTable=detected_objects,
@@ -404,9 +427,12 @@ def ImageCaptioning(conn,model_name='image_captioning',num_blocks=3,neurons=50,
         Default : 15
     Returns
     -------
-    CASTable
+    :class:`CASTable`
 
     '''
+    if num_blocks < 1:
+        raise DLPyError('num_blocks must be greater than 1')
+
     model = Sequential(conn, model_table=model_name)
 
     model.add(InputLayer(name='input'))
@@ -509,8 +535,15 @@ def scored_results_to_dict(result_tbl):
     Returns
     -------
     dict
+
     '''
-    result_columns = list(result_tbl.columns)
+    exists = True
+    try:
+        result_columns = list(result_tbl.columns)
+    except:
+        exists = False
+    if exists is False:
+        raise DLPyError('Specified result_tbl could not be located in the caslib')
 
     filename_idx = result_columns.index('_filename_0')
     caption_idx = result_columns.index('caption')
@@ -538,6 +571,7 @@ def get_max_capt_len(captions_file,delimiter='\t'):
     Returns
     -------
     int
+
     '''
     max_cap_len = 0
     with open(captions_file,'r') as readFile:
