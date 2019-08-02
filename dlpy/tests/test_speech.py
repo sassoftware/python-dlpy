@@ -2,8 +2,8 @@ from dlpy.speech import *
 import unittest
 import swat
 import swat.utils.testing as tm
-import wave
 import tempfile
+import os
 
 
 class TestSpeechUtils(unittest.TestCase):
@@ -13,6 +13,11 @@ class TestSpeechUtils(unittest.TestCase):
             self.data_dir_local = os.environ.get("DLPY_DATA_DIR_LOCAL")
 
     def test_read_audio_1(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -22,6 +27,11 @@ class TestSpeechUtils(unittest.TestCase):
             read_audio(os.path.join(self.data_dir_local, "sample_language_model.csv"))
 
     def test_read_audio_2(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -29,6 +39,11 @@ class TestSpeechUtils(unittest.TestCase):
             read_audio(os.path.join(self.data_dir_local, "nonexistent.wav"))
 
     def test_read_audio_3(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -39,7 +54,12 @@ class TestSpeechUtils(unittest.TestCase):
         self.assertIsNotNone(wave_params)
         wave_reader.close()
 
-    def test_check_framerate_1(self):
+    def test_check_framerate(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -49,11 +69,13 @@ class TestSpeechUtils(unittest.TestCase):
         wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"))
         self.assertTrue(check_framerate(wave_params, 16000))
         wave_reader.close()
-        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_16bit_44khz.wav"))
-        self.assertFalse(check_framerate(wave_params, 16000))
-        wave_reader.close()
 
-    def test_check_sampwidth_1(self):
+    def test_check_sampwidth(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -64,16 +86,16 @@ class TestSpeechUtils(unittest.TestCase):
         self.assertTrue(check_sampwidth(wave_params, 2))
         wave_reader.close()
 
-    def test_check_sampwidth_2(self):
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"))
-        with self.assertRaises(DLPyError):
-            check_sampwidth(wave_params, 2, sampwidth_options=(3, 4))
-        wave_reader.close()
-
     def test_convert_framerate_1(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -86,6 +108,15 @@ class TestSpeechUtils(unittest.TestCase):
         wave_reader.close()
 
     def test_convert_framerate_2(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -95,15 +126,6 @@ class TestSpeechUtils(unittest.TestCase):
         new_fragment = convert_framerate(fragment, wave_params.sampwidth, wave_params.nchannels,
                                          wave_params.framerate, wave_params.framerate // 2)
         self.assertEqual(len(fragment) / 2, len(new_fragment))
-        self.assertEqual(b"".join([fragment[i: i + 4] for i in range(0, 200, 8)]), new_fragment[:100])
-        wave_reader.close()
-
-    def test_convert_framerate_3(self):
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"))
-        fragment = wave_reader.readframes(1000)
         # convert from 16k to 32k
         new_fragment = convert_framerate(fragment, wave_params.sampwidth, wave_params.nchannels,
                                          wave_params.framerate, wave_params.framerate * 2)
@@ -111,6 +133,15 @@ class TestSpeechUtils(unittest.TestCase):
         wave_reader.close()
 
     def test_convert_sampwidth_1(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -122,24 +153,35 @@ class TestSpeechUtils(unittest.TestCase):
         wave_reader.close()
 
     def test_convert_sampwidth_2(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        wave_reader_8bit, wave_params_8bit = read_audio(os.path.join(self.data_dir_local, "sample_8bit_16khz.wav"))
-        fragment_8bit = wave_reader_8bit.readframes(1000)
+        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_8bit_16khz.wav"))
+        fragment = wave_reader.readframes(1000)
         # convert from 8 bit to 16 bit
-        fragment_8bit_to_16bit = convert_sampwidth(fragment_8bit,
-                                                   wave_params_8bit.sampwidth, wave_params_8bit.sampwidth * 2)
-        self.assertEqual(len(fragment_8bit), 0.5 * len(fragment_8bit_to_16bit))
-        wave_reader_8bit.close()
-
-        # compare with the 16 bit sample file
-        wave_reader_16bit, wave_params_16bit = read_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"))
-        fragment_16bit = wave_reader_16bit.readframes(1000)
-        self.assertEqual(len(fragment_8bit_to_16bit), len(fragment_16bit))
-        wave_reader_16bit.close()
+        new_fragment = convert_sampwidth(fragment, wave_params.sampwidth, wave_params.sampwidth * 2)
+        self.assertEqual(len(fragment), 0.5 * len(new_fragment))
+        wave_reader.close()
 
     def test_convert_sampwidth_3(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -151,16 +193,34 @@ class TestSpeechUtils(unittest.TestCase):
         wave_reader.close()
 
     def test_segment_audio_1(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             data_path_after_caslib = "test/"
             with self.assertRaises(DLPyError):
-                segment_audio(os.path.join(self.data_dir_local, "nonexistent.wav"),
-                              temp_dir, data_path_after_caslib, 20, 16000, 2)
+                segment_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"),
+                              temp_dir, data_path_after_caslib, 40, 16000, 2)
 
     def test_segment_audio_2(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -170,7 +230,6 @@ class TestSpeechUtils(unittest.TestCase):
                 segment_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"),
                               temp_dir, data_path_after_caslib, 20, 16000, 2)
 
-            self.assertIsNotNone(listing_path_after_caslib)
             self.assertTrue(os.path.exists(listing_path_local))
             with open(listing_path_local, "r") as listing_file:
                 lines = listing_file.readlines()
@@ -179,17 +238,10 @@ class TestSpeechUtils(unittest.TestCase):
             self.assertEqual(len(segment_path_local_list), 1)
             clean_audio(listing_path_local, segment_path_local_list)
 
-    def test_segment_audio_3(self):
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            data_path_after_caslib = "test/"
             listing_path_after_caslib, listing_path_local, segment_path_after_caslib_list, segment_path_local_list = \
                 segment_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"),
                               temp_dir, data_path_after_caslib, 2, 16000, 2)
 
-            self.assertIsNotNone(listing_path_after_caslib)
             self.assertTrue(os.path.exists(listing_path_local))
             with open(listing_path_local, "r") as listing_file:
                 lines = listing_file.readlines()
@@ -198,7 +250,16 @@ class TestSpeechUtils(unittest.TestCase):
             self.assertEqual(len(segment_path_local_list), 4)
             clean_audio(listing_path_local, segment_path_local_list)
 
-    def test_clean_audio_1(self):
+    def test_clean_audio(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
@@ -209,21 +270,9 @@ class TestSpeechUtils(unittest.TestCase):
                               temp_dir, data_path_after_caslib, 2, 16000, 2)
 
             self.assertTrue(os.path.exists(listing_path_local))
-            clean_audio(listing_path_local, segment_path_local_list)
-            self.assertFalse(os.path.exists(listing_path_local))
-
-    def test_clean_audio_2(self):
-        if self.data_dir_local is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            data_path_after_caslib = "test/"
-            listing_path_after_caslib, listing_path_local, segment_path_after_caslib_list, segment_path_local_list = \
-                segment_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"),
-                              temp_dir, data_path_after_caslib, 2, 16000, 2)
-
             for segment_path_local in segment_path_local_list:
                 self.assertTrue(os.path.exists(segment_path_local))
+
             clean_audio(listing_path_local, segment_path_local_list)
             for segment_path_local in segment_path_local_list:
                 self.assertFalse(os.path.exists(segment_path_local))
@@ -231,9 +280,11 @@ class TestSpeechUtils(unittest.TestCase):
 
 class TestSpeechToTextInit(unittest.TestCase):
     conn = None
-    caslib_name = "caslib_test"
-    data_path_after_caslib = None
-    local_path = None
+    server_type = None
+    server_sep = None
+
+    data_dir = None
+    local_dir = None
 
     def setUp(self):
         swat.reset_option()
@@ -241,158 +292,97 @@ class TestSpeechToTextInit(unittest.TestCase):
         swat.options.interactive_mode = False
 
         self.conn = swat.CAS()
-        server_type = tm.get_cas_host_type(self.conn)
-        if server_type.startswith("lin") or server_type.startswith("osx"):
-            server_sep = "/"
-        else:
-            server_sep = "\\"
+        self.server_type = tm.get_cas_host_type(self.conn)
+        self.server_sep = "\\"
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = "/"
 
         if "DLPY_DATA_DIR" in os.environ:
-            data_dir = os.environ.get("DLPY_DATA_DIR")
-
-            caslib_path, self.data_path_after_caslib = os.path.split(data_dir)
-            if not caslib_path.endswith(server_sep):
-                caslib_path += server_sep
-            if not self.data_path_after_caslib.endswith(server_sep) and len(self.data_path_after_caslib) > 0:
-                self.data_path_after_caslib += server_sep
-
-            print(caslib_path)
-            print(self.caslib_name)
-            self.conn.addCaslib(name=self.caslib_name, path=caslib_path,
-                                dataSource=dict(srcType="PATH"), subDirectories=True)
+            self.data_dir = os.environ.get("DLPY_DATA_DIR")
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if "DLPY_DATA_DIR_LOCAL" in os.environ:
-            self.local_path = os.environ.get("DLPY_DATA_DIR_LOCAL")
+            self.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
 
     def test_init_1(self):
-        SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
+        if self.local_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
+
+        speech = Speech(self.conn, self.data_dir, self.local_dir)
         action_set_list = self.conn.actionSetInfo().setinfo["actionset"].tolist()
         self.assertTrue("audio" in action_set_list)
         self.assertTrue("deepLearn" in action_set_list)
         self.assertTrue("langModel" in action_set_list)
+        self.assertIsNone(speech.acoustic_model)
+        self.assertIsNone(speech.language_model_caslib)
 
     def test_init_2(self):
-        if self.data_path_after_caslib is None:
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        with self.assertRaises(AttributeError):
-            self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-
-        SpeechToText(self.conn, self.data_path_after_caslib, self.local_path,
-                     acoustic_model_path=self.data_path_after_caslib + "sample_acoustic_model.sashdat",
-                     language_model_path=self.data_path_after_caslib + "sample_language_model.csv")
-        table_list = self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-        self.assertTrue("ASR" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS_ATTR" in table_list)
-        self.assertTrue("LM" in table_list)
-
-    def test_load_acoustic_model_1(self):
-        if self.data_path_after_caslib is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
-        with self.assertRaises(AttributeError):
-            self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-
-        speech.load_acoustic_model(self.data_path_after_caslib + "sample_acoustic_model.sashdat")
-        table_list = self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-        self.assertTrue("ASR" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS_ATTR" in table_list)
-
-    def test_load_acoustic_model_2(self):
-        if self.data_path_after_caslib is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
         with self.assertRaises(DLPyError):
-            speech.load_acoustic_model(self.data_path_after_caslib + "acoustic_model_nonexistent.sashdat")
+            Speech(self.conn, self.data_dir, os.path.join(self.local_dir, "nonexistent"))
 
-    def test_load_acoustic_model_3(self):
-        if self.data_path_after_caslib is None:
+    def test_init_3(self):
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
-        with self.assertRaises(AttributeError):
-            self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
+        speech = Speech(self.conn, self.data_dir, self.local_dir,
+                        self.data_dir + "sample_acoustic_model.sashdat",
+                        self.data_dir + "sample_language_model.csv")
+        self.assertIsNotNone(speech.acoustic_model)
+        self.assertIsNotNone(speech.language_model_caslib)
+        table_list = self.conn.tableInfo(caslib=speech.language_model_caslib).TableInfo["Name"].tolist()
+        self.assertTrue(speech.language_model_name.upper() in table_list)
 
-        speech.load_acoustic_model(
-            self.data_path_after_caslib + "sample_acoustic_model.sashdat",
-            model_weights_path=self.data_path_after_caslib + "sample_acoustic_model_weights.sashdat",
-            model_weights_attr_path=self.data_path_after_caslib + "sample_acoustic_model_weights_attr.sashdat")
-        table_list = self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-        self.assertTrue("ASR" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS_ATTR" in table_list)
-
-    def test_load_acoustic_model_4(self):
-        if self.data_path_after_caslib is None:
+    def test_load_acoustic_model(self):
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
-        with self.assertRaises(AttributeError):
-            self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-
-        speech.load_acoustic_model(
-            self.data_path_after_caslib + "sample_acoustic_model.sashdat",
-            model_caslib=self.caslib_name,
-            model_weights_path=self.data_path_after_caslib + "sample_acoustic_model_weights.sashdat",
-            model_weights_caslib=self.caslib_name,
-            model_weights_attr_path=self.data_path_after_caslib + "sample_acoustic_model_weights_attr.sashdat",
-            model_weights_attr_caslib=self.caslib_name)
-        table_list = self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-        self.assertTrue("ASR" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS" in table_list)
-        self.assertTrue("PRETRAINED_WEIGHTS_ATTR" in table_list)
+        speech = Speech(self.conn, self.data_dir, self.local_dir)
+        speech.load_acoustic_model(self.data_dir + "sample_acoustic_model.sashdat")
+        self.assertIsNotNone(speech.acoustic_model)
+        self.assertIsNotNone(speech.acoustic_model.model_name)
+        self.assertIsNotNone(speech.acoustic_model.model_table)
+        self.assertIsNotNone(speech.acoustic_model.model_weights)
 
     def test_load_language_model_1(self):
-        if self.data_path_after_caslib is None:
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
-        with self.assertRaises(AttributeError):
-            self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
+        speech = Speech(self.conn, self.data_dir, self.local_dir)
+        self.assertIsNone(speech.language_model_caslib)
 
-        speech.load_language_model(self.data_path_after_caslib + "sample_language_model.csv")
-        table_list = self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-        self.assertTrue("LM" in table_list)
+        speech.load_language_model(self.data_dir + "sample_language_model.csv")
+        self.assertIsNotNone(speech.language_model_caslib)
+
+        table_list = self.conn.tableInfo(caslib=speech.language_model_caslib).TableInfo["Name"].tolist()
+        self.assertTrue(speech.language_model_name.upper() in table_list)
 
     def test_load_language_model_2(self):
-        if self.data_path_after_caslib is None:
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
+        speech = Speech(self.conn, self.data_dir, self.local_dir)
+        self.assertIsNone(speech.language_model_caslib)
+
         with self.assertRaises(DLPyError):
-            speech.load_language_model(self.data_path_after_caslib + "language_model_nonexistent.csv")
-
-    def test_load_language_model_3(self):
-        if self.data_path_after_caslib is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        speech = SpeechToText(self.conn, self.data_path_after_caslib, self.local_path, self.caslib_name)
-        with self.assertRaises(AttributeError):
-            self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-
-        speech.load_language_model(self.data_path_after_caslib + "sample_language_model.csv", model_caslib=self.caslib_name)
-        table_list = self.conn.tableInfo(caslib=self.caslib_name).TableInfo["Name"].tolist()
-        self.assertTrue("LM" in table_list)
+            speech.load_language_model(self.data_dir + "language_model_nonexistent.csv")
+        self.assertIsNone(speech.language_model_caslib)
 
     def tearDown(self):
         try:
@@ -405,13 +395,13 @@ class TestSpeechToTextInit(unittest.TestCase):
 
 class TestSpeechToText(unittest.TestCase):
     conn = None
-    caslib_name = "caslib_test"
-    data_path_after_caslib = None
-    local_path = None
+    server_type = None
+    server_sep = None
 
-    listing_path_local = None
-    segment_path_list = None
-    segment_path_local_list = None
+    data_dir = None
+    local_dir = None
+
+    speech = None
 
     @classmethod
     def setUpClass(cls):
@@ -420,136 +410,77 @@ class TestSpeechToText(unittest.TestCase):
         swat.options.interactive_mode = False
 
         cls.conn = swat.CAS()
-
-        server_type = tm.get_cas_host_type(cls.conn)
-        if server_type.startswith("lin") or server_type.startswith("osx"):
-            server_sep = "/"
-        else:
-            server_sep = "\\"
+        cls.server_type = tm.get_cas_host_type(cls.conn)
+        cls.server_sep = "\\"
+        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
+            cls.server_sep = "/"
 
         if "DLPY_DATA_DIR" in os.environ:
-            data_dir = os.environ.get("DLPY_DATA_DIR")
-
-            caslib_path, cls.data_path_after_caslib = os.path.split(data_dir)
-            if not caslib_path.endswith(server_sep):
-                caslib_path += server_sep
-            if not cls.data_path_after_caslib.endswith(server_sep):
-                cls.data_path_after_caslib += server_sep
-
-            cls.conn.addCaslib(name=cls.caslib_name, path=caslib_path,
-                               dataSource=dict(srcType="PATH"), subDirectories=True)
+            cls.data_dir = os.environ.get("DLPY_DATA_DIR")
+            if cls.data_dir.endswith(cls.server_sep):
+                cls.data_dir = cls.data_dir[:-1]
+            cls.data_dir += cls.server_sep
 
         if "DLPY_DATA_DIR_LOCAL" in os.environ:
-            cls.local_path = os.environ.get("DLPY_DATA_DIR_LOCAL")
+            cls.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
 
-        if "DLPY_DATA_DIR" in os.environ and "DLPY_DATA_DIR_LOCAL" in os.environ:
-            cls.speech = SpeechToText(
-                cls.conn, cls.data_path_after_caslib, cls.local_path,
-                acoustic_model_path=cls.data_path_after_caslib + "sample_acoustic_model.sashdat",
-                acoustic_model_weights_path=cls.data_path_after_caslib + "sample_acoustic_model_weights.sashdat",
-                acoustic_model_weights_attr_path=cls.data_path_after_caslib + "sample_acoustic_model_weights_attr.sashdat",
-                language_model_path=cls.data_path_after_caslib + "sample_language_model.csv")
-
-    def step_1_load_audio(self):
-        self.listing_path_local, self.segment_path_list, self.segment_path_local_list = \
-            load_audio(self.speech,
-                       audio_path=os.path.join(self.local_path, "sample_16bit_16khz.wav"),
-                       casout=dict(name="audio", replace=True), segment_len=2)
-
-        self.assertEqual(len(self.segment_path_list), 4)
-        self.assertEqual(len(self.segment_path_local_list), 4)
-        with open(self.listing_path_local, "r") as listing_file:
-            lines = listing_file.readlines()
-            self.assertEqual(len(lines), 4)
-
-    def step_2_extract_acoustic_features(self):
-        extract_acoustic_features(self.speech,
-                                  audio_table="audio",
-                                  casout=dict(name="feature", replace=True))
-        num_of_rows = self.conn.tableInfo(name="feature").TableInfo["Rows"][0]
-        self.assertEqual(num_of_rows, 4)
-
-    def step_3_score_acoustic_features_1(self):
-        with self.assertRaises(DLPyError):
-            score_acoustic_features(self.speech,
-                                    feature_table="feature",
-                                    casout=dict(name="score", replace=True), gpu_devices={0})
-
-    def step_3_score_acoustic_features_2(self):
-        score_acoustic_features(self.speech,
-                                feature_table="feature",
-                                casout=dict(name="score", replace=True))
-        num_of_rows = self.conn.tableInfo(name="score").TableInfo["Rows"][0]
-        self.assertEqual(num_of_rows, 4)
-
-    def step_4_decode_scores(self):
-        decode_scores(self.speech,
-                      score_table="score",
-                      casout=dict(name="result", replace=True),
-                      # alpha=0
-                      )
-        num_of_rows = self.conn.tableInfo(name="result").TableInfo["Rows"][0]
-        self.assertEqual(num_of_rows, 4)
-
-    def step_5_concatenate_results(self):
-        result = concatenate_results(self.speech,
-                                     result_table_name="result",
-                                     segment_path_list=self.segment_path_list)
-        self.assertIsInstance(result, str)
-
-    def test_steps(self):
-        if self.data_path_after_caslib is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        self.step_1_load_audio()
-        self.step_2_extract_acoustic_features()
-        self.step_3_score_acoustic_features_1()
-        self.step_3_score_acoustic_features_2()
-        self.step_4_decode_scores()
-        self.step_5_concatenate_results()
-
-        clean_audio(self.listing_path_local, self.segment_path_local_list)
+        if cls.data_dir is not None:
+            cls.speech = Speech(cls.conn, cls.data_dir, cls.local_dir,
+                                cls.data_dir + "sample_acoustic_model.sashdat",
+                                cls.data_dir + "sample_language_model.csv")
 
     def test_transcribe_1(self):
-        if self.data_path_after_caslib is None:
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        result = self.speech.transcribe(os.path.join(self.local_path, "sample_16bit_16khz.wav"))
-        print(result)
+        result = self.speech.transcribe(os.path.join(self.local_dir, "sample_16bit_16khz.wav"))
         self.assertIsInstance(result, str)
 
     def test_transcribe_2(self):
-        if self.data_path_after_caslib is None:
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        result = self.speech.transcribe(os.path.join(self.local_path, "sample_16bit_16khz.wav"), segment_len=5)
-        print(result)
+        result = self.speech.transcribe(os.path.join(self.local_dir, "sample_8bit_16khz.wav"))
         self.assertIsInstance(result, str)
 
     def test_transcribe_3(self):
-        if self.data_path_after_caslib is None:
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
+        if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        result = self.speech.transcribe(os.path.join(self.local_path, "sample_8bit_16khz.wav"), segment_len=5)
-        print(result)
-        self.assertIsInstance(result, str)
-
-    def test_transcribe_4(self):
-        if self.data_path_after_caslib is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables.")
-        if self.local_path is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
-
-        result = self.speech.transcribe(os.path.join(self.local_path, "sample_16bit_44khz.wav"), segment_len=5)
-        print(result)
+        result = self.speech.transcribe(os.path.join(self.local_dir, "sample_16bit_44khz.wav"))
         self.assertIsInstance(result, str)
 
     @classmethod
