@@ -7,6 +7,42 @@ import platform
 
 
 class Speech:
+    """
+    Class to Do Speech Recognition Using SAS Viya.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection object
+
+    data_path : string
+        Specifies the absolute path of the folder where segmented audio files are stored (server side).
+
+        The "audio_path" parameter in "transcribe" method is located on the client side. To transcribe the audio,
+        we need to firstly save the .wav file somewhere the CAS server could access. Also, if the audio lasts
+        very long, we may need to segment it into multiple files before copying.
+
+        Notice that this is the location to store the temporary audio files. The Python client should have both
+        reading and writing permission of this folder, and the CAS server should have at least reading permission
+        of this folder.
+
+    local_path : string, optional
+        Specifies the path of the folder where segmented audio files are stored (client side).
+        Default = None
+
+        Notice that "data_path" and "local_path" actually point to the same location, and they should have
+        the same value if the OS of the CAS server and the Python client are the same.
+
+    acoustic_model_path : string, optional
+        Specifies the absolute server-side path of the acoustic model file.
+        Please make sure the weights file and the weights attribute file are placed under the same directory.
+        Default = None
+
+    language_model_path : string, optional
+        Specifies the absolute server-side path of the language model file.
+        Default = None
+    """
+
     acoustic_model = None
     language_model_name = "languageModel"
     language_model_caslib = None
@@ -23,43 +59,6 @@ class Speech:
     def __init__(self, conn,
                  data_path, local_path=None,
                  acoustic_model_path=None, language_model_path=None):
-        """
-        Initialize.
-
-        Parameters
-        ----------
-        conn: CAS Connection
-            Specifies the CAS connection object
-
-        data_path: string
-            Specifies the absolute path of the folder where segmented audio files are stored (server side).
-
-            The "audio_path" parameter in "transcribe" method is located on the client side. To transcribe the audio,
-            we need to firstly save the .wav file somewhere the CAS server could access. Also, if the audio lasts
-            very long, we may need to segment it into multiple files before copying.
-
-            Notice that this is the location to store the temporary audio files. The Python client should have both
-            reading and writing permission of this folder, and the CAS server should have at least reading permission
-            of this folder.
-
-        local_path: string, optional
-            Specifies the path of the folder where segmented audio files are stored (client side).
-            Default: None
-
-            Notice that "data_path" and "local_path" actually point to the same location, and they should have
-            the same value if the OS of the CAS server and the Python client are the same.
-
-        acoustic_model_path: string, optional
-            Specifies the absolute server-side path of the acoustic model file.
-            Please make sure the weights file and the weights attribute file are placed under the same directory.
-            Default: None
-
-        language_model_path: string, optional
-            Specifies the absolute server-side path of the language model file.
-            Default: None
-
-        """
-
         try:
             import wave
         except ImportError:
@@ -129,16 +128,16 @@ class Speech:
 
         Parameters
         ----------
-        acoustic_model_path: string
+        acoustic_model_path : string
             Specifies the absolute server-side path of the acoustic model file.
             Please make sure the weights file and the weights attribute file are placed under the same directory.
 
         """
         self.acoustic_model = Model(self.conn)
-        self.acoustic_model.from_sashdat(self.conn, path=acoustic_model_path)
-
         if self.acoustic_model is None:
             raise DLPyError("Failed to load the acoustic model.")
+
+        self.acoustic_model.from_sashdat(self.conn, path=acoustic_model_path)
         if self.acoustic_model.model_table is None:
             raise DLPyError("Failed to load the acoustic model.")
         if self.acoustic_model.model_weights is None:
@@ -150,7 +149,7 @@ class Speech:
 
         Parameters
         ----------
-        language_model_path: string
+        language_model_path : string
             Specifies the absolute server-side path of the acoustic model file.
 
         """
@@ -176,18 +175,18 @@ class Speech:
 
         Parameters
         ----------
-        audio_path: string
+        audio_path : string
             Specifies the location of the audio file (client-side, absolute/relative).
-        max_path_size: int, optional
+        max_path_size : int, optional
             Specifies the maximum number of paths kept as candidates of the final results during the decoding process.
-            Default: 100
-        alpha: double, optional
+            Default = 100
+        alpha : double, optional
             Specifies the weight of the language model, relative to the acoustic model.
-            Default: 1.0
-        beta: double, optional
+            Default = 1.0
+        beta : double, optional
             Specifies the weight of the sentence length, relative to the acoustic model.
-            Default: 0.0
-        gpu : :class:`Gpu`, optional
+            Default = 0.0
+        gpu : class : `Gpu`, optional
             When specified, the action uses graphical processing unit hardware.
             The simplest way to use GPU processing is to specify "gpu=1". In this case, the default values of
             other GPU parameters are used.
@@ -195,7 +194,7 @@ class Speech:
 
         Returns
         -------
-        result: string
+        string
         """
 
         # check if acoustic model is loaded

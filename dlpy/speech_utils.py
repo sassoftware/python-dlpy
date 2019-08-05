@@ -10,13 +10,13 @@ def read_audio(path):
 
     Parameters
     ----------
-    path: string
+    path : string
         Specifies path of the audio file.
 
     Returns
     -------
-    wave_reader: class:'wave.Wave_read'
-    wave_params: class:'wave._wave_params'
+    wave_reader : class : 'wave.Wave_read'
+    wave_params : class : 'wave._wave_params'
 
     """
     wave_reader = wave.open(path, "rb")
@@ -30,9 +30,9 @@ def check_framerate(params, framerate):
 
     Parameters
     ----------
-    params: class:'wave._wave_params'
+    params : class : 'wave._wave_params'
         Specifies the original parameters of the audio.
-    framerate: int
+    framerate : int
         Specifies the desired framerate.
 
     Returns
@@ -49,9 +49,9 @@ def check_sampwidth(params, sampwidth):
 
     Parameters
     ----------
-    params: class:'wave._wave_params'
+    params : class : 'wave._wave_params'
         Specifies the original parameters of the audio.
-    sampwidth: int
+    sampwidth : int
         Specifies the desired sampwidth.
 
     Returns
@@ -72,20 +72,20 @@ def convert_framerate(fragment, width, nchannels, framerate_in, framerate_out):
 
     Parameters
     ----------
-    fragment: bytes object
+    fragment : bytes object
         Specifies the original fragment.
-    width: int
+    width : int
         Specifies the fragment's original sampwidth.
-    nchannels: int
+    nchannels : int
         Specifies the fragment's original nchannels.
-    framerate_in: int
+    framerate_in : int
         Specifies the fragment's original framerate.
-    framerate_out: int
+    framerate_out : int
         Specifies the fragment's desired framerate.
 
     Returns
     -------
-    new_fragment: bytes object
+    bytes
 
     """
     if framerate_in == framerate_out:
@@ -101,16 +101,16 @@ def convert_sampwidth(fragment, sampwidth_in, sampwidth_out):
 
     Parameters
     ----------
-    fragment: bytes object
+    fragment : bytes object
         Specifies the original fragment.
-    sampwidth_in: int
+    sampwidth_in : int
         Specifies the fragment's original sampwidth.
-    sampwidth_out: int
+    sampwidth_out : int
         Specifies the fragment's desired sampwidth.
 
     Returns
     -------
-    new_fragment: bytes object
+    bytes
 
     """
     if sampwidth_in == sampwidth_out:
@@ -135,14 +135,14 @@ def calculate_segment_nframes(path, segment_len):
 
     Parameters
     ----------
-    path: string
+    path : string
         Specifies path of the audio file.
-    segment_len: float
+    segment_len : float
         Specifies the maximum length of one segment in seconds.
 
     Returns
     -------
-    segment_nframes_list: list of int
+    list of ints
     """
 
     wave_reader, wave_params = read_audio(path)
@@ -232,26 +232,26 @@ def segment_audio(path, local_path, data_path_after_caslib, segment_len, framera
 
     Parameters
     ----------
-    path: string
+    path : string
         Specifies path of the audio file.
-    local_path: string
+    local_path : string
         Specifies the location where temporary segmented audio files are stored (server side).
-    data_path_after_caslib: string
+    data_path_after_caslib : string
         Specifies the location where temporary segmented audio files are stored (client side, relative to caslib).
         Note that local_path and data_path_after_caslib actually point to the same position.
-    segment_len: float
+    segment_len : float
         Specifies the maximum length of one segment in seconds.
-    framerate: int
+    framerate : int
         Specifies the desired framerate.
-    sampwidth: int
+    sampwidth : int
         Specifies the desired sampwidth.
 
     Returns
     -------
-    listing_path_after_caslib: string
-    listing_path_local: string
-    segment_path_after_caslib_list: list of string
-    segment_path_local_list: list of string
+    listing_path_after_caslib : string
+    listing_path_local : string
+    segment_path_after_caslib_list : list of string
+    segment_path_local_list : list of string
 
     """
 
@@ -326,9 +326,9 @@ def clean_audio(listing_path_local, segment_path_local_list):
 
     Parameters
     ----------
-    listing_path_local: string
+    listing_path_local : string
         Specifies path of the temporary listing file to remove.
-    segment_path_local_list: list of string
+    segment_path_local_list : list of string
         Specifies paths of the temporary audio files to remove.
 
     """
