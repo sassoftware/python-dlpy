@@ -1,0 +1,35 @@
+dlpy.blocks.ResBlock\_Caffe
+===========================
+
+.. currentmodule:: dlpy.blocks
+
+.. autoclass:: ResBlock_Caffe
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ResBlock_Caffe.__init__
+      ~ResBlock_Caffe.add_layers
+      ~ResBlock_Caffe.compile
+      ~ResBlock_Caffe.count_instances
+      ~ResBlock_Caffe.get_number_of_instances
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ResBlock_Caffe.can_be_last_layer
+      ~ResBlock_Caffe.number_of_instances
+      ~ResBlock_Caffe.type
+      ~ResBlock_Caffe.type_desc
+   
+   

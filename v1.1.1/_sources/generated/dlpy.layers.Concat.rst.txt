@@ -1,0 +1,44 @@
+dlpy.layers.Concat
+==================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Concat
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Concat.__init__
+      ~Concat.count_instances
+      ~Concat.format_name
+      ~Concat.get_number_of_instances
+      ~Concat.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Concat.can_be_last_layer
+      ~Concat.kernel_size
+      ~Concat.layer_id
+      ~Concat.num_bias
+      ~Concat.num_weights
+      ~Concat.number_of_instances
+      ~Concat.output_size
+      ~Concat.rnn_summary
+      ~Concat.shared_weights
+      ~Concat.summary
+      ~Concat.type
+      ~Concat.type_desc
+      ~Concat.type_label
+   
+   

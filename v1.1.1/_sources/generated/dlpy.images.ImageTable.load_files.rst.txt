@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.load\_files
+==================================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.load_files

@@ -1,0 +1,17 @@
+digraph Simple_CNN {
+	node [fontname=helvetica shape=record style=filled]
+	edge [fontname=helvetica fontsize=10]
+	Input1 [label=" 224x224x3 Input1(input) " color="#3288bd" fillcolor="#3288bd40" height=0.3 margin="0.2,0.0"]
+	"Convo.1" [label=" 7x7 Convo.1(convo) " color="#b58c15" fillcolor="#fee08b40" height=0.3 margin="0.2,0.0"]
+	Input1 -> "Convo.1" [label=" 224 x 224 x 3 " color="#5677F3"]
+	Pool1 [label=" 2x2 Pool1(pool) " color="#66c2a5" fillcolor="#66c2a540" height=0.3 margin="0.2,0.0"]
+	"Convo.1" -> Pool1 [label=" 224 x 224 x 8 " color="#5677F3"]
+	"Convo.2" [label=" 7x7 Convo.2(convo) " color="#b58c15" fillcolor="#fee08b40" height=0.3 margin="0.2,0.0"]
+	Pool1 -> "Convo.2" [label=" 112 x 112 x 8 " color="#5677F3"]
+	Pool2 [label=" 2x2 Pool2(pool) " color="#66c2a5" fillcolor="#66c2a540" height=0.3 margin="0.2,0.0"]
+	"Convo.2" -> Pool2 [label=" 112 x 112 x 8 " color="#5677F3"]
+	"F.C.1" [label=" 25088x16 F.C.1(fc) " color="#aeae82" fillcolor="#ffffbf40" height=0.3 margin="0.2,0.0"]
+	Pool2 -> "F.C.1" [label=" 56 x 56 x 8 " color="#5677F3"]
+	Output1 [label=" 16x2 Output1(output) " color="#5e4fa2" fillcolor="#5e4fa220" height=0.3 margin="0.2,0.0"]
+	"F.C.1" -> Output1 [label=" 16 " color="#5677F3"]
+}

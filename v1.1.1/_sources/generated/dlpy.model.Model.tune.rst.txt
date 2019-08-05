@@ -1,0 +1,6 @@
+dlpy.model.Model.tune
+=====================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.tune

@@ -1,0 +1,6 @@
+dlpy.audio.AudioTable.create\_audio\_table\_speechrecognition
+=============================================================
+
+.. currentmodule:: dlpy.audio
+
+.. automethod:: AudioTable.create_audio_table_speechrecognition

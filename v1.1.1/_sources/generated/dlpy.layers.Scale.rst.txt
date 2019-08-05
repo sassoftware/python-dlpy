@@ -1,0 +1,44 @@
+dlpy.layers.Scale
+=================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Scale
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Scale.__init__
+      ~Scale.count_instances
+      ~Scale.format_name
+      ~Scale.get_number_of_instances
+      ~Scale.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Scale.can_be_last_layer
+      ~Scale.kernel_size
+      ~Scale.layer_id
+      ~Scale.num_bias
+      ~Scale.num_weights
+      ~Scale.number_of_instances
+      ~Scale.output_size
+      ~Scale.rnn_summary
+      ~Scale.shared_weights
+      ~Scale.summary
+      ~Scale.type
+      ~Scale.type_desc
+      ~Scale.type_label
+   
+   

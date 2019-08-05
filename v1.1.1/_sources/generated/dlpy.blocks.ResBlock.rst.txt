@@ -1,0 +1,35 @@
+dlpy.blocks.ResBlock
+====================
+
+.. currentmodule:: dlpy.blocks
+
+.. autoclass:: ResBlock
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ResBlock.__init__
+      ~ResBlock.add_layers
+      ~ResBlock.compile
+      ~ResBlock.count_instances
+      ~ResBlock.get_number_of_instances
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ResBlock.can_be_last_layer
+      ~ResBlock.number_of_instances
+      ~ResBlock.type
+      ~ResBlock.type_desc
+   
+   

@@ -1,0 +1,6 @@
+dlpy.audio.AudioTable.load\_audio\_files
+========================================
+
+.. currentmodule:: dlpy.audio
+
+.. automethod:: AudioTable.load_audio_files

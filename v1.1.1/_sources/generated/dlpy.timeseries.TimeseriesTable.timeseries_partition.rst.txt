@@ -1,0 +1,6 @@
+dlpy.timeseries.TimeseriesTable.timeseries\_partition
+=====================================================
+
+.. currentmodule:: dlpy.timeseries
+
+.. automethod:: TimeseriesTable.timeseries_partition

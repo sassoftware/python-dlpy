@@ -1,0 +1,6 @@
+dlpy.metrics.r2\_score
+======================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: r2_score

@@ -1,0 +1,6 @@
+dlpy.timeseries.TimeseriesTable.prepare\_subsequences
+=====================================================
+
+.. currentmodule:: dlpy.timeseries
+
+.. automethod:: TimeseriesTable.prepare_subsequences

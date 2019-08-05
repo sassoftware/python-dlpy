@@ -1,0 +1,44 @@
+dlpy.layers.Pooling
+===================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Pooling
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Pooling.__init__
+      ~Pooling.count_instances
+      ~Pooling.format_name
+      ~Pooling.get_number_of_instances
+      ~Pooling.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Pooling.can_be_last_layer
+      ~Pooling.kernel_size
+      ~Pooling.layer_id
+      ~Pooling.num_bias
+      ~Pooling.num_weights
+      ~Pooling.number_of_instances
+      ~Pooling.output_size
+      ~Pooling.rnn_summary
+      ~Pooling.shared_weights
+      ~Pooling.summary
+      ~Pooling.type
+      ~Pooling.type_desc
+      ~Pooling.type_label
+   
+   

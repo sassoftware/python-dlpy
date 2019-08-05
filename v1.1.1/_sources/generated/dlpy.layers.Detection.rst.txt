@@ -1,0 +1,44 @@
+dlpy.layers.Detection
+=====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Detection
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Detection.__init__
+      ~Detection.count_instances
+      ~Detection.format_name
+      ~Detection.get_number_of_instances
+      ~Detection.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Detection.can_be_last_layer
+      ~Detection.kernel_size
+      ~Detection.layer_id
+      ~Detection.num_bias
+      ~Detection.num_weights
+      ~Detection.number_of_instances
+      ~Detection.output_size
+      ~Detection.rnn_summary
+      ~Detection.shared_weights
+      ~Detection.summary
+      ~Detection.type
+      ~Detection.type_desc
+      ~Detection.type_label
+   
+   

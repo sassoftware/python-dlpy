@@ -1,0 +1,6 @@
+dlpy.model.Model.evaluate\_object\_detection
+============================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.evaluate_object_detection

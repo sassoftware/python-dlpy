@@ -1,0 +1,98 @@
+dlpy.model.Model
+================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: Model
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Model.__init__
+      ~Model.change_labels
+      ~Model.compile
+      ~Model.count_instances
+      ~Model.count_params
+      ~Model.deploy
+      ~Model.evaluate
+      ~Model.evaluate_object_detection
+      ~Model.fit
+      ~Model.fit_and_visualize
+      ~Model.forecast
+      ~Model.format_name
+      ~Model.from_caffe_model
+      ~Model.from_keras_model
+      ~Model.from_onnx_model
+      ~Model.from_sashdat
+      ~Model.from_table
+      ~Model.get_feature_maps
+      ~Model.get_features
+      ~Model.get_model_info
+      ~Model.get_number_of_instances
+      ~Model.heat_map_analysis
+      ~Model.load
+      ~Model.load_weights
+      ~Model.load_weights_attr
+      ~Model.load_weights_from_caffe
+      ~Model.load_weights_from_file
+      ~Model.load_weights_from_file_with_labels
+      ~Model.load_weights_from_keras
+      ~Model.load_weights_from_table
+      ~Model.plot_evaluate_res
+      ~Model.plot_heat_map
+      ~Model.plot_network
+      ~Model.plot_training_history
+      ~Model.predict
+      ~Model.print_summary
+      ~Model.save_to_astore
+      ~Model.save_to_onnx
+      ~Model.save_to_table
+      ~Model.save_to_table_with_caslibify
+      ~Model.save_weights_csv
+      ~Model.score
+      ~Model.set_weights
+      ~Model.set_weights_attr
+      ~Model.share_weights
+      ~Model.to_functional_model
+      ~Model.to_model_params
+      ~Model.train
+      ~Model.tune
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Model.can_be_last_layer
+      ~Model.feature_maps
+      ~Model.layer_id
+      ~Model.model_ever_trained
+      ~Model.model_explain_table
+      ~Model.n_epochs
+      ~Model.name
+      ~Model.number_of_instances
+      ~Model.rnn_summary
+      ~Model.score_message_level
+      ~Model.shared_weights
+      ~Model.src_layers
+      ~Model.summary
+      ~Model.train_tbl
+      ~Model.training_history
+      ~Model.type
+      ~Model.type_desc
+      ~Model.type_label
+      ~Model.valid_conf_mat
+      ~Model.valid_res
+      ~Model.valid_res_tbl
+      ~Model.valid_score
+      ~Model.valid_tbl
+   
+   

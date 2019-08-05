@@ -1,0 +1,40 @@
+dlpy.layers.Proj
+================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Proj
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Proj.__init__
+      ~Proj.count_instances
+      ~Proj.format_name
+      ~Proj.get_number_of_instances
+      ~Proj.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Proj.can_be_last_layer
+      ~Proj.layer_id
+      ~Proj.number_of_instances
+      ~Proj.rnn_summary
+      ~Proj.shared_weights
+      ~Proj.summary
+      ~Proj.type
+      ~Proj.type_desc
+      ~Proj.type_label
+   
+   

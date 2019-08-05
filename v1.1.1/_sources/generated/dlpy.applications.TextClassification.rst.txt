@@ -1,0 +1,6 @@
+dlpy.applications.TextClassification
+====================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: TextClassification

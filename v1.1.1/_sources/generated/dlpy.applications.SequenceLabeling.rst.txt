@@ -1,0 +1,6 @@
+dlpy.applications.SequenceLabeling
+==================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: SequenceLabeling

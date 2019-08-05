@@ -1,0 +1,6 @@
+dlpy.images.ImageTable.random\_mutations
+========================================
+
+.. currentmodule:: dlpy.images
+
+.. automethod:: ImageTable.random_mutations

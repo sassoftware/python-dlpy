@@ -1,0 +1,6 @@
+dlpy.metrics.average\_precision\_score
+======================================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: average_precision_score

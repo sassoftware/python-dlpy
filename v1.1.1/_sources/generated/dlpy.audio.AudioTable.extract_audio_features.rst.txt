@@ -1,0 +1,6 @@
+dlpy.audio.AudioTable.extract\_audio\_features
+==============================================
+
+.. currentmodule:: dlpy.audio
+
+.. automethod:: AudioTable.extract_audio_features

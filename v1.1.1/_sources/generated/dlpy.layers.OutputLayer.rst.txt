@@ -1,0 +1,45 @@
+dlpy.layers.OutputLayer
+=======================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: OutputLayer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OutputLayer.__init__
+      ~OutputLayer.count_instances
+      ~OutputLayer.format_name
+      ~OutputLayer.get_number_of_instances
+      ~OutputLayer.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~OutputLayer.can_be_last_layer
+      ~OutputLayer.kernel_size
+      ~OutputLayer.layer_id
+      ~OutputLayer.num_bias
+      ~OutputLayer.num_features
+      ~OutputLayer.num_weights
+      ~OutputLayer.number_of_instances
+      ~OutputLayer.output_size
+      ~OutputLayer.rnn_summary
+      ~OutputLayer.shared_weights
+      ~OutputLayer.summary
+      ~OutputLayer.type
+      ~OutputLayer.type_desc
+      ~OutputLayer.type_label
+   
+   
