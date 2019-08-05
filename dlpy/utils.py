@@ -501,7 +501,11 @@ def caslibify(conn, path, task='save'):
                     print('Something went wrong. Most likely, one of the subpaths of the provided path'
                           'is part of an existing caslib. A workaround is to put the file under that subpath or'
                           'move to a different location. It sounds and is inconvenient but it is to protect '
-                          'your privacy granted by your system admin.')
+                          'your privacy granted by your system admin. '
+                          'That said, you can run caslibinfo action to see if the path is colliding with'
+                          'any of the existing caslibs. Note that we try to create a caslib for you '
+                          'and look for existing ones; however, if there is a caslib created on a child'
+                          'folder of the path, then that also errors out. caslibinfo is to way to check that.')
                     return None, None, False
                 else:
                     return new_caslib, path_split[1], True
@@ -1367,6 +1371,61 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
+
+
+def create_segmentation_table(conn, path_to_images, path_to_ground_truth, output_table_name='seg_data'):
+    '''
+
+    Creates a segmentation table from two folders. 1) contains the original images,
+    and 2) contains the ground truth information. The ground truth information is usually embedded
+    in the images as each pixel in the original image should have a class. These classes are
+    represented by numbers. For example, if the ground truth image contains only values 0, 1, and 2
+    this means that there are three classes and each pixel is assigned with one of those numbers.
+    Note that .jpg images cannot fold this ground truth data.
+
+    Parameters
+    ----------
+
+    conn : CASConnection
+        Specifies a CAS connection
+    path_to_images : str
+        Specifies the location of the folder that contains the original images. Note that
+        server should have access to this folder.
+    path_to_ground_truth : str
+        Specifies the location of the folder that contains the ground truth images. Note that
+        server should have access to this folder. Each image name here should have a matching file in
+        the path_to_images folder with the exact same name.
+    output_table_name : str, optional
+        Specifies the name of the output table.
+        Default : seg_data
+
+    Returns
+    -------
+    `CASTable`
+
+    '''
+
+    from dlpy.images import ImageTable
+    raw = ImageTable.load_files(conn=conn, path=path_to_images)
+
+    if raw is not None:
+        print('NOTE: Images are loaded')
+
+    labels = ImageTable.load_files(conn=conn, path=path_to_ground_truth)
+    if labels is not None:
+        print('NOTE: Ground truth images are loaded')
+
+    # manipulate column names for easy access
+    conn.altertable(labels, columns=[dict(name='_image_', rename='labels')])
+    conn.altertable(labels, columns=[dict(name='_label_', drop=True)])
+    conn.altertable(labels, columns=[dict(name='_id_', drop=True)])
+
+    conn.loadactionset('deepLearn')
+    conn.deepLearn.dljoin(table=raw, annotatedtable=labels,
+                           id='_filename_0',
+                           casout=dict(name=output_table_name, replace=True))
+
+    return conn.CASTable(output_table_name)
 
 
 def display_object_detections(conn, table, coord_type, max_objects=10,
