@@ -1,11 +1,10 @@
 # Change Log
 
-## 1.1.0 - 2019-07-16
+## 1.1.1 - 2019-08-05
 
-- New layers: transpose convolution and group convolution
-- New architectures: U-Net, MobileNet, and ShuffleNet
-- Supporting FasterRCNN for object detection
-- Supporting image segmentation
+- New speech-to-text APIs that enables us doing language model post processing
+- APIs for Image captioning
+- More example notebooks
+- Updated weights (located: http://support.sas.com/documentation/prod-p/vdmml/zip/index.html) 
+supporting new version of ONNX
 - Various bug fixes
-- Improved documentation
-- Improved code coverage
