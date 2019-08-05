@@ -75,7 +75,8 @@ def get_image_features(conn,model,image_table,dense_layer,target='_filename_0'):
 
     return features
 
-def create_captions_table(conn,captions_file,caption_col_name='Var',delimiter='\t'):
+
+def create_captions_table(conn, captions_file, caption_col_name='Var', delimiter='\t'):
     '''
     Generate CASTable of captions and filenames
 
@@ -84,7 +85,8 @@ def create_captions_table(conn,captions_file,caption_col_name='Var',delimiter='\
     conn : CAS
         Specifies the CAS connection object.
     captions_file : string
-        Specifies absolute path to file containing image filenames and captions
+        Specifies absolute path to file containing image filenames and captions.
+        This file has to be accessible from the client.
     caption_col_name : string, optional
         Specifies base name of columns that contain captions
         Default : 'Var'
@@ -101,7 +103,7 @@ def create_captions_table(conn,captions_file,caption_col_name='Var',delimiter='\
     line_list = []
 
     # read file lines into large list
-    with open(captions_file,'r') as readFile:
+    with open(captions_file, 'r') as readFile:
         for line in readFile:
             line_list.append(line)
 
@@ -123,13 +125,13 @@ def create_captions_table(conn,captions_file,caption_col_name='Var',delimiter='\
         captions_dict['_filename_0'].append(items[0])
         for j in range(num_captions):
             captions_dict['{}{}'.format(caption_col_name,j)].append(items[j+1].strip())
-    captions = CASTable.from_dict(conn,captions_dict)
+    captions = CASTable.from_dict(conn, captions_dict)
 
     return captions
 
 
 def create_embeddings_from_object_detection(conn, image_table, detection_model, word_embeddings_file,
-                                            n_threads=None,gpu=None,max_objects=5,word_delimiter='\t'):
+                                            n_threads=None,gpu=None,max_objects=5, word_delimiter='\t'):
     '''
     Builds CASTable with objects detected in images as numeric data
 
@@ -143,6 +145,7 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
         Specifies CASTable containing model parameters for the object detection model
     word_embeddings_file : string
         Specifies full path to file containing pre-trained word vectors to be used for text generation
+        This file should be accessible from the client.
     n_threads : int, optional
         Specifies the number of threads to use when scoring the table. All cores available used when
         nothing is set.
@@ -184,7 +187,11 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
 
     object_table = detection_model.valid_res_tbl
     # combine first n objects into single column
+    #conn.table.partition(object_table, casout=dict(name='_'+object_table.name, replace=True))
+    #first_objects = conn.CASTable('_'+object_table.name)
+
     first_objects = object_table.copy()
+
     first_objects['first_objects'] = first_objects['_Object0_'] + ","
     if max_objects>5:
         max_objects = 5
@@ -211,6 +218,7 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
     final_objects = objects.drop(bad_columns, axis=1)
 
     return final_objects
+
 
 def numeric_parse_text(conn,table,word_embeddings_file,word_delimiter='\t',parse_column='first_objects'):
     '''
@@ -312,7 +320,8 @@ def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
 
     return rnn_input
 
-def create_captioning_table(conn,image_table,features_model,captions_file,
+
+def create_captioning_table(conn, image_table, features_model, captions_file,
                             obj_detect_model=None,word_embeddings_file=None,
                             num_captions=5,dense_layer='fc7',captions_delimiter='\t', 
                             caption_col_name='Var',embeddings_delimiter='\t',n_threads=None,gpu=None):
@@ -329,11 +338,13 @@ def create_captioning_table(conn,image_table,features_model,captions_file,
         Specifies CNN model to use for extracting features
     captions_file : string
         Specifies absolute path to file containing image filenames and captions
+        Client should have access to this file.
     obj_detect_model : CASTable or string, optional
         Specifies CASTable containing model parameters for the object detection model
         Default : None
     word_embeddings_file : string, optional
         Specifies full path to file containing pre-trained word vectors to be used for text generation.
+        This file should be accessible from the client.
         Required if obj_detect_model is not None
         Default : None
     num_captions : int, optional
@@ -556,14 +567,16 @@ def scored_results_to_dict(result_tbl):
 
     return result_values
 
-def get_max_capt_len(captions_file,delimiter='\t'):
+
+def get_max_capt_len(captions_file, delimiter='\t'):
     '''
     Finds maximum length of captions from file containing
 
     Parameters
     ----------
     captions_file : string
-        Specifies physical path to file containing ground truth image captions
+        Specifies physical path to file containing ground truth image captions. This has
+        to be client accesible.
     delimiter : string, optional
         Specifies delimiter between captions and filenames in captions_file
         Default : '\t'
@@ -574,7 +587,7 @@ def get_max_capt_len(captions_file,delimiter='\t'):
 
     '''
     max_cap_len = 0
-    with open(captions_file,'r') as readFile:
+    with open(captions_file, 'r') as readFile:
         for line in readFile:
             captions = line.split(delimiter)[1:]
             if len(captions) < 1:
