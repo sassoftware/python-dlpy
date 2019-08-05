@@ -187,9 +187,6 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
 
     object_table = detection_model.valid_res_tbl
     # combine first n objects into single column
-    #conn.table.partition(object_table, casout=dict(name='_'+object_table.name, replace=True))
-    #first_objects = conn.CASTable('_'+object_table.name)
-
     first_objects = object_table.copy()
 
     first_objects['first_objects'] = first_objects['_Object0_'] + ","
