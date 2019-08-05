@@ -134,9 +134,6 @@ class Speech:
 
         """
         self.acoustic_model = Model(self.conn)
-        if self.acoustic_model is None:
-            raise DLPyError("Failed to load the acoustic model.")
-
         self.acoustic_model.from_sashdat(self.conn, path=acoustic_model_path)
         if self.acoustic_model.model_table is None:
             raise DLPyError("Failed to load the acoustic model.")
