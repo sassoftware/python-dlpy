@@ -32,12 +32,13 @@ import os
 from dlpy.image_captioning import *
 
 
-class TestApplications(unittest.TestCase):
+class TestImageCaptioning(unittest.TestCase):
 
     server_type = None
     s = None
     server_sep = '/'
     data_dir = None
+    data_dir_local = None
 
     @classmethod
     def setUpClass(cls):
@@ -56,6 +57,16 @@ class TestApplications(unittest.TestCase):
             if cls.data_dir.endswith(cls.server_sep):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
+
+        if 'DLPY_DATA_DIR_LOCAL' in os.environ:
+            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if cls.data_dir_local.startswith('/'):
+                sep_ = '/'
+            else:
+                sep_ = '\\'
+            if cls.data_dir_local.endswith(sep_):
+                cls.data_dir_local = cls.data_dir_local[:-1]
+            cls.data_dir_local += sep_
 
     @classmethod
     def tearDownClass(cls):
@@ -114,50 +125,54 @@ class TestApplications(unittest.TestCase):
 
     # works
     def test_captions_table_1(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'image_captions.txt'
-        self.assertTrue(create_captions_table(self.s,captions_file) is not None)
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        self.assertTrue(create_captions_table(self.s, captions_file) is not None)
 
     # captions file doesn't exist
     def test_captions_table_2(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'no_file.txt'
-        self.assertRaises(FileNotFoundError,lambda:create_captions_table(self.s,captions_file))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'no_file.txt'
+        self.assertRaises(FileNotFoundError, lambda:create_captions_table(self.s, captions_file))
 
     # incorrect delimiter
     def test_captions_table_3(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAK is not set in the environment variables")
         delimiter = ','
-        captions_file = self.data_dir + 'image_captions.txt'
-        self.assertRaises(DLPyError,lambda:create_captions_table(self.s,captions_file,delimiter=delimiter) )
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        self.assertRaises(DLPyError, lambda:create_captions_table(self.s, captions_file,delimiter=delimiter))
 
     # works
     def test_object_table_1(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
         img_path = self.data_dir + 'imageCaptioning_images'
-        image_table = ImageTable.load_files(self.s,path=img_path)
+        image_table = ImageTable.load_files(self.s, path=img_path)
         image_table.resize(width=416)
 
-        word_embeddings = self.data_dir + 'word_embeddings.txt'
+        word_embeddings = self.data_dir_local + 'word_embeddings.txt'
         detection_model = Model(self.s)
         detection_model.load(self.data_dir + 'YOLOV2_MULTISIZE.sashdat')
         detection_model.load_weights(self.data_dir + 'YoloV2_Multisize_weights.sashdat')
 
-        self.assertTrue(create_embeddings_from_object_detection(self.s,
-                                                                image_table,
-                                                                detection_model,
-                                                                word_embeddings) is not None)
+        tbl = create_embeddings_from_object_detection(self.s,
+                                                      image_table,
+                                                      detection_model,
+                                                      word_embeddings)
+        self.assertTrue(tbl is not None)
 
     # word embeddings file doesn't exist
     def test_object_table_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         img_path = self.data_dir + 'imageCaptioning_images'
-        image_table = ImageTable.load_files(self.s,path=img_path)
+        image_table = ImageTable.load_files(self.s, path=img_path)
         image_table.resize(width=416)
 
         word_embeddings = self.data_dir + 'no_file.txt'
@@ -165,82 +180,84 @@ class TestApplications(unittest.TestCase):
         detection_model.load(self.data_dir + 'YOLOV2_MULTISIZE.sashdat')
         detection_model.load_weights(self.data_dir + 'YoloV2_Multisize_weights.sashdat')
 
-        self.assertRaises(DLPyError, lambda:
-            create_embeddings_from_object_detection(self.s,
-                                                    image_table,
-                                                    detection_model,
-                                                    word_embeddings))
+        self.assertRaises(DLPyError, lambda:create_embeddings_from_object_detection(self.s,
+                                                                                    image_table,
+                                                                                    detection_model,
+                                                                                    word_embeddings))
 
     def test_object_table_3(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + '\image_captions.txt'
-        image_table = create_captions_table(self.s,captions_file)
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        image_table = create_captions_table(self.s, captions_file)
 
         word_embeddings = self.data_dir + 'word_embeddings.txt'
         detection_model = Model(self.s)
         detection_model.load(self.data_dir + 'YOLOV2_MULTISIZE.sashdat')
         detection_model.load_weights(self.data_dir + 'YoloV2_Multisize_weights.sashdat')
 
-        self.assertRaises(DLPyError, lambda:
-            create_embeddings_from_object_detection(self.s,
-                                                    image_table,
-                                                    detection_model,
-                                                    word_embeddings))
+        self.assertRaises(DLPyError, lambda:create_embeddings_from_object_detection(self.s,
+                                                                                    image_table,
+                                                                                    detection_model,
+                                                                                    word_embeddings))
 
     #works
     def test_reshape_columns_1(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'image_captions.txt'
-        table = create_captions_table(self.s,captions_file)
-        self.assertTrue(reshape_caption_columns(self.s,table) is not None)
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        table = create_captions_table(self.s, captions_file)
+        self.assertTrue(reshape_caption_columns(self.s, table) is not None)
 
     # wrong caption_col_name
     def test_reshape_columns_2(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'image_captions.txt'
-        table = create_captions_table(self.s,captions_file)
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        table = create_captions_table(self.s, captions_file)
 
-        self.assertRaises(DLPyError,lambda:
-                          reshape_caption_columns(self.s,table,caption_col_name='random'))
+        self.assertRaises(DLPyError, lambda:reshape_caption_columns(self.s, table, caption_col_name='random'))
 
     # wrong number of captions
     def test_reshape_columns_3(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'image_captions.txt'
-        table = create_captions_table(self.s,captions_file)
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        table = create_captions_table(self.s, captions_file)
         num_caps = 10
-        self.assertRaises(DLPyError,lambda:
-                            reshape_caption_columns(self.s, table, num_captions=num_caps))
+        self.assertRaises(DLPyError, lambda:reshape_caption_columns(self.s, table, num_captions=num_caps))
 
     # # works w/o object detection
     def test_captioning_table_1(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
         img_path = self.data_dir + 'imageCaptioning_images'
         image_table = ImageTable.load_files(self.s,path=img_path)
         image_table.resize(width=224)
-        captions_file = self.data_dir + 'image_captions.txt'
+        captions_file = self.data_dir_local + 'image_captions.txt'
         features_model = VGG16(self.s,
                                width=224,
                                height=224,
                                pre_trained_weights=True,
                                pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5')
 
-        self.assertTrue(create_captioning_table(self.s,image_table,features_model,captions_file) is not None)
+        self.assertTrue(create_captioning_table(self.s, image_table, features_model, captions_file) is not None)
 
     # # object detection w/o word_embeddings (error)
     def test_captioning_table_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
         img_path = self.data_dir + 'imageCaptioning_images'
-        image_table = ImageTable.load_files(self.s,path=img_path)
+        image_table = ImageTable.load_files(self.s, path=img_path)
         image_table.resize(width=224)
-        captions_file = self.data_dir + 'image_captions.txt'
+        captions_file = self.data_dir_local + 'image_captions.txt'
         features_model = VGG16(self.s,
                                width=224,
                                height=224,
@@ -260,26 +277,29 @@ class TestApplications(unittest.TestCase):
     def test_captioning_table_3(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
 
         img_path = self.data_dir + 'imageCaptioning_images'
         image_table = ImageTable.load_files(self.s,path=img_path)
         image_table.resize(width=224)
-        captions_file = self.data_dir + 'image_captions.txt'
+        captions_file = self.data_dir_local + 'image_captions.txt'
         features_model = VGG16(self.s,
                                width=224,
                                height=224,
                                pre_trained_weights=True,
                                pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5')
+
         detection_model = Model(self.s)
         detection_model.load(self.data_dir + 'YOLOV2_MULTISIZE.sashdat')
         detection_model.load_weights(self.data_dir + 'YoloV2_Multisize_weights.sashdat')
-        word_embeddings = self.data_dir + 'word_embeddings.txt'
+        word_embeddings = self.data_dir_local + 'word_embeddings.txt'
         self.assertTrue(create_captioning_table(self.s,
-                                                  image_table,
-                                                  features_model,
-                                                  captions_file,
-                                                  obj_detect_model=detection_model,
-                                                  word_embeddings_file=word_embeddings) is not None)
+                                                image_table,
+                                                features_model,
+                                                captions_file,
+                                                obj_detect_model=detection_model,
+                                                word_embeddings_file=word_embeddings) is not None)
 
     # works
     def test_ImageCaptioning_1(self):
@@ -333,18 +353,18 @@ class TestApplications(unittest.TestCase):
                                     scored_results_to_dict(result_tbl))
 
     def test_capt_len_1(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'image_captions.txt'
-        self.assertEquals(get_max_capt_len(captions_file,delimiter='\t'),21)
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        self.assertEqual(get_max_capt_len(captions_file, delimiter='\t'),21)
 
     #     wrong delimiter
     def test_capt_len_2(self):
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        captions_file = self.data_dir + 'image_captions.txt'
-        self.assertRaises(DLPyError,lambda:
-                          get_max_capt_len(captions_file,delimiter=','))
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        captions_file = self.data_dir_local + 'image_captions.txt'
+        self.assertRaises(DLPyError, lambda:
+                          get_max_capt_len(captions_file, delimiter=','))
 
     # bad file
     def test_capt_len_3(self):
