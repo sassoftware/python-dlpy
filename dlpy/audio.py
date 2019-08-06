@@ -94,6 +94,9 @@ class AudioTable(CASTable):
                         else:
                             cls.running_caslib = path_split[0]
                             return AudioTable(casout['name'])
+            else:
+                print("WARNING: Specified path could not be reached. Make sure that the path is accessible by"
+                      " the CAS server.")
             return None
         else:
             rt4 = conn.retrieve('audio.loadaudio', _messagelevel='error', casout=casout,
