@@ -110,6 +110,14 @@ class Model(Network):
         """
         Fitting a deep learning model.
 
+        Note that this function surfaces several parameters from other parameters. For example,
+        while learning rate is a parameter of Solver (that is a parameter of Optimizer), it is leveled up
+        so that our users can easily set learning rate without changing the default optimizer and solver.
+        If a non-default solver or optimizer is passed, then these leveled-up
+        parameters will be ignored - even they are set - and the ones coming from
+        the custom solver and custom optimizer  will be used. In addition to learning_rate (lr),
+        max_epochs and log_level are another examples of such parameters.
+
         Parameters
         ----------
 
