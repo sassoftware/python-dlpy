@@ -301,8 +301,7 @@ class ImageTable(CASTable):
             Specifies the number of images to be displayed.
             If nimage is greater than the maximum number of images in the
             table, it will be set to this maximum number.
-            Note: Specifying a large value for nimages can lead to slow
-            performance.
+            Note: Specifying a large value for nimages can lead to slow performance.
         ncol : int, optional
             Specifies the layout of the display, determine the number of
             columns in the plots.
@@ -310,10 +309,8 @@ class ImageTable(CASTable):
             Specifies whether to randomly choose the images for display.
         figsize: int, optional
             Specifies the size of the fig that contains the image.
-        image_column: str, optional
-            Specifies the name of the column that contains the image data. By default it is '_image_',
-            however, it can be overridden if table has other columns holding image data.
         '''
+
         nimages = min(nimages, len(self))
 
         if randomize:

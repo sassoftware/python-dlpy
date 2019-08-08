@@ -16,7 +16,7 @@ v1.1.1 (August 05, 2019)
 - APIs for Image captioning
 - More example notebooks
 - Updated weights (located: http://support.sas.com/documentation/prod-p/vdmml/zip/index.html)
-supporting new version of ONNX
+  supporting new version of ONNX
 - Various bug fixes
 
 v1.1.0 (July 16, 2019)
@@ -50,4 +50,4 @@ v1.0.0 (October 26, 2018)
 - APIs for time series processing and modeling
 - APIs for processing audio files and creating speech recognition models
 - Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, and Yolo
-with enhanced data visualization and metadata handling
+ with enhanced data visualization and metadata handling
