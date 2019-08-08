@@ -162,7 +162,7 @@ class Speech:
                 print(msg)
             raise DLPyError("Failed to import the language model.")
 
-    def transcribe(self, audio_path, gpu=None, max_path_size=100, alpha=1.0, beta=0.0):
+    def transcribe(self, audio_path, max_path_size=100, alpha=1.0, beta=0.0, gpu=None):
         """
         Transcribe the audio file into text.
 
