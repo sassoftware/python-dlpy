@@ -255,6 +255,7 @@ def numeric_parse_text(conn,table,word_embeddings_file,word_delimiter='\t',parse
 
     return objects_numeric
 
+
 def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
     '''
     Reshapes table so there is only one caption per row of the table
