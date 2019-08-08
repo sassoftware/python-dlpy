@@ -802,6 +802,7 @@ def get_anchors(conn, data, coord_type, image_size=None, grid_number=13,
                 print('Error: Only support Yolo and CoCo coordType so far')
                 return
             boxes.append(Box(0, 0, width, height))
+
     centroid_indices = np.random.choice(len(boxes), n_anchors)
     centroids = []
     for centroid_index in centroid_indices:
