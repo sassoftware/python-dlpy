@@ -866,6 +866,76 @@ def onnx_extract_residual(graph, node, layers):
     return Res(name=node.name,
                act='identity',
                src_layers=src)
+               
+def onnx_extract_recurrent(graph, node, layer):
+	'''
+	Construct ONNX layer from recurrent op
+	
+	Parameters
+	----------
+	graph : ONNX GraphProto
+		Specifies a GraphProto
+	node : ONNX NodeProto
+		Specifiesa NodeProto object
+	layers : list of layers
+		Specifies existing layers of the model
+		
+	Returns:
+	-------
+	:class:`Recurrent`
+	'''
+	previous = onnx_find_previous_compute_layer(graph, node)
+	
+	n=None
+	act='identity' # all other layer types set to this activation type ?
+	rnn_type=None
+	output_type=None
+	reversed=None
+	src=None
+	
+	if not previous:
+		src_names = [find_input_layer_name(graph)]
+	else:
+		src_names = [p.name for p in previous]
+	
+	src = [get_dlpy_layer(layers, i) fir i in src_names]
+
+    # determine dimensions of the multiply 
+    a_shape = None
+    b_shape = None
+    # check initializer for weight tensors
+    for init in graph.initializer:
+        if init.name == node.input[0]:
+            a_shape = numpy_helper.to_array(init).shape
+        if init.name == node.input[1]:
+            b_shape = numpy_helper.to_array(init).shape
+	# check inferred shapes in graph
+    for v in graph.value_info:
+        if v.name == node.input[0]:
+            a_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
+                       v.type.tensor_type.shape.dim[1].dim_value)
+        if v.name == node.input[1]:
+            b_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
+                       v.type.tensor_type.shape.dim[1].dim_value)
+
+    if a_shape is None or b_shape is None:
+        raise OnnxParseError('Unable to determine number of neurons '
+                             'in FC layer.')
+    
+    # set number of neurons according to shape
+    if a_shape[0] == 1:
+        neurons = b_shape[1]
+    else:
+        neurons = a_shape[0] 
+      
+	return Recurrent(name=node.name,
+					n=neurons,
+					act=act,
+					rnn_type=rnn_type,
+					output_type=out_type,
+					reversed=reversed,
+					src_layers=src,
+					)
 
 
 def onnx_get_node(graph, name):
