@@ -66,6 +66,25 @@ def check_sampwidth(params, sampwidth):
     return params.sampwidth == sampwidth
 
 
+def check_stereo(params):
+    """
+    Check if the input audio has 2 channels (stereo).
+
+    Parameters
+    ----------
+    params : class : 'wave._wave_params'
+        Specifies the original parameters of the audio.
+
+    Returns
+    -------
+    boolean
+
+    """
+    if params.nchannels not in {1, 2}:
+        raise DLPyError("invalid wave input! Only mono and stereo are supported.")
+    return params.nchannels == 2
+
+
 def convert_framerate(fragment, width, nchannels, framerate_in, framerate_out):
     """
     Convert framerate (sampling rate) of the input fragment.
@@ -126,6 +145,26 @@ def convert_sampwidth(fragment, sampwidth_in, sampwidth_out):
     new_fragment = audioop.lin2lin(new_fragment, sampwidth_in, sampwidth_out)
     if sampwidth_out == 1:
         new_fragment = audioop.bias(new_fragment, 1, 128)
+    return new_fragment
+
+
+def convert_stereo_to_mono(fragment, width):
+    """
+    Convert stereo fragment to mono.
+
+    Parameters
+    ----------
+    fragment : bytes object
+        Specifies the original fragment.
+    width : int
+        Specifies the fragment's original sampwidth.
+
+    Returns
+    -------
+    bytes
+
+    """
+    new_fragment = audioop.tomono(fragment, width, 0.5, 0.5)
     return new_fragment
 
 
@@ -267,6 +306,7 @@ def segment_audio(path, local_path, data_path_after_caslib, segment_len, framera
 
     is_framerate_desired = check_framerate(wave_params, framerate)
     is_sampwidth_desired = check_sampwidth(wave_params, sampwidth)
+    is_stereo = check_stereo(wave_params)
 
     # generate the listing file name
     audio_name = os.path.basename(path)
@@ -297,13 +337,16 @@ def segment_audio(path, local_path, data_path_after_caslib, segment_len, framera
             with wave.open(segment_path_local, "wb") as wave_writer:
                 segment_path_after_caslib_list.append(segment_path_after_caslib)
                 segment_path_local_list.append(segment_path_local)
-                wave_writer.setnchannels(wave_params.nchannels)
+                wave_writer.setnchannels(1)
                 wave_writer.setframerate(framerate)
                 wave_writer.setsampwidth(sampwidth)
                 wave_writer.setcomptype(wave_params.comptype, wave_params.compname)
                 fragment = wave_reader.readframes(segment_nframes_list[i])
+                if is_stereo:
+                    fragment = convert_stereo_to_mono(fragment, wave_params.sampwidth)
+
                 if not is_framerate_desired:
-                    fragment = convert_framerate(fragment, wave_params.sampwidth, wave_params.nchannels,
+                    fragment = convert_framerate(fragment, wave_params.sampwidth, 1,
                                                  wave_params.framerate, framerate)
                 if not is_sampwidth_desired:
                     fragment = convert_sampwidth(fragment, wave_params.sampwidth, sampwidth)
@@ -332,9 +375,13 @@ def clean_audio(listing_path_local, segment_path_local_list):
         Specifies paths of the temporary audio files to remove.
 
     """
+    is_removed = False
     if os.path.exists(listing_path_local):
         os.remove(listing_path_local)
+        is_removed = True
     for segment_path_local in segment_path_local_list:
         if os.path.exists(segment_path_local):
             os.remove(segment_path_local)
-    print("Note: all temporary files are removed.")
+            is_removed = True
+    if is_removed:
+        print("Note: all temporary files are removed.")
