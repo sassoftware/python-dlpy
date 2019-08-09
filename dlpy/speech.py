@@ -211,7 +211,15 @@ class Speech:
                              for segment_path_after_caslib in segment_path_after_caslib_list]
 
         # step 2: load audio
-        audio_table = AudioTable.load_audio_files(self.conn, path=listing_path_after_caslib, caslib=self.data_caslib)
+        try:
+            audio_table = AudioTable.load_audio_files(self.conn,
+                                                      path=listing_path_after_caslib, caslib=self.data_caslib)
+        except DLPyError as err:
+            if "cannot load audio files, something is wrong!" in str(err):
+                clean_audio(listing_path_local, segment_path_local_list)
+                raise DLPyError("Error: Cannot load the audio files. "
+                                "Please verify that \"data_path\" and \"local_path\" are pointing to the same position.")
+            raise err
 
         # step 3: extract features
         feature_table = AudioTable.extract_audio_features(self.conn, table=audio_table,

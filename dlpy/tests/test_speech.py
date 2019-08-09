@@ -86,6 +86,22 @@ class TestSpeechUtils(unittest.TestCase):
         self.assertTrue(check_sampwidth(wave_params, 2))
         wave_reader.close()
 
+    def test_check_stereo(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
+
+        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "recording_1.wav"))
+        self.assertFalse(check_stereo(wave_params))
+        wave_reader.close()
+        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"))
+        self.assertTrue(check_stereo(wave_params))
+        wave_reader.close()
+
     def test_convert_framerate_1(self):
         try:
             import wave
@@ -189,6 +205,27 @@ class TestSpeechUtils(unittest.TestCase):
         fragment = wave_reader.readframes(1000)
         # convert from 16 bit to 8 bit
         new_fragment = convert_sampwidth(fragment, wave_params.sampwidth, wave_params.sampwidth // 2)
+        self.assertEqual(len(fragment), len(new_fragment) * 2)
+        wave_reader.close()
+
+    def test_convert_stereo_to_mono(self):
+        try:
+            import wave
+        except ImportError:
+            unittest.TestCase.skipTest(self, "wave is not found in the libraries.")
+        try:
+            import audioop
+        except ImportError:
+            unittest.TestCase.skipTest(self, "audioop is not found in the libraries.")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
+
+        wave_reader, wave_params = read_audio(os.path.join(self.data_dir_local, "sample_16bit_16khz.wav"))
+        self.assertTrue(check_stereo(wave_params))
+
+        fragment = wave_reader.readframes(1000)
+        new_fragment = convert_stereo_to_mono(fragment, wave_params.sampwidth)
         self.assertEqual(len(fragment), len(new_fragment) * 2)
         wave_reader.close()
 
@@ -444,8 +481,11 @@ class TestSpeechToText(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        result = self.speech.transcribe(os.path.join(self.local_dir, "sample_16bit_16khz.wav"))
-        self.assertIsInstance(result, str)
+        try:
+            result = self.speech.transcribe(os.path.join(self.local_dir, "sample_16bit_16khz.wav"))
+            self.assertIsInstance(result, str)
+        except DLPyError as err:
+            self.assertTrue("Cannot load the audio files." in str(err))
 
     def test_transcribe_2(self):
         try:
@@ -462,8 +502,11 @@ class TestSpeechToText(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        result = self.speech.transcribe(os.path.join(self.local_dir, "sample_8bit_16khz.wav"))
-        self.assertIsInstance(result, str)
+        try:
+            result = self.speech.transcribe(os.path.join(self.local_dir, "sample_8bit_16khz.wav"))
+            self.assertIsInstance(result, str)
+        except DLPyError as err:
+            self.assertTrue("Cannot load the audio files." in str(err))
 
     def test_transcribe_3(self):
         try:
@@ -480,8 +523,11 @@ class TestSpeechToText(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        result = self.speech.transcribe(os.path.join(self.local_dir, "sample_16bit_44khz.wav"))
-        self.assertIsInstance(result, str)
+        try:
+            result = self.speech.transcribe(os.path.join(self.local_dir, "sample_16bit_44khz.wav"))
+            self.assertIsInstance(result, str)
+        except DLPyError as err:
+            self.assertTrue("Cannot load the audio files." in str(err))
 
     @classmethod
     def tearDownClass(cls):
