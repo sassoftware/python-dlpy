@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.1.2 - 2019-08-13
+- Updating and expanding the documentation
+- Various bug fixes
+
 ## 1.1.1 - 2019-08-05
 - New speech-to-text APIs that enables us doing language model post processing
 - APIs for Image captioning

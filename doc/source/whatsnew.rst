@@ -9,6 +9,10 @@ What's New
 
 This document outlines features and improvements from each release.
 
+v1.1.2 (August 13, 2019)
+========================
+- Updating and expanding the documentation
+- Various bug fixes
 
 v1.1.1 (August 05, 2019)
 ========================
