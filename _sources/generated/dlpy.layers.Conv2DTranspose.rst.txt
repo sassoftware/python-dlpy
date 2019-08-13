@@ -1,0 +1,45 @@
+dlpy.layers.Conv2DTranspose
+===========================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Conv2DTranspose
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Conv2DTranspose.__init__
+      ~Conv2DTranspose.calculate_output_padding
+      ~Conv2DTranspose.count_instances
+      ~Conv2DTranspose.format_name
+      ~Conv2DTranspose.get_number_of_instances
+      ~Conv2DTranspose.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Conv2DTranspose.can_be_last_layer
+      ~Conv2DTranspose.kernel_size
+      ~Conv2DTranspose.layer_id
+      ~Conv2DTranspose.num_bias
+      ~Conv2DTranspose.num_weights
+      ~Conv2DTranspose.number_of_instances
+      ~Conv2DTranspose.output_size
+      ~Conv2DTranspose.rnn_summary
+      ~Conv2DTranspose.shared_weights
+      ~Conv2DTranspose.summary
+      ~Conv2DTranspose.type
+      ~Conv2DTranspose.type_desc
+      ~Conv2DTranspose.type_label
+   
+   

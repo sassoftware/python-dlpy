@@ -1,0 +1,6 @@
+dlpy.speech\_utils.convert\_stereo\_to\_mono
+============================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: convert_stereo_to_mono

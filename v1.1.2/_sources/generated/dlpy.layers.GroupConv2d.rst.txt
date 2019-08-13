@@ -1,0 +1,44 @@
+dlpy.layers.GroupConv2d
+=======================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: GroupConv2d
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GroupConv2d.__init__
+      ~GroupConv2d.count_instances
+      ~GroupConv2d.format_name
+      ~GroupConv2d.get_number_of_instances
+      ~GroupConv2d.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GroupConv2d.can_be_last_layer
+      ~GroupConv2d.kernel_size
+      ~GroupConv2d.layer_id
+      ~GroupConv2d.num_bias
+      ~GroupConv2d.num_weights
+      ~GroupConv2d.number_of_instances
+      ~GroupConv2d.output_size
+      ~GroupConv2d.rnn_summary
+      ~GroupConv2d.shared_weights
+      ~GroupConv2d.summary
+      ~GroupConv2d.type
+      ~GroupConv2d.type_desc
+      ~GroupConv2d.type_label
+   
+   

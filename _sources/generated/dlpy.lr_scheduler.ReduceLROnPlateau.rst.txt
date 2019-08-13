@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.ReduceLROnPlateau
+====================================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: ReduceLROnPlateau
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ReduceLROnPlateau.__init__
+      ~ReduceLROnPlateau.clear
+      ~ReduceLROnPlateau.get
+      ~ReduceLROnPlateau.items
+      ~ReduceLROnPlateau.keys
+      ~ReduceLROnPlateau.pop
+      ~ReduceLROnPlateau.popitem
+      ~ReduceLROnPlateau.setdefault
+      ~ReduceLROnPlateau.update
+      ~ReduceLROnPlateau.values
+   
+   
+
+   
+   
+   

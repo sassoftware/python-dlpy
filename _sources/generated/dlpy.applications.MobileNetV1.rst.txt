@@ -1,0 +1,6 @@
+dlpy.applications.MobileNetV1
+=============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: MobileNetV1

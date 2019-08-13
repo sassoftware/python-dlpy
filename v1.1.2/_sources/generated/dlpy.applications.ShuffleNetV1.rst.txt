@@ -1,0 +1,6 @@
+dlpy.applications.ShuffleNetV1
+==============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: ShuffleNetV1

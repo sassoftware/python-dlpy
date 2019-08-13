@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.PolynomialLR
+===============================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: PolynomialLR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~PolynomialLR.__init__
+      ~PolynomialLR.clear
+      ~PolynomialLR.get
+      ~PolynomialLR.items
+      ~PolynomialLR.keys
+      ~PolynomialLR.pop
+      ~PolynomialLR.popitem
+      ~PolynomialLR.setdefault
+      ~PolynomialLR.update
+      ~PolynomialLR.values
+   
+   
+
+   
+   
+   

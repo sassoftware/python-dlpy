@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.FixedLR
+==========================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: FixedLR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FixedLR.__init__
+      ~FixedLR.clear
+      ~FixedLR.get
+      ~FixedLR.items
+      ~FixedLR.keys
+      ~FixedLR.pop
+      ~FixedLR.popitem
+      ~FixedLR.setdefault
+      ~FixedLR.update
+      ~FixedLR.values
+   
+   
+
+   
+   
+   

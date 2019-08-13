@@ -1,0 +1,44 @@
+dlpy.layers.ROIPooling
+======================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: ROIPooling
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ROIPooling.__init__
+      ~ROIPooling.count_instances
+      ~ROIPooling.format_name
+      ~ROIPooling.get_number_of_instances
+      ~ROIPooling.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ROIPooling.can_be_last_layer
+      ~ROIPooling.kernel_size
+      ~ROIPooling.layer_id
+      ~ROIPooling.num_bias
+      ~ROIPooling.num_weights
+      ~ROIPooling.number_of_instances
+      ~ROIPooling.output_size
+      ~ROIPooling.rnn_summary
+      ~ROIPooling.shared_weights
+      ~ROIPooling.summary
+      ~ROIPooling.type
+      ~ROIPooling.type_desc
+      ~ROIPooling.type_label
+   
+   

@@ -1,0 +1,6 @@
+dlpy.speech\_utils.segment\_audio
+=================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: segment_audio

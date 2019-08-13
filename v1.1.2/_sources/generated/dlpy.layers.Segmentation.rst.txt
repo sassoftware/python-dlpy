@@ -1,0 +1,44 @@
+dlpy.layers.Segmentation
+========================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Segmentation
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Segmentation.__init__
+      ~Segmentation.count_instances
+      ~Segmentation.format_name
+      ~Segmentation.get_number_of_instances
+      ~Segmentation.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Segmentation.can_be_last_layer
+      ~Segmentation.kernel_size
+      ~Segmentation.layer_id
+      ~Segmentation.num_bias
+      ~Segmentation.num_weights
+      ~Segmentation.number_of_instances
+      ~Segmentation.output_size
+      ~Segmentation.rnn_summary
+      ~Segmentation.shared_weights
+      ~Segmentation.summary
+      ~Segmentation.type
+      ~Segmentation.type_desc
+      ~Segmentation.type_label
+   
+   

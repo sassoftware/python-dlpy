@@ -1,0 +1,6 @@
+dlpy.speech\_utils.convert\_framerate
+=====================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: convert_framerate

@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.CyclicLR
+===========================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: CyclicLR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CyclicLR.__init__
+      ~CyclicLR.clear
+      ~CyclicLR.get
+      ~CyclicLR.items
+      ~CyclicLR.keys
+      ~CyclicLR.pop
+      ~CyclicLR.popitem
+      ~CyclicLR.setdefault
+      ~CyclicLR.update
+      ~CyclicLR.values
+   
+   
+
+   
+   
+   

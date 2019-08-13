@@ -1,0 +1,6 @@
+dlpy.image\_captioning.ImageCaptioning
+======================================
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autofunction:: ImageCaptioning

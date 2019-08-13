@@ -1,0 +1,6 @@
+dlpy.speech.Speech.load\_acoustic\_model
+========================================
+
+.. currentmodule:: dlpy.speech
+
+.. automethod:: Speech.load_acoustic_model

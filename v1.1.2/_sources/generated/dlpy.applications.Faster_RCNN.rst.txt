@@ -1,0 +1,6 @@
+dlpy.applications.Faster\_RCNN
+==============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: Faster_RCNN

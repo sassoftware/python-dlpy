@@ -1,0 +1,6 @@
+dlpy.speech\_utils.clean\_audio
+===============================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: clean_audio

@@ -1,0 +1,44 @@
+dlpy.layers.EmbeddingLoss
+=========================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: EmbeddingLoss
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EmbeddingLoss.__init__
+      ~EmbeddingLoss.count_instances
+      ~EmbeddingLoss.format_name
+      ~EmbeddingLoss.get_number_of_instances
+      ~EmbeddingLoss.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~EmbeddingLoss.can_be_last_layer
+      ~EmbeddingLoss.kernel_size
+      ~EmbeddingLoss.layer_id
+      ~EmbeddingLoss.num_bias
+      ~EmbeddingLoss.num_weights
+      ~EmbeddingLoss.number_of_instances
+      ~EmbeddingLoss.output_size
+      ~EmbeddingLoss.rnn_summary
+      ~EmbeddingLoss.shared_weights
+      ~EmbeddingLoss.summary
+      ~EmbeddingLoss.type
+      ~EmbeddingLoss.type_desc
+      ~EmbeddingLoss.type_label
+   
+   

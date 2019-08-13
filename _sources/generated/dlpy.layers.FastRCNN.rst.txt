@@ -1,0 +1,44 @@
+dlpy.layers.FastRCNN
+====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: FastRCNN
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FastRCNN.__init__
+      ~FastRCNN.count_instances
+      ~FastRCNN.format_name
+      ~FastRCNN.get_number_of_instances
+      ~FastRCNN.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FastRCNN.can_be_last_layer
+      ~FastRCNN.kernel_size
+      ~FastRCNN.layer_id
+      ~FastRCNN.num_bias
+      ~FastRCNN.num_weights
+      ~FastRCNN.number_of_instances
+      ~FastRCNN.output_size
+      ~FastRCNN.rnn_summary
+      ~FastRCNN.shared_weights
+      ~FastRCNN.summary
+      ~FastRCNN.type
+      ~FastRCNN.type_desc
+      ~FastRCNN.type_label
+   
+   

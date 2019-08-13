@@ -1,0 +1,44 @@
+dlpy.layers.GlobalAveragePooling2D
+==================================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: GlobalAveragePooling2D
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~GlobalAveragePooling2D.__init__
+      ~GlobalAveragePooling2D.count_instances
+      ~GlobalAveragePooling2D.format_name
+      ~GlobalAveragePooling2D.get_number_of_instances
+      ~GlobalAveragePooling2D.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~GlobalAveragePooling2D.can_be_last_layer
+      ~GlobalAveragePooling2D.kernel_size
+      ~GlobalAveragePooling2D.layer_id
+      ~GlobalAveragePooling2D.num_bias
+      ~GlobalAveragePooling2D.num_weights
+      ~GlobalAveragePooling2D.number_of_instances
+      ~GlobalAveragePooling2D.output_size
+      ~GlobalAveragePooling2D.rnn_summary
+      ~GlobalAveragePooling2D.shared_weights
+      ~GlobalAveragePooling2D.summary
+      ~GlobalAveragePooling2D.type
+      ~GlobalAveragePooling2D.type_desc
+      ~GlobalAveragePooling2D.type_label
+   
+   

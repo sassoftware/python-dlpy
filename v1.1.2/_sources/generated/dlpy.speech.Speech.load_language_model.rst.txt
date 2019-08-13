@@ -1,0 +1,6 @@
+dlpy.speech.Speech.load\_language\_model
+========================================
+
+.. currentmodule:: dlpy.speech
+
+.. automethod:: Speech.load_language_model

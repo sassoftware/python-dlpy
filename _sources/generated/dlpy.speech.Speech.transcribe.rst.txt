@@ -1,0 +1,6 @@
+dlpy.speech.Speech.transcribe
+=============================
+
+.. currentmodule:: dlpy.speech
+
+.. automethod:: Speech.transcribe

@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.StepLR
+=========================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: StepLR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~StepLR.__init__
+      ~StepLR.clear
+      ~StepLR.get
+      ~StepLR.items
+      ~StepLR.keys
+      ~StepLR.pop
+      ~StepLR.popitem
+      ~StepLR.setdefault
+      ~StepLR.update
+      ~StepLR.values
+   
+   
+
+   
+   
+   

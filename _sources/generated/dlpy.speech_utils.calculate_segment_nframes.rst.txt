@@ -1,0 +1,6 @@
+dlpy.speech\_utils.calculate\_segment\_nframes
+==============================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: calculate_segment_nframes
