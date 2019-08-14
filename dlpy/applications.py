@@ -4844,7 +4844,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     backbone: string, optional
         Specifies the architecture to be used as the feature extractor.
         Valid values: vgg16
-        Default: vgg16
+        Default: vgg16, resnet50, resnet18, resnet34, mobilenetv1, mobilenetv2
 
     Returns
     -------
