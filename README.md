@@ -44,6 +44,35 @@ FasterRCNN, U-Net, MobileNet, and ShuffleNet
 - A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
 - It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
 - Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
+
+#### SAS Viya and VDMML versions vs. DLPY versions
+DLPy versions are aligned with the SAS Viya and VDMML versions. 
+Below is the versions matrix.
+
+<table>
+<thead>
+<tr>
+<th align='left'>DLPy</th>
+<th align='left'>SAS Viya</th>
+<th align='left'>VDMML</th>
+</thead>
+<tbody>
+<tr>
+<td align='left'>1.1</td>
+<td align='left'>3.4</td>
+<td align='left'>8.4</td>
+</tr>
+<tr>
+<td align='left'>1.0</td>
+<td align='left'>3.4</td>
+<td align='left'>8.3</td>
+</tr>
+</tbody>
+</table>
+
+The table above can be read as follows: DLPy versions between 1.0 (inclusive)
+to 1.1 (exclusive) are designed to work with the SAS Viya 3.4 and VDMML 8.3.
+
 #### External Libraries ####
 The following versions of external libraries are supported:
 - ONNX: versions >= 1.5.0

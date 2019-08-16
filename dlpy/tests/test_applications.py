@@ -583,6 +583,31 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(model.layers[20].config == self.sample_syntax['faster_rcnn1'])
         model.print_summary()
 
+    def test_fast_rcnn_3(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50')
+        model.print_summary()
+
+    def test_fast_rcnn_4(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50', number_of_neurons_in_fc=1024)
+        model.print_summary()
+
+    def test_fast_rcnn_5(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50', number_of_neurons_in_fc=[1024, 1024])
+        model.print_summary()
+
+    def test_fast_rcnn_6(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50', number_of_neurons_in_fc=[1024])
+        model.print_summary()
+
+    def test_fast_rcnn_7(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet18', number_of_neurons_in_fc=[1024, 1024])
+        model.print_summary()
+
     def test_mobilenetv1(self):
         from dlpy.applications import MobileNetV1
         model = MobileNetV1(self.s, n_classes = 2, n_channels = 3, depth_multiplier = 10, alpha = 2)

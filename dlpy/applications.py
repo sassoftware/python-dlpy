@@ -4755,7 +4755,8 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                 n_classes=20, anchor_num_to_sample=256, anchor_ratio=[0.5, 1, 2], anchor_scale=[8, 16, 32],
                 base_anchor_size=16, coord_type='coco', max_label_per_image=200, proposed_roi_num_train=2000,
                 proposed_roi_num_score=300, roi_train_sample_num=128, roi_pooling_height=7, roi_pooling_width=7,
-                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50, max_bounding_box_factor = 20.0):
+                nms_iou_threshold=0.3, detection_threshold=0.5, max_object_num=50, number_of_neurons_in_fc=4096,
+                backbone='vgg16'):
     '''
     Generates a deep learning model with the faster RCNN architecture.
 
@@ -4835,18 +4836,15 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     max_object_num: int, optional
         Specifies the maximum number of object to detect
         Default: 50
-    max_bounding_box_factor : double, optional
-        max_bounding_box_factor : double, optional
-        The proposed region bounding box width and height are calculated using the feature map output
-        values deltaHeight and deltaWidth. The bounding box width is calculated as exp(deltaWidth)*anchorBoxWidth.
-        The bounding box height is calculated as exp(deltaHeight)*anchorBoxHeight.
-        The maxBoundingBoxFactor parameter sets the upper bound, and it truncates the deltaHeight and deltaWidth values
-        for each region bounding box calculation.
-        The maxBoundingBoxFactor value should be large enough to allow sufficient correction to
-        the anchor box size, yet small enough to prevent a calculation floating-point exception.
-        A typical value to use for the maxBoundingBoxFactor property is 20.
-        Default: 20.0
-        Default: 20.0
+    number_of_neurons_in_fc: int, or list of int, optional
+        Specifies the number of neurons in the last two fully connected layers. If one int is set, then
+        both of the layers will have the same values. If a list is set, then the layers get different
+        number of neurons.
+        Default: 4096
+    backbone: string, optional
+        Specifies the architecture to be used as the feature extractor.
+        Valid values: vgg16
+        Default: vgg16
 
     Returns
     -------
@@ -4865,42 +4863,89 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     rpn_parameters = _get_layer_options(rpn_layer_options, parameters)
     fast_rcnn_parameters = _get_layer_options(fast_rcnn_options, parameters)
     inp = Input(**input_parameters, name='data')
-    # backbone is VGG16 model
-    conv1_1 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_1')(inp)
-    conv1_2 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_2')(conv1_1)
-    pool1 = Pooling(width=2, height=2, stride=2, pool='max', name='pool1')(conv1_2)
 
-    conv2_1 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_1')(pool1)
-    conv2_2 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_2')(conv2_1)
-    pool2 = Pooling(width=2, height=2, stride=2, pool='max')(conv2_2)
+    if backbone.lower() == 'vgg16':
+        # backbone is VGG16 model
+        conv1_1 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_1')(inp)
+        conv1_2 = Conv2d(n_filters=64, width=3, height=3, stride=1, name='conv1_2')(conv1_1)
+        pool1 = Pooling(width=2, height=2, stride=2, pool='max', name='pool1')(conv1_2)
 
-    conv3_1 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_1')(pool2)
-    conv3_2 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_2')(conv3_1)
-    conv3_3 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_3')(conv3_2)
-    pool3 = Pooling(width=2, height=2, stride=2, pool='max')(conv3_3)
+        conv2_1 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_1')(pool1)
+        conv2_2 = Conv2d(n_filters=128, width=3, height=3, stride=1, name='conv2_2')(conv2_1)
+        pool2 = Pooling(width=2, height=2, stride=2, pool='max')(conv2_2)
 
-    conv4_1 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_1')(pool3)
-    conv4_2 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_2')(conv4_1)
-    conv4_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv4_3')(conv4_2)
-    pool4 = Pooling(width=2, height=2, stride=2, pool='max')(conv4_3)
+        conv3_1 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_1')(pool2)
+        conv3_2 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_2')(conv3_1)
+        conv3_3 = Conv2d(n_filters=256, width=3, height=3, stride=1, name='conv3_3')(conv3_2)
+        pool3 = Pooling(width=2, height=2, stride=2, pool='max')(conv3_3)
 
-    conv5_1 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_1')(pool4)
-    conv5_2 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_2')(conv5_1)
-    # feature of Conv5_3 is used to generate region proposals
-    conv5_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
-    # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
-    rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(conv5_3)
-    rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors),
-                       name='rpn_score')(rpn_conv)
-    # propose anchors, NMS, select anchors to train RPN, produce ROIs
-    rp1 = RegionProposal(**rpn_parameters, name = 'rois')(rpn_score)
-    # given ROIs, crop on conv5_3 and resize the feature to the same size
-    roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                          spatial_scale=conv5_3.shape[0]/width,
-                          name = 'roi_pooling')([conv5_3, rp1])
+        conv4_1 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_1')(pool3)
+        conv4_2 = Conv2d(n_filters=512, width=3, height=3, stride = 1, name = 'conv4_2')(conv4_1)
+        conv4_3 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv4_3')(conv4_2)
+        pool4 = Pooling(width=2, height=2, stride=2, pool='max')(conv4_3)
+
+        conv5_1 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_1')(pool4)
+        conv5_2 = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_2')(conv5_1)
+        # feature of Conv5_3 is used to generate region proposals
+        last_layer_in_backbone = Conv2d(n_filters=512, width=3, height=3, stride=1, name='conv5_3')(conv5_2)
+        # two convolutions build on top of conv5_3 and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+
+        # given ROIs, crop on conv5_3 and resize the feature to the same size
+        roipool1 = ROIPooling(output_height=roi_pooling_height,
+                              output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone.shape[0]/width,
+                              name='roi_pooling')([last_layer_in_backbone, rp1])
+
+    elif backbone.lower() == 'resnet50':
+        backbone = ResNet50_SAS(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
+
+    elif backbone.lower() == 'resnet18':
+        backbone = ResNet18_SAS(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
+    else:
+        raise DLPyError('We are not supporting this backbone yet.')
+
     # fully connect layer to extract the feature of ROIs
-    fc6 = Dense(n=4096, act='relu', name='fc6')(roipool1)
-    fc7 = Dense(n=4096, act='relu', name='fc7')(fc6)
+    if number_of_neurons_in_fc is None:
+        fc6 = Dense(n=4096, act='relu', name='fc6')(roipool1)
+        fc7 = Dense(n=4096, act='relu', name='fc7')(fc6)
+    else:
+        if isinstance(number_of_neurons_in_fc, list):
+            if len(number_of_neurons_in_fc) > 1:
+                fc6 = Dense(n=number_of_neurons_in_fc[0], act='relu', name='fc6')(roipool1)
+                fc7 = Dense(n=number_of_neurons_in_fc[1], act='relu', name='fc7')(fc6)
+            else:
+                fc6 = Dense(n=number_of_neurons_in_fc[0], act='relu', name='fc6')(roipool1)
+                fc7 = Dense(n=number_of_neurons_in_fc[0], act='relu', name='fc7')(fc6)
+        else:
+            fc6 = Dense(n=number_of_neurons_in_fc, act='relu', name='fc6')(roipool1)
+            fc7 = Dense(n=number_of_neurons_in_fc, act='relu', name='fc7')(fc6)
     # classification tensor
     cls1 = Dense(n=n_classes+1, act='identity', name='cls_score')(fc7)
     # regression tensor(second stage bounding box regression)
