@@ -208,7 +208,7 @@ class Speech:
 
         # step 1: preparation and segmentation
         listing_path_after_caslib, listing_path_local, segment_path_after_caslib_list, segment_path_local_list = \
-            segment_audio(audio_path, self.local_path, self.data_path_after_caslib, 30, 16000, 2)
+            segment_audio(audio_path, self.local_path, self.data_path_after_caslib, 10, 16000, 2)
         segment_path_list = [self.data_caslib_path + segment_path_after_caslib
                              for segment_path_after_caslib in segment_path_after_caslib_list]
 
@@ -256,7 +256,7 @@ class Speech:
         result_list = [result_dict[segment_path] for segment_path in segment_path_list]
         result_list = [result.strip() for result in result_list]
         result_list = [result for result in result_list if len(result) > 0]
-        result = "\n\n".join(result_list)
+        result = " ".join(result_list)
 
         # step 7: cleaning
         clean_audio(listing_path_local, segment_path_local_list)
