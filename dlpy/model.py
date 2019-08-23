@@ -2720,3 +2720,81 @@ class DataSpec(DLPyDict):
     def __init__(self, type_, layer, data, nominals=None, numeric_nominal_parms=None):
         DLPyDict.__init__(self, type=type_, layer=layer, data=data, nominals=nominals,
                           numeric_nominal_parms=numeric_nominal_parms)
+class TensorBoard():
+    '''
+    TensorBoard class provides functionality for viewing scalar metrics in TensorBoard
+
+    Parameters
+    ----------
+    model : dlpy.Model
+        Specifies the desired model object to monitor.
+    log_dir : string
+        Specifies the directory to write logs to.
+    use_valid : bool
+        Specifies whether to record validation statistics.
+        If set to True then user must pass valid_table to Model.fit().
+        Default: False
+
+    Returns
+    -------
+    :class:`TensorBoard`
+
+    '''
+    def __init__(self, model, log_dir, use_valid=False):
+        
+
+    def build_summary_writer(self):
+        '''
+        Creates a tf.summary.FileWriter object for logging scalar events 
+        to the appropriate directory. Will return a dictionary of writers
+        with elements for each scalar to be monitored.
+
+        Returns
+        -------
+        dictionary
+            dictionary with keys for each scalar and values a list of 
+            FileWriters for train and valid partitions.
+        '''
+
+    def log_scalar(self, file_writer, scalar_name, scalar_value, scalar_global_step):
+        '''
+        Writes a scalar summary value as a tfevents file.
+
+        Parameters
+        ----------
+        file_writer : tf.summary.FileWriter
+            The FileWriter object for a particular scalar (e.g. the FileWriter for learning rate).
+        scalar_name : string
+            The scalar that is being recorded (e.g. learning rate).
+        scalar_value : str
+            A substring of the CASResponse message that contains the scalar value to log
+            (e.g. "1.0" would be the value representing loss).
+        scalar_global_step : str
+            A substring of the CASResponse message that contains the step (iteration) value of the scalar so far
+            (e.g. "10" would be the 10th iteration of a certain scalar, by default using the epoch count).
+        '''
+        
+
+    def tensorboard_response_cb(self, response, connection, userdata):
+        '''
+        Callback function to handle the CASResponse message while model training is run. 
+        This function is called after each iteration of Model.fit() in order to capture 
+        the scalar training metrics that are being monitored. This function calls log_scalar() 
+        to write the needed tfevents files for tensorboard
+
+        Parameters
+        ----------
+        response : swat.cas.response.CASResponse
+            The CASResponse from a CAS action. 
+        connection : swat.cas.connection.CAS
+            The CAS connection object
+        userdata : swat.cas.results.CASResults() or arbitrary user data structure
+            Keeps state information between calls. The returned value of the function
+            will get passed in as the userdata argument on the next call.
+
+        Returns
+        -------
+        swat.cas.results.CASResults() or arbitrary user data structure
+            Each time function is called it returns whatever is stored in userdata
+            and is passed into subsequent function calls as the userdata parameter.
+        '''
