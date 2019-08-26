@@ -27,7 +27,7 @@ import os
 import swat
 import swat.utils.testing as tm
 from swat.cas.table import CASTable
-from dlpy.model import Model, Optimizer, AdamSolver, Sequence
+from dlpy.model import Model, Optimizer, AdamSolver, Sequence, TensorBoard
 from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
@@ -1295,6 +1295,10 @@ class TestModel(unittest.TestCase):
         model5.load(path = self.data_dir + 'vgg16.sashdat')
 
     def test_tensorboard_init_log_dir(self):
+        try:
+            import tensorflow
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow not found in the libraries")
 
         model1 = Sequential(self.s, model_table='Simple_CNN1')
         model1.add(InputLayer(3, 224, 224))
@@ -1315,7 +1319,7 @@ class TestModel(unittest.TestCase):
                                path=path)
 
         # Test log_dir DNE
-        self.assertRaises(OSError, TensorBoard(model1, self.data_dir + '_TB'))
+        self.assertRaises(OSError, lambda:TensorBoard(model1, self.data_dir + '_TB'))
 
         # Test existing log_dir
         os.mkdir(self.data_dir + '_TB')
