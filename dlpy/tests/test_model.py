@@ -23,6 +23,7 @@
 #       the CASPROTOCOL environment variable.
 
 import os
+import shutil
 #import onnx
 import swat
 import swat.utils.testing as tm
@@ -52,7 +53,7 @@ class TestModel(unittest.TestCase):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
-
+                
         cls.s = swat.CAS()
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
@@ -1296,7 +1297,7 @@ class TestModel(unittest.TestCase):
 
     def test_tensorboard_init_log_dir(self):
         try:
-            import tensorflow
+            import tensorflow as tf
         except:
             unittest.TestCase.skipTest(self, "tensorflow not found in the libraries")
 
@@ -1317,6 +1318,8 @@ class TestModel(unittest.TestCase):
         self.s.table.loadtable(caslib=caslib,
                                casout={'name': 'eee', 'replace': True},
                                path=path)
+        # Clean up for DNE
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
 
         # Test log_dir DNE
         self.assertRaises(OSError, lambda:TensorBoard(model1, self.data_dir + '_TB'))
@@ -1326,11 +1329,77 @@ class TestModel(unittest.TestCase):
         tensorboard = TensorBoard(model1, self.data_dir + '_TB')
         self.assertEqual(tensorboard.log_dir, self.data_dir + '_TB')
 
-        # Clean up
-        os.rmdir(self.data_dir + '_TB')
-        if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
 
+    def test_tensorboard_build_summary_writer(self):
+        try:
+            import tensorflow as tf
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow not found in the libraries")
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        # Test default scalars
+        tensorboard = TensorBoard(model1, log_dir)
+        writer = tensorboard.build_summary_writer()
+        default_scalar_list = ['learning_rate', 'loss', 'error']
+        default_scalar_dict = {}
+        for i in default_scalar_list:
+            default_scalar_dict[i] =  tf.summary.FileWriter(
+                log_dir + 'Simple_CNN1' + '/' + i + '/'
+            )
+        for k,v in default_scalar_dict.items():
+            if k == 'learning_rate':
+                self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
+            if k == 'loss':
+                self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
+            if k == 'error':
+                self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
+            if k == 'valid_loss':
+                self.log_scalar(v, k, float(userdata.message[5]), userdata.epoch_count)
+            if k == 'valid_error':
+                self.log_scalar(v, k, float(userdata.message[6]), userdata.epoch_count)
+                        
+        # Test with validation scalars
+        tensorboard = TensorBoard(model1, log_dir, use_valid=True)
+        valid_writer = tensorboard.build_summary_writer()
+        valid_scalar_list = ['learning_rate', 'loss', 'error', 'valid_loss', 'valid_error']
+        valid_scalar_dict = {}
+        for i in valid_scalar_list:
+            valid_scalar_dict[i] =  tf.summary.FileWriter(
+               log_dir + 'Simple_CNN1' + '/' + i + '/'
+            )
+        for k,v in default_scalar_dict.items():
+            if k == 'learning_rate':
+                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
+            if k == 'loss':
+                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
+            if k == 'error':
+                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
+            if k == 'valid_loss':
+                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
+            if k == 'valid_error':
+                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
 
     @classmethod
     def tearDownClass(cls):
