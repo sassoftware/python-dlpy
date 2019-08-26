@@ -24,6 +24,10 @@ import numpy as np
 import pandas as pd
 import collections
 import sys
+try:
+    import tensorflow as tf
+except ImportError:
+    print("TensorFlow must be installed to use tensorboard")
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
 from .utils import filter_by_image_id, filter_by_filename
 from dlpy.timeseries import TimeseriesTable
