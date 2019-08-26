@@ -2824,3 +2824,67 @@ class TensorBoard():
             Each time function is called it returns whatever is stored in userdata
             and is passed into subsequent function calls as the userdata parameter.
         '''
+        if userdata is None:
+            # Initialize userdata as a CASResults instance to hold results of action 
+            # Initialize userdata attribute, severity, for warnings/errors as action runs
+            # Initialize userdata attribute, message, to store the response message
+            userdata = swat.cas.results.CASResults()
+            userdata.severity = 0
+            userdata.message = None
+            userdata.at_scaler = False
+            userdata.writer_dict = self.build_summary_writer()
+            userdata.epoch_count = self.model.n_epochs + 1
+            
+        # Store the CASResults in userdata
+        for k,v in response:
+            userdata[k] = v
+            
+        # Update userdata severity 
+        userdata.severity = response.disposition.severity
+            
+        # Get the initial response message
+        if userdata.message is None:
+            userdata.message = response.messages
+            
+        # Skip if reponse is an empty list
+        if not userdata.message:
+            pass
+        
+        # Writing scalar data
+        else:
+            # Split current message
+            userdata.message = userdata.message[0].split()
+
+            # Change at_scaler flag when done training
+            if userdata.message[2] == 'optimization':
+                userdata.at_scaler = False
+
+            # Wait until next epoch
+            if userdata.message[1] == 'Batch':
+                userdata.at_scaler = False
+            
+            # Log scalers at each epoch
+            if userdata.at_scaler:
+                for k,v in userdata.writer_dict.items():
+                    if k == 'learning_rate':
+                        self.log_scalar(v, k, float(userdata.message[2]), userdata.epoch_count)
+                    if k == 'loss':
+                        self.log_scalar(v, k, float(userdata.message[3]), userdata.epoch_count)
+                    if k == 'error':
+                        self.log_scalar(v, k, float(userdata.message[4]), userdata.epoch_count)
+                    if k == 'valid_loss':
+                        self.log_scalar(v, k, float(userdata.message[5]), userdata.epoch_count)
+                    if k == 'valid_error':
+                        self.log_scalar(v, k, float(userdata.message[6]), userdata.epoch_count)
+                        
+                # Increment the epoch_count 
+                userdata.epoch_count += 1
+                
+            # Change at_scaler flag if we are ready to log
+            if userdata.message[1] == 'Epoch':
+                userdata.at_scaler = True
+
+            # Get next response
+            userdata.message = response.messages
+
+        return userdata
