@@ -2745,8 +2745,7 @@ class TensorBoard():
         if os.path.exists(log_dir):
             self.log_dir = log_dir
         else:
-            raise OSError(log_dir + "does not exist. Please provide an existing directory \
-                to write event logs or create this directory.")
+            raise OSError(log_dir + "does not exist. Please provide an existing directory to write event logs or create this directory.")
         self.use_valid = use_valid
 
         # Scalar metrics to log
@@ -2767,6 +2766,14 @@ class TensorBoard():
             dictionary with keys for each scalar and values a list of 
             FileWriters for train and valid partitions.
         '''
+        writer_dict = {}
+
+        for i in self.scalars:
+            writer_dict[i] =  tf.summary.FileWriter(
+                self.log_dir + self.model.model_table['name'] + '/' + i + '/'
+            )
+                
+        return writer_dict
 
     def log_scalar(self, file_writer, scalar_name, scalar_value, scalar_global_step):
         '''
