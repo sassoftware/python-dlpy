@@ -2749,7 +2749,7 @@ class TensorBoard():
         if os.path.exists(log_dir):
             self.log_dir = log_dir
         else:
-            raise OSError(log_dir + "does not exist. Please provide an existing directory to write event logs or create this directory.")
+            raise OSError(log_dir + " does not exist. Please provide an existing directory to write event logs or create this directory.")
         self.use_valid = use_valid
 
         # Scalar metrics to log

@@ -53,7 +53,7 @@ class TestModel(unittest.TestCase):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
-                
+
         cls.s = swat.CAS()
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
@@ -1372,10 +1372,6 @@ class TestModel(unittest.TestCase):
                 self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
             if k == 'error':
                 self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
-            if k == 'valid_loss':
-                self.log_scalar(v, k, float(userdata.message[5]), userdata.epoch_count)
-            if k == 'valid_error':
-                self.log_scalar(v, k, float(userdata.message[6]), userdata.epoch_count)
                         
         # Test with validation scalars
         tensorboard = TensorBoard(model1, log_dir, use_valid=True)
@@ -1400,6 +1396,54 @@ class TestModel(unittest.TestCase):
 
         # Clean up for next test
         shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+
+    def test_tensorboard_log_scalar(self):
+        try:
+            import tensorflow as tf
+            import numpy as np
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
+        
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        # Generate test data for writing scalar values
+        np.random.seed(123)
+        test_loss_values = np.random.normal(size=10)
+        tensorboard = TensorBoard(model1, log_dir)
+        writers = tensorboard.build_summary_writer()
+        
+        # Write out test loss data as tfevents
+        for i in range(10):
+            tensorboard.log_scalar(writers['loss'], 'loss', test_loss_values[i], i)
+
+        # Check event files for correct output data
+        tfevent_file = os.listdir(writers['loss'].get_logdir())
+        count = 0
+        for e in tf.compat.v1.train.summary_iterator(writers['loss'].get_logdir() + tfevent_file[0]):
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, test_loss_values[count], places=4)
+                count += 1
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
 
     @classmethod
     def tearDownClass(cls):
