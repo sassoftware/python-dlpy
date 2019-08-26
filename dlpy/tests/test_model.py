@@ -1294,6 +1294,39 @@ class TestModel(unittest.TestCase):
         model5 = Model(self.s)
         model5.load(path = self.data_dir + 'vgg16.sashdat')
 
+    def test_tensorboard_init_log_dir(self):
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        # Test log_dir DNE
+        self.assertRaises(OSError, TensorBoard(model1, self.data_dir + '_TB'))
+
+        # Test existing log_dir
+        os.mkdir(self.data_dir + '_TB')
+        tensorboard = TensorBoard(model1, self.data_dir + '_TB')
+        self.assertEqual(tensorboard.log_dir, self.data_dir + '_TB')
+
+        # Clean up
+        os.rmdir(self.data_dir + '_TB')
+        if (caslib is not None) and tmp_caslib:
+            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+
 
     @classmethod
     def tearDownClass(cls):

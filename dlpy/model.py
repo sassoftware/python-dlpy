@@ -2741,7 +2741,19 @@ class TensorBoard():
 
     '''
     def __init__(self, model, log_dir, use_valid=False):
-        
+        self.model = model
+        if os.path.exists(log_dir):
+            self.log_dir = log_dir
+        else:
+            raise OSError(log_dir + "does not exist. Please provide an existing directory \
+                to write event logs or create this directory.")
+        self.use_valid = use_valid
+
+        # Scalar metrics to log
+        self.scalars = ['learning_rate', 'loss', 'error']
+        if self.use_valid:
+            self.scalars.append('valid_' + self.scalars[1])
+            self.scalars.append('valid_' + self.scalars[2])
 
     def build_summary_writer(self):
         '''
