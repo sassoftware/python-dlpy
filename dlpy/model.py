@@ -2796,7 +2796,10 @@ class TensorBoard():
             A substring of the CASResponse message that contains the step (iteration) value of the scalar so far
             (e.g. "10" would be the 10th iteration of a certain scalar, by default using the epoch count).
         '''
-        
+        summary = tf.Summary()
+        summary.value.add(tag=scalar_name, simple_value=scalar_value)
+        file_writer.add_summary(summary, global_step=scalar_global_step)
+        file_writer.flush()
 
     def tensorboard_response_cb(self, response, connection, userdata):
         '''
