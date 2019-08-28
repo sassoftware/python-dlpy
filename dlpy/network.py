@@ -1285,12 +1285,12 @@ class Network(Layer):
         CAS_tbl_name = self.model_name + '_astore'
 
         self._retrieve_('deeplearn.dlexportmodel',
-                        casout = dict(replace = True, name = CAS_tbl_name),
+                        casout = dict(replace = True, name=CAS_tbl_name),
                         initWeights = self.model_weights,
                         modelTable = self.model_table,
-                        randomCrop = 'none',
-                        randomFlip = 'none',
-                        randomMutation = 'none',
+                        randomCrop='none',
+                        randomFlip='none',
+                        randomMutation='none',
                         **kwargs)
 
         model_astore = self._retrieve_('astore.download',
@@ -1300,13 +1300,17 @@ class Network(Layer):
         if path is None:
             path = os.getcwd()
 
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        file_name = os.path.join(path, file_name)
-        with open(file_name, 'wb') as file:
+        if not os.path.exists(path):
+            raise DLPyError('There seems to be an error while writing the astore file to the client. '
+                            'Please check out the path provided. There is also a chance that you are passing '
+                            'a server side path while the function expects a client side path')
+        else:
+            file_name = os.path.join(path, file_name)
+            file = open(file_name, 'wb')
             file.write(model_astore['blob'])
-        print('NOTE: Model astore file saved successfully.')
+            file.close()
+            print('NOTE: Model astore file saved successfully.')
+
 
     def save_to_table(self, path):
         """
@@ -1502,7 +1506,7 @@ class Network(Layer):
 
         """
         if output_format.lower() == 'astore':
-            self.save_to_astore(path = path, **kwargs)
+            self.save_to_astore(path=path, **kwargs)
         elif output_format.lower() in ('castable', 'table'):
             self.save_to_table(path = path)
         elif output_format.lower() == 'onnx':

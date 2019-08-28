@@ -835,7 +835,8 @@ class TestModel(unittest.TestCase):
         yolo_model = Model(self.s)
         yolo_model.load(self.data_dir + 'YOLOV2_MULTISIZE.sashdat')
         model_df = self.s.fetch(table = dict(name = yolo_model.model_name,
-                                             where = '_DLKey0_ eq "detection1" or _DLKey0_ eq "reshape1"'), to = 50).Fetch
+                                             where = '_DLKey0_ eq "detection1" or _DLKey0_ eq "reshape1"'),
+                                to = 50).Fetch
         anchors_5 = model_df['_DLNumVal_'][model_df['_DLKey1_'] == 'detectionopts.anchors.8'].tolist()[0]
         self.assertAlmostEqual(anchors_5, 1.0907, 4)
         depth = model_df['_DLNumVal_'][model_df['_DLKey1_'] == 'reshapeopts.depth'].tolist()[0]
