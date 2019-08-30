@@ -554,7 +554,7 @@ def get_cas_host_type(conn):
     elif ostype.startswith('WIN'):
         ostype = 'windows'
     elif ostype.startswith('OSX'):
-        ostype = 'mac'
+        ostype = 'osx'
     else:
         raise ValueError('Unknown OS type: ' + ostype)
 
