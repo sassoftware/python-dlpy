@@ -40,7 +40,7 @@ def check_framerate(params, framerate):
 
     Returns
     -------
-    boolean
+    Boolean
         Whether the input audio has the desired framerate (True) or not (False).
 
     """
@@ -60,7 +60,7 @@ def check_sampwidth(params, sampwidth):
 
     Returns
     -------
-    boolean
+    Boolean
         Whether the input audio has the desired sampwidth (True) or not (False).
 
     """
@@ -82,7 +82,7 @@ def check_stereo(params):
 
     Returns
     -------
-    boolean
+    Boolean
         Whether the input audio has 2 channels (True) or not (False).
 
     """
