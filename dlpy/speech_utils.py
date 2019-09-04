@@ -16,7 +16,10 @@ def read_audio(path):
     Returns
     -------
     wave_reader : class : 'wave.Wave_read'
+        'wave.Wave_read' Object returned by opening the audio file listed in 'path'.
     wave_params : class : 'wave._wave_params'
+        Wave parameters (nchannels, sampwidth, framerate, nframes, comptype, compname) obtained by calling getparams()
+        on the 'wave.Wave_read' Object.
 
     """
     wave_reader = wave.open(path, "rb")
@@ -37,7 +40,8 @@ def check_framerate(params, framerate):
 
     Returns
     -------
-    boolean
+    Boolean
+        Whether the input audio has the desired framerate (True) or not (False).
 
     """
     return params.framerate == framerate
@@ -45,7 +49,7 @@ def check_framerate(params, framerate):
 
 def check_sampwidth(params, sampwidth):
     """
-    Check if the input audio has the desired sampwdith (byte width).
+    Check if the input audio has the desired sampwidth (byte width).
 
     Parameters
     ----------
@@ -56,7 +60,8 @@ def check_sampwidth(params, sampwidth):
 
     Returns
     -------
-    boolean
+    Boolean
+        Whether the input audio has the desired sampwidth (True) or not (False).
 
     """
     if params.sampwidth not in {1, 2, 3, 4}:
@@ -77,7 +82,8 @@ def check_stereo(params):
 
     Returns
     -------
-    boolean
+    Boolean
+        Whether the input audio has 2 channels (True) or not (False).
 
     """
     if params.nchannels not in {1, 2}:
@@ -105,6 +111,7 @@ def convert_framerate(fragment, width, nchannels, framerate_in, framerate_out):
     Returns
     -------
     bytes
+        Converted audio with the desired framerate 'framerate_out'.
 
     """
     if framerate_in == framerate_out:
@@ -130,6 +137,7 @@ def convert_sampwidth(fragment, sampwidth_in, sampwidth_out):
     Returns
     -------
     bytes
+        Converted audio with the desired sampwidth 'sampwidth_out'.
 
     """
     if sampwidth_in == sampwidth_out:
@@ -162,6 +170,7 @@ def convert_stereo_to_mono(fragment, width):
     Returns
     -------
     bytes
+        Converted audio in mono type.
 
     """
     new_fragment = audioop.tomono(fragment, width, 0.5, 0.5)
@@ -182,6 +191,7 @@ def calculate_segment_nframes(path, segment_len):
     Returns
     -------
     list of ints
+        A list of each segment length in frames.
     """
 
     wave_reader, wave_params = read_audio(path)
@@ -288,9 +298,13 @@ def segment_audio(path, local_path, data_path_after_caslib, segment_len, framera
     Returns
     -------
     listing_path_after_caslib : string
+        Path of the file listing the audio segments on the server side, relative to caslib.
     listing_path_local : string
+        Path of the file listing the audio segments on the client side.
     segment_path_after_caslib_list : list of string
+        A list of paths of the audio segments on the server side, relative to caslib.
     segment_path_local_list : list of string
+        A list of paths of the audio segments on client side.
 
     """
 

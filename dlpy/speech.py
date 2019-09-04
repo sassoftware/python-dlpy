@@ -8,7 +8,7 @@ import platform
 
 class Speech:
     """
-    Class to Do Speech Recognition Using SAS Viya.
+    Class to do speech recognition using SAS Viya.
 
     Parameters
     ----------
@@ -19,19 +19,19 @@ class Speech:
         Specifies the absolute path of the folder where segmented audio files are stored (server side).
 
         The "audio_path" parameter in "transcribe" method is located on the client side. To transcribe the audio,
-        we need to firstly save the .wav file somewhere the CAS server could access. Also, if the audio lasts
-        very long, we may need to segment it into multiple files before copying.
+        we need to firstly save the .wav file somewhere the CAS server can access. Also, if the audio is really long
+        we may need to segment it into multiple files before copying.
 
         Notice that this is the location to store the temporary audio files. The Python client should have both
-        reading and writing permission of this folder, and the CAS server should have at least reading permission
-        of this folder.
+        reading and writing permission for this folder, and the CAS server should have at least reading permission
+        for this folder.
 
     local_path : string, optional
         Specifies the path of the folder where segmented audio files are stored (client side).
         Default = None
 
-        Notice that "data_path" and "local_path" actually point to the same location, and they should have
-        the same value if the OS of the CAS server and the Python client are the same.
+        Notice that "data_path" and "local_path" actually point to the same location, and they should only have
+        the same path if the CAS server and the Python client are on the same machine.
 
     acoustic_model_path : string, optional
         Specifies the absolute server-side path of the acoustic model file.
@@ -62,13 +62,13 @@ class Speech:
         try:
             import wave
         except ImportError:
-            raise DLPyError("wave package is not found in the libraries. "
+            raise DLPyError("wave package was not found. "
                             "Please install this package before using any APIs from dlpy.speech. "
                             "We're using this Python library to help read and write audio files.")
         try:
             import audioop
         except ImportError:
-            raise DLPyError("audioop package is not found in the libraries. "
+            raise DLPyError("audioop package was not found. "
                             "Please install this package before using any APIs from dlpy.speech. "
                             "We're using this Python library to help extract audio features and convert audio formats.")
 
@@ -183,8 +183,8 @@ class Speech:
         beta : double, optional
             Specifies the weight of the sentence length, relative to the acoustic model.
             Default = 0.0
-        gpu : class : `Gpu`, optional
-            When specified, the action uses graphical processing unit hardware.
+        gpu : class : `dlpy.model.Gpu`, optional
+            When specified, the action uses  Graphics Processing Unit hardware.
             The simplest way to use GPU processing is to specify "gpu=1". In this case, the default values of
             other GPU parameters are used.
             Setting gpu=1 enables all available GPU devices for use. Setting gpu=0 disables GPU processing.
@@ -192,17 +192,19 @@ class Speech:
         Returns
         -------
         string
+            Transcribed text from audio file located at 'audio_path'.
+
         """
 
         # check if acoustic model is loaded
         if self.acoustic_model is None:
             raise DLPyError("acoustic model not found. "
-                            "Please load the acoustic model by \"load_acoustic_model\" before calling \"transcribe\".")
+                            "Please load the acoustic model with \"load_acoustic_model\" before calling \"transcribe\".")
 
         # check if language model is loaded
         if self.language_model_caslib is None:
             raise DLPyError("language model not found. "
-                            "Please load the language model by \"load_language_model\" before calling \"transcribe\".")
+                            "Please load the language model with \"load_language_model\" before calling \"transcribe\".")
 
         # step 1: preparation and segmentation
         listing_path_after_caslib, listing_path_local, segment_path_after_caslib_list, segment_path_local_list = \
