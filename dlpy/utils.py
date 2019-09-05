@@ -38,6 +38,7 @@ import platform
 import collections
 from itertools import repeat
 import math
+from contextlib import contextmanager
 
 
 def random_name(name='ImageData', length=6):
@@ -425,6 +426,103 @@ def get_server_path_sep(conn):
     if server_type.startswith("lin") or server_type.startswith("osx"):
         sep = '/'
     return sep
+
+
+@contextmanager
+def caslibify_context(conn, path, task='save'):
+    '''
+    This is a utility context function to find or create a caslib for a given path and for a given task.
+    This function also checks the root folders to see if there is a caslib created, if so return that caslib along
+    with the normalized path. Otherwise creates one.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    path : string
+        Specifies the path to be analyzed for creating a caslib.
+    task : string
+        Specifies the task. If it is a load task, then a caslib needs to be created to the parent folder
+        of the path folder. If it is a save task, then a caslib needs to be created to the path folder.
+    '''
+    if task == 'save':
+
+        sep = get_server_path_sep(conn)
+
+        if path.endswith(sep):
+            path = path[:-1]
+
+        path_split = path.split(sep)
+        caslib = None
+        new_path = sep
+        if path.startswith(sep):
+            start = 1
+        else:
+            start = 0
+
+        end = len(path_split)
+        while caslib is None and start < end:
+
+            new_path += path_split[start]+sep
+            caslib = find_caslib(conn, new_path)
+            start += 1
+
+        remaining_path = ''
+        for i in range(start, end):
+            remaining_path += path_split[i]
+            remaining_path += sep
+
+        if caslib is not None:
+            yield caslib, remaining_path, False
+        else:
+            new_caslib = random_name('Caslib', 6)
+            rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
+                               activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
+
+            if rt.severity > 1:
+                raise DLPyError('something went wrong while adding the caslib for the specified path.')
+            else:
+                # try-finally construct guarantees that the tear-down is always executed
+                try:
+                    yield new_caslib, '', True
+                finally:
+                    if new_caslib is not None:
+                        conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
+    else:
+        server_type = get_cas_host_type(conn).lower()
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            path_split = path.rsplit("/", 1)
+        else:
+            path_split = path.rsplit("\\", 1)
+
+        if len(path_split) == 2:
+            caslib = find_caslib(conn, path_split[0])
+            if caslib is not None:
+                yield caslib, path_split[1], False
+            else:
+                new_caslib = random_name('Caslib', 6)
+                rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path_split[0],
+                                   activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
+
+                if rt.severity > 1:
+                    print('Something went wrong. Most likely, one of the subpaths of the provided path'
+                          'is part of an existing caslib. A workaround is to put the file under that subpath or'
+                          'move to a different location. It sounds and is inconvenient but it is to protect '
+                          'your privacy granted by your system admin. '
+                          'That said, you can run caslibinfo action to see if the path is colliding with'
+                          'any of the existing caslibs. Note that we try to create a caslib for you '
+                          'and look for existing ones; however, if there is a caslib created on a child'
+                          'folder of the path, then that also errors out. caslibinfo is to way to check that.')
+                    yield None, None, False
+                else:
+                    # try-finally construct guarantees that the tear-down is always executed
+                    try:
+                        yield new_caslib, path_split[1], True
+                    finally:
+                        if new_caslib is not None:
+                            conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
+        else:
+            raise DLPyError('we need more than one level of directories. e.g., /dir1/dir2 ')
 
 
 def caslibify(conn, path, task='save'):
@@ -1205,12 +1303,12 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     image_size = _pair(image_size)  # ensure image_size is a pair
     det_img_table = random_name('DET_IMG')
 
-    caslib, path_after_caslib, tmp_caslib = caslibify(conn, data_path, task='load')
-    if caslib is None and path_after_caslib is None:
-        print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
-              'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+    with caslibify_context(conn, data_path, 'load') as (caslib, path_after_caslib, tmp_caslib), \
+            sw.option_context(print_messages=False):
+        if caslib is None and path_after_caslib is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
-    with sw.option_context(print_messages=False):
         res = conn.image.loadImages(path=path_after_caslib,
                                     recurse=False,
                                     labelLevels=-1,
@@ -1235,46 +1333,35 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         else:
             print("NOTE: Images are processed.")
 
-    if (caslib is not None) and tmp_caslib:
-        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
+    with caslibify_context(conn, data_path, 'save') as (caslib, path_after_caslib, tmp_caslib):
+        # find all of annotation files under the directory
+        label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
+        # if client and server are on different type of operation system, we assume user parse xml files and put
+        # txt files in data_path folder. So skip get_txt_annotation()
+        # parse xml or json files and create txt files
+        if need_to_parse:
+            get_txt_annotation(local_path, coord_type, image_size, label_files)
 
-    with sw.option_context(print_messages = False):
-        caslib = find_caslib(conn, data_path)
-        if caslib is None:
-            caslib = random_name('Caslib', 6)
-            rt = conn.retrieve('addcaslib', _messagelevel = 'error', name = caslib, path = data_path,
-                               activeonadd = False, subdirectories = True, datasource = {'srctype': 'path'})
-            if rt.severity > 1:
-                raise DLPyError('something went wrong while adding the caslib for the specified path.')
-
-    # find all of annotation files under the directory
-    label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    # if client and server are on different type of operation system, we assume user parse xml files and put
-    # txt files in data_path folder. So skip get_txt_annotation()
-    # parse xml or json files and create txt files
-    if need_to_parse:
-        get_txt_annotation(local_path, coord_type, image_size, label_files)
-
-    label_tbl_name = random_name('obj_det')
-    # load all of txt files into cas server
-    label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    label_files = [x for x in label_files if x.endswith('.txt')]
-    if len(label_files) == 0:
-        raise DLPyError('Can not find any txt file under data_path.')
-    idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
-    with sw.option_context(print_messages = False):
-        for idx, filename in enumerate(label_files):
-            tbl_name = '{}_{}'.format(label_tbl_name, idx)
-            conn.retrieve('loadtable', caslib = caslib, path = filename,
-                          casout = dict(name = tbl_name, replace = True),
-                          importOptions = dict(fileType = 'csv', getNames = False,
-                                               varChars = True, delimiter = ','))
-            conn.retrieve('partition',
-                          table = dict(name = tbl_name,
-                                       compvars = ['idjoin'],
-                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
-                                                                                          filename[:-len('.txt')])),
-                          casout = dict(name = tbl_name, replace = True))
+        label_tbl_name = random_name('obj_det')
+        # load all of txt files into cas server
+        label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
+        label_files = [x for x in label_files if x.endswith('.txt')]
+        if len(label_files) == 0:
+            raise DLPyError('Can not find any txt file under data_path.')
+        idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
+        with sw.option_context(print_messages = False):
+            for idx, filename in enumerate(label_files):
+                tbl_name = '{}_{}'.format(label_tbl_name, idx)
+                conn.retrieve('loadtable', caslib = caslib, path = filename,
+                              casout = dict(name = tbl_name, replace = True),
+                              importOptions = dict(fileType = 'csv', getNames = False,
+                                                   varChars = True, delimiter = ','))
+                conn.retrieve('partition',
+                              table = dict(name = tbl_name,
+                                           compvars = ['idjoin'],
+                                           comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
+                                                                                              filename[:-len('.txt')])),
+                              casout = dict(name = tbl_name, replace = True))
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
     string_input_tbl_name = ' '.join(input_tbl_name)
@@ -1367,8 +1454,6 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         for var in var_name:
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
-
-    conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
