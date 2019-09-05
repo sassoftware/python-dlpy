@@ -382,7 +382,7 @@ class InputLayer(Layer):
         Note: Required for CNN.
     scale : float, optional,
         Specifies the scale to be used to scale the input data.
-    offsets: int-list, optional
+    offsets : int-list, optional
         Specifies the values to be subtracted from the pixel values of
         the input data, used if the data is image.
     dropout : float, optional
@@ -1833,7 +1833,7 @@ class Detection(Layer):
     num_to_force_coord : int, optional
         The number of leading chunk of images in training when the algorithm forces predicted objects
         in each grid to be equal to the anchor box sizes, and located at the grid center
-    force_coord_scale: float, optional
+    force_coord_scale : float, optional
         The scale for location error during the training period while forcing the predicted boxes
         to have default sizes/locations
 
@@ -2097,6 +2097,7 @@ class ChannelShuffle(Layer):
         Specifies the number of groups for the layer.
         Default: 1
     scale : double, optional
+        Specifies the scale factor to be applied to the number of channels.
         Default: 1
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
@@ -2266,7 +2267,7 @@ class ROIPooling(Layer):
     output_width : int, optional
         Specifies the output width of the region pooling layer.
         Default: 7
-    spatial_scale: float, optional
+    spatial_scale : float, optional
         Specifies the spatial scale of ROIs coordinates (in the input image space) in related to the
         feature map pixel space.
         Default: 0.0625
@@ -2335,13 +2336,13 @@ class FastRCNN(Layer):
     detection_threshold : float, optional
         Specifies the threshold for object detection.
         Default: 0.5
-    max_label_per_image: int, optional
+    max_label_per_image : int, optional
         Specifies the maximum number of labels per training image.
         Default: 200
-    max_object_num: int, optional
+    max_object_num : int, optional
         Specifies the maximum number of object to detect
         Default: 50
-    nms_iou_threshold: float, optional
+    nms_iou_threshold : float, optional
         Specifies the IOU threshold of maximum suppression in object detection
         Default: 0.3
     src_layers : iter-of-Layers, optional

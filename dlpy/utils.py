@@ -501,7 +501,11 @@ def caslibify(conn, path, task='save'):
                     print('Something went wrong. Most likely, one of the subpaths of the provided path'
                           'is part of an existing caslib. A workaround is to put the file under that subpath or'
                           'move to a different location. It sounds and is inconvenient but it is to protect '
-                          'your privacy granted by your system admin.')
+                          'your privacy granted by your system admin. '
+                          'That said, you can run caslibinfo action to see if the path is colliding with'
+                          'any of the existing caslibs. Note that we try to create a caslib for you '
+                          'and look for existing ones; however, if there is a caslib created on a child'
+                          'folder of the path, then that also errors out. caslibinfo is to way to check that.')
                     return None, None, False
                 else:
                     return new_caslib, path_split[1], True
@@ -550,7 +554,7 @@ def get_cas_host_type(conn):
     elif ostype.startswith('WIN'):
         ostype = 'windows'
     elif ostype.startswith('OSX'):
-        ostype = 'mac'
+        ostype = 'osx'
     else:
         raise ValueError('Unknown OS type: ' + ostype)
 
@@ -798,6 +802,7 @@ def get_anchors(conn, data, coord_type, image_size=None, grid_number=13,
                 print('Error: Only support Yolo and CoCo coordType so far')
                 return
             boxes.append(Box(0, 0, width, height))
+
     centroid_indices = np.random.choice(len(boxes), n_anchors)
     centroids = []
     for centroid_index in centroid_indices:
@@ -1367,6 +1372,61 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
+
+
+def create_segmentation_table(conn, path_to_images, path_to_ground_truth, output_table_name='seg_data'):
+    '''
+
+    Creates a segmentation table from two folders. 1) contains the original images,
+    and 2) contains the ground truth information. The ground truth information is usually embedded
+    in the images as each pixel in the original image should have a class. These classes are
+    represented by numbers. For example, if the ground truth image contains only values 0, 1, and 2
+    this means that there are three classes and each pixel is assigned with one of those numbers.
+    Note that .jpg images cannot fold this ground truth data.
+
+    Parameters
+    ----------
+
+    conn : CASConnection
+        Specifies a CAS connection
+    path_to_images : str
+        Specifies the location of the folder that contains the original images. Note that
+        server should have access to this folder.
+    path_to_ground_truth : str
+        Specifies the location of the folder that contains the ground truth images. Note that
+        server should have access to this folder. Each image name here should have a matching file in
+        the path_to_images folder with the exact same name.
+    output_table_name : str, optional
+        Specifies the name of the output table.
+        Default : seg_data
+
+    Returns
+    -------
+    `CASTable`
+
+    '''
+
+    from dlpy.images import ImageTable
+    raw = ImageTable.load_files(conn=conn, path=path_to_images)
+
+    if raw is not None:
+        print('NOTE: Images are loaded')
+
+    labels = ImageTable.load_files(conn=conn, path=path_to_ground_truth)
+    if labels is not None:
+        print('NOTE: Ground truth images are loaded')
+
+    # manipulate column names for easy access
+    conn.altertable(labels, columns=[dict(name='_image_', rename='labels')])
+    conn.altertable(labels, columns=[dict(name='_label_', drop=True)])
+    conn.altertable(labels, columns=[dict(name='_id_', drop=True)])
+
+    conn.loadactionset('deepLearn')
+    conn.deepLearn.dljoin(table=raw, annotatedtable=labels,
+                           id='_filename_0',
+                           casout=dict(name=output_table_name, replace=True))
+
+    return conn.CASTable(output_table_name)
 
 
 def display_object_detections(conn, table, coord_type, max_objects=10,
@@ -2124,6 +2184,109 @@ def parameter_2d(param1, param2, param3, default_value):
             return (param2, default_value[1])
         else:
             return (param2, param3)
+
+
+def create_metadata_table(conn, folder='', task='image_classification',
+                          extensions_to_filter=None, caslib=None, output_name='metadata_table'):
+    '''
+    Creates a metadata table from the specified folder or folder and caslib information.
+    The code traverses the given folder recursively and creates a dataframe, which is then uploaded
+    to the CAS server. The function returns a metadata table, in the format of CAS Table.
+
+    It currently supports the following tasks:
+        image_classification: the code assumes that folder name of an image file is its label
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    folder : string
+        Specifies the location of the images.
+    task : str
+        Specifies the task where we are creating the metadata table
+        Default: image_classification
+    extensions_to_filter : list of extensions in str
+        Specifies the extensions that we are interested in while traversing the folders.
+    caslib : str
+        Specifies the caslib of the folder
+    output_name : str
+        Specifies the name of the output cas table
+
+    Returns
+    -------
+    :class:`CASTable`
+
+    '''
+    tasks = ['image_classification']
+    rel_path = ''
+    if task in tasks:
+        if caslib is not None:
+            if not conn.table.querycaslib(caslib=caslib)[caslib]:
+                raise DLPyError('caslib='+caslib+' cannot be found in the server.')
+            r = conn.table.caslibinfo(caslib=caslib)
+            rel_path = r.CASLibInfo.Path[0]
+            folder = os.path.join(rel_path, folder)
+        if task is 'image_classification':
+            return create_image_classification_metadata_table(conn, folder,
+                                                               extensions_to_filter, output_name, rel_path)
+    else:
+        raise DLPyError('We do not support this task yet, supported tasks are as follows: '+str(tasks))
+
+
+def create_image_classification_metadata_table(conn, folder, extensions_to_filter, output_name, rel_path):
+    '''
+    Creates a metadata table from the specified folder or folder and caslib information.
+    The code traverses the given folder recursively and creates a dataframe, which is then uploaded
+    to the CAS server. The function returns a metadata table, in the format of CAS Table.
+    This function is specific to the image classification task. It can be also as a reference
+    if a custom data metadata creator needs to be implemented.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    folder : string
+        Specifies the location of the images.
+    extensions_to_filter : list of extensions in str
+        Specifies the extensions that we are interested in while traversing the folders.
+    output_name : str
+        Specifies the name of the output cas table
+    rel_path : str
+        Specifies the path of the caslib, this will be used to extract the relative path of an input file.
+
+    Returns
+    -------
+    :class:`CASTable`
+
+    '''
+    import os
+    try:
+        import pandas as pd
+    except:
+        raise DLPyError('pandas is not installed')
+
+    count = 0
+
+    data=[]
+    for root, dire, files in os.walk( folder):
+        for f in files:
+            if extensions_to_filter is None or any(f.endswith(end) for end in extensions_to_filter):
+                absolute_path = os.path.join(root, f)
+                dirname = os.path.dirname( absolute_path)
+                basename = os.path.basename( dirname)
+                fe = os.path.splitext(f)
+                fee = ''
+                if len(fe) > 1:
+                    fee = fe[0]
+                rp = ''
+                if len(rel_path) > 0:
+                    s = absolute_path.split(rel_path)
+                    if len(s) > 1:
+                        rp = s[1]
+                data.append([absolute_path, rp, f, fee, basename, count])
+                count +=1
+    df = pd.DataFrame(data, columns=['_filePath_', '_relativePath_', '_fileName_', '_fName_', '_label_', '_id_'])
+    return conn.upload_frame(df, casout=dict(name=output_name, replace=True))
 
 
 class DLPyDict(collections.MutableMapping):

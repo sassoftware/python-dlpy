@@ -214,7 +214,6 @@ class TestUtils(unittest.TestCase):
         image_id = '1'
         self.assertRaises(ValueError, lambda:filter_by_image_id(table, image_id, filtered_name=1))
 
-
     def test_filter_by_image_id_2(self): 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -226,7 +225,6 @@ class TestUtils(unittest.TestCase):
         
         self.assertTrue(filtered.numrows().numrows == 3)
 
-
     def test_filter_by_image_id_3(self): 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -236,7 +234,6 @@ class TestUtils(unittest.TestCase):
         image_id = 0
         self.assertRaises(ValueError,lambda:filter_by_image_id(table, image_id, filtered_name=None))
 
-
     def test_filter_by_filename_1(self): 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -245,7 +242,6 @@ class TestUtils(unittest.TestCase):
         table = ImageTable.load_files(self.s, path=img_path)
         filename = 'giraffe_'
         self.assertRaises(ValueError, lambda:filter_by_filename(table, filename, filtered_name=1))
-        
 
     def test_filter_by_filename_2(self): 
         if self.data_dir is None:
@@ -258,7 +254,6 @@ class TestUtils(unittest.TestCase):
         filtered = ImageTable.from_table(filtered)
         self.assertTrue(filtered.label_freq.loc['Giraffe'][1]>0)
         self.assertRaises(KeyError, lambda:filtered.label_freq.loc['Dolphin'])
-
 
     def test_filter_by_filename_3(self): 
         if self.data_dir is None:
@@ -320,4 +315,41 @@ class TestUtils(unittest.TestCase):
         anchor_ratio = [4, 1, 2]
         image_size = (2000, 321)
         plot_anchors(base_anchor_size, anchor_scale, anchor_ratio, image_size)
+
+    def test_create_metadata_table_1(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_metadata_table(self.s, folder=self.data_dir)
+
+    def test_create_metadata_table_2(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_metadata_table(self.s, folder=self.data_dir, extensions_to_filter=['.jpg'])
+
+    def test_create_metadata_table_3(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        create_metadata_table(self.s, folder='/random/location')
+        with self.assertRaises(DLPyError):
+            create_metadata_table(self.s, folder='dlpy', caslib='random_caslib')
+
+    def test_create_segmentation_table(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        server_type = get_cas_host_type(self.s).lower()
+
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            sep = '/'
+        else:
+            sep = '\\'
+
+        tbl = create_segmentation_table(self.s,
+                                        path_to_images=self.data_dir+'segmentation_data'+sep+'raw',
+                                        path_to_ground_truth=self.data_dir+'segmentation_data'+sep+'mask')
+
+
+
+
 

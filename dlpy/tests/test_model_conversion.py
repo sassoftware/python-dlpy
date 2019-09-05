@@ -37,15 +37,19 @@ warnings.filterwarnings("ignore", category=UserWarning)
 # helper function: define RNN model with two recurrent layers using Keras
 def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, output_dim):
 
-    import keras
-    from keras import backend as K
-    from keras.models import Model as KerasModel
-    from keras.models import Sequential
-    from keras.layers import LSTM, Input, Lambda, Bidirectional, CuDNNLSTM, Dropout, TimeDistributed, Dense, SimpleRNN, GRU
-    from keras.layers import CuDNNLSTM, CuDNNGRU
-    from keras.activations import relu
-    from keras.utils import multi_gpu_model
-    from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+    try:
+        import keras
+        from keras import backend as K
+        from keras.models import Model as KerasModel
+        from keras.models import Sequential
+        from keras.layers import LSTM, Input, Lambda, Bidirectional, CuDNNLSTM, Dropout, TimeDistributed, Dense, SimpleRNN, GRU
+        from keras.layers import CuDNNLSTM, CuDNNGRU
+        from keras.activations import relu
+        from keras.utils import multi_gpu_model
+        from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+    except:
+
+        print('Keras is not installed.')
 
     if layer_type not in ['simplernn', 'lstm', 'gru', 'cudnnlstm', 'cudnngru']:
         return None
@@ -64,61 +68,61 @@ def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, out
 
     if layer_type == 'simplernn':
         if bidirectional:
-            out_layer1 = Bidirectional(SimpleRNN(rnn_size, 
-                                        activation='tanh', 
-                                        use_bias=True, 
-                                        kernel_initializer='glorot_uniform', 
-                                        recurrent_initializer='orthogonal', 
-                                        bias_initializer='RandomNormal',
-                                        dropout=0.0, 
-                                        recurrent_dropout=0.0, 
-                                        return_sequences=True, 
-                                        return_state=False, 
-                                        stateful=False, 
-                                        unroll=False,
-                                        name='birnn1'), merge_mode='concat')(input_data)
-            out_layer2 = Bidirectional(SimpleRNN(rnn_size, 
-                                        activation='tanh', 
-                                        use_bias=True, 
-                                        kernel_initializer='glorot_uniform', 
-                                        recurrent_initializer='orthogonal', 
-                                        bias_initializer='RandomNormal', 
-                                        dropout=0.0, 
-                                        recurrent_dropout=0.0, 
-                                        return_sequences=True, 
-                                        return_state=False, 
-                                        stateful=False, 
-                                        unroll=False,
-                                        name='birnn2'), merge_mode='concat')(out_layer1)
+            out_layer1 = Bidirectional(SimpleRNN(rnn_size,
+                                                 activation='tanh',
+                                                 use_bias=True,
+                                                 kernel_initializer='glorot_uniform',
+                                                 recurrent_initializer='orthogonal',
+                                                 bias_initializer='RandomNormal',
+                                                 dropout=0.0,
+                                                 recurrent_dropout=0.0,
+                                                 return_sequences=True,
+                                                 return_state=False,
+                                                 stateful=False,
+                                                 unroll=False,
+                                                 name='birnn1'), merge_mode='concat')(input_data)
+            out_layer2 = Bidirectional(SimpleRNN(rnn_size,
+                                                 activation='tanh',
+                                                 use_bias=True,
+                                                 kernel_initializer='glorot_uniform',
+                                                 recurrent_initializer='orthogonal',
+                                                 bias_initializer='RandomNormal',
+                                                 dropout=0.0,
+                                                 recurrent_dropout=0.0,
+                                                 return_sequences=True,
+                                                 return_state=False,
+                                                 stateful=False,
+                                                 unroll=False,
+                                                 name='birnn2'), merge_mode='concat')(out_layer1)
         else:
-            out_layer1 = SimpleRNN(rnn_size, 
-                             activation='tanh', 
-                             use_bias=True, 
-                             kernel_initializer='glorot_uniform', 
-                             recurrent_initializer='orthogonal', 
-                             bias_initializer='RandomNormal', 
-                             dropout=0.0, 
-                             recurrent_dropout=0.0, 
-                             return_sequences=True, 
-                             return_state=False, 
-                             go_backwards=False, 
-                             stateful=False, 
-                             unroll=False,
-                             name='birnn1')(input_data)
-            out_layer2 = SimpleRNN(rnn_size, 
-                             activation='tanh', 
-                             use_bias=True, 
-                             kernel_initializer='glorot_uniform', 
-                             recurrent_initializer='orthogonal', 
-                             bias_initializer='RandomNormal', 
-                             dropout=0.0, 
-                             recurrent_dropout=0.0, 
-                             return_sequences=True, 
-                             return_state=False, 
-                             go_backwards=False, 
-                             stateful=False, 
-                             unroll=False,
-                             name='birnn2')(out_layer1)
+            out_layer1 = SimpleRNN(rnn_size,
+                                   activation='tanh',
+                                   use_bias=True,
+                                   kernel_initializer='glorot_uniform',
+                                   recurrent_initializer='orthogonal',
+                                   bias_initializer='RandomNormal',
+                                   dropout=0.0,
+                                   recurrent_dropout=0.0,
+                                   return_sequences=True,
+                                   return_state=False,
+                                   go_backwards=False,
+                                   stateful=False,
+                                   unroll=False,
+                                   name='birnn1')(input_data)
+            out_layer2 = SimpleRNN(rnn_size,
+                                   activation='tanh',
+                                   use_bias=True,
+                                   kernel_initializer='glorot_uniform',
+                                   recurrent_initializer='orthogonal',
+                                   bias_initializer='RandomNormal',
+                                   dropout=0.0,
+                                   recurrent_dropout=0.0,
+                                   return_sequences=True,
+                                   return_state=False,
+                                   go_backwards=False,
+                                   stateful=False,
+                                   unroll=False,
+                                   name='birnn2')(out_layer1)
     elif layer_type == 'lstm':
         if bidirectional:
             out_layer1 = Bidirectional(LSTM(rnn_size, 
@@ -157,23 +161,24 @@ def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, out
     elif layer_type == 'cudnnlstm':
         if bidirectional:
             out_layer1 = Bidirectional(CuDNNLSTM(rnn_size, 
-                                               kernel_initializer='glorot_uniform', 
-                                               recurrent_initializer='orthogonal', 
-                                               bias_initializer='RandomNormal', 
-                                               unit_forget_bias=True, 
-                                               return_sequences=True, 
-                                               return_state=False, 
-                                               stateful=False,
-                                               name='birnn1'), merge_mode='concat')(input_data)
-            out_layer2 = Bidirectional(CuDNNLSTM(rnn_size, 
-                                               kernel_initializer='glorot_uniform', 
-                                               recurrent_initializer='orthogonal', 
-                                               bias_initializer='RandomNormal', 
-                                               unit_forget_bias=True, 
-                                               return_sequences=True, 
-                                               return_state=False, 
-                                               stateful=False,
-                                               name='birnn2'), merge_mode='concat')(out_layer1)     
+                                                 kernel_initializer='glorot_uniform',
+                                                 recurrent_initializer='orthogonal',
+                                                 bias_initializer='RandomNormal',
+                                                 unit_forget_bias=True,
+                                                 return_sequences=True,
+                                                 return_state=False,
+                                                 stateful=False,
+                                                 name='birnn1'), merge_mode='concat')(input_data)
+
+            out_layer2 = Bidirectional(CuDNNLSTM(rnn_size,
+                                                 kernel_initializer='glorot_uniform',
+                                                 recurrent_initializer='orthogonal',
+                                                 bias_initializer='RandomNormal',
+                                                 unit_forget_bias=True,
+                                                 return_sequences=True,
+                                                 return_state=False,
+                                                 stateful=False,
+                                                 name='birnn2'), merge_mode='concat')(out_layer1)
         else:
             out_layer1 = CuDNNLSTM(rnn_size, 
                                    kernel_initializer='glorot_uniform', 
@@ -195,43 +200,44 @@ def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, out
                                    name='birnn2')(out_layer1)
     elif layer_type == 'gru':
         if bidirectional:
-            out_layer1 = Bidirectional(GRU(rnn_size, 
-                                         activation='tanh', 
-                                         recurrent_activation='sigmoid', 
-                                         use_bias=True, 
-                                         kernel_initializer='glorot_uniform', 
-                                         recurrent_initializer='orthogonal', 
-                                         bias_initializer='RandomNormal', 
-                                         dropout=0.0, 
-                                         recurrent_dropout=0.0, 
-                                         implementation=1, 
-                                         return_sequences=True, 
-                                         return_state=False, 
-                                         go_backwards=False, 
-                                         stateful=False, 
-                                         unroll=False, 
-                                         reset_after=False,    # set to True for CUDNN implementation
-                                         name='birnn1'), merge_mode='concat')(input_data)
-            out_layer2 = Bidirectional(GRU(rnn_size, 
-                                         activation='tanh', 
-                                         recurrent_activation='sigmoid', 
-                                         use_bias=True, 
-                                         kernel_initializer='glorot_uniform', 
-                                         recurrent_initializer='orthogonal', 
-                                         bias_initializer='RandomNormal', 
-                                         dropout=0.0, 
-                                         recurrent_dropout=0.0, 
-                                         implementation=1, 
-                                         return_sequences=True, 
-                                         return_state=False, 
-                                         go_backwards=False, 
-                                         stateful=False, 
-                                         unroll=False, 
-                                         reset_after=False,    # set to True for CUDNN implementation
-                                         name='birnn2'), merge_mode='concat')(out_layer1)
+            out_layer1 = Bidirectional(GRU(rnn_size,
+                                           activation='tanh',
+                                           recurrent_activation='sigmoid',
+                                           use_bias=True,
+                                           kernel_initializer='glorot_uniform',
+                                           recurrent_initializer='orthogonal',
+                                           bias_initializer='RandomNormal',
+                                           dropout=0.0,
+                                           recurrent_dropout=0.0,
+                                           implementation=1,
+                                           return_sequences=True,
+                                           return_state=False,
+                                           go_backwards=False,
+                                           stateful=False,
+                                           unroll=False,
+                                           reset_after=False,    # set to True for CUDNN implementation
+                                           name='birnn1'), merge_mode='concat')(input_data)
+
+            out_layer2 = Bidirectional(GRU(rnn_size,
+                                           activation='tanh',
+                                           recurrent_activation='sigmoid',
+                                           use_bias=True,
+                                           kernel_initializer='glorot_uniform',
+                                           recurrent_initializer='orthogonal',
+                                           bias_initializer='RandomNormal',
+                                           dropout=0.0,
+                                           recurrent_dropout=0.0,
+                                           implementation=1,
+                                           return_sequences=True,
+                                           return_state=False,
+                                           go_backwards=False,
+                                           stateful=False,
+                                           unroll=False,
+                                           reset_after=False,    # set to True for CUDNN implementation
+                                           name='birnn2'), merge_mode='concat')(out_layer1)
         else:
-            out_layer1 = GRU(rnn_size, 
-                             activation='tanh', 
+            out_layer1 = GRU(rnn_size,
+                             activation='tanh',
                              recurrent_activation='sigmoid', 
                              use_bias=True, 
                              kernel_initializer='glorot_uniform', 
@@ -283,23 +289,22 @@ def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, out
                                                 stateful=False,
                                                 name='birnn2'), merge_mode='concat')(out_layer1)
         else:
-            out_layer1 = CuDNNGRU(rnn_size, 
-                                kernel_initializer='glorot_uniform', 
-                                recurrent_initializer='orthogonal', 
-                                bias_initializer='zeros', 
-                                return_sequences=True, 
-                                return_state=False, 
-                                stateful=False,
-                                name='birnn1')(input_data)
+            out_layer1 = CuDNNGRU(rnn_size,
+                                  kernel_initializer='glorot_uniform',
+                                  recurrent_initializer='orthogonal',
+                                  bias_initializer='zeros',
+                                  return_sequences=True,
+                                  return_state=False,
+                                  stateful=False,
+                                  name='birnn1')(input_data)
             out_layer2 = CuDNNGRU(rnn_size, 
-                                kernel_initializer='glorot_uniform', 
-                                recurrent_initializer='orthogonal', 
-                                bias_initializer='zeros', 
-                                return_sequences=True, 
-                                return_state=False, 
-                                stateful=False,
-                                name='birnn2')(out_layer1)
-
+                                  kernel_initializer='glorot_uniform',
+                                  recurrent_initializer='orthogonal',
+                                  bias_initializer='zeros',
+                                  return_sequences=True,
+                                  return_state=False,
+                                  stateful=False,
+                                  name='birnn2')(out_layer1)
 
     y_pred = TimeDistributed(Dense(output_dim, 
                                    name="y_pred", 
@@ -326,6 +331,7 @@ def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, out
     model.compile(optimizer=adam, loss={'ctc': lambda y_true, y_pred: y_pred})
     
     return model
+
 
 class TestModelConversion(unittest.TestCase):
     '''
@@ -392,7 +398,8 @@ class TestModelConversion(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         if (self.data_dir_local is None) or (not os.path.isfile(os.path.join(self.data_dir_local,'lenet.h5'))):
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables or lenet.h5 file is missing")
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment "
+                                             "variables or lenet.h5 file is missing")
 
         if self.keras_installed:
             from keras.models import Sequential
@@ -401,7 +408,8 @@ class TestModelConversion(unittest.TestCase):
             unittest.TestCase.skipTest(self, "keras is not installed")
 
         model = Sequential()
-        model.add(Conv2D(20, kernel_size=(5, 5), strides=(1, 1), activation='relu', input_shape=(28,28,1), padding="same"))
+        model.add(Conv2D(20, kernel_size=(5, 5), strides=(1, 1), activation='relu',
+                         input_shape=(28,28,1), padding="same"))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
         model.add(Conv2D(50, kernel_size=(5, 5), strides=(1, 1), activation='relu', padding='same'))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2), padding='same'))
@@ -419,7 +427,8 @@ class TestModelConversion(unittest.TestCase):
                                 
         if os.path.isdir(self.data_dir):
             try:
-                copyfile(os.path.join(os.getcwd(),'lenet_weights.kerasmodel.h5'),os.path.join(self.data_dir,'lenet_weights.kerasmodel.h5'))
+                copyfile(os.path.join(os.getcwd(),'lenet_weights.kerasmodel.h5'),
+                         os.path.join(self.data_dir,'lenet_weights.kerasmodel.h5'))
                 copy_success = True
             except:
                 print('Unable to copy weights file, skipping test of attaching weights')

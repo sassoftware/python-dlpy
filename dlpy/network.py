@@ -1288,12 +1288,12 @@ class Network(Layer):
         CAS_tbl_name = self.model_name + '_astore'
 
         self._retrieve_('deeplearn.dlexportmodel',
-                        casout = dict(replace = True, name = CAS_tbl_name),
+                        casout = dict(replace = True, name=CAS_tbl_name),
                         initWeights = self.model_weights,
                         modelTable = self.model_table,
-                        randomCrop = 'none',
-                        randomFlip = 'none',
-                        randomMutation = 'none',
+                        randomCrop='none',
+                        randomFlip='none',
+                        randomMutation='none',
                         **kwargs)
 
         model_astore = self._retrieve_('astore.download',
@@ -1303,13 +1303,17 @@ class Network(Layer):
         if path is None:
             path = os.getcwd()
 
-        if not os.path.isdir(path):
-            os.makedirs(path)
-
-        file_name = os.path.join(path, file_name)
-        with open(file_name, 'wb') as file:
+        if not os.path.exists(path):
+            raise DLPyError('There seems to be an error while writing the astore file to the client. '
+                            'Please check out the path provided. There is also a chance that you are passing '
+                            'a server side path while the function expects a client side path')
+        else:
+            file_name = os.path.join(path, file_name)
+            file = open(file_name, 'wb')
             file.write(model_astore['blob'])
-        print('NOTE: Model astore file saved successfully.')
+            file.close()
+            print('NOTE: Model astore file saved successfully.')
+
 
     def save_to_table(self, path):
         """
@@ -1505,7 +1509,7 @@ class Network(Layer):
 
         """
         if output_format.lower() == 'astore':
-            self.save_to_astore(path = path, **kwargs)
+            self.save_to_astore(path=path, **kwargs)
         elif output_format.lower() in ('castable', 'table'):
             self.save_to_table(path = path)
         elif output_format.lower() == 'onnx':
@@ -1820,7 +1824,7 @@ def extract_conv_layer(layer_table):
     if 'trunc_fact' in conv_layer_config:
         conv_layer_config['truncation_factor'] = conv_layer_config['trunc_fact']
         del conv_layer_config['trunc_fact']
-    if conv_layer_config.get('act') == 'Leaky Activation function':
+    if conv_layer_config.get('act').lower() == 'leaky activation function':
         conv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
@@ -1901,7 +1905,7 @@ def extract_batchnorm_layer(layer_table):
     bn_layer_config = dict()
     bn_layer_config.update(get_str_configs(['act'], 'bnopts', layer_table))
     bn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
-    if bn_layer_config.get('act') == 'Leaky Activation function':
+    if bn_layer_config.get('act').lower() == 'leaky activation function':
         bn_layer_config['act'] = 'Leaky'
 
     layer = BN(**bn_layer_config)
@@ -2047,7 +2051,7 @@ def extract_fc_layer(layer_table):
     if 'trunc_fact' in fc_layer_config:
         fc_layer_config['truncation_factor'] = fc_layer_config['trunc_fact']
         del fc_layer_config['trunc_fact']
-    if fc_layer_config.get('act') == 'Leaky Activation function':
+    if fc_layer_config.get('act').lower() == 'leaky activation function':
         fc_layer_config['act'] = 'Leaky'
 
     layer = Dense(**fc_layer_config)
@@ -2287,7 +2291,7 @@ def extract_groupconv_layer(layer_table):
     if 'trunc_fact' in grpconv_layer_config:
         grpconv_layer_config['truncation_factor'] = grpconv_layer_config['trunc_fact']
         del grpconv_layer_config['trunc_fact']
-    if grpconv_layer_config.get('act') == 'Leaky Activation function':
+    if grpconv_layer_config.get('act').lower() == 'leaky activation function':
         grpconv_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']
@@ -2336,7 +2340,7 @@ def extract_conv2dtranspose_layer(layer_table):
     if 'trunc_fact' in conv2dtranspose_layer_config:
         conv2dtranspose_layer_config['truncation_factor'] = conv2dtranspose_layer_config['trunc_fact']
         del conv2dtranspose_layer_config['trunc_fact']
-    if conv2dtranspose_layer_config.get('act') == 'Leaky Activation function':
+    if conv2dtranspose_layer_config.get('act').lower() == 'leaky activation function':
         conv2dtranspose_layer_config['act'] = 'Leaky'
 
     dl_numval = layer_table['_DLNumVal_']

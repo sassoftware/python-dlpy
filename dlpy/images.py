@@ -25,14 +25,18 @@ from .utils import random_name, image_blocksize, caslibify
 
 
 class ImageTable(CASTable):
+
     '''
+
     Specialized CASTable for Image Data
+
     Parameters
     ----------
     name : string
         The name of the CAS table
     **table_params : keyword arguments, optional
         Parameters to the :class:`CASTable` constructor
+
     Attributes
     ----------
     image_summary : pandas.Series
@@ -43,10 +47,13 @@ class ImageTable(CASTable):
         The mean of the image intensities in each channels.
     uid : pandas.DataFrame
         The unique ID for each image
+
     Returns
     -------
     :class:`ImageTable`
+
     '''
+
     running_image_column = '_image_'
 
     def __init__(self, name, **table_params):
@@ -56,8 +63,11 @@ class ImageTable(CASTable):
     @classmethod
     def from_table(cls, tbl, image_col='_image_', label_col='_label_',
                    path_col=None, columns=None, casout=None):
+
         '''
+
         Create an ImageTable from a CASTable
+
         Parameters
         ----------
         tbl : CASTable
@@ -79,10 +89,13 @@ class ImageTable(CASTable):
             Default = None.
             Note : the options of replace=True, blocksize=32 will be automatically
             added to the casout option.
+
         Returns
         -------
         :class:`ImageTable`
+
         '''
+
         out = cls(**tbl.params)
 
         conn = tbl.get_connection()
@@ -113,8 +126,6 @@ class ImageTable(CASTable):
 
         if image_col != '_image_':
             cls.running_image_column = image_col
-            #computedvars.append('_image_')
-            #code.append('_image_ = {};'.format(image_col))
 
         if label_col != '_label_':
             computedvars.append('_label_')
@@ -153,8 +164,11 @@ class ImageTable(CASTable):
     @classmethod
     def load_files(cls, conn, path, casout=None, columns=None,
                    caslib=None, **kwargs):
+
         '''
+
         Create ImageTable from files in `path`
+
         Parameters
         ----------
         conn : CAS
@@ -170,10 +184,14 @@ class ImageTable(CASTable):
             The name of the caslib containing the images.
         **kwargs : keyword arguments, optional
             Additional keyword arguments to the `image.loadimages` action
+
         Returns
         -------
+
         :class:`ImageTable`
+
         '''
+
         conn.loadactionset('image', _messagelevel='error')
 
         if casout is None:
@@ -234,12 +252,16 @@ class ImageTable(CASTable):
         return out
 
     def to_files(self, path):
+
         '''
+
         Save the images in the original format under the specified directory
+
         Parameters
         ----------
         path : string
             Specifies the directory on the server to save the images
+
         '''
 
         caslib = random_name('Caslib', 6)
@@ -254,13 +276,18 @@ class ImageTable(CASTable):
         self._retrieve('dropcaslib', caslib=caslib)
 
     def to_sashdat(self, path=None, name=None, **kwargs):
+
         '''
+
         Save the ImageTable to a sashdat file
+
         Parameters
         ----------
         path : string
             Specifies the directory on the server to save the images
+
         '''
+
         caslib = random_name('Caslib', 6)
         self._retrieve('addcaslib', name=caslib, path=path, activeonadd=False,
                        datasource=dict(srcType='DNFS'))
@@ -272,16 +299,22 @@ class ImageTable(CASTable):
         self._retrieve('dropcaslib', caslib=caslib)
 
     def copy_table(self, casout=None):
+
         '''
+
         Create a copy of the ImageTable
+
         Parameters
         ----------
         casout : dict, optional
             Output CAS table parameters
+
         Returns
         -------
         :class:`ImageTable`
+
         '''
+
         if casout is None:
             casout = {}
             casout['name'] = random_name()
@@ -293,16 +326,18 @@ class ImageTable(CASTable):
         return out
 
     def show(self, nimages=5, ncol=8, randomize=False, figsize=None):
+
         '''
+
         Display a grid of images
+
         Parameters
         ----------
         nimages : int, optional
             Specifies the number of images to be displayed.
             If nimage is greater than the maximum number of images in the
             table, it will be set to this maximum number.
-            Note: Specifying a large value for nimages can lead to slow
-            performance.
+            Note: Specifying a large value for nimages can lead to slow performance.
         ncol : int, optional
             Specifies the layout of the display, determine the number of
             columns in the plots.
@@ -310,10 +345,9 @@ class ImageTable(CASTable):
             Specifies whether to randomly choose the images for display.
         figsize: int, optional
             Specifies the size of the fig that contains the image.
-        image_column: str, optional
-            Specifies the name of the column that contains the image data. By default it is '_image_',
-            however, it can be overridden if table has other columns holding image data.
+
         '''
+
         nimages = min(nimages, len(self))
 
         if randomize:
@@ -351,8 +385,11 @@ class ImageTable(CASTable):
         plt.show()
 
     def crop(self, x=0, y=0, width=None, height=None, inplace=True):
+
         '''
+
         Crop the images in the ImageTable
+
         Parameters
         ----------
         x : int, optional
@@ -366,13 +403,16 @@ class ImageTable(CASTable):
             If not specified, height will be set to be equal to width.
         inplace : bool, optional
             Specifies whether to update the original table, or to create a new one.
+
         Returns
         -------
         :class:`ImageTable`
             If `inplace=False`
         None
             If `inplace=True`
+
         '''
+
         if (width is None) and (height is None):
             width = 224
         if width is None:
@@ -400,8 +440,11 @@ class ImageTable(CASTable):
             return out
 
     def resize(self, width=None, height=None, inplace=True):
+
         '''
+
         Resize the images in the ImageTable
+
         Parameters
         ----------
         width : int, optional
@@ -412,13 +455,16 @@ class ImageTable(CASTable):
         inplace : bool, optional
             Specifies whether to update the original table, or to create
             a new one.
+
         Returns
         -------
         :class:`ImageTable`
             If `inplace=False`
         None
             If `inplace=True`
+
         '''
+
         if (width is None) and (height is None):
             width = 224
         if width is None:
@@ -437,10 +483,6 @@ class ImageTable(CASTable):
                            imagefunctions=[
                                dict(functionoptions=dict(functiontype='RESIZE',
                                                          w=width, h=height))])
-            # self._retrieve('table.partition',
-            #                casout=dict(replace=True, blocksize=blocksize,
-            #                           **self.to_outtable_params())
-
         else:
             out = self.copy_table()
             out.resize(width=width, height=height)
@@ -448,8 +490,11 @@ class ImageTable(CASTable):
 
     def as_patches(self, x=0, y=0, width=None, height=None, step_size=None,
                    output_width=None, output_height=None, inplace=True):
+
         '''
+
         Generate patches from the images in the ImageTable
+
         Parameters
         ----------
         x : int, optional
@@ -480,16 +525,14 @@ class ImageTable(CASTable):
         inplace : bool, optional
             Specifies whether to update the original table, or create a
             new one.
-        Notes
-        -----
-        By creating crops with fixed window size and moving the window
-        along the images.
+
         Returns
         -------
         :class:`ImageTable`
             If `inplace=False`
         None
             If `inplace=True`
+
         '''
 
         if (width is None) and (height is None):
@@ -552,10 +595,14 @@ class ImageTable(CASTable):
     def as_random_patches(self, random_ratio=0.5, x=0, y=0, width=None, height=None,
                           step_size=None, output_width=None, output_height=None,
                           inplace=True):
+
         '''
+
         Generate random patches from the images in the ImageTable
+
         Parameters
         ----------
+
         random_ratio : double, optional
             Specifies the proportion of the generated patches to output.
         x : int, optional
@@ -578,13 +625,16 @@ class ImageTable(CASTable):
             If not specified, it will be set to be equal to height.
         inplace : bool, optional
             Specifies whether to update the original table, or create a new one.
+
         Returns
         -------
         :class:`ImageTable`
             If `inplace=True`
         None
             If `inplace=False`
+
         '''
+
         if (width is None) and (height is None):
             width = 224
         if width is None:
@@ -654,10 +704,14 @@ class ImageTable(CASTable):
                          horizontal_flip=True, invert_pixels=False, lighten=False, pyramid_down=False,
                          pyramid_up=False, rotate_left=False, rotate_right=False, sharpen=False,
                          vertical_flip=True, inplace=True):
+
         '''
+
         Generate random mutations from the images in the ImageTable
+
         Parameters
         ----------
+
         color_jitter : bool, optional
             Specifies whether to apply color jittering to an input image.
         color_shift : bool, optional
@@ -682,12 +736,15 @@ class ImageTable(CASTable):
             Specifies whether to sharpen the input image.
         vertical_flip : bool, optional
             Specifies whether to vertically flip the input image.
+
         Returns
         -------
+
         :class:`ImageTable`
             If `inplace=True`
         None
             If `inplace=False`
+
         '''
 
         croplist = [{'mutations':dict(colorjittering=color_jitter,

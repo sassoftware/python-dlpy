@@ -435,6 +435,32 @@ class TestNetwork(tm.TestCase):
         # expect to get two outputs since stop layer is in a branch
         self.assertEqual(len(backbone_pure.output_layers), 2)
 
+    def test_astore_deploy_wrong_path(self):
+        from dlpy.sequential import Sequential
+        from dlpy.utils import caslibify
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(1, 17))
+        model1.add(Pooling(14))
+        model1.add(Dense(3))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
+
+        self.assertTrue(r.severity == 0)
+
+        with self.assertRaises(DLPyError):
+            model1.deploy(path='/amran/komran', output_format='astore')
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

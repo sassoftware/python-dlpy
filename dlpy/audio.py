@@ -94,6 +94,9 @@ class AudioTable(CASTable):
                         else:
                             cls.running_caslib = path_split[0]
                             return AudioTable(casout['name'])
+            else:
+                print("WARNING: Specified path could not be reached. Make sure that the path is accessible by"
+                      " the CAS server.")
             return None
         else:
             rt4 = conn.retrieve('audio.loadaudio', _messagelevel='error', casout=casout,
@@ -165,6 +168,21 @@ class AudioTable(CASTable):
                     print(msg)
                 return None
 
+            server_type = get_cas_host_type(conn).lower()
+            if server_type.startswith("lin") or server_type.startswith("osx"):
+                fs = "/"
+            else:
+                fs = "\\"
+
+            scode = "i=find(_path_,'{0}',-length(_path_)); ".format(fs)
+            scode += "length _fName_ $1000; "
+            scode += "_fName_=substr(_path_, i+length('{0}'), length(_path_)-i);".format(fs)
+
+            ctable = CASTable(casout['name'], computedvars=['_fName_'],
+                              computedvarsprogram=scode)
+
+            conn.table.partition(table=ctable, casout=dict(name=casout['name'], replace=True))
+
             return AudioTable(casout['name'])
 
         return None
@@ -194,8 +212,16 @@ class AudioTable(CASTable):
         dc_response = dc.process_contents(audio_path = audio_path)
         tbl = dc.create_castable(dc_response['results'], output_name, replace=True, promote=False,
                                  col_names=dc_response['col_names'])
-     
-        return tbl
+
+        scode = 'length _fName_ $1000; '
+        scode += '_fName_ = _filename_; '
+
+        ctbl = CASTable(tbl, computedvars=['_fName_'],
+                        computedvarsprogram=scode)
+
+        conn.table.partition(table=ctbl, casout=dict(name=tbl, replace=True))
+
+        return CASTable(tbl)
 
     @classmethod
     def load_audio_metadata(cls, conn, path, audio_path, task='speech2text'):
@@ -348,7 +374,11 @@ class AudioTable(CASTable):
         if 'name' not in casout:
             casout['name'] = random_name('AudioTable', 6)
 
-        rt = conn.retrieve('dlJoin', _messagelevel='error', casout=casout, annotation=me, table=features, id='_path_')
+        rt = conn.retrieve('dlJoin', _messagelevel='error',
+                           casout=casout,
+                           annotation=me,
+                           table=features,
+                           id='_fName_')
 
         if rt.severity > 1:
             for msg in rt.messages:

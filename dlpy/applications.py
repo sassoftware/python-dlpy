@@ -4844,7 +4844,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     backbone: string, optional
         Specifies the architecture to be used as the feature extractor.
         Valid values: vgg16
-        Default: vgg16
+        Default: vgg16, resnet50, resnet18, resnet34, mobilenetv1, mobilenetv2
 
     Returns
     -------
@@ -4915,8 +4915,50 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
                               spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
+    elif backbone.lower() == 'resnet34':
+        backbone = ResNet34_SAS(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
+
     elif backbone.lower() == 'resnet18':
         backbone = ResNet18_SAS(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
+
+    elif backbone.lower() == 'mobilenetv1':
+        backbone = MobileNetV1(conn, width=width, height=height)
+        backbone.layers[-2].src_layers
+        backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
+        last_layer_in_backbone = backbone_with_last(inp)
+        # two convolutions build on top of f_ex and reduce feature map depth to 6*number_anchors
+        rpn_conv = Conv2d(width=3, n_filters=512, name='rpn_conv_3x3')(last_layer_in_backbone)
+        rpn_score = Conv2d(act='identity', width=1, n_filters=((1 + 1 + 4) * num_anchors), name='rpn_score')(rpn_conv)
+        # propose anchors, NMS, select anchors to train RPN, produce ROIs
+        rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
+        roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
+                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              name='roi_pooling')([last_layer_in_backbone[0], rp1])
+
+    elif backbone.lower() == 'mobilenetv2':
+        backbone = MobileNetV2(conn, width=width, height=height)
         backbone.layers[-2].src_layers
         backbone_with_last = backbone.to_functional_model(stop_layers=backbone.layers[-2])
         last_layer_in_backbone = backbone_with_last(inp)
