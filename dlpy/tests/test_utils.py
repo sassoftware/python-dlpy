@@ -349,6 +349,45 @@ class TestUtils(unittest.TestCase):
                                         path_to_images=self.data_dir+'segmentation_data'+sep+'raw',
                                         path_to_ground_truth=self.data_dir+'segmentation_data'+sep+'mask')
 
+    def test_caslibify_context(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        server_type = get_cas_host_type(self.s).lower()
+
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            sep = '/'
+        else:
+            sep = '\\'
+        tmp_caslib = None
+        # save task
+        with caslibify_context(self.s, self.data_dir+'segmentation_data'+sep+'raw', 'load') as (caslib, path):
+            tmp_caslib = caslib
+            df = self.s.caslibinfo().CASLibInfo['Name']
+            # in the context, the new caslib should be created
+            self.assertEqual(df[df == caslib].shape[0], 1)
+            try:
+                raise DLPyError('force to throw an error')
+            except DLPyError:
+                pass
+        # expect the caslib is removed even if the error occurs
+        df = self.s.caslibinfo().CASLibInfo['Name']
+        self.assertEqual(df[df == tmp_caslib].shape[0], 0)
+
+        # save task
+        with caslibify_context(self.s, self.data_dir+'segmentation_data'+sep+'raw', 'save') as (caslib, path):
+            tmp_caslib = caslib
+            df = self.s.caslibinfo().CASLibInfo['Name']
+            # in the context, the new caslib should be created
+            self.assertEqual(df[df == caslib].shape[0], 1)
+            try:
+                raise DLPyError('force to throw an error')
+            except DLPyError:
+                pass
+        # expect the caslib is removed even if the error occurs
+        df = self.s.caslibinfo().CASLibInfo['Name']
+        self.assertEqual(df[df == tmp_caslib].shape[0], 0)
+
 
 
 
