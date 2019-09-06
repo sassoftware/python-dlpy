@@ -18,9 +18,8 @@
 
 ''' Block layers for deep learning '''
 
-from .layers import (Conv2d, BN, Res, Concat, Recurrent, InputLayer, Dense, Scale, GlobalAveragePooling2D)
+from .layers import (Conv2d, BN, Res, Concat, Recurrent, InputLayer)
 from dlpy.utils import DLPyError
-from dlpy.network import Network
 
 
 class ResBlock(object):
@@ -614,38 +613,3 @@ class Bidirectional(object):
     def get_layers(self):
         ''' Return list of layers '''
         return self.layers
-
-
-def SEBlock(x, fully_connect=True, reduction=16):
-    c = x.shape[0]
-    y = GlobalAveragePooling2D(x)
-    if fully_connect:
-        y = Dense(n=c//reduction, act='relu', init='MSRA')(y)
-        y = Dense(n=c, act='relu', init='MSRA')(y)
-    else:
-        y = Conv2d(n_filters=c//reduction, width=1, height=1, act='relu', init='MSRA')
-        y = Conv2d(n_filters=c, width=1, height=1, act='relu', init='MSRA')
-    y = Scale()([x, y])
-    return y
-
-
-def conv3x3(out_planes, stride=1, groups=1):
-    return Conv2d(out_planes, width=3, stride=stride, include_bias=False, act='identity')
-
-
-def conv1x1(out_planes, stride=1):
-    return Conv2d(out_planes, width=1, stride=stride, include_bias=False, act='identity')
-
-
-def ResBottleNeck(x, planes, stride=1, downsample=None, expansion=4):
-    identity = x
-    x = conv1x1(planes)(x)
-    x = BN(act='relu')(x)
-    x = conv3x3(x.shape[-1], stride)(x)
-    x = BN(act = 'relu')(x)
-    x = conv1x1(planes*expansion)(x)
-    x = BN(act = 'identity')(x)
-    if downsample is not None:
-        identity = downsample(x)
-    out = Res(act='relu')([identity, x])
-    return out

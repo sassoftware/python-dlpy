@@ -22,7 +22,7 @@ import warnings
 import six
 
 from .sequential import Sequential
-from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional, SEBlock
+from .blocks import ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
 from .caffe_models import (model_vgg16, model_vgg19, model_resnet50,
                            model_resnet101, model_resnet152)
 from .keras_models import model_inceptionv3
@@ -38,7 +38,7 @@ input_layer_options = ['n_channels', 'width', 'height', 'nominals', 'std', 'scal
 # RPN layer option will be found in model function's local parameters
 rpn_layer_options = ['anchor_ratio', 'anchor_scale', 'anchor_num_to_sample', 'base_anchor_size',
                      'coord_type', 'do_RPN_only', 'max_label_per_image', 'proposed_roi_num_score',
-                     'proposed_roi_num_train', 'roi_train_sample_num', 'max_bounding_box_factor']
+                     'proposed_roi_num_train', 'roi_train_sample_num']
 # Fast RCNN option will be found in model function's local parameters
 fast_rcnn_options = ['detection_threshold', 'max_label_per_image', 'max_object_num', 'nms_iou_threshold']
 
@@ -4998,45 +4998,3 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
     faster_rcnn.compile()
     return faster_rcnn
 
-
-def ResNet(conn, block, layers, model_table='ResNet', n_classes=1000, n_channels=3, width=224, height=224,
-           random_flip='none', random_crop='none', random_mutation='none',
-           norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406)):
-    def conv3x3(out_planes, stride=1, groups=1):
-        return Conv2d(out_planes, width=3, stride=stride, act='identity', include_bias=False)
-    def conv1x1(out_planes, stride=1):
-        return Conv2d(out_planes, width=1, stride=stride, act='identity', include_bias=False)
-
-    def _make_layer(x, block, planes, blocks, stride = 1):
-        downsample = None
-        if stride != 1 or x.shape[-1] != planes * expansion:
-            downsample = conv1x1(planes * expansion, stride)
-            downsample = BN(planes * expansion)(downsample)
-
-        x = block(x, planes, stride, downsample)
-        for _ in range(1, blocks):
-            x = block(x, planes)
-
-        return x
-
-    in_planes=64
-    expansion=4
-    parameters = locals()
-    input_parameters = _get_layer_options(input_layer_options, parameters)
-    inp = Input(**input_parameters, name = 'data')
-    conv1 = Conv2d(in_planes, width=7, stride=3, include_bias=False)
-    bn1 = BN(act='relu')(conv1)
-    maxpool1 = Pooling(width=2, stride=2, pool='max')(bn1)
-    block1 = _make_layer(maxpool1, block, 64, layers[0])
-    block2 = _make_layer(block1, block, 128, layers[1], stride=2)
-    block3 = _make_layer(block2, block, 128, layers[2], stride = 2)
-    block4 = _make_layer(block3, block, 128, layers[3], stride = 2)
-    x = GlobalAveragePooling2D()(block4)
-    x = OutputLayer(act='softmax', n=n_classes)(x)
-    model = Model(conn, inp, x, model_table=model_table)
-    model.compile()
-    return model
-
-
-# def SE_ResNet(conn, model_table='SENet', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-#               batch_norm_first=True, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68))
