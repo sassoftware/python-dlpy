@@ -21,7 +21,8 @@
 import os
 
 from dlpy.layers import Layer
-from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, underscore_to_camelcase
+from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep,\
+    underscore_to_camelcase, caslibify_context
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
     Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
 import dlpy.model
@@ -710,117 +711,113 @@ class Network(Layer):
 
         '''
 
-        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
-
-        self._retrieve_('table.loadtable',
-                        caslib=cas_lib_name,
-                        path=file_name,
-                        casout=dict(replace=True, **self.model_table))
-
-        model_name = self._retrieve_('table.fetch',
-                                     table=dict(where='_DLKey1_= "modeltype"',
-                                                **self.model_table)).Fetch['_DLKey0_'][0]
-
-        if model_name.lower() != self.model_name.lower():
-            self._retrieve_('table.partition',
-                            casout=dict(replace=True, name=model_name),
-                            table=self.model_name)
-
-            self._retrieve_('table.droptable', **self.model_table)
-            if display_note:
-                print(('NOTE: Model table is loaded successfully!\n'
-                       'NOTE: Model is renamed to "{}" according to the '
-                       'model name in the table.').format(model_name))
-            self.model_name = model_name
-            self.model_table['name'] = model_name
-            self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
-
-        model_table = self.conn.CASTable(self.model_name).to_frame()
-        for layer_id in range(int(model_table['_DLLayerID_'].max()) + 1):
-            layer_table = model_table[model_table['_DLLayerID_'] == layer_id]
-            layer_type = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
-                                                   'layertype'].tolist()[0]
-            if layer_type == 1:
-                self.layers.append(extract_input_layer(layer_table=layer_table))
-            elif layer_type == 2:
-                self.layers.append(extract_conv_layer(layer_table=layer_table))
-            elif layer_type == 3:
-                self.layers.append(extract_pooling_layer(layer_table=layer_table))
-            elif layer_type == 4:
-                self.layers.append(extract_fc_layer(layer_table=layer_table))
-            elif layer_type == 5:
-                self.layers.append(extract_output_layer(layer_table=layer_table))
-            elif layer_type == 6:
-                self.layers.append(extract_recurrent_layer(layer_table = layer_table))
-            elif layer_type == 8:
-                self.layers.append(extract_batchnorm_layer(layer_table=layer_table))
-            elif layer_type == 9:
-                self.layers.append(extract_residual_layer(layer_table=layer_table))
-            elif layer_type == 10:
-                self.layers.append(extract_concatenate_layer(layer_table=layer_table))
-            elif layer_type == 11:
-                self.layers.append(extract_detection_layer(layer_table=layer_table))
-            elif layer_type == 12:
-                self.layers.append(extract_scale_layer(layer_table=layer_table))
-            elif layer_type == 13:
-                self.layers.append(extract_keypoints_layer(layer_table = layer_table))
-            elif layer_type == 14:
-                self.layers.append(extract_reshape_layer(layer_table = layer_table))
-            elif layer_type == 16:
-                self.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
-            elif layer_type == 17:
-                self.layers.append(extract_groupconv_layer(layer_table = layer_table))
-            elif layer_type == 18:
-                self.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
-            elif layer_type == 23:
-                self.layers.append(extract_rpn_layer(layer_table = layer_table))
-            elif layer_type == 24:
-                self.layers.append(extract_roipooling_layer(layer_table = layer_table))
-            elif layer_type == 25:
-                self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
-
-        conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
-            model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
-        layer_id_list = conn_mat['_DLLayerID_'].tolist()
-        src_layer_id_list = conn_mat['_DLNumVal_'].tolist()
-
-        for row_id in range(conn_mat.shape[0]):
-            layer_id = int(layer_id_list[row_id])
-            src_layer_id = int(src_layer_id_list[row_id])
-            if self.layers[layer_id].src_layers is None:
-                self.layers[layer_id].src_layers = [self.layers[src_layer_id]]
-            else:
-                self.layers[layer_id].src_layers.append(self.layers[src_layer_id])
-
-        # Check if weight table is in the same path
-        _file_name_, _extension_ = os.path.splitext(file_name)
-
-        _file_name_list_ = list(self._retrieve_('table.fileinfo',
-                                                caslib=cas_lib_name,
-                                                includeDirectories=False).FileInfo.Name)
-
-        if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
-            print('NOTE: ' + _file_name_ + '_weights' + _extension_ +
-                  ' is used as model weigths.')
-
+        with caslibify_context(self.conn, path, task='load') as (cas_lib_name, file_name):
             self._retrieve_('table.loadtable',
                             caslib=cas_lib_name,
-                            path=_file_name_ + '_weights' + _extension_,
-                            casout=dict(replace=True, name=self.model_name + '_weights'))
-            self.set_weights(self.model_name + '_weights')
+                            path=file_name,
+                            casout=dict(replace=True, **self.model_table))
 
-            if (_file_name_ + '_weights_attr' + _extension_) in _file_name_list_:
-                print('NOTE: ' + _file_name_ + '_weights_attr' + _extension_ +
-                      ' is used as weigths attribute.')
+            model_name = self._retrieve_('table.fetch',
+                                         table=dict(where='_DLKey1_= "modeltype"',
+                                                    **self.model_table)).Fetch['_DLKey0_'][0]
+
+            if model_name.lower() != self.model_name.lower():
+                self._retrieve_('table.partition',
+                                casout=dict(replace=True, name=model_name),
+                                table=self.model_name)
+
+                self._retrieve_('table.droptable', **self.model_table)
+                if display_note:
+                    print(('NOTE: Model table is loaded successfully!\n'
+                           'NOTE: Model is renamed to "{}" according to the '
+                           'model name in the table.').format(model_name))
+                self.model_name = model_name
+                self.model_table['name'] = model_name
+                self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
+
+            model_table = self.conn.CASTable(self.model_name).to_frame()
+            for layer_id in range(int(model_table['_DLLayerID_'].max()) + 1):
+                layer_table = model_table[model_table['_DLLayerID_'] == layer_id]
+                layer_type = layer_table['_DLNumVal_'][layer_table['_DLKey1_'] ==
+                                                       'layertype'].tolist()[0]
+                if layer_type == 1:
+                    self.layers.append(extract_input_layer(layer_table=layer_table))
+                elif layer_type == 2:
+                    self.layers.append(extract_conv_layer(layer_table=layer_table))
+                elif layer_type == 3:
+                    self.layers.append(extract_pooling_layer(layer_table=layer_table))
+                elif layer_type == 4:
+                    self.layers.append(extract_fc_layer(layer_table=layer_table))
+                elif layer_type == 5:
+                    self.layers.append(extract_output_layer(layer_table=layer_table))
+                elif layer_type == 6:
+                    self.layers.append(extract_recurrent_layer(layer_table = layer_table))
+                elif layer_type == 8:
+                    self.layers.append(extract_batchnorm_layer(layer_table=layer_table))
+                elif layer_type == 9:
+                    self.layers.append(extract_residual_layer(layer_table=layer_table))
+                elif layer_type == 10:
+                    self.layers.append(extract_concatenate_layer(layer_table=layer_table))
+                elif layer_type == 11:
+                    self.layers.append(extract_detection_layer(layer_table=layer_table))
+                elif layer_type == 12:
+                    self.layers.append(extract_scale_layer(layer_table=layer_table))
+                elif layer_type == 13:
+                    self.layers.append(extract_keypoints_layer(layer_table = layer_table))
+                elif layer_type == 14:
+                    self.layers.append(extract_reshape_layer(layer_table = layer_table))
+                elif layer_type == 16:
+                    self.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
+                elif layer_type == 17:
+                    self.layers.append(extract_groupconv_layer(layer_table = layer_table))
+                elif layer_type == 18:
+                    self.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+                elif layer_type == 23:
+                    self.layers.append(extract_rpn_layer(layer_table = layer_table))
+                elif layer_type == 24:
+                    self.layers.append(extract_roipooling_layer(layer_table = layer_table))
+                elif layer_type == 25:
+                    self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
+
+            conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
+                model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
+            layer_id_list = conn_mat['_DLLayerID_'].tolist()
+            src_layer_id_list = conn_mat['_DLNumVal_'].tolist()
+
+            for row_id in range(conn_mat.shape[0]):
+                layer_id = int(layer_id_list[row_id])
+                src_layer_id = int(src_layer_id_list[row_id])
+                if self.layers[layer_id].src_layers is None:
+                    self.layers[layer_id].src_layers = [self.layers[src_layer_id]]
+                else:
+                    self.layers[layer_id].src_layers.append(self.layers[src_layer_id])
+
+            # Check if weight table is in the same path
+            _file_name_, _extension_ = os.path.splitext(file_name)
+
+            _file_name_list_ = list(self._retrieve_('table.fileinfo',
+                                                    caslib=cas_lib_name,
+                                                    includeDirectories=False).FileInfo.Name)
+
+            if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
+                print('NOTE: ' + _file_name_ + '_weights' + _extension_ +
+                      ' is used as model weigths.')
+
                 self._retrieve_('table.loadtable',
                                 caslib=cas_lib_name,
-                                path=_file_name_ + '_weights_attr' + _extension_,
-                                casout=dict(replace=True,
-                                            name=self.model_name + '_weights_attr'))
-                self.set_weights_attr(self.model_name + '_weights_attr')
+                                path=_file_name_ + '_weights' + _extension_,
+                                casout=dict(replace=True, name=self.model_name + '_weights'))
+                self.set_weights(self.model_name + '_weights')
 
-        if (cas_lib_name is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
+                if (_file_name_ + '_weights_attr' + _extension_) in _file_name_list_:
+                    print('NOTE: ' + _file_name_ + '_weights_attr' + _extension_ +
+                          ' is used as weigths attribute.')
+                    self._retrieve_('table.loadtable',
+                                    caslib=cas_lib_name,
+                                    path=_file_name_ + '_weights_attr' + _extension_,
+                                    casout=dict(replace=True,
+                                                name=self.model_name + '_weights_attr'))
+                    self.set_weights_attr(self.model_name + '_weights_attr')
 
     def load_weights(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None,
                      use_gpu=False):
@@ -948,84 +945,80 @@ class Network(Layer):
         '''     
         from dlpy.model_conversion.model_conversion_utils import query_action_parm
 
-        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
+        with caslibify_context(self.conn, path, task='load') as (cas_lib_name, file_name):
+            has_gpu_model, act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+            if (not has_gpu_model) and use_gpu:
+                raise DLPyError('A GPU model was specified, but your Viya installation does not support'
+                                'importing GPU models.')
 
-        has_gpu_model, act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
-        if (not has_gpu_model) and use_gpu:
-            raise DLPyError('A GPU model was specified, but your Viya installation does not support'
-                            'importing GPU models.')
+            if data_spec:
 
-        if data_spec:
-            
-            has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
-            
-            if has_data_spec:
-                # run action with dataSpec option
-                if has_gpu_model:
-                    with sw.option_context(print_messages=False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                             model=self.model_table,
-                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                             dataSpecs=data_spec,
-                                             gpuModel=use_gpu,
-                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
+                has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+
+                if has_data_spec:
+                    # run action with dataSpec option
+                    if has_gpu_model:
+                        with sw.option_context(print_messages=False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 gpuModel=use_gpu,
+                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
+                    else:
+                        with sw.option_context(print_messages=False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
                 else:
-                    with sw.option_context(print_messages=False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                             model=self.model_table,
-                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                             dataSpecs=data_spec,
-                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
+                    if has_gpu_model:
+                        with sw.option_context(print_messages=False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                                 modelWeights=dict(replace=True,
+                                                                   name=self.model_name + '_weights'),
+                                                 formatType=format_type, weightFilePath=file_name,
+                                                 gpuModel=use_gpu,
+                                                 caslib=cas_lib_name)
+                    else:
+                        with sw.option_context(print_messages=False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                                 modelWeights=dict(replace=True,
+                                                                   name=self.model_name + '_weights'),
+                                                 formatType=format_type, weightFilePath=file_name,
+                                                 caslib=cas_lib_name)
+
+                # handle error or create necessary attributes
+                if rt.severity > 1:
+                    for msg in rt.messages:
+                        print(msg)
+                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
+
+                # create attributes if necessary
+                if not has_data_spec:
+                    from dlpy.attribute_utils import create_extended_attributes
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
+
             else:
+                print("NOTE: no dataspec(s) provided - creating image classification model.")
                 if has_gpu_model:
-                    with sw.option_context(print_messages=False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                             modelWeights=dict(replace=True,
-                                                               name=self.model_name + '_weights'),
-                                             formatType=format_type, weightFilePath=file_name,
-                                             gpuModel=use_gpu,
-                                             caslib=cas_lib_name)
+                    self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                    modelWeights=dict(replace=True,
+                                                      name=self.model_name + '_weights'),
+                                    formatType=format_type, weightFilePath=file_name,
+                                    gpuModel=use_gpu,
+                                    caslib=cas_lib_name,
+                                    )
                 else:
-                    with sw.option_context(print_messages=False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                             modelWeights=dict(replace=True,
-                                                               name=self.model_name + '_weights'),
-                                             formatType=format_type, weightFilePath=file_name,
-                                             caslib=cas_lib_name)
-
-            # handle error or create necessary attributes
-            if rt.severity > 1:
-                for msg in rt.messages:
-                    print(msg)
-                raise DLPyError('Cannot import model weights, there seems to be a problem.')
-                
-            # create attributes if necessary
-            if not has_data_spec:
-                from dlpy.attribute_utils import create_extended_attributes
-                create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
-
-        else:
-            print("NOTE: no dataspec(s) provided - creating image classification model.")
-            if has_gpu_model:
-                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                modelWeights=dict(replace=True,
-                                                  name=self.model_name + '_weights'),
-                                formatType=format_type, weightFilePath=file_name,
-                                gpuModel=use_gpu,
-                                caslib=cas_lib_name,
-                                )
-            else:
-                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                modelWeights=dict(replace=True,
-                                                  name=self.model_name + '_weights'),
-                                formatType=format_type, weightFilePath=file_name,
-                                caslib=cas_lib_name,
-                                )            
+                    self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                    modelWeights=dict(replace=True,
+                                                      name=self.model_name + '_weights'),
+                                    formatType=format_type, weightFilePath=file_name,
+                                    caslib=cas_lib_name,
+                                    )
 
         self.set_weights(self.model_name + '_weights')
-
-        if (cas_lib_name is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None,
                                            label_length=None,
@@ -1053,91 +1046,87 @@ class Network(Layer):
         '''
         from dlpy.model_conversion.model_conversion_utils import query_action_parm
 
-        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
+        with caslibify_context(self.conn, path, task = 'load') as (cas_lib_name, file_name):
+            has_gpu_model,act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+            if (not has_gpu_model) and use_gpu:
+                raise DLPyError('A GPU model was specified, but your Viya installation does not support'
+                                'importing GPU models.')
 
-        has_gpu_model,act_parms = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
-        if (not has_gpu_model) and use_gpu:
-            raise DLPyError('A GPU model was specified, but your Viya installation does not support'
-                            'importing GPU models.')
-            
-        if label_file_name:
-            from dlpy.utils import get_user_defined_labels_table
-            label_table = get_user_defined_labels_table(self.conn, label_file_name, label_length)
-        else:
-            from dlpy.utils import get_imagenet_labels_table
-            label_table = get_imagenet_labels_table(self.conn, label_length)            
-
-        if data_spec:
-
-            has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
-            
-            if has_data_spec:
-                # run action with dataSpec option
-                if has_gpu_model:
-                    with sw.option_context(print_messages = False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                             model=self.model_table,
-                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                             dataSpecs=data_spec,
-                                             gpuModel=use_gpu,
-                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                             labelTable=label_table)
-                else:
-                    with sw.option_context(print_messages = False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights',
-                                             model=self.model_table,
-                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                             dataSpecs=data_spec,
-                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                             labelTable=label_table)
+            if label_file_name:
+                from dlpy.utils import get_user_defined_labels_table
+                label_table = get_user_defined_labels_table(self.conn, label_file_name, label_length)
             else:
-                if has_gpu_model:
-                    with sw.option_context(print_messages = False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                             formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                             gpuModel=use_gpu,
-                                             labelTable=label_table)
+                from dlpy.utils import get_imagenet_labels_table
+                label_table = get_imagenet_labels_table(self.conn, label_length)
+
+            if data_spec:
+
+                has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+
+                if has_data_spec:
+                    # run action with dataSpec option
+                    if has_gpu_model:
+                        with sw.option_context(print_messages = False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 gpuModel=use_gpu,
+                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                                 labelTable=label_table)
+                    else:
+                        with sw.option_context(print_messages = False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                                 labelTable=label_table)
                 else:
-                    with sw.option_context(print_messages = False):
-                        rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                             modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                             formatType=format_type,
-                                             weightFilePath=file_name,
-                                             caslib=cas_lib_name,
-                                             labelTable=label_table)
+                    if has_gpu_model:
+                        with sw.option_context(print_messages = False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                                 gpuModel=use_gpu,
+                                                 labelTable=label_table)
+                    else:
+                        with sw.option_context(print_messages = False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 formatType=format_type,
+                                                 weightFilePath=file_name,
+                                                 caslib=cas_lib_name,
+                                                 labelTable=label_table)
 
-            # handle error or create necessary attributes
-            if rt.severity > 1:
-                for msg in rt.messages:
-                    print(msg)
-                raise DLPyError('Cannot import model weights, there seems to be a problem.')
-                
-            # create attributes if necessary
-            if not has_data_spec:
-                from dlpy.attribute_utils import create_extended_attributes
-                create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
+                # handle error or create necessary attributes
+                if rt.severity > 1:
+                    for msg in rt.messages:
+                        print(msg)
+                    raise DLPyError('Cannot import model weights, there seems to be a problem.')
 
-        else:
-            print("NOTE: no dataspec(s) provided - creating image classification model.")
-            if has_gpu_model:
-                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                gpuModel=use_gpu,
-                                labelTable=label_table,
-                                )
+                # create attributes if necessary
+                if not has_data_spec:
+                    from dlpy.attribute_utils import create_extended_attributes
+                    create_extended_attributes(self.conn, self.model_name, self.layers, data_spec)
+
             else:
-                self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
-                                modelWeights=dict(replace=True, name=self.model_name + '_weights'),
-                                formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
-                                labelTable=label_table,
-                                )
+                print("NOTE: no dataspec(s) provided - creating image classification model.")
+                if has_gpu_model:
+                    self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    gpuModel=use_gpu,
+                                    labelTable=label_table,
+                                    )
+                else:
+                    self._retrieve_('deeplearn.dlimportmodelweights', model=self.model_table,
+                                    modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                    formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                    labelTable=label_table,
+                                    )
 
         self.set_weights(self.model_name + '_weights')
-
-        if (cas_lib_name is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def load_weights_from_table(self, path):
         '''
@@ -1150,36 +1139,33 @@ class Network(Layer):
             contains the weight table.
 
         '''
-        cas_lib_name, file_name, tmp_caslib = caslibify(self.conn, path, task='load')
+        with caslibify_context(self.conn, path, task = 'load') as (cas_lib_name, file_name):
 
-        self._retrieve_('table.loadtable',
-                        caslib=cas_lib_name,
-                        path=file_name,
-                        casout=dict(replace=True, name=self.model_name + '_weights'))
-
-        self.set_weights(self.model_name + '_weights')
-
-        _file_name_, _extension_ = os.path.splitext(file_name)
-
-        _file_name_list_ = list(
-            self._retrieve_('table.fileinfo', caslib=cas_lib_name,
-                            includeDirectories=False).FileInfo.Name)
-
-        if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
-            print('NOTE: ' + _file_name_ + '_attr' + _extension_ +
-                  ' is used as weigths attribute.')
             self._retrieve_('table.loadtable',
                             caslib=cas_lib_name,
-                            path=_file_name_ + '_attr' + _extension_,
-                            casout=dict(replace=True,
-                                        name=self.model_name + '_weights_attr'))
+                            path=file_name,
+                            casout=dict(replace=True, name=self.model_name + '_weights'))
 
-            self.set_weights_attr(self.model_name + '_weights_attr')
+            self.set_weights(self.model_name + '_weights')
+
+            _file_name_, _extension_ = os.path.splitext(file_name)
+
+            _file_name_list_ = list(
+                self._retrieve_('table.fileinfo', caslib=cas_lib_name,
+                                includeDirectories=False).FileInfo.Name)
+
+            if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
+                print('NOTE: ' + _file_name_ + '_attr' + _extension_ +
+                      ' is used as weigths attribute.')
+                self._retrieve_('table.loadtable',
+                                caslib=cas_lib_name,
+                                path=_file_name_ + '_attr' + _extension_,
+                                casout=dict(replace=True,
+                                            name=self.model_name + '_weights_attr'))
+
+                self.set_weights_attr(self.model_name + '_weights_attr')
 
         self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
-
-        if (cas_lib_name is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = cas_lib_name)
 
     def set_weights_attr(self, attr_tbl, clear=True):
         '''
@@ -1338,52 +1324,49 @@ class Network(Layer):
         # if path.endswith(os.path.sep):
         #    path = path[:-1]
 
-        caslib, path_remaining, tmp_caslib = caslibify(self.conn, path, task = 'save')
+        with caslibify_context(self.conn, path, task = 'save') as (caslib, path_remaining):
 
-        _file_name_ = self.model_name.replace(' ', '_')
-        _extension_ = '.sashdat'
-        model_tbl_file = path_remaining + _file_name_ + _extension_
-        weight_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
-        attr_tbl_file = path_remaining + _file_name_ + '_weights_attr' + _extension_
+            _file_name_ = self.model_name.replace(' ', '_')
+            _extension_ = '.sashdat'
+            model_tbl_file = path_remaining + _file_name_ + _extension_
+            weight_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
+            attr_tbl_file = path_remaining + _file_name_ + '_weights_attr' + _extension_
 
-        if self.model_table is not None:
-            ch = self.conn.table.tableexists(self.model_weights)
-            if ch.exists > 0:
-                rt = self._retrieve_('table.save', table = self.model_table, name = model_tbl_file, replace = True,
-                                     caslib = caslib)
-                if rt.severity > 1:
-                    for msg in rt.messages:
-                        print(msg)
-                    raise DLPyError('something is wrong while saving the model to a table!')
-        if self.model_weights is not None:
-            ch = self.conn.table.tableexists(self.model_weights)
-            if ch.exists > 0:
-                rt = self._retrieve_('table.save', table = self.model_weights, name = weight_tbl_file,
-                                     replace = True, caslib = caslib)
-                if rt.severity > 1:
-                    for msg in rt.messages:
-                        print(msg)
-                    raise DLPyError('something is wrong while saving the model weights to a table!')
+            if self.model_table is not None:
+                ch = self.conn.table.tableexists(self.model_weights)
+                if ch.exists > 0:
+                    rt = self._retrieve_('table.save', table = self.model_table, name = model_tbl_file, replace = True,
+                                         caslib = caslib)
+                    if rt.severity > 1:
+                        for msg in rt.messages:
+                            print(msg)
+                        raise DLPyError('something is wrong while saving the model to a table!')
+            if self.model_weights is not None:
+                ch = self.conn.table.tableexists(self.model_weights)
+                if ch.exists > 0:
+                    rt = self._retrieve_('table.save', table = self.model_weights, name = weight_tbl_file,
+                                         replace = True, caslib = caslib)
+                    if rt.severity > 1:
+                        for msg in rt.messages:
+                            print(msg)
+                        raise DLPyError('something is wrong while saving the model weights to a table!')
 
-                CAS_tbl_name = random_name('Attr_Tbl')
-                rt = self._retrieve_('table.attribute', task = 'convert', attrtable = CAS_tbl_name,
-                                     **self.model_weights.to_table_params())
-                if rt.severity > 1:
-                    for msg in rt.messages:
-                        print(msg)
-                    raise DLPyError('something is wrong while extracting the model attributes!')
+                    CAS_tbl_name = random_name('Attr_Tbl')
+                    rt = self._retrieve_('table.attribute', task = 'convert', attrtable = CAS_tbl_name,
+                                         **self.model_weights.to_table_params())
+                    if rt.severity > 1:
+                        for msg in rt.messages:
+                            print(msg)
+                        raise DLPyError('something is wrong while extracting the model attributes!')
 
-                rt = self._retrieve_('table.save', table = CAS_tbl_name, name = attr_tbl_file, replace = True,
-                                     caslib = caslib)
-                if rt.severity > 1:
-                    for msg in rt.messages:
-                        print(msg)
-                    raise DLPyError('something is wrong while saving the model attributes to a table!')
+                    rt = self._retrieve_('table.save', table = CAS_tbl_name, name = attr_tbl_file, replace = True,
+                                         caslib = caslib)
+                    if rt.severity > 1:
+                        for msg in rt.messages:
+                            print(msg)
+                        raise DLPyError('something is wrong while saving the model attributes to a table!')
 
-        print('NOTE: Model table saved successfully.')
-
-        if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
+            print('NOTE: Model table saved successfully.')
 
     def save_weights_csv(self, path):
         '''
@@ -1404,21 +1387,18 @@ class Network(Layer):
                             casout = dict(name = self.model_weights.name,
                                           replace = True))
 
-        caslib, path_remaining, tmp_caslib = caslibify(self.conn, path, task = 'save')
-        _file_name_ = self.model_name.replace(' ', '_')
-        _extension_ = '.csv'
-        weights_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
-        rt = self._retrieve_('table.save', table = weights_table_opts,
-                             name = weights_tbl_file, replace = True, caslib = caslib)
-        if rt.severity > 1:
-            for msg in rt.messages:
-                print(msg)
-            raise DLPyError('something is wrong while saving the the model to a table!')
+        with caslibify_context(self.conn, path, task = 'save') as (caslib, path_remaining):
+            _file_name_ = self.model_name.replace(' ', '_')
+            _extension_ = '.csv'
+            weights_tbl_file = path_remaining + _file_name_ + '_weights' + _extension_
+            rt = self._retrieve_('table.save', table = weights_table_opts,
+                                 name = weights_tbl_file, replace = True, caslib = caslib)
+            if rt.severity > 1:
+                for msg in rt.messages:
+                    print(msg)
+                raise DLPyError('something is wrong while saving the the model to a table!')
 
         print('NOTE: Model weights csv saved successfully.')
-
-        if (caslib is not None) and tmp_caslib:
-            self._retrieve_('table.dropcaslib', message_level = 'error', caslib = caslib)
 
     def save_to_onnx(self, path, model_weights = None):
         '''

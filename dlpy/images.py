@@ -21,7 +21,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
-from .utils import random_name, image_blocksize, caslibify
+from .utils import random_name, image_blocksize, caslibify_context
 
 
 class ImageTable(CASTable):
@@ -201,21 +201,21 @@ class ImageTable(CASTable):
 
         if 'name' not in casout:
             casout['name'] = random_name()
+        with caslibify_context(conn, path, task = 'load') as (caslib_created, path_created):
 
-        if caslib is None:
-            caslib, path, tmp_caslib = caslibify(conn, path, task='load')
-        else:
-            tmp_caslib = False
+            if caslib is None:
+                caslib = caslib_created
+                path = path_created
 
-        if caslib is None and path is None:
-            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
-                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+            if caslib is None and path is None:
+                print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                      'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
-        conn.retrieve('image.loadimages', _messagelevel='error',
-                      casout=casout,
-                      distribution=dict(type='random'),
-                      recurse=True, labellevels=-1,
-                      path=path, caslib=caslib, **kwargs)
+            conn.retrieve('image.loadimages', _messagelevel='error',
+                          casout=casout,
+                          distribution=dict(type='random'),
+                          recurse=True, labellevels=-1,
+                          path=path, caslib=caslib, **kwargs)
 
         code=[]
         code.append('length _filename_0 varchar(*);')
@@ -234,10 +234,6 @@ class ImageTable(CASTable):
 
         out = cls(**casout)
         out.set_connection(conn)
-
-        # drop the temp caslib
-        if (caslib is not None) and tmp_caslib:
-            conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
 
         return out
 
