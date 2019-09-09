@@ -156,8 +156,6 @@ class TestImageTable(unittest.TestCase):
         self.assertTrue(int(out[5]) == 200)
         self.assertTrue(int(out[6]) == 200)
 
-
-
     def test_as_random_patches(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -206,3 +204,12 @@ class TestImageTable(unittest.TestCase):
         self.assertTrue(int(out[4]) == 200)
         self.assertTrue(int(out[5]) == 200)
         self.assertTrue(int(out[6]) == 200)
+
+    def test_show(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        my_images = ImageTable.load_files(self.s, path=img_path)
+        # the test shold be clean, even if selected are less than nimages
+        my_images.show(nimages=2, where='_id_ eq 57')

@@ -321,7 +321,7 @@ class ImageTable(CASTable):
 
         return out
 
-    def show(self, nimages=5, ncol=8, randomize=False, figsize=None):
+    def show(self, nimages=5, ncol=8, randomize=False, figsize=None, where=None):
 
         '''
 
@@ -339,12 +339,19 @@ class ImageTable(CASTable):
             columns in the plots.
         randomize : bool, optional
             Specifies whether to randomly choose the images for display.
-        figsize: int, optional
+        figsize : int, optional
             Specifies the size of the fig that contains the image.
+        where : string, optional
+            Specifies the SAS Where clause for selecting images to be shown.
 
         '''
 
         nimages = min(nimages, len(self))
+        # put where clause to select images
+        self.params['where'] = where
+        # restrict the number of observations to be shown
+        max_obs = self.numrows().numrows
+        nimages = min(max_obs, nimages)
 
         if randomize:
             temp_tbl = self.retrieve('image.fetchimages', _messagelevel='error',
@@ -358,6 +365,9 @@ class ImageTable(CASTable):
                                      sortby='random_index', to=nimages)
         else:
             temp_tbl = self._retrieve('image.fetchimages', to=nimages, image=self.running_image_column)
+
+        # remove the where clause
+        self.params['where'] = None
 
         if nimages > ncol:
             nrow = nimages // ncol + 1
