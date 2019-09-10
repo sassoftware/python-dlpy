@@ -165,19 +165,17 @@ Finally, add the output layer:
 - [SAS ESPPy](https://github.com/sassoftware/python-esppy)
 - Watch: DLPy videos:
   * DLPy v1.0 examples:
-     * [Introduction Deep Learning with Python (DLPy) and SAS Viya](https://www.youtube.com/watch?v=RJ0gbsB7d_8)
      * [Image classification using CNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=125)
      * [Object detection using TinyYOLOv2](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=390)
      * [Import and export deep learning models with ONNX](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=627)
      * [Text classification and text generation using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=943)
      * [Time series forecasting using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=1185)
   * DLPy v1.1 examples:
-     * [Introduction to the series](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6078419777001)
-     * [Leverage Functional APIs to Build Complex Models](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6078414496001)
-     * [Image Segmentation with U-Net](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6078414496001)
-     * [Object Detection with Faster-RCNN](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6078421097001)
-     * [Image Classification with ShuffleNet and MobileNet](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6078413608001)
-     * [Multi-class Deep learning](http://players.brightcove.net/1872491364001/default_default/index.html?videoId=6078421098001) 
+     * [Leverage Functional APIs to Build Complex Models](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=115s)
+     * [Image Segmentation with U-Net](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=399s)
+     * [Object Detection with Faster-RCNN](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=688s)
+     * [Image Classification with ShuffleNet and MobileNet](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=1158s)
+     * [Multi-class Deep learning](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=1648s) 
 - [SAS Deep Learning with Python made easy using DLPy](https://blogs.sas.com/content/subconsciousmusings/2019/03/13/sas-deep-learning-with-python-made-easy-using-dlpy/)
 
 ### Contributing
