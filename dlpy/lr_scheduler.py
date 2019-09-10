@@ -111,6 +111,7 @@ class FixedLR(_LRScheduler):
 class StepLR(_LRScheduler):
     """
     Step learning rate scheduler
+    The learning rate is reduced by a factor(gamma) at certain intervals(step_size)
 
     Parameters
     ----------
@@ -134,6 +135,7 @@ class StepLR(_LRScheduler):
 class MultiStepLR(_LRScheduler):
     """
     Multiple steps learning rate scheduler
+    The initial learning rate is decayed by gamma once the number of epoch reaches one of the steps.
 
     Parameters
     ----------
@@ -161,6 +163,8 @@ class MultiStepLR(_LRScheduler):
 class PolynomialLR(_LRScheduler):
     """
     Polynomial learning rate scheduler
+    Applies a polynomial decay to the learning rate calculated by:
+    lr = initial_lr * (1 −iter / maxiter ) ^ power
 
     Parameters
     ----------
@@ -181,6 +185,7 @@ class PolynomialLR(_LRScheduler):
 class ReduceLROnPlateau(FCMPLR):
     """
     Reduce learning rate on plateau learning rate scheduler
+    Reduce learning rate when loss has stopped improving for a patience number of epochs.
 
     Parameters
     ----------
@@ -242,6 +247,9 @@ class ReduceLROnPlateau(FCMPLR):
 class CyclicLR(FCMPLR):
     """
     Cyclic learning rate scheduler
+    The policy cycles the learning rate between two boundaries[learning_rate, max_lr] with a constant frequency which
+    can be adjusted by factor. The learning rate changes after every batch. batch_size and data are necessary
+    to determine how many batches an epoch requires.
 
     Parameters
     ----------
