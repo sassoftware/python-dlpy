@@ -27,6 +27,7 @@ import unittest
 import swat
 import swat.utils.testing as tm
 from dlpy.images import ImageTable
+from dlpy.utils import DLPyError
 
 
 class TestImageTable(unittest.TestCase):
@@ -213,3 +214,13 @@ class TestImageTable(unittest.TestCase):
         my_images = ImageTable.load_files(self.s, path=img_path)
         # the test shold be clean, even if selected are less than nimages
         my_images.show(nimages=2, where='_id_ eq 57')
+
+    def test_show_invalid_whereclause(self):
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        img_path = self.data_dir+'giraffe_dolphin_small'
+        my_images = ImageTable.load_files(self.s, path=img_path)
+        # the test shold be clean, even if where clause is invalid.
+        my_images.show(nimages=2, where='_idfe_ eq 57')

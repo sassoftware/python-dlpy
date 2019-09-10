@@ -22,6 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
 from .utils import random_name, image_blocksize, caslibify_context
+from warnings import warn
 
 
 class ImageTable(CASTable):
@@ -343,6 +344,8 @@ class ImageTable(CASTable):
             Specifies the size of the fig that contains the image.
         where : string, optional
             Specifies the SAS Where clause for selecting images to be shown.
+            One example is as follows:
+            my_images.show(nimages=2, where='_id_ eq 57')
 
         '''
 
@@ -350,8 +353,14 @@ class ImageTable(CASTable):
         # put where clause to select images
         self.params['where'] = where
         # restrict the number of observations to be shown
-        max_obs = self.numrows().numrows
-        nimages = min(max_obs, nimages)
+        try:
+            # we use numrows to check if where clause is valid
+            max_obs = self.numrows().numrows
+            nimages = min(max_obs, nimages)
+        except AttributeError:
+            self.params['where'] = None
+            warn("Where clause doesn't take effect, because encounter an error while processing where clause. "
+                 "Please check your where clause.")
 
         if randomize:
             temp_tbl = self.retrieve('image.fetchimages', _messagelevel='error',
