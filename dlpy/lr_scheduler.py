@@ -60,7 +60,9 @@ class _LRScheduler(DLPyDict):
 
 class FCMPLR(_LRScheduler):
     """
-    FCMP learning rate scheduler
+    FCMP learning rate scheduler. Customize you own defined learning rate policy.
+    For more details, please check one example at:
+    examples/learning_rate_policy/Define_Learning_Rate_Policy.ipynb.
 
     Parameters
     ----------
@@ -111,6 +113,11 @@ class FixedLR(_LRScheduler):
 class StepLR(_LRScheduler):
     """
     Step learning rate scheduler
+    The learning rate is reduced by a factor(gamma) at certain intervals(step_size)
+    Example:
+        # reduce learning rate every 2 epochs
+        lr_scheduler = StepLR(learning_rate=0.0001, gamma=0.1, step_size=2)
+        solver = MomentumSolver(lr_scheduler = lr_scheduler, clip_grad_max = 100, clip_grad_min = -100)
 
     Parameters
     ----------
@@ -134,6 +141,11 @@ class StepLR(_LRScheduler):
 class MultiStepLR(_LRScheduler):
     """
     Multiple steps learning rate scheduler
+    The initial learning rate is decayed by gamma once the number of epoch reaches one of the steps.
+    Example:
+        # reduce learning rate by 0.1 at 20th, 50th, 80th epochs
+        lr_scheduler = MultiStepLR(learning_rate=0.0001, gamma=0.1, steps=[20, 50, 80])
+        solver = MomentumSolver(lr_scheduler = lr_scheduler, clip_grad_max = 100, clip_grad_min = -100)
 
     Parameters
     ----------
@@ -161,6 +173,8 @@ class MultiStepLR(_LRScheduler):
 class PolynomialLR(_LRScheduler):
     """
     Polynomial learning rate scheduler
+    Applies a polynomial decay to the learning rate calculated by:
+    lr = initial_lr * (1 −iter / maxiter ) ^ power
 
     Parameters
     ----------
@@ -181,6 +195,10 @@ class PolynomialLR(_LRScheduler):
 class ReduceLROnPlateau(FCMPLR):
     """
     Reduce learning rate on plateau learning rate scheduler
+    Reduce learning rate when loss has stopped improving for a certain number of epochs(patience).
+    Example:
+        lr_scheduler = ReduceLROnPlateau(conn=sess, cool_down_iters=2, gamma=0.1, learning_rate=0.01, patience=3)
+        solver = MomentumSolver(lr_scheduler = lr_scheduler, clip_grad_max = 100, clip_grad_min = -100)
 
     Parameters
     ----------
@@ -242,6 +260,13 @@ class ReduceLROnPlateau(FCMPLR):
 class CyclicLR(FCMPLR):
     """
     Cyclic learning rate scheduler
+    The policy cycles the learning rate between two boundaries[learning_rate, max_lr] with a constant frequency which
+    can be adjusted by factor. The learning rate changes after every batch. batch_size and data are necessary
+    to determine how many batches an epoch requires.
+    Example:
+        lr_scheduler = CyclicLR(conn=sess, data=my_images, max_lr=0.01, batch_size=1, factor=2,
+                                learning_rate=0.0001)
+        solver = MomentumSolver(lr_scheduler = lr_scheduler, clip_grad_max = 100, clip_grad_min = -100)
 
     Parameters
     ----------
