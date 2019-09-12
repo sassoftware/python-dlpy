@@ -582,7 +582,7 @@ class Conv2d(_Conv):
     act : string, optional
         Specifies the activation function.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
-        Default: AUTO
+        Default: RELU
     fcmp_act : string, optional
         Specifies the FCMP activation function for the layer.
     init : string, optional
@@ -599,7 +599,7 @@ class Conv2d(_Conv):
         Specifies the initial bias for the layer.
     dropout : float, optional
         Specifies the dropout rate.
-        Default: 0
+        Default: None
     include_bias : bool, optional
         Includes bias neurons (default).
     src_layers : iter-of-Layers, optional
@@ -673,8 +673,10 @@ class Conv1d(_Conv):
         Specifies the number of filters for the layer.
     width : int
         Specifies the width of the 1D kernel.
+        Default: 1
     stride : int, optional
         Specifies the step size for the moving window of the kernel over the input data.
+        Default: 1
     name : string, optional
         Specifies the name of the convolution layer.
     padding : int, optional
@@ -682,7 +684,7 @@ class Conv1d(_Conv):
     act : string, optional
         Specifies the activation function.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
-        Default: AUTO
+        Default: RELU
     fcmp_act : string, optional
         Specifies the FCMP activation function for the layer.
     init : string, optional
@@ -699,7 +701,7 @@ class Conv1d(_Conv):
         Specifies the initial bias for the layer.
     dropout : float, optional
         Specifies the dropout rate.
-        Default: 0
+        Default: None
     include_bias : bool, optional
         Includes bias neurons (default).
     src_layers : iter-of-Layers, optional
@@ -716,7 +718,7 @@ class Conv1d(_Conv):
     can_be_last_layer = False
     number_of_instances = 0
 
-    def __init__(self, n_filters, width = None, stride = 1, name = None,
+    def __init__(self, n_filters, width = 1, stride = 1, name = None,
                  padding = None, act = 'relu',
                  fcmp_act = None, init = None, std = None, mean = None, truncation_factor = None, init_bias = None,
                  dropout = None, include_bias = True, src_layers = None, **kwargs):
@@ -799,7 +801,7 @@ class GroupConv2d(Conv2d):
     act : string, optional
         Specifies the activation function.
         Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
-        Default: AUTO
+        Default: RELU
     fcmp_act : string, optional
         Specifies the FCMP activation function for the layer.
     init : string, optional
@@ -2580,6 +2582,6 @@ Add = Res
 BatchNormalization = BN
 Concatenate = Concat
 Conv2D = Conv2d
-Conv1D = Conv1d
 CLoss = EmbeddingLoss
+Conv1D = Conv1d
 GlobalAveragePooling1D = GlobalAveragePooling2D

@@ -344,10 +344,21 @@ class TestLayers(unittest.TestCase):
 
     # test conv1d
     def test_conv1d_layer1(self):
-        dict1 = Conv1d(name='convo1', n_filters=10, act='relu',
+        dict1 = Conv1d(name='convo1d_1', n_filters=10, act='relu',
                        width=3, stride=2, padding=1,
                        src_layers=[InputLayer(name='input1')]).to_model_params()
-        self.assertTrue(self.sample_syntax['convo1d'] == dict1)
+        self.assertTrue(self.sample_syntax['convo1d_1'] == dict1)
+
+    def test_conv1d_layer2(self):
+        dict1 = Conv1d(name='convo1d_2', n_filters=10, act='relu',
+                       stride=1, padding=1,
+                       src_layers=[InputLayer(name='input1')]).to_model_params()
+        self.assertTrue(self.sample_syntax['convo1d_2'] == dict1)
+
+    def test_conv1d_layer3(self):
+        dict1 = Conv1d(name='convo1d_3', n_filters=10, act='relu',
+                       src_layers=[InputLayer(name='input1')]).to_model_params()
+        self.assertTrue(self.sample_syntax['convo1d_3'] == dict1)
 
     def test_mapping_dict(self):
         mapping = get_mapping_dict()
