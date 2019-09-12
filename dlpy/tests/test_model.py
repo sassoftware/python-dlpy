@@ -30,8 +30,8 @@ from swat.cas.table import CASTable
 from dlpy.model import Model, Optimizer, AdamSolver, Sequence
 from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
-from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
-                         Recurrent, Keypoints, BN, Res, Concat, Reshape)
+from dlpy.layers import (InputLayer, Conv2d, Conv1d, Pooling, Dense, OutputLayer,
+                         Recurrent, Keypoints, BN, Res, Concat, Reshape, GlobalAveragePooling1D)
 from dlpy.utils import caslibify
 from dlpy.applications import Tiny_YoloV2
 import unittest
@@ -983,6 +983,21 @@ class TestModel(unittest.TestCase):
         model5 = Model(self.s)
         model5.load(path = self.data_dir + 'vgg16.sashdat')
 
+    def test_conv1d_model(self):
+        # a model from https://blog.goodaudience.com/introduction-to-1d-convolutional-neural-networks-in-keras-for-time-sequences-3a7ff801a2cf
+        Conv1D = Conv1d
+        MaxPooling1D=Pooling
+        model_m = Sequential(self.s)
+        model_m.add(InputLayer(width=80*3, height=1, n_channels=1))
+        model_m.add(Conv1D(100, 10, act='relu'))
+        model_m.add(Conv1D(100, 10, act='relu'))
+        model_m.add(MaxPooling1D(3))
+        model_m.add(Conv1D(160, 10, act='relu'))
+        model_m.add(Conv1D(160, 10, act='relu'))
+        model_m.add(GlobalAveragePooling1D(dropout=0.5))
+        model_m.add(OutputLayer(n=6, act='softmax'))
+        # use assertEqual to check whether the layer output size matches the expected value for MaxPooling1D
+        self.assertEqual(model_m.layers[3].output_size, (1, 80, 100))
 
     @classmethod
     def tearDownClass(cls):

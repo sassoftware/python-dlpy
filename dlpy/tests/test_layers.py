@@ -21,7 +21,7 @@ import unittest
 import json
 import os
 
-from dlpy.layers import InputLayer, Conv2d, Pooling, Dense, Recurrent, BN, Res, Proj, OutputLayer, \
+from dlpy.layers import InputLayer, Conv2d, Conv1d, Pooling, Dense, Recurrent, BN, Res, Proj, OutputLayer, \
                         Keypoints, Detection, Scale, Reshape, Conv2DTranspose, GroupConv2d, GlobalAveragePooling2D, \
                         FastRCNN, ROIPooling, RegionProposal
 from dlpy.blocks import ResBlock, ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
@@ -342,6 +342,14 @@ class TestLayers(unittest.TestCase):
                              nms_iou_threshold = 0.3)
         self.assertTrue(self.sample_syntax['fast_rcnn1'] == fast_rcnn.config)
 
+    # test conv1d
+    def test_conv1d_layer1(self):
+        dict1 = Conv1d(name='convo1', n_filters=10, act='relu',
+                       width=3, stride=2, padding=1,
+                       src_layers=[InputLayer(name='input1')]).to_model_params()
+        self.assertTrue(self.sample_syntax['convo1d'] == dict1)
+
     def test_mapping_dict(self):
         mapping = get_mapping_dict()
         print(mapping['learningrate'])
+

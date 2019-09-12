@@ -663,6 +663,110 @@ class Conv2d(_Conv):
                 return int(self.config['n_filters'])
         return int(self.config['n_filters'])
 
+class Conv1d(_Conv):
+    '''
+    Convolution layer in 1D
+
+    Parameters
+    ----------
+    n_filters : int
+        Specifies the number of filters for the layer.
+    width : int
+        Specifies the width of the 1D kernel.
+    stride : int, optional
+        Specifies the step size for the moving window of the kernel over the input data.
+    name : string, optional
+        Specifies the name of the convolution layer.
+    padding : int, optional
+        Specifies the padding size, assuming equal padding vertically and horizontally.
+    act : string, optional
+        Specifies the activation function.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, TANH, RECTIFIER, RELU, SOFPLUS, ELU, LEAKY, FCMP
+        Default: AUTO
+    fcmp_act : string, optional
+        Specifies the FCMP activation function for the layer.
+    init : string, optional
+        Specifies the initialization scheme for the layer.
+        Valid Values: XAVIER, UNIFORM, NORMAL, CAUCHY, XAVIER1, XAVIER2, MSRA, MSRA1, MSRA2
+        Default: XAVIER
+    std : float, optional
+        Specifies the standard deviation value when the ``init`` parameter is set to NORMAL.
+    mean : float, optional
+        Specifies the mean value when the ``init`` parameter is set to NORMAL.
+    truncation_factor : float, optional
+        Specifies the truncation threshold (truncationFactor x std), when the ``init`` parameter is set to NORMAL
+    init_bias : float, optional
+        Specifies the initial bias for the layer.
+    dropout : float, optional
+        Specifies the dropout rate.
+        Default: 0
+    include_bias : bool, optional
+        Includes bias neurons (default).
+    src_layers : iter-of-Layers, optional
+        Specifies the layers directed to this layer.
+
+    Returns
+    -------
+    :class:`Conv1d`
+
+    '''
+    type = 'convo'
+    type_label = 'Convo.'
+    type_desc = '1D Convolution layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, n_filters, width = None, stride = 1, name = None,
+                 padding = None, act = 'relu',
+                 fcmp_act = None, init = None, std = None, mean = None, truncation_factor = None, init_bias = None,
+                 dropout = None, include_bias = True, src_layers = None, **kwargs):
+        # use the super class from _conv
+        # for Conv1d, padding is always (padding, 0)
+        # for Conv1d, stride is always (stride, 0)
+        super(Conv1d, self).__init__(n_filters=n_filters, width=width, height=1,
+                                     stride=None, stride_horizontal=stride, stride_vertical=1,
+                                     name=name,
+                                     padding=None, padding_width=padding, padding_height=0,
+                                     act=act, fcmp_act=fcmp_act, init=init, std=std, mean=mean,
+                                     truncation_factor=truncation_factor, init_bias=init_bias, dropout=dropout,
+                                     include_bias=include_bias, src_layers=src_layers, **kwargs)
+
+    @property
+    def output_size(self):
+        if self._output_size is None:
+            # calculate output according to specified padding
+            if self.padding != (None, None):
+                out_h = ((self.src_layers[0].output_size[0]-self.config['height'] + 2*self.padding[0])//self.stride[0])+1
+                out_w = ((self.src_layers[0].output_size[1]-self.config['width'] + 2*self.padding[1])//self.stride[1])+1
+            else:
+                import math
+                # same padding
+                out_h = math.ceil(self.src_layers[0].output_size[0]/self.stride[0])
+                out_w = math.ceil(self.src_layers[0].output_size[1]/self.stride[1])
+
+            self._output_size = (int(out_h), int(out_w), int(self.config['n_filters']))
+        return self._output_size
+
+    @property
+    def num_weights(self):
+        if self._num_weights is None:
+            self._num_weights = int(self.config['height'] * self.config['width'] *
+                                    self.config['n_filters'] * self.src_layers[0].output_size[2])
+        return self._num_weights
+
+    @property
+    def kernel_size(self):
+        return (int(self.config['height']), int(self.config['width']))
+
+    @property
+    def num_bias(self):
+        if 'include_bias' in self.config:
+            if not self.config['include_bias']:
+                return 0
+            else:
+                return int(self.config['n_filters'])
+        return int(self.config['n_filters'])
+
 
 class GroupConv2d(Conv2d):
     '''
@@ -2476,4 +2580,6 @@ Add = Res
 BatchNormalization = BN
 Concatenate = Concat
 Conv2D = Conv2d
+Conv1D = Conv1d
 CLoss = EmbeddingLoss
+GlobalAveragePooling1D = GlobalAveragePooling2D
