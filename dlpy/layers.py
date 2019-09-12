@@ -567,6 +567,7 @@ class Conv2d(_Conv):
         Specifies the height of the kernel.
     stride : int, optional
         Specifies the step size for the moving window of the kernel over the input data.
+        Default: 1
     name : string, optional
         Specifies the name of the convolution layer.
     stride_horizontal : int, optional
@@ -786,6 +787,7 @@ class GroupConv2d(Conv2d):
         Specifies the height of the kernel.
     stride : int, optional
         Specifies the step size for the moving window of the kernel over the input data.
+        Default: 1
     name : string, optional
         Specifies the name of the convolution layer.
     stride_horizontal : int, optional
