@@ -154,18 +154,50 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
                              row=y_true, col=y_pred)
     
     conf_mat = res['Crosstab']
-    
+
+    # make conf_mat to be a symmetric
+
+    # collect class info from rows and cols
+    row_class = [x.strip() for x in conf_mat.iloc[:,0].values]
+    col_class = [conf_mat.colinfo[x].label for x in conf_mat.columns.values][1:]
+
+    # use union to get the total number of classes
+    import collections
+    row_order_set = collections.OrderedDict.fromkeys(row_class).keys()
+    col_order_set = collections.OrderedDict.fromkeys(col_class).keys()
+
+    tot_class = set(row_class).union(set(col_class))
+
+    # generate the full matrix
+    cls_list = list(tot_class)
+    cls_list.sort()
+    ret = np.zeros((len(tot_class), len(tot_class)))  # dummy array
+    for i, row in conf_mat.iterrows():
+        irow = cls_list.index(row.iloc[0].strip())
+        for j, col in enumerate(conf_mat.iloc[i, 1:]):
+            icol = cls_list.index(col_class[j])
+            # print(irow, icol, j, col)
+            ret[int(irow), int(icol)] = col
+
+    import pandas as pd
+    conf_mat = pd.DataFrame(data=ret, columns=cls_list, index=cls_list)
+
+    #change the index column name
+    conf_mat.index.names = [y_true]
+
     if target_dtype == 'double':
         target_index_dtype = np.float64
-        conf_mat[y_true] = conf_mat[y_true].astype(target_index_dtype)
+        #conf_mat[y_true] = conf_mat[y_true].astype(target_index_dtype)
+
     elif target_dtype.startswith('int'):
         target_index_dtype = getattr(np, target_dtype)
-        conf_mat[y_true] = conf_mat[y_true].astype(target_index_dtype)
-        
-    conf_mat.set_index(y_true, inplace=True)
+        #conf_mat[y_true] = conf_mat[y_true].astype(target_index_dtype)
+
+    conf_mat.index = conf_mat.index.astype(target_index_dtype)
+    #conf_mat.set_index(y_true, inplace=True)
     
-    conf_mat.columns = conf_mat.index.copy()
-    conf_mat.columns.name = y_pred
+    #conf_mat.columns = conf_mat.index.copy()
+    #conf_mat.columns.name = y_pred
     
     if tmp_table_created: # if tmp_table_created, tbl_name referes to the temporary table name
         conn.retrieve('table.droptable', _messagelevel='error', name=castable.name) 
@@ -176,7 +208,7 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
         if not isinstance(labels, list):
             labels = [labels]
         
-        return conf_mat.loc[labels, labels]
+        return conf_mat.iloc[labels, labels]
     
 def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001, 
              figsize=(8, 8), fontsize_spec=None, linewidth=1, id_vars=None):
@@ -578,9 +610,9 @@ def f1_score(y_true, y_pred, pos_label, castable=None, id_vars=None):
     
     conf_mat = confusion_matrix(y_true, y_pred, castable=castable, id_vars=id_vars)
     
-    recall = conf_mat.loc[pos_label, pos_label]/conf_mat.loc[pos_label, :].sum()
+    recall = conf_mat.iloc[pos_label, pos_label]/conf_mat.iloc[pos_label, :].sum()
     
-    precision = conf_mat.loc[pos_label, pos_label]/conf_mat.loc[:, pos_label].sum()
+    precision = conf_mat.iloc[pos_label, pos_label]/conf_mat.iloc[:, pos_label].sum()
     
     f1 = 2*precision*recall/(precision + recall)
     

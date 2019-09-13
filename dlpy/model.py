@@ -268,7 +268,8 @@ class Model(Network):
         if target is None and '_label_' in input_table.columns.tolist():
             target = '_label_'
 
-        if self.model_weights.to_table_params()['name'].upper() in \
+        # check whether the field is none or not
+        if self.model_weights is not None and self.model_weights.to_table_params()['name'].upper() in \
                 list(self._retrieve_('table.tableinfo').TableInfo.Name):
             print('NOTE: Training based on existing weights.')
             init_weights = self.model_weights
