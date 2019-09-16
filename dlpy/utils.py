@@ -417,7 +417,7 @@ def get_user_defined_labels_table(conn, label_file_name, label_length=None):
                       'Setting the label length to ' + char_length + ' characters.')
 
         else:
-            char_label = label_length
+            char_length = label_length
 
     else: 
         raise DLPyError('The label table is missing one or both of the "label" and "label_id" columns.')
