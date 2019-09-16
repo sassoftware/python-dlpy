@@ -20,6 +20,7 @@
 import unittest
 import swat
 import swat.utils.testing as tm
+import csv
 from dlpy.utils import *
 from dlpy.images import ImageTable
 
@@ -388,7 +389,71 @@ class TestUtils(unittest.TestCase):
         df = self.s.caslibinfo().CASLibInfo['Name']
         self.assertEqual(df[df == tmp_caslib].shape[0], 0)
 
+    def test_user_defined_labels(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
+        server_type = get_cas_host_type(self.s).lower()
+
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            sep = '/'
+        else:
+            sep = '\\'
+            
+        # write user-defined label table to CSV file
+        levels = [
+                  '&', # : 0,
+                  'A', # : 1,
+                  'B', # : 2,
+                  'C', # : 3,
+                  'D', # : 4,
+                  'E', # : 5,
+                  'F', # : 6,
+                  'G', # : 7,
+                  'H', # : 8,
+                  'I', # : 9,
+                  'J', # : 10,
+                  'K', # : 11,
+                  'L', # : 12,
+                  'M', # : 13,
+                  'N', # : 14,
+                  'O', # : 15,
+                  'P', # : 16,
+                  'Q', # : 17,
+                  'R', # : 18,
+                  'S', # : 19,
+                  'T', # : 20,
+                  'U', # : 21,
+                  'V', # : 22,
+                  'W', # : 23,
+                  'X', # : 24,
+                  'Y', # : 25,
+                  'Z', # : 26,
+                  '\'', # : 27
+                  ' ', # : 28
+                ]
+
+        # save labels file to local data directory
+        header = ['label_id'] + ['label']
+
+        label_file_name = self.data_dir_local + sep + 'rnn_import_labels.csv'
+        with open(label_file_name, 'w+') as f:
+            writer = csv.writer(f, delimiter=',')
+            writer.writerow(header)
+
+            for ii, lval in enumerate(levels):
+                row = [str(ii)] + [lval]
+                writer.writerow(row)
+
+        # test using maximum label length in CSV to set uploaded table label length
+        label_table1 = get_user_defined_labels_table(self.s, label_file_name, None)
+
+        self.assertTrue(label_table1 is not None)
+
+        # test specifying label length to set uploaded table label length
+        label_table2 = get_user_defined_labels_table(self.s, label_file_name, 6)
+
+        self.assertTrue(label_table2 is not None)
 
 
 
