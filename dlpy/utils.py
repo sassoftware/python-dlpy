@@ -392,12 +392,36 @@ def get_user_defined_labels_table(conn, label_file_name, label_length=None):
 
     full_filename = label_file_name
 
-    if label_length is None:
-        char_length = 200
-    else:
-        char_length = label_length
-    
-    labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False)
+    labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False, keep_default_na=False)
+
+    # make sure proper columns exist
+    if ('label' in labels.columns) and ('label_id' in labels.columns):
+        if label_length is None:
+
+            # check for columns that might be using space as label.  These labels would be
+            # ignored due to specifying skipinitialspace=True in Pandas read_csv function
+            for ii in range(labels.shape[0]):
+                if len(labels.loc[ii,'label']) == 0:
+                    labels.loc[ii,'label'] = " "
+
+            # set number of characters based on maximum label length
+            char_length = 0
+            warn_unequal_lengths = False
+            for ii in range(labels.shape[0]):
+                char_length = max([char_length, len(labels.loc[ii,'label'])])
+                if char_length != len(labels.loc[0,'label']):
+                    warn_unequal_lengths = True
+
+            if warn_unequal_lengths:
+                print('WARNING: not all target labels have the same length.'
+                      'Setting the label length to ' + char_length + ' characters.')
+
+        else:
+            char_length = label_length
+
+    else: 
+        raise DLPyError('The label table is missing one or both of the "label" and "label_id" columns.')
+
     conn.upload_frame(labels, casout=dict(name=temp_name, replace=True),
                       importoptions={'vars':[
                           {'name': 'label_id', 'type': 'int64'},
