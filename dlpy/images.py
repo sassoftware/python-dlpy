@@ -718,7 +718,7 @@ class ImageTable(CASTable):
     def random_mutations(self, color_jitter=True, color_shift=True, darken=False,
                          horizontal_flip=True, invert_pixels=False, lighten=False, pyramid_down=False,
                          pyramid_up=False, rotate_left=False, rotate_right=False, sharpen=False,
-                         vertical_flip=True, inplace=True):
+                         vertical_flip=True, inplace=True, random_ratio=None):
 
         '''
 
@@ -751,7 +751,12 @@ class ImageTable(CASTable):
             Specifies whether to sharpen the input image.
         vertical_flip : bool, optional
             Specifies whether to vertically flip the input image.
-
+        inplace : bool, optional
+            Specifies if the input table will be used as the resulting table or not.
+            Default : True
+        random_ratio : double, optional
+            Specifies the ratio of the randomness. The smaller value would yield less
+            number of images in the resulting table.
         Returns
         -------
 
@@ -783,6 +788,7 @@ class ImageTable(CASTable):
                            image=self.running_image_column,
                            casout=dict(replace=True, **self.to_outtable_params()),
                            croplist=croplist,
+                           randomratio=random_ratio,
                            writerandomly=True)
 
             # The following code generate the latest file name according
@@ -820,7 +826,8 @@ class ImageTable(CASTable):
                                  rotate_right=rotate_right,
                                  sharpen=sharpen,
                                  vertical_flip=vertical_flip,
-                                 inplace=True)
+                                 inplace=True,
+                                 randomratio=random_ratio)
             return out
 
     @property
