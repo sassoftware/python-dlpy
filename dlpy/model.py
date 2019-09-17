@@ -277,6 +277,10 @@ class Model(Network):
             print('NOTE: Training from scratch.')
             init_weights = None
 
+        # when model_weights is none, reset it
+        if self.model_weights is None:
+            self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
+
         if save_best_weights and self.best_weights is None:
             self.best_weights = random_name('model_best_weights', 6)
 

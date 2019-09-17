@@ -24,79 +24,8 @@ from swat.cas.table import CASColumn
 from swat.cas.table import CASTable
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import warnings
-
-def accuracy_score(y_true, y_pred, castable=None, normalize=True, id_vars=None):
-    '''
-    Computes the classification accuracy score.
-
-    Parameters
-    ----------
-    y_true : string or :class:`CASColumn`
-        The column of the ground truth labels. If it is a string, then 
-        y_pred has to be a string and they both belongs to the same CASTable specified 
-        by the castable argument. If it is a :class:`CASColumn`, then y_pred has to be 
-        a :class:`CASColumn`, and the castable argument is ignored. When both y_pred 
-        and y_true are :class:`CASColumn`, they can be in different CASTables. 
-    y_pred : string or :class:`CASColumn`
-        The column of the predicted class labels. If it is a string, then 
-        y_true has to be a string and they both belongs to the same CASTable specified 
-        by the castable argument. If it is a :class:`CASColumn`, then y_true has to be 
-        a :class:`CASColumn`, and the castable argument is ignored. When both y_pred 
-        and y_true are :class:`CASColumn`, they can be in different CASTables. 
-    castable : :class:`CASTable`, optional
-        The CASTable object to use as the source if the y_pred and y_true are strings.
-        Default = None
-    normalize : boolean, optional
-        If ``False``, return the number of correctly classified samples.
-        Otherwise, return the fraction of correctly classified samples.
-        Default = True
-    id_vars : string or list of strings, optional
-        Column names that serve as unique id for y_true and y_pred if they are 
-        from different CASTables. The column names need to appear in both CASTables, 
-        and they serve to match y_true and y_pred appropriately, since observation 
-        orders can be shuffled in distributed computing environment. 
-        Default = None
-
-    Returns
-    -------
-    score : float
-        If ``normalize=False``, return the number of correctly classified samples.
-        Otherwise, return the fraction of correctly classified samples.        
-
-    '''
-
-    
-    check_results = _check_inputs(y_true, y_pred, castable=castable, 
-                                  return_target_dtype=False, id_vars=id_vars)
-    y_true = check_results[0]
-    y_pred = check_results[1]
-    castable = check_results[2]
-    conn = check_results[3]
-    tmp_table_created = check_results[4]
-       
-    matched_colname = 'matched'
-    # check whether matched_colname is already in the castable, 
-    # to avoid duplication or overwrite when creating computedvars. 
-    while matched_colname in castable.columns:
-        matched_colname = random_name(name='matched_')  
-     
-    castbl_params = {}
-    castbl_params['computedvars'] = [{"name":matched_colname}]
-    code = 'if {0}={1} then {2}=1;else {2}=0'.format(y_true, y_pred, matched_colname)
-    castbl_params['computedvarsprogram'] = code
-    castable = conn.CASTable(castable.name, **castbl_params)
-    
-    if normalize:
-        score = castable[matched_colname].mean()
-    else:
-        score = castable[matched_colname].sum()
-    
-    if tmp_table_created:  # if tmp_table_created, tbl_name referes to the temporary table name   
-        conn.retrieve('table.droptable', _messagelevel='error', name=castable.name) 
-    
-    return score
-
 
 def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
     '''
@@ -209,8 +138,77 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
             labels = [labels]
         
         return conf_mat.iloc[labels, labels]
-    
-def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001, 
+
+
+def accuracy_score(y_true, y_pred, castable=None, normalize=True, id_vars=None):
+    '''
+    Computes the classification accuracy score.
+
+    Parameters
+    ----------
+    y_true : string or :class:`CASColumn`
+        The column of the ground truth labels. If it is a string, then
+        y_pred has to be a string and they both belongs to the same CASTable specified
+        by the castable argument. If it is a :class:`CASColumn`, then y_pred has to be
+        a :class:`CASColumn`, and the castable argument is ignored. When both y_pred
+        and y_true are :class:`CASColumn`, they can be in different CASTables.
+    y_pred : string or :class:`CASColumn`
+        The column of the predicted class labels. If it is a string, then
+        y_true has to be a string and they both belongs to the same CASTable specified
+        by the castable argument. If it is a :class:`CASColumn`, then y_true has to be
+        a :class:`CASColumn`, and the castable argument is ignored. When both y_pred
+        and y_true are :class:`CASColumn`, they can be in different CASTables.
+    castable : :class:`CASTable`, optional
+        The CASTable object to use as the source if the y_pred and y_true are strings.
+        Default = None
+    normalize : boolean, optional
+        If ``False``, return the number of correctly classified samples.
+        Otherwise, return the fraction of correctly classified samples.
+        Default = True
+    id_vars : string or list of strings, optional
+        Column names that serve as unique id for y_true and y_pred if they are
+        from different CASTables. The column names need to appear in both CASTables,
+        and they serve to match y_true and y_pred appropriately, since observation
+        orders can be shuffled in distributed computing environment.
+        Default = None
+
+    Returns
+    -------
+    score : float
+        If ``normalize=False``, return the number of correctly classified samples.
+        Otherwise, return the fraction of correctly classified samples.
+
+    '''
+
+    check_results = _check_inputs(y_true, y_pred, castable=castable,
+                                  return_target_dtype=False, id_vars=id_vars)
+    y_true = check_results[0]
+    y_pred = check_results[1]
+    castable = check_results[2]
+    conn = check_results[3]
+    tmp_table_created = check_results[4]
+
+    # use confusion_matrix to compute accuracy
+    conf_mat = confusion_matrix(y_true, y_pred, castable=castable, id_vars=id_vars)
+
+    # total number of observations
+    obs_per_class = conf_mat.sum()
+    tot_obs = sum(obs_per_class)
+    correct_pred_class = pd.Series(np.diag(conf_mat), index=[conf_mat.index, conf_mat.columns])
+    tot_correct_pred_obs = sum(correct_pred_class)
+
+    if normalize:
+        score = tot_correct_pred_obs/tot_obs
+    else:
+        score = tot_correct_pred_obs
+
+    if tmp_table_created:  # if tmp_table_created, tbl_name referes to the temporary table name
+        conn.retrieve('table.droptable', _messagelevel='error', name=castable.name)
+
+    return score
+
+
+def plot_roc(y_true, y_score, pos_label, castable=None, cutstep=0.001,
              figsize=(8, 8), fontsize_spec=None, linewidth=1, id_vars=None):
     
     '''
