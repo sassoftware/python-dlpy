@@ -436,7 +436,8 @@ class TestUtils(unittest.TestCase):
         # save labels file to local data directory
         header = ['label_id'] + ['label']
 
-        label_file_name = self.data_dir_local + sep + 'rnn_import_labels.csv'
+        import os
+        label_file_name = os.path.join(self.data_dir_local, 'rnn_import_labels.csv')
         with open(label_file_name, 'w+') as f:
             writer = csv.writer(f, delimiter=',')
             writer.writerow(header)
@@ -455,5 +456,6 @@ class TestUtils(unittest.TestCase):
 
         self.assertTrue(label_table2 is not None)
 
+        os.remove(label_file_name)
 
 

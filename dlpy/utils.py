@@ -414,7 +414,7 @@ def get_user_defined_labels_table(conn, label_file_name, label_length=None):
 
             if warn_unequal_lengths:
                 print('WARNING: not all target labels have the same length.'
-                      'Setting the label length to ' + char_length + ' characters.')
+                      'Setting the label length to ' + str(char_length) + ' characters.')
 
         else:
             char_length = label_length
