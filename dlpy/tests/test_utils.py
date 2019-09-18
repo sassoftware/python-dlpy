@@ -458,4 +458,7 @@ class TestUtils(unittest.TestCase):
 
         os.remove(label_file_name)
 
+    def test_print_predefined_models(self):
+        print_predefined_models()
+
 

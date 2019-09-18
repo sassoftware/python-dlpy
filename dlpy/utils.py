@@ -39,6 +39,7 @@ import collections
 from itertools import repeat
 import math
 from contextlib import contextmanager
+import inspect
 
 
 def random_name(name='ImageData', length=6):
@@ -2382,6 +2383,15 @@ def create_image_classification_metadata_table(conn, folder, extensions_to_filte
                 count +=1
     df = pd.DataFrame(data, columns=['_filePath_', '_relativePath_', '_fileName_', '_fName_', '_label_', '_id_'])
     return conn.upload_frame(df, casout=dict(name=output_name, replace=True))
+
+
+def print_predefined_models():
+    import dlpy.applications
+    models_meta = inspect.getmembers(dlpy.applications, inspect.isfunction)
+    # only keep function from application module instead of import ones; remove function starts with underscore.
+    models_name = [m[0] for m in models_meta if m[1].__module__ == dlpy.applications.__name__ and
+                   not m[0].startswith('_')]
+    print('DLPy supports predefined models as follows: \n{}.'.format(', '.join(models_name)))
 
 
 class DLPyDict(collections.MutableMapping):
