@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
+
 def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
     '''
     Computes the confusion matrix of a classification task.
