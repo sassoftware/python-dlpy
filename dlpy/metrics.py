@@ -92,8 +92,8 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
 
     # use union to get the total number of classes
     import collections
-    row_order_set = collections.OrderedDict.fromkeys(row_class).keys()
-    col_order_set = collections.OrderedDict.fromkeys(col_class).keys()
+    collections.OrderedDict.fromkeys(row_class).keys()
+    collections.OrderedDict.fromkeys(col_class).keys()
 
     tot_class = set(row_class).union(set(col_class))
 
