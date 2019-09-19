@@ -187,6 +187,12 @@ class TestUtils(unittest.TestCase):
         get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', (416, 512))
         get_txt_annotation(self.data_dir_local + 'dlpy_obj_det_test', 'coco', (416, 512))
 
+    def test_get_txt_annotation_name_file(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        get_txt_annotation(self.data_dir_local+'dlpy_obj_det_test', 'yolo', (416, 512),
+                           name_file = self.data_dir_local+'dlpy_obj_det_test'+self.server_sep+'coco.names')
+
     def test_unify_keys(self):
         dict_1={
             'Key1':'abc',
