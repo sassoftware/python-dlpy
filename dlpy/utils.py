@@ -39,6 +39,7 @@ import collections
 from itertools import repeat
 import math
 from contextlib import contextmanager
+import locale
 
 
 def random_name(name='ImageData', length=6):
@@ -1082,6 +1083,9 @@ def _convert_coco(size, box, resize):
 
 
 def _convert_xml_annotation(filename, coord_type, resize):
+    # always use en locale since we use this locale to generate our internal txt files
+    locale.setlocale(locale.LC_ALL, 'en-US')
+
     in_file = open(filename)
     filename, file_extension = os.path.splitext(filename)
     tree = ET.parse(in_file)
@@ -1108,6 +1112,9 @@ def _convert_xml_annotation(filename, coord_type, resize):
         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
     in_file.close()
     out_file.close()
+
+    # reset this locale back to the default
+    locale.setlocale(locale.LC_ALL, '')
 
 
 def _convert_json_annotation(filename_w_ext, coord_type, resize):
@@ -1210,19 +1217,14 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
         Default: None
 
     '''
-    cwd = os.getcwd()
-    os.chdir(local_path)
-    image_size = _pair(image_size)  # ensure image_size is a pair
-    # if label_files = None, that means we call it directly and parse annotation files.
-    if label_files is None:
-        label_files = os.listdir(local_path)
-    # find all of label files
-    label_files = [x for x in label_files if x.endswith('.xml')]
+    from glob import glob
+    image_size=_pair(image_size) # ensure image_size is a pair
+    # get all xml file under the local_path
+    label_files = glob(os.path.join(local_path, '*.xml'))
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
     for idx, filename in enumerate(label_files):
         _convert_xml_annotation(filename, coord_type, image_size)
-    os.chdir(cwd)
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
@@ -1267,6 +1269,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         Specifies the size of images to resize.
         If a tuple is passed, the first integer is width and the second value is height.
         Default: (416, 416)
+
+    local_locale : string, optional
 
     Returns
     -------
