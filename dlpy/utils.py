@@ -1237,11 +1237,15 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
 
     '''
     image_size = _pair(image_size)  # ensure image_size is a pair
-    # get all xml file under the local_path
-    label_files = glob(os.path.join(local_path, '*.xml'))
+    # if label_files = None, that means we call it directly and parse annotation files.
+    if label_files is None:
+        # get all xml file under the local_path
+        label_files = glob(os.path.join(local_path, '*.xml'))
+    else:
+        label_files = [os.path.join(local_path, f) for f in label_files if f.endswith('.xml')]
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
-    for idx, filename in enumerate(label_files):
+    for filename in label_files:
         _convert_xml_annotation(filename, coord_type, image_size)
 
 
