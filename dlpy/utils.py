@@ -1275,8 +1275,6 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         If a tuple is passed, the first integer is width and the second value is height.
         Default: (416, 416)
 
-    local_locale : string, optional
-
     Returns
     -------
     A list of variables that are the labels of the object detection table
