@@ -163,8 +163,7 @@ class ImageTable(CASTable):
         return out
 
     @classmethod
-    def load_files(cls, conn, path, casout=None, columns=None,
-                   caslib=None, **kwargs):
+    def load_files(cls, conn, path, casout=None, columns=None, caslib=None, **kwargs):
 
         '''
 
