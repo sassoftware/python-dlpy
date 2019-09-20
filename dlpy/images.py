@@ -21,7 +21,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
-from .utils import random_name, image_blocksize, caslibify_context
+from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep
 from warnings import warn
 
 
@@ -217,9 +217,10 @@ class ImageTable(CASTable):
                           recurse=True, labellevels=-1,
                           path=path, caslib=caslib, **kwargs)
 
+        sep_ = get_server_path_sep(conn)
         code=[]
         code.append('length _filename_0 varchar(*);')
-        code.append('_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),\'/\')+2;')
+        code.append("_loc1 = LENGTH(_path_) - INDEX(REVERSE(_path_),'"+sep_+"')+2;")
         code.append('_filename_0 = SUBSTR(_path_,_loc1);')
         code = '\n'.join(code)
         column_names = ['_image_', '_label_', '_filename_0', '_id_']

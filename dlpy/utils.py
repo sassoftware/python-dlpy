@@ -549,9 +549,9 @@ def caslibify_context(conn, path, task='save'):
                         if new_caslib is not None:
                             conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
         else:
-            raise DLPyError('we need more than one level of directories. e.g., /dir1/dir2. '
+            raise DLPyError('We need more than one level of directories. e.g., /dir1/dir2. '
                             'This usually happens when you pass a Windows path to a Unix CAS server, '
-                            'or vice versa. Please do check the path.')
+                            'or vice versa. Please do check the path parameter.')
 
 
 def caslibify(conn, path, task='save'):
