@@ -19,7 +19,8 @@ from ..utils import input_table_check
 
 
 def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=224,
-                   random_crop=None, offsets=None):
+                   random_crop=None, offsets=None,
+                   random_flip=None, random_mutation=None):
     '''
     ResNet50 model definition
 
@@ -50,7 +51,15 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
         input data is set after applying scaling and subtracting the
         specified offsets.deepLearn.
         Default: (103.939, 116.779, 123.68)
-
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
     Returns
     -------
     None
@@ -72,9 +81,26 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
     s.deepLearn.buildModel(model=dict(replace=True, **model_table_opts), type='CNN')
 
     # input layer
-    s.deepLearn.addLayer(model=model_table_opts, name='data',
-                         layer=dict(type='input', nchannels=n_channels, width=width, height=height,
-                                    randomcrop=random_crop, offsets=offsets))
+    # to keep back compatible with the older VDMML, check random_flip and random_mutation first
+    if random_flip is not None and random_mutation is not None:
+        s.deepLearn.addLayer(model=model_table_opts, name='data',
+                             layer=dict(type='input', nchannels=n_channels, width=width, height=height,
+                                        randomcrop=random_crop, offsets=offsets,
+                                        randomFlip=random_flip, randomMutation=random_mutation))
+    elif random_flip is not None:
+        s.deepLearn.addLayer(model=model_table_opts, name='data',
+                             layer=dict(type='input', nchannels=n_channels, width=width, height=height,
+                                        randomcrop=random_crop, offsets=offsets,
+                                        randomFlip=random_flip))
+    elif random_mutation is not None:
+        s.deepLearn.addLayer(model=model_table_opts, name='data',
+                             layer=dict(type='input', nchannels=n_channels, width=width, height=height,
+                                        randomcrop=random_crop, offsets=offsets,
+                                        randomMutation=random_mutation))
+    else:
+        s.deepLearn.addLayer(model=model_table_opts, name='data',
+                             layer=dict(type='input', nchannels=n_channels, width=width, height=height,
+                                        randomcrop=random_crop, offsets=offsets))
 
     # -------------------- Layer 1 ----------------------
 
