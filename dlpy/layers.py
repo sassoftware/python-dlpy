@@ -26,6 +26,7 @@ from . import __dev__
 import warnings
 import collections
 from copy import deepcopy
+from collections import Iterable
 
 PALETTES = dict(
     original={
@@ -327,11 +328,27 @@ class Layer(object):
         else:
             stride = self.config.get('stride', '')
 
+        self.output_mem = multiply_elements(self.output_size) \
+            if isinstance(self.output_size, Iterable) else self.output_size
+
+        if self.__class__ in [Conv2d, Conv2DTranspose, Conv1d]:
+            kernel_wh = int(self.config['height']) * int(self.config['width'])
+            self.FLOPS = self.output_mem * self.src_layers[0].output_size[-1] * kernel_wh
+        elif self.__class__ == GroupConv2d:
+            kernel_wh = int(self.config['height']) * int(self.config['width'])
+            self.FLOPS = self.output_mem * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups
+        elif self.__class__ == Dense:
+            self.FLOPS = self.num_weights
+        else:
+            self.FLOPS = 0
+
         return pd.DataFrame([[self.layer_id, self.name, self.type, kernel_size_,
                               stride, self.activation,
-                              self.output_size, (self.num_weights, self.num_bias)]],
+                              self.output_size, self.output_mem,
+                              (self.num_weights, self.num_bias), self.FLOPS]],
                             columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
-                                     'Activation', 'Output Size', 'Number of Parameters'])
+                                     'Activation', 'Output Size', 'Output Memory',
+                                     'Number of Parameters', 'FLOPS'])
 
     @property
     def rnn_summary(self):
@@ -663,6 +680,7 @@ class Conv2d(_Conv):
             else:
                 return int(self.config['n_filters'])
         return int(self.config['n_filters'])
+
 
 class Conv1d(_Conv):
     '''

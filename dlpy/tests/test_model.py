@@ -53,7 +53,7 @@ class TestModel(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
+        cls.s = swat.CAS('dlgrd009', 13300)
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -998,6 +998,7 @@ class TestModel(unittest.TestCase):
         model_m.add(OutputLayer(n=6, act='softmax'))
         # use assertEqual to check whether the layer output size matches the expected value for MaxPooling1D
         self.assertEqual(model_m.layers[3].output_size, (1, 80, 100))
+        model_m.print_summary()
 
     @classmethod
     def tearDownClass(cls):
