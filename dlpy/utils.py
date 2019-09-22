@@ -39,6 +39,7 @@ import collections
 from itertools import repeat
 import math
 from contextlib import contextmanager
+import locale
 import inspect
 from glob import glob
 
@@ -548,7 +549,9 @@ def caslibify_context(conn, path, task='save'):
                         if new_caslib is not None:
                             conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
         else:
-            raise DLPyError('we need more than one level of directories. e.g., /dir1/dir2 ')
+            raise DLPyError('We need more than one level of directories. e.g., /dir1/dir2. '
+                            'This usually happens when you pass a Windows path to a Unix CAS server, '
+                            'or vice versa. Please do check the path parameter.')
 
 
 def caslibify(conn, path, task='save'):
@@ -1108,6 +1111,9 @@ def _convert_coco(size, box, resize):
 
 
 def _convert_xml_annotation(filename, coord_type, resize, name_file = None):
+    # always use en locale since we use this locale to generate our internal txt files
+    locale.setlocale(locale.LC_ALL, 'en-US')
+
     in_file = open(filename)
     filename, file_extension = os.path.splitext(filename)
     tree = ET.parse(in_file)
@@ -1148,6 +1154,9 @@ def _convert_xml_annotation(filename, coord_type, resize, name_file = None):
             out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
     in_file.close()
     out_file.close()
+
+    # reset this locale back to the default
+    locale.setlocale(locale.LC_ALL, '')
 
 
 def _convert_json_annotation(filename_w_ext, coord_type, resize):
@@ -2413,8 +2422,8 @@ def print_predefined_models():
     import dlpy.applications
     models_meta = inspect.getmembers(dlpy.applications, inspect.isfunction)
     # only keep function from application module instead of import ones; remove function starts with underscore.
-    models_name = [m[0] for m in models_meta if m[1].__module__ == dlpy.applications.__name__ and
-                   not m[0].startswith('_')]
+    models_name = [m[0] for m in models_meta if m[1].__module__.startswith(dlpy.applications.__name__) and
+                   not m[1].__module__.endswith('application_utils')]
     print('DLPy supports predefined models as follows: \n{}.'.format(', '.join(models_name)))
 
 
