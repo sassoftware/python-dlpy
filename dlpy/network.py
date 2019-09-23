@@ -674,7 +674,7 @@ class Network(Layer):
                                       ],
                                      columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                               'Activation', 'Output Size', 'Output Memory',
-                                              'Number of Parameters', 'FLOPS'])
+                                              'Number of Parameters', 'FLOPS(forward pass)'])
                 display(pd.concat([layers_summary, total], ignore_index = True))
             else:
                 display(self.summary)

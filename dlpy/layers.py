@@ -327,10 +327,10 @@ class Layer(object):
             stride = self.stride
         else:
             stride = self.config.get('stride', '')
-
+        # get feature memory of a layer
         self.output_mem = multiply_elements(self.output_size) \
             if isinstance(self.output_size, Iterable) else self.output_size
-
+        # calculate FLOPS per layer type. Note that bias computation is ignored.
         if self.__class__ in [Conv2d, Conv2DTranspose, Conv1d]:
             kernel_wh = int(self.config['height']) * int(self.config['width'])
             self.FLOPS = self.output_mem * self.src_layers[0].output_size[-1] * kernel_wh
@@ -348,7 +348,7 @@ class Layer(object):
                               (self.num_weights, self.num_bias), self.FLOPS]],
                             columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                      'Activation', 'Output Size', 'Output Memory',
-                                     'Number of Parameters', 'FLOPS'])
+                                     'Number of Parameters', 'FLOPS(forward pass)'])
 
     @property
     def rnn_summary(self):
