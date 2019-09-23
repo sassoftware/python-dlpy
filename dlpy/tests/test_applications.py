@@ -630,8 +630,6 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(model.layers[49]._output_size == (7, 7, 2048))
         model.print_summary()
         self.assertEqual(model.total_FLOPS_in_unit, 20932.283)
-        self.assertEqual(model.total_parameters_in_unit, 483.339)
-        self.assertEqual(model.total_output_mem_in_unit, 342.816)
 
     def test_mobilenetv2(self):
         from dlpy.applications import MobileNetV2
@@ -658,8 +656,6 @@ class TestApplications(unittest.TestCase):
         model = UNet(self.s, width = 256, height = 256, offsets = [1.25], scale = 0.0002)
         model.print_summary()
         self.assertEqual(model.total_FLOPS_in_unit, 62316.0)
-        self.assertEqual(model.total_output_mem_in_unit, 220.75)
-        self.assertEqual(model.total_parameters_in_unit, 131.658)
 
     def test_unet_with_bn(self):
         from dlpy.applications import UNet

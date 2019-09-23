@@ -1261,11 +1261,12 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
         Specifies the path of name_file which lists all of the names for the classes in your dataset.
         If you specify the option, the function will generate txt using index to represent category
         and space as separator. For example:
-            17 0.539766 0.492976 0.317406 0.345796
-            17 0.557742 0.265619 0.083922 0.087191
+            0 0.539766 0.492976 0.317406 0.345796
+            0 0.557742 0.265619 0.083922 0.087191
+        where the first element of lines, 0, represents the index of category, person.
         Otherwise, it will generate the format can be consumed by SAS platform.
-            person,0.09464285,0.471428,0.1285,0.6507
-            person,0.4142,0.441269,0.257142,0.5714
+            person,0.539766,0.492976,0.317406,0.345796
+            person,0.557742,0.265619,0.083922,0.087191
         Here is one example of name file for COCO dataset: datasources/coco.names
         Default: None
 

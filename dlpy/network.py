@@ -652,29 +652,19 @@ class Network(Layer):
                             self.num_params += l.num_bias
 
                 total_FLOPS = 0
-                total_output_mem = 0
                 for l in self.layers:
-                    total_FLOPS += l.FLOPS if l.FLOPS else 0
-                    total_output_mem += l.output_mem if l.output_mem else 0
-
-                MB = 1 << 20
-                # assuming single float
-                # todo: half precision
-                self.total_parameters_in_unit = round(4 * self.num_params / MB, 3)
-                self.total_output_mem_in_unit = round(4 * total_output_mem / MB, 3)  # MB
+                    if l.FLOPS:
+                        total_FLOPS += l.FLOPS
+                MB = 2**20
                 self.total_FLOPS_in_unit = round(total_FLOPS / MB, 3)  # MFLOPS
                 # total summary rows
-                total = pd.DataFrame([['', '', '', '', '', '', '', 'Total output memory', 'Total number of parameters',
-                                       'Total FLOPS'],
-                                      ['Summary', '', '', '', '', '', '', total_output_mem, self.num_params,
-                                       total_FLOPS],
-                                      ['In units', '', '', '', '', '', '', str(self.total_output_mem_in_unit)+' MB',
-                                       str(self.total_parameters_in_unit)+' MB',
-                                       str(self.total_FLOPS_in_unit)+' MFLOPS']
+                total = pd.DataFrame([['', '', '', '', '', '', '', 'Total number of parameters', 'Total FLOPS'],
+                                      ['Summary', '', '', '', '', '', '', self.num_params, total_FLOPS],
+                                      ['In units', '', '', '', '', '', '', '', str(self.total_FLOPS_in_unit)+' MFLOPS']
                                       ],
                                      columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
-                                              'Activation', 'Output Size', 'Output Memory',
-                                              'Number of Parameters', 'FLOPS(forward pass)'])
+                                              'Activation', 'Output Size', 'Number of Parameters',
+                                              'FLOPS(forward pass)'])
                 display(pd.concat([layers_summary, total], ignore_index = True))
             else:
                 display(self.summary)

@@ -1005,8 +1005,6 @@ class TestModel(unittest.TestCase):
         model_m.print_summary()
         # 1d print summary numerical check
         self.assertEqual(model_m.total_FLOPS_in_unit, 54.855)
-        self.assertEqual(model_m.total_parameters_in_unit, 1.978)
-        self.assertEqual(model_m.total_output_mem_in_unit, 0.313)
 
     @classmethod
     def tearDownClass(cls):
