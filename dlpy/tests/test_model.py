@@ -944,8 +944,6 @@ class TestModel(unittest.TestCase):
         model.print_summary()
         # 2d print summary numerical check
         self.assertEqual(model.total_FLOPS_in_unit, 6746.348)
-        self.assertEqual(model.total_output_mem_in_unit, 30.241)
-        self.assertEqual(model.total_parameters_in_unit, 120.863)
 
     def test_heat_map_analysis(self):
         if self.data_dir is None:
