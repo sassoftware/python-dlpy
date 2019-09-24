@@ -20,15 +20,15 @@
 from dlpy.sequential import Sequential
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, Detection, Dense, Reshape, Concat
 from dlpy.utils import DLPyError
-
+from .application_utils import get_layer_options, input_layer_options
 
 def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
-           random_mutation='NONE', act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
+           random_mutation=None, act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
            coord_type='YOLO', max_label_per_image=30, max_boxes=30,
            n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
            coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
            detection_threshold=None, iou_threshold=None, random_boxes=False, match_anchor_size=None,
-           num_to_force_coord=None):
+           num_to_force_coord=None, random_flip=None, random_crop=None):
     '''
     Generates a deep learning model with the Yolov2 architecture.
 
@@ -120,6 +120,18 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
     num_to_force_coord : int, optional
         The number of leading chunk of images in training when the algorithm forces predicted objects
         in each grid to be equal to the anchor box sizes, and located at the grid center
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
 
     Returns
     -------
@@ -137,8 +149,9 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, random_mutation=random_mutation,
-                         scale=scale))
+    parameters = locals()
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # conv1 224 416
     model.add(Conv2d(32, width=3, act='identity', include_bias=False, stride=1))
@@ -217,12 +230,12 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
 
 
 def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
-                     random_mutation='NONE', act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
+                     random_mutation=None, act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
                      coord_type='YOLO', max_label_per_image=30, max_boxes=30,
                      n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
                      coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
                      detection_threshold=None, iou_threshold=None, random_boxes=False, match_anchor_size=None,
-                     num_to_force_coord=None):
+                     num_to_force_coord=None, random_flip=None, random_crop=None):
     '''
     Generates a deep learning model with the Yolov2 architecture.
 
@@ -318,6 +331,18 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
     num_to_force_coord : int, optional
         The number of leading chunk of images in training when the algorithm forces predicted objects
         in each grid to be equal to the anchor box sizes, and located at the grid center
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
 
     Returns
     -------
@@ -331,8 +356,9 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, random_mutation=random_mutation,
-                         scale=scale))
+    parameters = locals()
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # conv1 224 416
     model.add(Conv2d(32, width=3, act='identity', include_bias=False, stride=1))
@@ -434,12 +460,12 @@ def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, wid
 
 
 def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
-                random_mutation='NONE', act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
+                random_mutation=None, act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
                 coord_type='YOLO', max_label_per_image=30, max_boxes=30,
                 n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
                 coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
                 detection_threshold=None, iou_threshold=None, random_boxes=False, match_anchor_size=None,
-                num_to_force_coord=None):
+                num_to_force_coord=None, random_flip=None, random_crop=None):
     '''
     Generate a deep learning model with the Tiny Yolov2 architecture.
 
@@ -535,6 +561,18 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
     num_to_force_coord : int, optional
         The number of leading chunk of images in training when the algorithm forces predicted objects
         in each grid to be equal to the anchor box sizes, and located at the grid center
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
 
     Returns
     -------
@@ -548,8 +586,10 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, random_mutation=random_mutation,
-                         scale=scale))
+    parameters = locals()
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # conv1 416 448
     model.add(Conv2d(n_filters=16, width=3, act='identity', include_bias=False, stride=1))
     model.add(BN(act=act))
@@ -596,11 +636,11 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
 
 
 def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255,
-           random_mutation='NONE', act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
+           random_mutation=None, act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
            coord_type='YOLO', max_label_per_image=30, max_boxes=30,
            n_classes=20, predictions_per_grid=2, do_sqrt=True, grid_number=7,
            coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
-           detection_threshold=None, iou_threshold=None, random_boxes=False):
+           detection_threshold=None, iou_threshold=None, random_boxes=False, random_flip=None, random_crop=None):
     '''
     Generates a deep learning model with the Yolo V1 architecture.
 
@@ -690,6 +730,18 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
     random_boxes : bool, optional
         Randomizing boxes when loading the bounding box information.
         Default: False
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
 
     Returns
     -------
@@ -703,8 +755,10 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, random_mutation=random_mutation,
-                         scale=scale))
+    parameters = locals()
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # conv1 448
     model.add(Conv2d(32, width=3, act=act, include_bias=False, stride=1))
     model.add(Pooling(width=2, height=2, stride=2, pool='max'))
@@ -772,11 +826,11 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
 
 
 def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255,
-                random_mutation='NONE', act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
+                random_mutation=None, act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
                 coord_type='YOLO', max_label_per_image=30, max_boxes=30,
                 n_classes=20, predictions_per_grid=2, do_sqrt=True, grid_number=7,
                 coord_scale=None, object_scale=None, prediction_not_a_object_scale=None, class_scale=None,
-                detection_threshold=None, iou_threshold=None, random_boxes=False):
+                detection_threshold=None, iou_threshold=None, random_boxes=False, random_flip=None, random_crop=None):
     '''
     Generates a deep learning model with the Tiny Yolov1 architecture.
 
@@ -869,6 +923,18 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
     random_boxes : bool, optional
         Randomizing boxes when loading the bounding box information.
         Default: False
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
 
     Returns
     -------
@@ -882,8 +948,9 @@ def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, random_mutation=random_mutation,
-                         scale=scale))
+    parameters = locals()
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     model.add(Conv2d(16, width=3, act=act, include_bias=False, stride=1))
     model.add(Pooling(width=2, height=2, stride=2, pool='max'))

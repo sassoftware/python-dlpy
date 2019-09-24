@@ -23,7 +23,8 @@ from .application_utils import get_layer_options, input_layer_options
 
 
 def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, height=256, scale=1.0/255,
-         norm_stds=None, offsets=None, random_mutation=None, init=None, bn_after_convolutions=False):
+         norm_stds=None, offsets=None, random_mutation=None, init=None, bn_after_convolutions=False,
+         random_flip=None, random_crop=None):
     '''
     Generates a deep learning model with the U-Net architecture.
 
@@ -66,6 +67,18 @@ def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, heigh
         Default: None
     bn_after_convolutions : Boolean
         If set to True, a batch normalization layer is added after each convolution layer.
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+        Default: 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+        Default: 'none'
 
     Returns
     -------

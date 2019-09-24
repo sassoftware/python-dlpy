@@ -22,12 +22,14 @@ from dlpy.model import Model
 from dlpy.keras_models import model_inceptionv3
 from dlpy.sequential import Sequential
 from dlpy.layers import (Conv2d, BN, Pooling, Concat, OutputLayer, InputLayer)
+from .application_utils import get_layer_options, input_layer_options
 
 
 def InceptionV3(conn, model_table='InceptionV3',
                 n_classes=1000, n_channels=3, width=299, height=299, scale=1,
                 random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
-                pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
+                pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
+                random_mutation=None):
     '''
     Generates a deep learning model with the Inceptionv3 architecture with batch normalization layers.
 
@@ -80,6 +82,10 @@ def InceptionV3(conn, model_table='InceptionV3',
         Specifies whether to include pre-trained weights of the top layers,
         i.e. the FC layers
         Default: False
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
 
     Returns
     -------
@@ -96,12 +102,15 @@ def InceptionV3(conn, model_table='InceptionV3',
 
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
-        model.add(InputLayer(n_channels=n_channels, width=width,
-                             height=height, scale=scale, offsets=offsets,
-                             random_flip=random_flip, random_crop=random_crop))
+        # get the input parameters
+        input_parameters = get_layer_options(input_layer_options, parameters)
+        model.add(InputLayer(**input_parameters))
 
         # 299 x 299 x 3
         model.add(Conv2d(n_filters=32, width=3, height=3, stride=2,
@@ -616,7 +625,7 @@ def InceptionV3(conn, model_table='InceptionV3',
         model_cas = model_inceptionv3.InceptionV3_Model(
             s=conn, model_table=model_table, n_channels=n_channels,
             width=width, height=height, random_crop=random_crop,
-            offsets=[1, 1, 1])
+            offsets=[1, 1, 1], random_flip=random_flip, random_mutation=random_mutation)
 
         if include_top:
             if n_classes != 1000:

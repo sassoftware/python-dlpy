@@ -19,11 +19,12 @@
 from dlpy.sequential import Sequential
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, Concat, OutputLayer, GlobalAveragePooling2D
 from dlpy.blocks import DenseNetBlock
+from .application_utils import get_layer_options, input_layer_options
 
 
 def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, growth_rate=12, n_blocks=4,
-             n_cells=4, n_channels=3, width=32, height=32, scale=1, random_flip='none', random_crop='none',
-             offsets=(85, 111, 139)):
+             n_cells=4, n_channels=3, width=32, height=32, scale=1, random_flip=None, random_crop=None,
+             offsets=(85, 111, 139), random_mutation=None):
     '''
     Generates a deep learning model with the DenseNet architecture.
 
@@ -77,6 +78,10 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (85, 111, 139)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
 
     Returns
     -------
@@ -88,12 +93,19 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
 
     '''
 
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # get all the parms passed in
+    parameters = locals()
+
     channel_in = conv_channel  # number of channel of transition conv layer
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale,
-                         offsets=offsets, random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # Top layers
     model.add(Conv2d(conv_channel, width=3, act='identity', include_bias=False, stride=1))
 
@@ -115,7 +127,7 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
 
 def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64, growth_rate=32,
                 n_cells=[6, 12, 24, 16], n_channels=3, reduction=0.5, width=224, height=224, scale=1,
-                random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+                random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68), random_mutation=None):
     '''
     Generates a deep learning model with the DenseNet121 architecture.
 
@@ -169,6 +181,10 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+        Default: 'NONE'
 
     Returns
     -------
@@ -179,12 +195,20 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
     https://arxiv.org/pdf/1608.06993.pdf
 
     '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # get all the parms passed in
+    parameters = locals()
+
     n_blocks = len(n_cells)
 
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale,
-                         random_flip=random_flip, offsets=offsets, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # Top layers
     model.add(Conv2d(conv_channel, width=7, act='identity', include_bias=False, stride=2))
     model.add(BN(act='relu'))

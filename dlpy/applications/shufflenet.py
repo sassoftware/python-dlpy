@@ -26,7 +26,7 @@ from .application_utils import get_layer_options, input_layer_options
 
 def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3, width=224, height=224,
                  norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
-                 random_flip='none', random_crop='none', random_mutation='none', scale_factor=1.0,
+                 random_flip=None, random_crop=None, random_mutation=None, scale_factor=1.0,
                  num_shuffle_units=[3, 7, 3], bottleneck_ratio=0.25, groups=3, block_act='identity'):
     '''
     Generates a deep learning model with the ShuffleNetV1 architecture.

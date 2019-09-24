@@ -22,7 +22,7 @@ from .application_utils import get_layer_options, input_layer_options
 
 
 def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, width=224, height=224,
-                random_flip='none', random_crop='none', random_mutation='none',
+                random_flip=None, random_crop=None, random_mutation=None,
                 norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
                 alpha=1, depth_multiplier=1):
     '''
@@ -191,7 +191,7 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
 
 def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, width=224, height=224,
                 norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
-                random_flip='none', random_crop='none', random_mutation='none', alpha=1):
+                random_flip=None, random_crop=None, random_mutation=None, alpha=1):
     '''
     Generates a deep learning model with the MobileNetV2 architecture.
     The implementation is revised based on
