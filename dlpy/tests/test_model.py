@@ -942,6 +942,8 @@ class TestModel(unittest.TestCase):
         model.add(OutputLayer(act = 'softmax', n = 3, name = 'output1'))
         self.assertEqual(model.summary['Output Size'].values[-3], (1, 1, 1024))
         model.print_summary()
+        # 2d print summary numerical check
+        self.assertEqual(model.total_FLOPS_in_unit, 6746.348)
 
     def test_heat_map_analysis(self):
         if self.data_dir is None:
@@ -998,6 +1000,9 @@ class TestModel(unittest.TestCase):
         model_m.add(OutputLayer(n=6, act='softmax'))
         # use assertEqual to check whether the layer output size matches the expected value for MaxPooling1D
         self.assertEqual(model_m.layers[3].output_size, (1, 80, 100))
+        model_m.print_summary()
+        # 1d print summary numerical check
+        self.assertEqual(model_m.total_FLOPS_in_unit, 54.855)
 
     @classmethod
     def tearDownClass(cls):

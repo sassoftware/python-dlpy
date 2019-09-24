@@ -1110,7 +1110,7 @@ def _convert_coco(size, box, resize):
     return (x_min, y_min, x_max, y_max)
 
 
-def _convert_xml_annotation(filename, coord_type, resize):
+def _convert_xml_annotation(filename, coord_type, resize, name_file = None):
     # always use en locale since we use this locale to generate our internal txt files
     locale.setlocale(locale.LC_ALL, 'en-US')
 
@@ -1123,6 +1123,11 @@ def _convert_xml_annotation(filename, coord_type, resize):
     if object_ is None:
         in_file.close()
         return
+    # write in all classes
+    if name_file:
+        with open(name_file, 'r') as nf:
+            line = nf.readlines()
+            cls_list = [l.strip() for l in line]
     size = root.find('size')
     width = int(size.find('width').text)
     height = int(size.find('height').text)
@@ -1137,7 +1142,16 @@ def _convert_xml_annotation(filename, coord_type, resize):
             boxes = _convert_yolo((width, height), boxes)
         elif coord_type == 'coco':
             boxes = _convert_coco((width, height), boxes, resize)
-        out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
+        # name_file is not None, write into comma separated
+        if name_file:
+            try:
+                idx = str(cls_list.index(str(cls)))
+            except ValueError:
+                # throw error if having a class other than name file has
+                raise DLPyError('{} is not in name file'.format(str(cls)))
+            out_file.write(idx + " " + " ".join([str(box) for box in boxes]) + '\n')
+        else:
+            out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
     in_file.close()
     out_file.close()
 
@@ -1217,7 +1231,7 @@ def convert_txt_to_xml(path):
     os.chdir(cwd)
 
 
-def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_files = None):
+def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_files = None, name_file = None):
     '''
     Parse object detection annotation files based on Pascal VOC format and save as txt files.
 
@@ -1243,6 +1257,18 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
         Specifies the list of filename with XML extension under local_path to be parsed.
         If label_files is not specified, all of XML files under local_path will be parsed .
         Default: None
+    name_file : str, optional
+        Specifies the path of name_file which lists all of the names for the classes in your dataset.
+        If you specify the option, the function will generate txt using index to represent category
+        and space as separator. For example:
+            0 0.539766 0.492976 0.317406 0.345796
+            0 0.557742 0.265619 0.083922 0.087191
+        where the first element of lines, 0, represents the index of category, person.
+        Otherwise, it will generate the format can be consumed by SAS platform.
+            person,0.539766,0.492976,0.317406,0.345796
+            person,0.557742,0.265619,0.083922,0.087191
+        Here is one example of name file for COCO dataset: datasources/coco.names
+        Default: None
 
     '''
     image_size = _pair(image_size)  # ensure image_size is a pair
@@ -1255,7 +1281,7 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
     for filename in label_files:
-        _convert_xml_annotation(filename, coord_type, image_size)
+        _convert_xml_annotation(filename, coord_type, image_size, name_file)
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
@@ -2391,6 +2417,15 @@ def create_image_classification_metadata_table(conn, folder, extensions_to_filte
                 count +=1
     df = pd.DataFrame(data, columns=['_filePath_', '_relativePath_', '_fileName_', '_fName_', '_label_', '_id_'])
     return conn.upload_frame(df, casout=dict(name=output_name, replace=True))
+
+
+def print_predefined_models():
+    import dlpy.applications
+    models_meta = inspect.getmembers(dlpy.applications, inspect.isfunction)
+    # only keep function from application module instead of import ones; remove function starts with underscore.
+    models_name = [m[0] for m in models_meta if m[1].__module__.startswith(dlpy.applications.__name__) and
+                   not m[1].__module__.endswith('application_utils')]
+    print('DLPy supports predefined models as follows: \n{}.'.format(', '.join(models_name)))
 
 
 class DLPyDict(collections.MutableMapping):
