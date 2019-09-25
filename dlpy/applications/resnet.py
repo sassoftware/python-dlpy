@@ -23,10 +23,12 @@ from dlpy.layers import InputLayer, Conv2d, BN, Pooling, GlobalAveragePooling2D,
 from dlpy.blocks import ResBlockBN, ResBlock_Caffe
 from dlpy.utils import DLPyError
 from dlpy.caffe_models import (model_resnet50, model_resnet101, model_resnet152)
+from .application_utils import get_layer_options, input_layer_options
 
 
 def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_classes=1000, n_channels=3, width=224,
-                 height=224, scale=1, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+                 height=224, scale=1, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                 random_mutation=None):
     '''
     Generates a deep learning model with the ResNet18 architecture.
 
@@ -65,18 +67,19 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -89,10 +92,14 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
@@ -127,7 +134,8 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
 
 
 def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n_classes=1000, n_channels=3, width=224,
-                   height=224, scale=1, random_flip='none', random_crop='none', offsets=None):
+                   height=224, scale=1, random_flip=None, random_crop=None, offsets=None,
+                   random_mutation=None):
     '''
     Generates a deep learning model with the ResNet18 architecture with convolution shortcut.
 
@@ -164,17 +172,18 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -187,10 +196,15 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
     model.add(BN(act='relu'))
@@ -225,7 +239,8 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
 
 
 def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                 batch_norm_first=True, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+                 batch_norm_first=True, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                 random_mutation=None):
     '''
     Generates a deep learning model with the ResNet34 architecture.
 
@@ -264,18 +279,19 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -288,10 +304,15 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
     model.add(BN(act='relu'))
@@ -325,7 +346,8 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
 
 
 def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                   batch_norm_first=False, random_flip='none', random_crop='none', offsets=None):
+                   batch_norm_first=False, random_flip=None, random_crop=None, offsets=None,
+                   random_mutation=None):
     '''
     Generates a deep learning model with the ResNet34 architecture with convolution shortcut.
 
@@ -362,18 +384,19 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: None
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -386,10 +409,14 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
@@ -426,7 +453,8 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
 
 
 def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                 batch_norm_first=True, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+                 batch_norm_first=True, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                 random_mutation=None):
     '''
     Generates a deep learning model with the ResNet50 architecture.
 
@@ -465,18 +493,19 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -489,10 +518,14 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
@@ -529,8 +562,9 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
 
 
 def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                   batch_norm_first=False, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
-                   pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
+                   batch_norm_first=False, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                   pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
+                   random_mutation=None):
     '''
     Generates a deep learning model with the ResNet50 architecture with convolution shortcut.
 
@@ -567,14 +601,12 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -590,6 +622,9 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         Specifies whether to include pre-trained weights of the top layers
         (i.e., the last layer for classification).
         Default: False
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -605,11 +640,16 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
-        model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                             random_flip=random_flip, random_crop=random_crop))
+        # get the input parameters
+        input_parameters = get_layer_options(input_layer_options, parameters)
+        model.add(InputLayer(**input_parameters))
+
         # Top layers
         model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
         model.add(BN(act='relu'))
@@ -656,7 +696,8 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
                             '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
 
         model_cas = model_resnet50.ResNet50_Model(s=conn, model_table=model_table, n_channels=n_channels,
-                                                  width=width, height=height, random_crop=random_crop, offsets=offsets)
+                                                  width=width, height=height, random_crop=random_crop, offsets=offsets,
+                                                  random_flip=random_flip, random_mutation=random_mutation)
 
         if include_top:
             if n_classes != 1000:
@@ -683,7 +724,8 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
 
 
 def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                  batch_norm_first=True, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+                  batch_norm_first=True, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                  random_mutation=None):
     '''
     Generates a deep learning model with the ResNet101 architecture.
 
@@ -723,18 +765,19 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -747,10 +790,14 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
@@ -785,8 +832,9 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
 
 
 def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                    batch_norm_first=False, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
-                    pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
+                    batch_norm_first=False, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                    pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
+                    random_mutation=None):
     '''
     Generates a deep learning model with the ResNet101 architecture with convolution shortcut.
 
@@ -823,14 +871,12 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -846,6 +892,9 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         Specifies whether to include pre-trained weights of the top layers,
         i.e. the last layer for classification.
         Default: False.
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -861,11 +910,16 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
-        model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                             random_flip=random_flip, random_crop=random_crop))
+        # get the input parameters
+        input_parameters = get_layer_options(input_layer_options, parameters)
+        model.add(InputLayer(**input_parameters))
+
         # Top layers
         model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
         model.add(BN(act='relu'))
@@ -912,7 +966,8 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
                             '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
         model_cas = model_resnet101.ResNet101_Model( s=conn, model_table=model_table, n_channels=n_channels,
                                                      width=width, height=height, random_crop=random_crop,
-                                                     offsets=offsets)
+                                                     offsets=offsets,
+                                                     random_flip=random_flip, random_mutation=random_mutation)
 
         if include_top:
             if n_classes != 1000:
@@ -939,7 +994,8 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
 
 
 def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                  batch_norm_first=True, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+                  batch_norm_first=True, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                  random_mutation=None):
     '''
     Generates a deep learning model with the SAS ResNet152 architecture.
 
@@ -979,18 +1035,19 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -1003,10 +1060,14 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # Top layers
     model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
@@ -1041,8 +1102,9 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
 
 
 def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                    batch_norm_first=False, random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
-                    pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
+                    batch_norm_first=False, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+                    pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
+                    random_mutation=None):
     '''
     Generates a deep learning model with the ResNet152 architecture with convolution shortcut
 
@@ -1079,14 +1141,12 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -1102,6 +1162,9 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         Specifies whether to include pre-trained weights of the top layers,
         i.e. the last layer for classification.
         Default: False
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -1117,12 +1180,16 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
-        model.add(InputLayer(n_channels=n_channels, width=width, height=height,
-                             scale=scale, offsets=offsets, random_flip=random_flip,
-                             random_crop=random_crop))
+        # get the input parameters
+        input_parameters = get_layer_options(input_layer_options, parameters)
+        model.add(InputLayer(**input_parameters))
+
         # Top layers
         model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
         model.add(BN(act='relu'))
@@ -1167,7 +1234,8 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
                              '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
         model_cas = model_resnet152.ResNet152_Model( s=conn, model_table=model_table, n_channels=n_channels,
                                                      width=width, height=height, random_crop=random_crop,
-                                                     offsets=offsets)
+                                                     offsets=offsets,
+                                                     random_flip=random_flip, random_mutation=random_mutation)
 
         if include_top:
             if n_classes != 1000:
@@ -1194,8 +1262,9 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
 
 
 def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_of_blocks=1, k=4, n_classes=None,
-                n_channels=3, width=32, height=32, scale=1, random_flip='none', random_crop='none',
-                offsets=(103.939, 116.779, 123.68)):
+                n_channels=3, width=32, height=32, scale=1, random_flip=None, random_crop=None,
+                offsets=(103.939, 116.779, 123.68),
+                random_mutation=None):
     '''
     Generate a deep learning model with Wide ResNet architecture.
 
@@ -1244,18 +1313,19 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -1270,10 +1340,15 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
 
     in_filters = 16
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # Top layers
     model.add(Conv2d(in_filters, 3, act='identity', include_bias=False, stride=1))
     model.add(BN(act='relu'))

@@ -3234,7 +3234,7 @@ class DataSpec(DLPyDict):
 
     """
     def __init__(self, type_, layer, data=None, data_layer=None, nominals=None, numeric_nominal_parms=None,
-                 loss_scale_factor=1):
+                 loss_scale_factor=None):
         DLPyDict.__init__(self, type=type_, layer=layer, data=data, data_layer=data_layer, nominals=nominals,
                           numeric_nominal_parms=numeric_nominal_parms, loss_scale_factor=loss_scale_factor)
 
