@@ -67,14 +67,12 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -82,7 +80,6 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -175,21 +172,18 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -285,14 +279,12 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -300,7 +292,6 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -393,14 +384,12 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -408,7 +397,6 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -505,14 +493,12 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -520,7 +506,6 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -616,14 +601,12 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -642,7 +625,6 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -783,14 +765,12 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -798,7 +778,6 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -892,14 +871,12 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -918,7 +895,6 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -1059,14 +1035,12 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -1074,7 +1048,6 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -1168,14 +1141,12 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -1194,7 +1165,6 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -1343,14 +1313,12 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -1358,7 +1326,6 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------

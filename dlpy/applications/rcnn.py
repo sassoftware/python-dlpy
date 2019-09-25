@@ -25,7 +25,7 @@ from dlpy.utils import DLPyError
 
 
 def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, height=496, scale=1,
-                norm_stds=None, offsets=(102.9801, 115.9465, 122.7717), random_mutation = 'none',
+                norm_stds=None, offsets=(102.9801, 115.9465, 122.7717), random_mutation=None,
                 n_classes=20, anchor_num_to_sample=256, anchor_ratio=[0.5, 1, 2], anchor_scale=[8, 16, 32],
                 base_anchor_size=16, coord_type='coco', max_label_per_image=200, proposed_roi_num_train=2000,
                 proposed_roi_num_score=300, roi_train_sample_num=128, roi_pooling_height=7, roi_pooling_width=7,
@@ -62,7 +62,6 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         Specifies how to apply data augmentations/mutations to the data in the
         input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -123,14 +122,12 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
 
     Returns
     -------

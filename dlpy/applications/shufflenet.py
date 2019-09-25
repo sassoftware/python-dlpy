@@ -63,18 +63,15 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
     scale_factor : double
 
     num_shuffle_units: iter-of-int, optional

@@ -45,7 +45,6 @@ def ResNet152_Model(s, model_table='RESNET152', n_channels=3, width=224, height=
         and height parameters.deepLearn. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default	: 'unique'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
@@ -55,11 +54,9 @@ def ResNet152_Model(s, model_table='RESNET152', n_channels=3, width=224, height=
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------

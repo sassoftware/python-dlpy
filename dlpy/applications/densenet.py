@@ -66,14 +66,12 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -81,7 +79,6 @@ def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, grow
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -169,14 +166,12 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -184,7 +179,6 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------

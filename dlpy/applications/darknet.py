@@ -73,7 +73,6 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
@@ -181,7 +180,6 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
 
     Returns
     -------
