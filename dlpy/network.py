@@ -159,6 +159,9 @@ class Network(Layer):
 
     def compile(self):
         ''' parse the network nodes and process CAS Action '''
+        for l in self.layers:
+            if isinstance(l, Recurrent):
+                self.model_type = 'RNN'
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
 

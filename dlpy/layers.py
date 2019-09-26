@@ -872,7 +872,6 @@ class GroupConv2d(Conv2d):
     def output_size(self):
         if self._output_size is None:
             # calculate output according to specified padding
-            # calculate output according to specified padding
             if self.padding != (None, None):
                 out_h = ((self.src_layers[0].output_size[0] - self.config['height'] + 2 * self.padding[0]) //
                          self.stride[0] + 1)
