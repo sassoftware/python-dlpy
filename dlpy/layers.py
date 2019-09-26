@@ -192,7 +192,8 @@ class Layer(object):
         layer_type = self.__class__.__name__
         if isinstance(inputs, list):
             if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'CLoss',
-                                                      'Dense', 'Model', 'OutputLayer', 'ROIPooling', 'FastRCNN']:
+                                                      'Dense', 'Model', 'OutputLayer', 'ROIPooling', 'FastRCNN',
+                                                      'Recurrent']:
                 raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
@@ -870,7 +871,6 @@ class GroupConv2d(Conv2d):
     @property
     def output_size(self):
         if self._output_size is None:
-            # calculate output according to specified padding
             # calculate output according to specified padding
             if self.padding != (None, None):
                 out_h = ((self.src_layers[0].output_size[0] - self.config['height'] + 2 * self.padding[0]) //
