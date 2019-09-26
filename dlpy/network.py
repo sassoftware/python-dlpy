@@ -633,7 +633,16 @@ class Network(Layer):
                 l.layer_id = layer_ids[l.name.lower()]
 
     def print_summary(self):
-        ''' Display a table that summarizes the model architecture '''
+        '''
+
+        Display a table that summarizes the model architecture
+
+        Returns
+        -------
+        :pandas data frame
+
+        '''
+
         try:
             if len(self.layers) > 0 and self.layers[0].layer_id is None:
                 self.__load_layer_ids()
@@ -665,11 +674,15 @@ class Network(Layer):
                                      columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                               'Activation', 'Output Size', 'Number of Parameters',
                                               'FLOPS(forward pass)'])
-                display(pd.concat([layers_summary, total], ignore_index = True))
+                pd_layers = pd.concat([layers_summary, total], ignore_index = True)
+                display(pd_layers)
+                return pd_layers
             else:
                 display(self.summary)
+                return self.summary
         except ImportError:
             print(self.summary)
+            return self.summary
 
     def _repr_html_(self):
         return self.summary._repr_html_()

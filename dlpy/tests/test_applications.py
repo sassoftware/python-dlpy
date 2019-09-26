@@ -416,6 +416,28 @@ class TestApplications(unittest.TestCase):
         model = ResNet50_Caffe(self.s)
         model.print_summary()
 
+    # test resnet50 with reshape
+    def test_resnet50_3(self):
+        from dlpy.applications import ResNet50_Caffe
+        model = ResNet50_Caffe(self.s, add_reshape_after_input=True)
+        model.print_summary()
+
+        # test it with pretrained weights
+        model1 = ResNet50_Caffe(self.s, model_table='Resnet50', n_classes=1000, n_channels=3,
+                                width=224, height=224, scale=1,
+                                offsets=None,
+                                random_crop='unique',
+                                random_flip='hv',
+                                random_mutation='random',
+                                pre_trained_weights=True,
+                                pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
+                                include_top=True,
+                                add_reshape_after_input=True)
+        res = model1.print_summary()
+        self.assertEqual(res.iloc[1, 6][0], 224)
+        self.assertEqual(res.iloc[1, 6][1], 224)
+        self.assertEqual(res.iloc[1, 6][2], 3)
+
     def test_resnet101(self):
         from dlpy.applications import ResNet101_SAS
         model = ResNet101_SAS(self.s)
@@ -785,7 +807,7 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(model.layers[12].output_size == (64, 64, 512))
         model.print_summary()
         # transpose conv print summary numerical check
-        model = UNet(self.s, width = 256, height = 256, offsets = [1.25], scale = 0.0002)
+        model = UNet(self.s, width=256, height=256, offsets=[1.25], scale=0.0002)
         model.print_summary()
         self.assertEqual(model.total_FLOPS_in_unit, 62316.0)
 
