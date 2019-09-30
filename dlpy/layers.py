@@ -166,13 +166,13 @@ class Layer(object):
     can_be_last_layer = False
     number_of_instances = 0
     layer_id = None
-    shared_weights = None
 
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
         self.config = config
         self.depth = None
         self._inbound_nodes = []
+        self.shared_weights = None
 
         if src_layers is None:
             self.src_layers = None
@@ -193,16 +193,17 @@ class Layer(object):
         if isinstance(inputs, list):
             if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'CLoss',
                                                       'Dense', 'Model', 'OutputLayer', 'ROIPooling', 'FastRCNN',
-                                                      'Recurrent']:
+                                                      'Recurrent', 'EmbeddingLoss']:
                 raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
         if layer_type == 'Model':
+            self.model_counter += 1
             copied_model = deepcopy(self)
             # update name
-            if copied_model.number_of_instances != 0:
+            if copied_model.model_counter > 1:
                 for layer in copied_model.layers:
-                    layer.name = layer.name + '_' + '{}'.format(copied_model.number_of_instances)
+                    layer.name = layer.name + '_' + '{}'.format(copied_model.model_counter)
             # share weights
             # for layer in copied_model.layers:
             #     layer.from_sub_network = self

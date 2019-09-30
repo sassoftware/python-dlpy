@@ -109,6 +109,7 @@ class Network(Layer):
         self.target = None
         self.num_params = None
         self.count_instances()
+        self.model_counter = 0
 
     def _map_graph_network(self, inputs, outputs):
         '''
@@ -1263,10 +1264,15 @@ class Network(Layer):
         layers_name = [l.name for l in self.layers]
         for layer in layers:
             for anchor, shares in layer.items():
+                if anchor not in layers_name:
+                    raise DLPyError('{} is not in the model. Please check again.'.format(anchor))
                 if isinstance(shares, str):
                     shares = [shares]
                 for share in shares:
-                    idx_share = layers_name.index(share)
+                    try:
+                        idx_share = layers_name.index(share)
+                    except ValueError:
+                        raise DLPyError('{} is not in the model. Please check again.'.format(anchor))
                     self.layers[idx_share].shared_weights = anchor
 
     def save_to_astore(self, path = None, **kwargs):
