@@ -22,7 +22,7 @@ from .application_utils import get_layer_options, input_layer_options
 
 
 def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, width=224, height=224,
-                random_flip='none', random_crop='none', random_mutation='none',
+                random_flip=None, random_crop=None, random_mutation=None,
                 norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
                 alpha=1, depth_multiplier=1):
     '''
@@ -53,18 +53,15 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
     norm_stds : double or iter-of-doubles, optional
         Specifies a standard deviation for each channel in the input data.
         The final input data is normalized with specified means and standard deviations.
@@ -191,7 +188,7 @@ def MobileNetV1(conn, model_table='MobileNetV1', n_classes=1000, n_channels=3, w
 
 def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, width=224, height=224,
                 norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
-                random_flip='none', random_crop='none', random_mutation='none', alpha=1):
+                random_flip=None, random_crop=None, random_mutation=None, alpha=1):
     '''
     Generates a deep learning model with the MobileNetV2 architecture.
     The implementation is revised based on
@@ -228,18 +225,15 @@ def MobileNetV2(conn, model_table='MobileNetV2', n_classes=1000, n_channels=3, w
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
     alpha : int, optional
         Specifies the width multiplier in the MobileNet paper
         Default: 1

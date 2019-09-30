@@ -18,11 +18,12 @@
 
 from dlpy.sequential import Sequential
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, GlobalAveragePooling2D, OutputLayer
+from .application_utils import get_layer_options, input_layer_options
 
 
 def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act='leaky',
                       n_channels=3, width=224, height=224, scale=1.0 / 255, random_flip='H',
-                      random_crop='UNIQUE'):
+                      random_crop='UNIQUE', random_mutation=None):
 
     '''
     Generates a deep learning model with the Darknet_Reference architecture.
@@ -69,6 +70,9 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'unique'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -76,10 +80,16 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
 
     '''
 
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     # conv1 224
     model.add(Conv2d(16, width=3, act='identity', include_bias=False, stride=1))
@@ -118,7 +128,7 @@ def Darknet_Reference(conn, model_table='Darknet_Reference', n_classes=1000, act
 
 
 def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels=3, width=224, height=224,
-            scale=1.0 / 255, random_flip='H', random_crop='UNIQUE'):
+            scale=1.0 / 255, random_flip='H', random_crop='UNIQUE', random_mutation=None):
     '''
     Generate a deep learning model with the Darknet architecture.
 
@@ -167,6 +177,9 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
         Default: 'unique'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -174,11 +187,17 @@ def Darknet(conn, model_table='Darknet', n_classes=1000, act='leaky', n_channels
 
     '''
 
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height,
-                         scale=scale, random_flip=random_flip,
-                         random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
+
     # conv1 224 416
     model.add(Conv2d(32, width=3, act='identity', include_bias=False, stride=1))
     model.add(BN(act=act))

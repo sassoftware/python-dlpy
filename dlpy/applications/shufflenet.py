@@ -26,7 +26,7 @@ from .application_utils import get_layer_options, input_layer_options
 
 def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3, width=224, height=224,
                  norm_stds=(255*0.229, 255*0.224, 255*0.225), offsets=(255*0.485, 255*0.456, 255*0.406),
-                 random_flip='none', random_crop='none', random_mutation='none', scale_factor=1.0,
+                 random_flip=None, random_crop=None, random_mutation=None, scale_factor=1.0,
                  num_shuffle_units=[3, 7, 3], bottleneck_ratio=0.25, groups=3, block_act='identity'):
     '''
     Generates a deep learning model with the ShuffleNetV1 architecture.
@@ -63,18 +63,15 @@ def ShuffleNetV1(conn, model_table='ShuffleNetV1', n_classes=1000, n_channels=3,
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-        Default: 'NONE'
     scale_factor : double
 
     num_shuffle_units: iter-of-int, optional

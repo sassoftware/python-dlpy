@@ -19,7 +19,8 @@ from ..utils import input_table_check
 
 
 def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
-                random_crop=None, offsets=None):
+                random_crop=None, offsets=None,
+                random_flip=None, random_mutation=None):
     '''
     VGG16 model definition
 
@@ -43,13 +44,19 @@ def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
         used. Images are cropped to the values that are specified in the width
         and height parameters.deepLearn. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
-        Valid Values: 'none' or 'unique'
-        Default	: 'unique'
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.deepLearn.
         Default: (103.939, 116.779, 123.68)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -58,11 +65,6 @@ def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
 
     '''
     model_table_opts = input_table_check(model_table)
-
-    if random_crop is None:
-        random_crop = 'none'
-    elif random_crop.lower() not in ['none', 'unique']:
-        raise ValueError('random_crop can only be "none" or "unique"')
 
     if offsets is None:
         offsets = [103.939, 116.779, 123.68]
@@ -73,7 +75,8 @@ def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
     # input layer
     s.deepLearn.addLayer(model=model_table_opts, name='data',
                          layer=dict(type='input', nchannels=n_channels, width=width, height=height,
-                                    randomcrop=random_crop, offsets=offsets))
+                                    randomcrop=random_crop, offsets=offsets,
+                                    randomFlip=random_flip, randomMutation=random_mutation))
 
     # conv1_1 layer: 64*3*3
     s.deepLearn.addLayer(model=model_table_opts, name='conv1_1',

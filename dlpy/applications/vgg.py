@@ -23,10 +23,11 @@ from dlpy.model import Model
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, OutputLayer, Dense
 from dlpy.utils import DLPyError
 from dlpy.caffe_models import (model_vgg16, model_vgg19)
-
+from .application_utils import get_layer_options, input_layer_options
 
 def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+          random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+          random_mutation=None):
     '''
     Generates a deep learning model with the VGG11 architecture.
 
@@ -56,19 +57,20 @@ def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, he
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final
         input data is set after applying scaling and subtracting the
         specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -81,10 +83,14 @@ def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, he
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
     model.add(Pooling(width=2, height=2, stride=2, pool='max'))
@@ -113,7 +119,8 @@ def VGG11(conn, model_table='VGG11', n_classes=1000, n_channels=3, width=224, he
 
 
 def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68)):
+          random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+          random_mutation=None):
     '''
     Generates a deep learning model with the VGG13 architecture.
 
@@ -143,18 +150,19 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
         Default: (103.939, 116.779, 123.68)
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -167,10 +175,14 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     model = Sequential(conn=conn, model_table=model_table)
 
-    model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                         random_flip=random_flip, random_crop=random_crop))
+    # get the input parameters
+    input_parameters = get_layer_options(input_layer_options, parameters)
+    model.add(InputLayer(**input_parameters))
 
     model.add(Conv2d(n_filters=64, width=3, height=3, stride=1, act='identity', include_bias=False))
     model.add(BN(act='relu'))
@@ -211,8 +223,9 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
 
 
 def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
-          pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
+          random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+          pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
+          random_mutation=None):
     '''
     Generates a deep learning model with the VGG16 architecture.
 
@@ -242,14 +255,12 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -264,6 +275,9 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
     include_top : bool, optional
         Specifies whether to include pre-trained weights of the top layers (i.e., the FC layers)
         Default: False
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -279,11 +293,15 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
-        model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                             random_flip=random_flip, random_crop=random_crop))
+        # get the input parameters
+        input_parameters = get_layer_options(input_layer_options, parameters)
+        model.add(InputLayer(**input_parameters))
 
         model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
         model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
@@ -329,7 +347,8 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
                             '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
 
         model_cas = model_vgg16.VGG16_Model(s=conn, model_table=model_table, n_channels=n_channels,
-                                            width=width, height=height, random_crop=random_crop, offsets=offsets)
+                                            width=width, height=height, random_crop=random_crop, offsets=offsets,
+                                            random_mutation=random_mutation)
 
         if include_top:
             if n_classes != 1000:
@@ -356,8 +375,9 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
 
 
 def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-          random_flip='none', random_crop='none', offsets=(103.939, 116.779, 123.68),
-          pre_trained_weights=False, pre_trained_weights_file=None, include_top=False):
+          random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
+          pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
+          random_mutation=None):
     '''
     Generates a deep learning model with the VGG19 architecture.
 
@@ -387,14 +407,12 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
         Specifies how to flip the data in the input layer when image data is
         used. Approximately half of the input data is subject to flipping.
         Valid Values: 'h', 'hv', 'v', 'none'
-        Default: 'none'
     random_crop : string, optional
         Specifies how to crop the data in the input layer when image data is
         used. Images are cropped to the values that are specified in the width
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
-        Default: 'none'
     offsets : double or iter-of-doubles, optional
         Specifies an offset for each channel in the input data. The final input
         data is set after applying scaling and subtracting the specified offsets.
@@ -409,6 +427,9 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
     include_top : bool, optional
         Specifies whether to include pre-trained weights of the top layers (i.e., the FC layers).
         Default: False
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     Returns
     -------
@@ -424,11 +445,15 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # get all the parms passed in
+    parameters = locals()
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
-        model.add(InputLayer(n_channels=n_channels, width=width, height=height, scale=scale, offsets=offsets,
-                             random_flip=random_flip, random_crop=random_crop))
+        # get the input parameters
+        input_parameters = get_layer_options(input_layer_options, parameters)
+        model.add(InputLayer(**input_parameters))
 
         model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
         model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
@@ -474,7 +499,8 @@ def VGG19(conn, model_table='VGG19', n_classes=1000, n_channels=3, width=224, he
                             '3. Specify the pre_trained_weights_file using the fully qualified server side path.')
 
         model_cas = model_vgg19.VGG19_Model(s=conn, model_table=model_table, n_channels=n_channels,
-                                            width=width, height=height, random_crop=random_crop, offsets=offsets)
+                                            width=width, height=height, random_crop=random_crop, offsets=offsets,
+                                            random_flip=random_flip, random_mutation=random_mutation)
 
         if include_top:
             if n_classes != 1000:
