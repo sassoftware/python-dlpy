@@ -654,18 +654,17 @@ class Network(Layer):
                             self.num_params += l.num_weights
                         if l.num_bias is not None:
                             self.num_params += l.num_bias
+                num_params_str = format(self.num_params, ",d")  # value with comma
 
                 total_FLOPS = 0
                 for l in self.layers:
                     if l.FLOPS:
                         total_FLOPS += l.FLOPS
+                total_FLOPS = format(total_FLOPS, ",d")  # value with comma
                 MB = 2**20
-                self.total_FLOPS_in_unit = round(total_FLOPS / MB, 3)  # MFLOPS
                 # total summary rows
                 total = pd.DataFrame([['', '', '', '', '', '', '', 'Total number of parameters', 'Total FLOPS'],
-                                      ['Summary', '', '', '', '', '', '', self.num_params, total_FLOPS],
-                                      ['In units', '', '', '', '', '', '', '', str(self.total_FLOPS_in_unit)+' MFLOPS']
-                                      ],
+                                      ['Summary', '', '', '', '', '', '', num_params_str, total_FLOPS]],
                                      columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                               'Activation', 'Output Size', 'Number of Parameters',
                                               'FLOPS(forward pass)'])

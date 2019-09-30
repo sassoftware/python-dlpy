@@ -338,7 +338,7 @@ class Layer(object):
             self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh
         elif self.__class__ == GroupConv2d:
             kernel_wh = int(self.config['height']) * int(self.config['width'])
-            self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups
+            self.FLOPS = int(feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups)
         elif self.__class__ == Dense:
             self.FLOPS = self.num_weights
         else:
