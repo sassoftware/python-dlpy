@@ -85,7 +85,7 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
     if reshape_after_input is not None:
         input_data_layer = 'reshape1'
         s.deepLearn.addLayer(model=model_table_opts, name='reshape1',
-                             layer=reshape_after_input.config,
+                             layer=dict(type='reshape', **reshape_after_input.config),
                              srcLayers=['data'])
 
     # -------------------- Layer 1 ----------------------
