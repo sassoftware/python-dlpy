@@ -21,8 +21,8 @@
 import os
 
 from dlpy.layers import Layer
-from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep,\
-    underscore_to_camelcase, caslibify_context
+from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, \
+    underscore_to_camelcase, caslibify_context, isnotebook
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
     Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
 import dlpy.model
@@ -678,13 +678,16 @@ class Network(Layer):
                                               'Activation', 'Output Size', 'Number of Parameters',
                                               'FLOPS(forward pass)'])
                 pd_layers = pd.concat([layers_summary, total], ignore_index = True)
-                display(pd_layers)
+                if not isnotebook():
+                    display(pd_layers)
                 return pd_layers
             else:
-                display(self.summary)
+                if not isnotebook():
+                    display(self.summary)
                 return self.summary
         except ImportError:
-            print(self.summary)
+            if not isnotebook():
+                print(self.summary)
             return self.summary
 
     def _repr_html_(self):

@@ -564,7 +564,7 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
 def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
                    batch_norm_first=False, random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
                    pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
-                   random_mutation=None, add_reshape_after_input=False):
+                   random_mutation=None, reshape_after_input=None):
     '''
     Generates a deep learning model with the ResNet50 architecture with convolution shortcut.
 
@@ -625,10 +625,8 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    add_reshape_after_input : bool, optional
+    reshape_after_input : Layer Reshape, optional
         Specifies whether to add a reshape layer after the input layer.
-        This option is required to build a RNN model that contains CNN layers.
-        Default: False
 
     Returns
     -------
@@ -657,8 +655,8 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         # when a RNN model is built to consume the input data, it automatically flattens the input tensor
         # to a one-dimension vector. The reshape layer is required to reshape the tensor to the original definition.
         # This feature of mixing CNN layers with a RNN model is supported in VDMML 8.5.
-        if add_reshape_after_input:
-            model.add(Reshape(width=width, height=height, depth=n_channels))
+        if reshape_after_input:
+            model.add(reshape_after_input)
 
         # Top layers
         model.add(Conv2d(64, 7, act='identity', include_bias=False, stride=2))
@@ -708,7 +706,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         model_cas = model_resnet50.ResNet50_Model(s=conn, model_table=model_table, n_channels=n_channels,
                                                   width=width, height=height, random_crop=random_crop, offsets=offsets,
                                                   random_flip=random_flip, random_mutation=random_mutation,
-                                                  add_reshape_after_input=add_reshape_after_input)
+                                                  reshape_after_input=reshape_after_input)
 
         if include_top:
             if n_classes != 1000:

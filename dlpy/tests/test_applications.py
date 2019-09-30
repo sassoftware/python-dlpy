@@ -419,7 +419,10 @@ class TestApplications(unittest.TestCase):
     # test resnet50 with reshape
     def test_resnet50_3(self):
         from dlpy.applications import ResNet50_Caffe
-        model = ResNet50_Caffe(self.s, add_reshape_after_input=True)
+
+        #reshape = Reshape(width=224, height=224, depth=3, order='WHD')
+        reshape = Reshape(width=224, height=224, depth=3)
+        model = ResNet50_Caffe(self.s, reshape_after_input = reshape)
         model.print_summary()
 
         # test it with pretrained weights
@@ -430,10 +433,11 @@ class TestApplications(unittest.TestCase):
                                 random_flip='hv',
                                 random_mutation='random',
                                 pre_trained_weights=True,
-                                pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
+                                pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
                                 include_top=True,
-                                add_reshape_after_input=True)
+                                reshape_after_input=reshape)
         res = model1.print_summary()
+        print(res)
         self.assertEqual(res.iloc[1, 6][0], 224)
         self.assertEqual(res.iloc[1, 6][1], 224)
         self.assertEqual(res.iloc[1, 6][2], 3)

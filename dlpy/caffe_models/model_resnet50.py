@@ -20,7 +20,7 @@ from ..utils import input_table_check
 
 def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=224,
                    random_crop=None, offsets=None,
-                   random_flip=None, random_mutation=None, add_reshape_after_input=False):
+                   random_flip=None, random_mutation=None, reshape_after_input=None):
     '''
     ResNet50 model definition
 
@@ -57,10 +57,8 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    add_reshape_after_input : bool, optional
+    reshape_after_input : Layer Reshape, optional
         Specifies whether to add a reshape layer after the input layer.
-        This option is required to build a RNN model that contains CNN layers.
-        Default: False
 
     Returns
     -------
@@ -84,10 +82,10 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
                                     randomFlip=random_flip, randomMutation=random_mutation))
 
     input_data_layer = 'data'
-    if add_reshape_after_input:
-        input_data_layer='reshape1'
+    if reshape_after_input is not None:
+        input_data_layer = 'reshape1'
         s.deepLearn.addLayer(model=model_table_opts, name='reshape1',
-                             layer=dict(type='reshape',  width=width, height=height, depth=n_channels),
+                             layer=reshape_after_input.config,
                              srcLayers=['data'])
 
     # -------------------- Layer 1 ----------------------
