@@ -22,7 +22,7 @@ from dlpy.layers import InputLayer, Conv2d, BN, Pooling, Detection, Dense, Resha
 from dlpy.utils import DLPyError
 from .application_utils import get_layer_options, input_layer_options
 
-def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
+def YoloV2(conn, anchors, model_table='YoloV2', n_channels=3, width=416, height=416, scale=1.0 / 255,
            random_mutation=None, act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
            coord_type='YOLO', max_label_per_image=30, max_boxes=30,
            n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
@@ -226,7 +226,7 @@ def YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, he
     return model
 
 
-def YoloV2_MultiSize(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=416, height=416, scale=1.0 / 255,
+def YoloV2_MultiSize(conn, anchors, model_table='YoloV2-MultiSize', n_channels=3, width=416, height=416, scale=1.0 / 255,
                      random_mutation=None, act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
                      coord_type='YOLO', max_label_per_image=30, max_boxes=30,
                      n_classes=20, predictions_per_grid=5, do_sqrt=True, grid_number=13,
@@ -626,7 +626,7 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
     return model
 
 
-def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255,
+def YoloV1(conn, model_table='YoloV1', n_channels=3, width=448, height=448, scale=1.0 / 255,
            random_mutation=None, act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
            coord_type='YOLO', max_label_per_image=30, max_boxes=30,
            n_classes=20, predictions_per_grid=2, do_sqrt=True, grid_number=7,
@@ -813,7 +813,7 @@ def YoloV1(conn, model_table='Yolov1', n_channels=3, width=448, height=448, scal
     return model
 
 
-def Tiny_YoloV1(conn, model_table='Tiny-Yolov1', n_channels=3, width=448, height=448, scale=1.0 / 255,
+def Tiny_YoloV1(conn, model_table='Tiny-YoloV1', n_channels=3, width=448, height=448, scale=1.0 / 255,
                 random_mutation=None, act='leaky', dropout=0, act_detection='AUTO', softmax_for_class_prob=True,
                 coord_type='YOLO', max_label_per_image=30, max_boxes=30,
                 n_classes=20, predictions_per_grid=2, do_sqrt=True, grid_number=7,

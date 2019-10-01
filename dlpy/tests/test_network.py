@@ -407,6 +407,35 @@ class TestNetwork(tm.TestCase):
         backbone2 = model_resnet18.to_functional_model(model_resnet18.layers[-3])
         self.assertEqual(backbone2.layers[-1].__class__.__name__, 'BN')
 
+    def test_multiple_branch(self):
+        from dlpy.sequential import Sequential
+        model = Sequential(self.s, model_table = 'Simple_CNN')
+        model.add(InputLayer(3, 48, 96, scale = 1 / 255, random_mutation = 'none'))
+        model.add(Conv2d(64, 7, include_bias = True, act = 'relu'))
+        model.add(Pooling(2))
+        model.add(Conv2d(64, 3, include_bias = True, act = 'relu'))
+        model.add(Pooling(2))
+        model.add(Conv2d(64, 3, include_bias = True, act = 'relu'))
+        model.add(Pooling(2))
+        model.add(Conv2d(64, 3, include_bias = True, act = 'relu'))
+        model.add(Pooling(2))
+        model.add(Dense(16))
+        model.add(OutputLayer(n = 1, act = 'sigmoid'))
+        branch = model.to_functional_model(stop_layers = model.layers[-1])
+        inp1 = Input(**branch.layers[0].config)  # tensor
+        branch1 = branch(inp1)  # tensor
+        inp2 = Input(**branch.layers[0].config)  # tensor
+        branch2 = branch(inp2)  # tensor
+        inp3 = Input(**branch.layers[0].config)  # tensor
+        branch3 = branch(inp3)  # tensor
+        triplet = OutputLayer(n = 1)(branch1 + branch2 + branch3)
+        triplet_model = Model(self.s, inputs = [inp1, inp2, inp3], outputs = triplet)
+        triplet_model.compile()
+        triplet_model.print_summary()
+        self.assertEqual(len(triplet_model.layers), 31)
+        triplet_model.share_weights({'Convo.1': ['Convo.1_2', 'Convo.1_3']})
+        triplet_model.compile()
+
     def test_residual_output_shape0(self):
         inLayer = Input(n_channels = 3, width = 32, height = 128,
                         name = 'input1', random_mutation = 'random', random_flip = 'HV')
@@ -460,6 +489,50 @@ class TestNetwork(tm.TestCase):
 
         with self.assertRaises(DLPyError):
             model1.deploy(path='/amran/komran', output_format='astore')
+
+    def test_mix_cnn_rnn_network(self):
+        from dlpy.applications import ResNet50_Caffe
+        from dlpy import Sequential
+        from dlpy.blocks import Bidirectional
+        # the case is to test if CNN and RNN model can be connect using functional api
+        # the model_type is expected to be RNN in 19w47.
+        # CNN
+        model = ResNet50_Caffe(self.s)
+        cnn_head = model.to_functional_model(stop_layers = model.layers[-1])
+        # RNN
+        model_rnn = Sequential(conn = self.s, model_table = 'rnn')
+        model_rnn.add(Bidirectional(n = 100, n_blocks = 2))
+        model_rnn.add(OutputLayer('fixed'))
+
+        f_rnn = model_rnn.to_functional_model()
+        # connecting
+        inp = Input(**cnn_head.layers[0].config)
+        x = cnn_head(inp)
+        y = f_rnn(x)
+        cnn_rnn = Model(self.s, inp, y)
+        cnn_rnn.compile()
+        # check type
+        self.assertTrue(cnn_rnn.model_type == 'RNN')
+        self.assertTrue(cnn_rnn.layers[-1].name == 'fixed')
+
+        f_rnn = model_rnn.to_functional_model()
+        # connecting
+        inp = Input(**cnn_head.layers[0].config)
+        x = cnn_head(inp)
+        y = f_rnn(x)
+        cnn_rnn = Model(self.s, inp, y)
+        cnn_rnn.compile()
+        # it should be fixed if I create f_rnn again.
+        self.assertTrue(cnn_rnn.layers[-1].name == 'fixed')
+
+        inp = Input(**cnn_head.layers[0].config)
+        x = cnn_head(inp)
+        y = f_rnn(x)
+        cnn_rnn = Model(self.s, inp, y)
+        cnn_rnn.compile()
+        # it should be fixed if I create f_rnn again.
+        self.assertTrue(cnn_rnn.layers[-1].name == 'fixed_2')
+
 
     @classmethod
     def tearDownClass(cls):

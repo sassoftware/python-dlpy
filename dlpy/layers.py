@@ -166,13 +166,13 @@ class Layer(object):
     can_be_last_layer = False
     number_of_instances = 0
     layer_id = None
-    shared_weights = None
 
     def __init__(self, name=None, config=None, src_layers=None):
         self.name = name
         self.config = config
         self.depth = None
         self._inbound_nodes = []
+        self.shared_weights = None
 
         if src_layers is None:
             self.src_layers = None
@@ -192,16 +192,18 @@ class Layer(object):
         layer_type = self.__class__.__name__
         if isinstance(inputs, list):
             if len(inputs) > 1 and layer_type not in ['Concat', 'Res', 'Scale', 'CLoss',
-                                                      'Dense', 'Model', 'OutputLayer', 'ROIPooling', 'FastRCNN']:
+                                                      'Dense', 'Model', 'OutputLayer', 'ROIPooling', 'FastRCNN',
+                                                      'Recurrent', 'EmbeddingLoss']:
                 raise DLPyError('The input of {} should have only one layer.'.format(layer_type))
         else:
             inputs = [inputs]
         if layer_type == 'Model':
+            self.model_counter += 1
             copied_model = deepcopy(self)
             # update name
-            if copied_model.number_of_instances != 0:
+            if copied_model.model_counter > 1:
                 for layer in copied_model.layers:
-                    layer.name = layer.name + '_' + '{}'.format(copied_model.number_of_instances)
+                    layer.name = layer.name + '_' + '{}'.format(copied_model.model_counter)
             # share weights
             # for layer in copied_model.layers:
             #     layer.from_sub_network = self
@@ -336,7 +338,7 @@ class Layer(object):
             self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh
         elif self.__class__ == GroupConv2d:
             kernel_wh = int(self.config['height']) * int(self.config['width'])
-            self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups
+            self.FLOPS = int(feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups)
         elif self.__class__ == Dense:
             self.FLOPS = self.num_weights
         else:
@@ -870,7 +872,6 @@ class GroupConv2d(Conv2d):
     @property
     def output_size(self):
         if self._output_size is None:
-            # calculate output according to specified padding
             # calculate output according to specified padding
             if self.padding != (None, None):
                 out_h = ((self.src_layers[0].output_size[0] - self.config['height'] + 2 * self.padding[0]) //
@@ -2132,7 +2133,7 @@ class Reshape(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            self._output_size = (self.config['height'], self.config['width'], self.config['depth'])
+            self._output_size = (int(self.config['height']), int(self.config['width']), int(self.config['depth']))
         return self._output_size
 
     @property
@@ -2422,8 +2423,8 @@ class ROIPooling(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            self._output_size = (self.config['output_width'], self.config['output_height'],
-                                 self.src_layers[0].output_size[1])
+            self._output_size = (int(self.config['output_width']), int(self.config['output_height']),
+                                 int(self.src_layers[0].output_size[1]))
         return self._output_size
 
     @property

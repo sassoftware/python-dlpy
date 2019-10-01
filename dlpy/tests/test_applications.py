@@ -761,7 +761,7 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(len(model.layers) == 57)
         self.assertTrue(model.layers[49]._output_size == (7, 7, 2048))
         model.print_summary()
-        self.assertEqual(model.total_FLOPS_in_unit, 20932.283)
+        self.assertEqual(model.summary.iloc[7, -1], 36126720)
 
     def test_mobilenetv2(self):
         from dlpy.applications import MobileNetV2
@@ -787,7 +787,7 @@ class TestApplications(unittest.TestCase):
         # transpose conv print summary numerical check
         model = UNet(self.s, width = 256, height = 256, offsets = [1.25], scale = 0.0002)
         model.print_summary()
-        self.assertEqual(model.total_FLOPS_in_unit, 62316.0)
+        self.assertEqual(model.summary.iloc[23, -1], 4831838208)
 
     def test_unet_with_bn(self):
         from dlpy.applications import UNet
