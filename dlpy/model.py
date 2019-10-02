@@ -2973,9 +2973,6 @@ class Optimizer(DLPyDict):
     bn_src_layer_warnings : bool, optional
         Turns warning on or off, if batch normalization source layer has
         an atypical type, activation, or include_bias setting. Default: False
-        freeze_layers_to : string
-        Specifies a layer name to freeze this layer and all the layers before
-        this layer.
     total_mini_batch_size : int, optional
         specifies the number of observations in a mini-batch. You can use
         this parameter to control the number of observations that the action
@@ -3003,7 +3000,6 @@ class Optimizer(DLPyDict):
         this layer.
     freeze_batch_norm_stats : Boolean
         When set to True, freezes the statistics of all batch normalization layers.
-        Default : False
     freeze_layers : list of string
         Specifies a list of layer names whose trainable parameters will be frozen.
 
@@ -3016,7 +3012,7 @@ class Optimizer(DLPyDict):
                  dropout=0, dropout_input=0, dropout_type='standard', stagnation=0, threshold=0.00000001, f_conv=0,
                  snapshot_freq=0, log_level=0, bn_src_layer_warnings=True, freeze_layers_to=None, flush_weights=False,
                  total_mini_batch_size=None, mini_batch_buf_size=None,
-                 freeze_layers=None, freeze_batch_norm_stats=False):
+                 freeze_layers=None, freeze_batch_norm_stats=None):
         DLPyDict.__init__(self, algorithm=algorithm, mini_batch_size=mini_batch_size, seed=seed, max_epochs=max_epochs,
                           reg_l1=reg_l1, reg_l2=reg_l2, dropout=dropout, dropout_input=dropout_input,
                           dropout_type=dropout_type, stagnation=stagnation, threshold=threshold, f_conv=f_conv,

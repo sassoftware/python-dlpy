@@ -20,7 +20,8 @@ from ..utils import input_table_check
 
 def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
                 random_crop=None, offsets=None,
-                random_flip=None, random_mutation=None):
+                random_flip=None, random_mutation=None,
+                reshape_after_input=None):
     '''
     VGG16 model definition
 
@@ -57,6 +58,8 @@ def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
+    reshape_after_input : Layer Reshape, optional
+        Specifies whether to add a reshape layer after the input layer.
 
     Returns
     -------
@@ -77,12 +80,19 @@ def VGG16_Model(s, model_table='VGG16', n_channels=3, width=224, height=224,
                          layer=dict(type='input', nchannels=n_channels, width=width, height=height,
                                     randomcrop=random_crop, offsets=offsets,
                                     randomFlip=random_flip, randomMutation=random_mutation))
+    # check whether add reshape
+    input_data_layer = 'data'
+    if reshape_after_input is not None:
+        input_data_layer = 'reshape1'
+        s.deepLearn.addLayer(model=model_table_opts, name='reshape1',
+                             layer=dict(type='reshape', **reshape_after_input.config),
+                             srcLayers=['data'])
 
     # conv1_1 layer: 64*3*3
     s.deepLearn.addLayer(model=model_table_opts, name='conv1_1',
                          layer=dict(type='convolution', nFilters=64, width=3, height=3,
                                     stride=1, act='relu'),
-                         srcLayers=['data'])
+                         srcLayers=[input_data_layer])
 
     # conv1_2 layer: 64*3*3
     s.deepLearn.addLayer(model=model_table_opts, name='conv1_2',

@@ -420,9 +420,8 @@ class TestApplications(unittest.TestCase):
     def test_resnet50_3(self):
         from dlpy.applications import ResNet50_Caffe
 
-        #reshape = Reshape(width=224, height=224, depth=3, order='WHD')
-        reshape = Reshape(width=224, height=224, depth=3)
-        model = ResNet50_Caffe(self.s, reshape_after_input = reshape)
+        reshape = Reshape(width=224, height=224, depth=3, order='WHD')
+        model = ResNet50_Caffe(self.s, reshape_after_input=reshape)
         model.print_summary()
 
         # test it with pretrained weights

@@ -655,6 +655,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
         # when a RNN model is built to consume the input data, it automatically flattens the input tensor
         # to a one-dimension vector. The reshape layer is required to reshape the tensor to the original definition.
         # This feature of mixing CNN layers with a RNN model is supported in VDMML 8.5.
+        # This option could be also used to reshape the input tensor.
         if reshape_after_input:
             model.add(reshape_after_input)
 
