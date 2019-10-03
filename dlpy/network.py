@@ -21,8 +21,8 @@
 import os
 
 from dlpy.layers import Layer
-from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep,\
-    underscore_to_camelcase, caslibify_context
+from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, \
+    underscore_to_camelcase, caslibify_context, isnotebook
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
     Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
 import dlpy.model
@@ -173,6 +173,33 @@ class Network(Layer):
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
         self.num_params = 0
+
+        orig_ids = self.summary['Layer Id']
+        offset_id = 0
+        new_ids = []
+        max_id = -1
+        pool = []
+        for idx, l_id in enumerate(orig_ids):
+            # encounter None id or duplicated id, start a new Model
+            if l_id is None or l_id in pool:
+                offset_id = idx
+                pool = []
+            else:
+                pool.append(l_id)
+
+            if l_id is None:
+                max_id = -1
+                l_id = offset_id
+            else:
+                max_id = max(max_id, l_id)
+                l_id += offset_id
+
+            new_ids.append(l_id)
+
+        for i, l in enumerate(self.layers):
+            l.layer_id = new_ids[i]
+        self.layers.sort()
+
         for layer in self.layers:
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
@@ -261,7 +288,22 @@ class Network(Layer):
                             output_tensors.append(outbound_layer.tensor)
                             break
 
-        return dlpy.model.Model(self.conn, input_tensors, output_tensors)
+        func_model = dlpy.model.Model(self.conn, input_tensors, output_tensors)
+        # stop_layers will remove some layers from copied_model.layers
+        # f_layer_names = [f_l.name for f_l in func_model.layers]  #subset
+        # c_layer_names = [c_l.name for c_l in copied_model.layers]  #set
+        #
+        # for c_name in c_layer_names:
+        #     if c_name not in f_layer_names:
+        #         copied_model.layers.remove(copied_model.layers[c_layer_names.index(c_name)])
+        #
+        # # traverse the model by to_functional_model(): layer name is used to find depth
+        # for l in copied_model.layers:
+        #     idx = f_layer_names.index(l.name)
+        #     l.depth = func_model.layers[idx].depth
+        # func_model.layers = copied_model.layers
+
+        return func_model
 
     def __deepcopy__(self, memo):
         cls = self.__class__
@@ -668,11 +710,18 @@ class Network(Layer):
                                      columns=['Layer Id', 'Layer', 'Type', 'Kernel Size', 'Stride',
                                               'Activation', 'Output Size', 'Number of Parameters',
                                               'FLOPS(forward pass)'])
-                display(pd.concat([layers_summary, total], ignore_index = True))
+                pd_layers = pd.concat([layers_summary, total], ignore_index = True)
+                if not isnotebook():
+                    display(pd_layers)
+                return pd_layers
             else:
-                display(self.summary)
+                if not isnotebook():
+                    display(self.summary)
+                return self.summary
         except ImportError:
-            print(self.summary)
+            if not isnotebook():
+                print(self.summary)
+            return self.summary
 
     def _repr_html_(self):
         return self.summary._repr_html_()

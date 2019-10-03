@@ -248,7 +248,7 @@ class Layer(object):
         return self.tensor
 
     def __lt__(self, other):
-        return self.depth < other.depth
+        return self.layer_id < other.layer_id
 
     def __str__(self):
         return self.name

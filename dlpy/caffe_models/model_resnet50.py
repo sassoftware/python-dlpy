@@ -20,7 +20,7 @@ from ..utils import input_table_check
 
 def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=224,
                    random_crop=None, offsets=None,
-                   random_flip=None, random_mutation=None):
+                   random_flip=None, random_mutation=None, reshape_after_input=None):
     '''
     ResNet50 model definition
 
@@ -57,6 +57,9 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
+    reshape_after_input : Layer Reshape, optional
+        Specifies whether to add a reshape layer after the input layer.
+
     Returns
     -------
     None
@@ -78,13 +81,20 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
                                     randomcrop=random_crop, offsets=offsets,
                                     randomFlip=random_flip, randomMutation=random_mutation))
 
+    input_data_layer = 'data'
+    if reshape_after_input is not None:
+        input_data_layer = 'reshape1'
+        s.deepLearn.addLayer(model=model_table_opts, name='reshape1',
+                             layer=dict(type='reshape', **reshape_after_input.config),
+                             srcLayers=['data'])
+
     # -------------------- Layer 1 ----------------------
 
     # conv1 layer: 64 channels, 7x7 conv, stride=2; output = 112 x 112 */
     s.deepLearn.addLayer(model=model_table_opts, name='conv1',
                          layer=dict(type='convolution', nFilters=64, width=7, height=7,
                                     stride=2, act='identity'),
-                         srcLayers=['data'])
+                         srcLayers=[input_data_layer])
 
     # conv1 batch norm layer: 64 channels, output = 112 x 112 */
     s.deepLearn.addLayer(model=model_table_opts, name='bn_conv1',
