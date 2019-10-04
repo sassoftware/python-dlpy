@@ -1122,15 +1122,21 @@ def _convert_xml_annotation(filename, coord_type, resize, name_file = None):
     # if a xml is empty, just skip it.
     if object_ is None:
         in_file.close()
+        print('WARNING: There is no object in the annotation file {}.xml. The observation is ignored.'.format(filename))
+        return
+    size = root.find('size')
+    width = int(size.find('width').text)
+    height = int(size.find('height').text)
+    if width <= 0 or height <= 0:
+        in_file.close()
+        print('WARNING: Please check the annotation file, {}.xml, '
+              'in which either width or height is smaller than 0. The observation is ignored.'.format(filename))
         return
     # write in all classes
     if name_file:
         with open(name_file, 'r') as nf:
             line = nf.readlines()
             cls_list = [l.strip() for l in line]
-    size = root.find('size')
-    width = int(size.find('width').text)
-    height = int(size.find('height').text)
     out_file = open(filename + ".txt", 'w')  # write to test files
     for obj in root.iter('object'):
         cls = obj.find('name').text
@@ -1431,9 +1437,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                 run;
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code = fmt_code, _messagelevel = 'error')
-    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    cls_col_format_length = conn.columninfo(output).ColumnInfo['RawLength'][0]  # max class name length
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
-
     conn.altertable(name = output, columns = [dict(name = 'Var1', rename = var_name[0]),
                                               dict(name = 'Var2', rename = var_name[1]),
                                               dict(name = 'Var3', rename = var_name[2]),
