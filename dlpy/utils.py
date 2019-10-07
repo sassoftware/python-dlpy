@@ -1358,6 +1358,12 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'deepLearn')
     conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'transpose')
 
+    # get os path seperator
+    if server_type.startswith("lin") or server_type.startswith("osx"):
+        sep = '/'
+    else:
+        sep = '\\'
+
     # label variables, _ : category;
     yolo_var_name = ['_', '_x', '_y', '_width', '_height']
     coco_var_name = ['_', '_xmin', '_ymin', '_xmax', '_ymax']
@@ -1400,7 +1406,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     with caslibify_context(conn, data_path, 'save') as (caslib, path_after_caslib):
         # find all of annotation files under the directory
-        label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
+        label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
         # if client and server are on different type of operation system, we assume user parse xml files and put
         # txt files in data_path folder. So skip get_txt_annotation()
         # parse xml or json files and create txt files
@@ -1409,7 +1415,6 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
         label_tbl_name = random_name('obj_det')
         # load all of txt files into cas server
-        label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
         label_files = [x for x in label_files if x.endswith('.txt')]
         if len(label_files) == 0:
             raise DLPyError('Can not find any txt file under data_path.')
@@ -1417,6 +1422,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         with sw.option_context(print_messages = False):
             for idx, filename in enumerate(label_files):
                 tbl_name = '{}_{}'.format(label_tbl_name, idx)
+                if path_after_caslib != '':
+                    filename = path_after_caslib + sep + filename
                 conn.retrieve('loadtable', caslib = caslib, path = filename,
                               casout = dict(name = tbl_name, replace = True),
                               importOptions = dict(fileType = 'csv', getNames = False,
@@ -2095,7 +2102,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     if len(label_files) == 0:
         raise DLPyError('There is no annotation file in the annotation_path.')
 
-    with caslibify(conn, data_path, task='load') as (caslib, path_after_caslib):
+    with caslibify_context(conn, data_path, task='load') as (caslib, path_after_caslib):
         if caslib is None and path_after_caslib is None:
             print('Cannot create a caslib for the provided (i.e., '+data_path+') path. Please make sure that the '
                                                                               'path is accessible from'
