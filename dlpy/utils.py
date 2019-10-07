@@ -1112,7 +1112,14 @@ def _convert_coco(size, box, resize):
 
 def _convert_xml_annotation(filename, coord_type, resize, name_file = None):
     # always use en locale since we use this locale to generate our internal txt files
-    locale.setlocale(locale.LC_ALL, 'en-US')
+    try:
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+        except:
+            print("Could not set the locale to english and it is now using the system's locale")
+            locale.setlocale(locale.LC_ALL, '')
 
     in_file = open(filename)
     filename, file_extension = os.path.splitext(filename)
