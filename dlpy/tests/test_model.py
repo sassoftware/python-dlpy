@@ -943,7 +943,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model.summary['Output Size'].values[-3], (1, 1, 1024))
         model.print_summary()
         # 2d print summary numerical check
-        self.assertEqual(model.total_FLOPS_in_unit, 6746.348)
+        self.assertEqual(model.summary.iloc[1, -1], 2985984)
 
     def test_heat_map_analysis(self):
         if self.data_dir is None:
@@ -1002,7 +1002,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual(model_m.layers[3].output_size, (1, 80, 100))
         model_m.print_summary()
         # 1d print summary numerical check
-        self.assertEqual(model_m.total_FLOPS_in_unit, 54.855)
+        self.assertEqual(model_m.summary.iloc[1, -1], 240000)
 
     @classmethod
     def tearDownClass(cls):

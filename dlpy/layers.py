@@ -338,7 +338,7 @@ class Layer(object):
             self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh
         elif self.__class__ == GroupConv2d:
             kernel_wh = int(self.config['height']) * int(self.config['width'])
-            self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups
+            self.FLOPS = int(feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups)
         elif self.__class__ == Dense:
             self.FLOPS = self.num_weights
         else:
@@ -2136,7 +2136,7 @@ class Reshape(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            self._output_size = (self.config['height'], self.config['width'], self.config['depth'])
+            self._output_size = (int(self.config['height']), int(self.config['width']), int(self.config['depth']))
         return self._output_size
 
     @property
@@ -2426,8 +2426,8 @@ class ROIPooling(Layer):
     @property
     def output_size(self):
         if self._output_size is None:
-            self._output_size = (self.config['output_width'], self.config['output_height'],
-                                 self.src_layers[0].output_size[1])
+            self._output_size = (int(self.config['output_width']), int(self.config['output_height']),
+                                 int(self.src_layers[0].output_size[1]))
         return self._output_size
 
     @property
