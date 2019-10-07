@@ -395,6 +395,19 @@ class TestUtils(unittest.TestCase):
         df = self.s.caslibinfo().CASLibInfo['Name']
         self.assertEqual(df[df == tmp_caslib].shape[0], 0)
 
+    def test_caslibify_subdirectory_permission(self):
+        self.s.addcaslib(path = self.data_dir, name='data', subdirectories=False)
+        self.assertRaises(DLPyError, lambda: caslibify(self.s, path = self.data_dir + 'segmentation_data'))
+
+    def test_caslibify_context_subdirectory_permission(self):
+        self.s.addcaslib(path = self.data_dir, name='data', subdirectories=False)
+        try:
+            with caslibify_context(self.s, path = self.data_dir + 'segmentation_data'):
+                a = 1+1
+        except DLPyError:
+            return
+        raise DLPyError('caslibify_context() expected to throw a DLPyError')
+
     def test_user_defined_labels(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
