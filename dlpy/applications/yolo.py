@@ -22,6 +22,7 @@ from dlpy.layers import InputLayer, Conv2d, BN, Pooling, Detection, Dense, Resha
 from dlpy.utils import DLPyError
 from .application_utils import get_layer_options, input_layer_options
 
+
 def YoloV2(conn, anchors, model_table='YoloV2', n_channels=3, width=416, height=416, scale=1.0 / 255,
            random_mutation=None, act='leaky', act_detection='AUTO', softmax_for_class_prob=True,
            coord_type='YOLO', max_label_per_image=30, max_boxes=30,

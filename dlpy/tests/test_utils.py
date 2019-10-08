@@ -467,4 +467,7 @@ class TestUtils(unittest.TestCase):
     def test_print_predefined_models(self):
         print_predefined_models()
 
-
+    def test_check_layer_type(self):
+        from dlpy.layers import Conv2DTranspose, Conv2d
+        layer = Conv2DTranspose(10)
+        self.assertRaises(DLPyError, lambda: check_layer_class(layer, Conv2d))

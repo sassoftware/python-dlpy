@@ -20,8 +20,8 @@ import warnings
 
 from dlpy.sequential import Sequential
 from dlpy.model import Model
-from dlpy.layers import InputLayer, Conv2d, BN, Pooling, OutputLayer, Dense
-from dlpy.utils import DLPyError
+from dlpy.layers import InputLayer, Conv2d, BN, Pooling, OutputLayer, Dense, Reshape
+from dlpy.utils import DLPyError, check_layer_class
 from dlpy.caffe_models import (model_vgg16, model_vgg19)
 from .application_utils import get_layer_options, input_layer_options
 
@@ -225,7 +225,7 @@ def VGG13(conn, model_table='VGG13', n_classes=1000, n_channels=3, width=224, he
 def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, height=224, scale=1,
           random_flip=None, random_crop=None, offsets=(103.939, 116.779, 123.68),
           pre_trained_weights=False, pre_trained_weights_file=None, include_top=False,
-          random_mutation=None):
+          random_mutation=None, reshape_after_input=None):
     '''
     Generates a deep learning model with the VGG16 architecture.
 
@@ -278,6 +278,8 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
+    reshape_after_input : :class:`Reshape`, optional
+        Specifies whether to add a reshape layer after the input layer.
 
     Returns
     -------
@@ -296,12 +298,18 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
     # get all the parms passed in
     parameters = locals()
 
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
+
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
 
         # get the input parameters
         input_parameters = get_layer_options(input_layer_options, parameters)
         model.add(InputLayer(**input_parameters))
+
+        if reshape_after_input:
+            model.add(reshape_after_input)
 
         model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
         model.add(Conv2d(n_filters=64, width=3, height=3, stride=1))
@@ -348,7 +356,7 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
 
         model_cas = model_vgg16.VGG16_Model(s=conn, model_table=model_table, n_channels=n_channels,
                                             width=width, height=height, random_crop=random_crop, offsets=offsets,
-                                            random_mutation=random_mutation)
+                                            random_mutation=random_mutation, reshape_after_input=reshape_after_input)
 
         if include_top:
             if n_classes != 1000:

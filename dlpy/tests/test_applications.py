@@ -416,6 +416,38 @@ class TestApplications(unittest.TestCase):
         model = ResNet50_Caffe(self.s)
         model.print_summary()
 
+    # test resnet50 with reshape
+    def test_resnet50_3(self):
+        from dlpy.applications import ResNet50_Caffe
+
+        reshape = Reshape(width=224, height=224, depth=3, order='WHD')
+        model = ResNet50_Caffe(self.s, reshape_after_input=reshape)
+        model.print_summary()
+
+        # test it with pretrained weights
+        model1 = ResNet50_Caffe(self.s, model_table='Resnet50', n_classes=1000, n_channels=3,
+                                width=224, height=224, scale=1,
+                                offsets=None,
+                                random_crop='unique',
+                                random_flip='hv',
+                                random_mutation='random',
+                                pre_trained_weights=True,
+                                pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
+                                include_top=True,
+                                reshape_after_input=reshape)
+        res = model1.print_summary()
+        print(res)
+        self.assertEqual(res.iloc[1, 6][0], 224)
+        self.assertEqual(res.iloc[1, 6][1], 224)
+        self.assertEqual(res.iloc[1, 6][2], 3)
+
+    # test resnet50 with the wrong reshape layer
+    def test_resnet50_4(self):
+        from dlpy.applications import ResNet50_Caffe
+
+        reshape = Pooling(width=2, height=2, stride=2)
+        self.assertRaises(DLPyError, lambda: ResNet50_Caffe(self.s, reshape_after_input=reshape))
+
     def test_resnet101(self):
         from dlpy.applications import ResNet101_SAS
         model = ResNet101_SAS(self.s)
@@ -785,7 +817,7 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(model.layers[12].output_size == (64, 64, 512))
         model.print_summary()
         # transpose conv print summary numerical check
-        model = UNet(self.s, width = 256, height = 256, offsets = [1.25], scale = 0.0002)
+        model = UNet(self.s, width=256, height=256, offsets=[1.25], scale=0.0002)
         model.print_summary()
         self.assertEqual(model.summary.iloc[23, -1], 4831838208)
 

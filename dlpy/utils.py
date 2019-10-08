@@ -2435,6 +2435,13 @@ def print_predefined_models():
     print('DLPy supports predefined models as follows: \n{}.'.format(', '.join(models_name)))
 
 
+def check_layer_class(layer_to_check, layer_class):
+    if layer_to_check:
+        if type(layer_to_check) != layer_class:
+            raise DLPyError('The layer to be checked does not match '
+                            'the layer class, {}.'.format(str(layer_class)))
+
+
 class DLPyDict(collections.MutableMapping):
     """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
 
