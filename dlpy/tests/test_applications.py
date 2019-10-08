@@ -441,6 +441,13 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(res.iloc[1, 6][1], 224)
         self.assertEqual(res.iloc[1, 6][2], 3)
 
+    # test resnet50 with the wrong reshape layer
+    def test_resnet50_4(self):
+        from dlpy.applications import ResNet50_Caffe
+
+        reshape = Pooling(width=2, height=2, stride=2)
+        self.assertRaises(DLPyError, lambda: ResNet50_Caffe(self.s, reshape_after_input=reshape))
+
     def test_resnet101(self):
         from dlpy.applications import ResNet101_SAS
         model = ResNet101_SAS(self.s)

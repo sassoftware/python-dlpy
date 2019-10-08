@@ -2099,7 +2099,10 @@ class Reshape(Layer):
         Specifies the layers directed to this layer.
     order : string, optional
         Specifies how to reshape the source layer.
-        Valid Values: AUTO, WHD, WDH, DWH, HWD, DHW, HDW
+        Valid Values: AUTO, WHD, WDH, DWH, HWD, DHW, HDW. For AUTO, when the output channel is 1,
+        the reshape order is depth (D), width (W), and height (H).
+        When the output channel is evenly divisible by the input channel,
+        the reshape order is width (W), height (H), and depth (D).
 
     Returns
     -------

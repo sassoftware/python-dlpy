@@ -20,8 +20,8 @@ import warnings
 
 from dlpy.sequential import Sequential
 from dlpy.model import Model
-from dlpy.layers import InputLayer, Conv2d, BN, Pooling, OutputLayer, Dense
-from dlpy.utils import DLPyError
+from dlpy.layers import InputLayer, Conv2d, BN, Pooling, OutputLayer, Dense, Reshape
+from dlpy.utils import DLPyError, check_layer_class
 from dlpy.caffe_models import (model_vgg16, model_vgg19)
 from .application_utils import get_layer_options, input_layer_options
 
@@ -278,7 +278,7 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -297,6 +297,9 @@ def VGG16(conn, model_table='VGG16', n_classes=1000, n_channels=3, width=224, he
 
     # get all the parms passed in
     parameters = locals()
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)

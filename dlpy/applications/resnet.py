@@ -21,7 +21,7 @@ from dlpy.sequential import Sequential
 from dlpy.model import Model
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, GlobalAveragePooling2D, OutputLayer, Reshape
 from dlpy.blocks import ResBlockBN, ResBlock_Caffe
-from dlpy.utils import DLPyError
+from dlpy.utils import DLPyError, check_layer_class
 from dlpy.caffe_models import (model_resnet50, model_resnet101, model_resnet152)
 from .application_utils import get_layer_options, input_layer_options
 
@@ -80,7 +80,7 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -93,6 +93,9 @@ def ResNet18_SAS(conn, model_table='RESNET18_SAS', batch_norm_first=True, n_clas
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -190,7 +193,7 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -203,6 +206,9 @@ def ResNet18_Caffe(conn, model_table='RESNET18_CAFFE', batch_norm_first=False, n
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -304,7 +310,7 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -317,6 +323,9 @@ def ResNet34_SAS(conn, model_table='RESNET34_SAS', n_classes=1000, n_channels=3,
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -415,7 +424,7 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -428,6 +437,9 @@ def ResNet34_Caffe(conn, model_table='RESNET34_CAFFE',  n_classes=1000, n_channe
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -530,7 +542,7 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -543,6 +555,9 @@ def ResNet50_SAS(conn, model_table='RESNET50_SAS', n_classes=1000, n_channels=3,
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -655,7 +670,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -672,8 +687,14 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
 
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
+
     # get all the parms passed in
     parameters = locals()
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     if not pre_trained_weights:
         model = Sequential(conn=conn, model_table=model_table)
@@ -818,7 +839,7 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -831,6 +852,9 @@ def ResNet101_SAS(conn, model_table='RESNET101_SAS',  n_classes=1000, n_channels
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -941,7 +965,7 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -957,6 +981,9 @@ def ResNet101_Caffe(conn, model_table='RESNET101_CAFFE', n_classes=1000, n_chann
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -1101,7 +1128,7 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -1114,6 +1141,9 @@ def ResNet152_SAS(conn, model_table='RESNET152_SAS',  n_classes=1000, n_channels
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -1224,7 +1254,7 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -1240,6 +1270,9 @@ def ResNet152_Caffe(conn, model_table='RESNET152_CAFFE',  n_classes=1000, n_chan
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     # get all the parms passed in
     parameters = locals()
@@ -1392,7 +1425,7 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns
@@ -1405,6 +1438,9 @@ def ResNet_Wide(conn, model_table='WIDE_RESNET', batch_norm_first=True, number_o
 
     '''
     conn.retrieve('loadactionset', _messagelevel='error', actionset='deeplearn')
+
+    # check the type
+    check_layer_class(reshape_after_input, Reshape)
 
     in_filters = 16
 
