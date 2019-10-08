@@ -1525,7 +1525,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     return var_order[2:]
 
 
-def getInfoForObjectDetection( sess, table):
+def get_info_for_object_detection( sess, table):
     '''
 
     parameters

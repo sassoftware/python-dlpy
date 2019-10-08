@@ -144,8 +144,8 @@ class TestUtils(unittest.TestCase):
                                       output='output')
 
         a = self.s.CASTable('output')
-        from dlpy.utils import getInfoForObjectDetection
-        c, m = getInfoForObjectDetection( self.s, a)
+        from dlpy.utils import get_info_for_object_detection
+        c, m = get_info_for_object_detection( self.s, a)
         d = {'Black King': 10.0,
              'White King': 9.0,
              'White Rook': 10.0,
