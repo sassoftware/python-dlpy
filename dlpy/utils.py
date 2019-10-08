@@ -2430,7 +2430,7 @@ def print_predefined_models():
 
 def check_layer_class(layer_to_check, layer_class):
     if layer_to_check:
-        if layer_to_check.__class__ != layer_class:
+        if type(layer_to_check) != layer_class:
             raise DLPyError('The layer to be checked does not match '
                             'the layer class, {}.'.format(str(layer_class)))
 
