@@ -129,10 +129,31 @@ class TestUtils(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         # If coord_type is not either 'yolo' or 'coco', an error should be thrown
-        self.assertRaises(ValueError, lambda:create_object_detection_table(self.s, 
-                                      data_path = self.data_dir + 'dlpy_obj_det_test',
-                                      coord_type = 'invalid_val',
-                                      output = 'output'))
+        self.assertRaises(ValueError, lambda:create_object_detection_table(self.s,
+                                                                           data_path=self.data_dir+'dlpy_obj_det_test',
+                                                                           coord_type='invalid_val',
+                                                                           output='output'))
+
+    def test_create_object_detection_table_4(self):
+        # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type='yolo',
+                                      output='output')
+
+        a = self.s.CASTable('output')
+        from dlpy.utils import getInfoForObjectDetection
+        c, m = getInfoForObjectDetection( self.s, a)
+        d = {'Black King': 10.0,
+             'White King': 9.0,
+             'White Rook': 10.0,
+             'White Kinghuh': 1.0}
+
+        self.assertEqual(len(d), 4)
+        self.assertEqual(d, c)
+        self.assertEqual(m, 3)
 
     def test_create_object_detection_table_non_square(self):
         # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.

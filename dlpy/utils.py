@@ -1525,6 +1525,50 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     return var_order[2:]
 
 
+def getInfoForObjectDetection( sess, table):
+    '''
+
+    parameters
+    ----------
+    sess : CAS Session
+        Specifies the CAS session
+    table : CAS table
+        Specifies the table containing the object detection metadata
+
+    Returns
+    -------
+    classes : dict
+        Specifies the frequency distribution of the classes in the metadata
+    max_no_of_objects : int
+        Specifies the maximum number of objects that can found in an image.
+
+    '''
+    if isinstance(table, str):
+        t = sess.CASTable(table)
+    else:
+        t = table
+    r = table.summary(table, inputs=[dict(name='_nObjects_')])
+    max_no_of_objects = int(r.Summary.iloc[0]['Max'])
+
+    classes={}
+    inputs=[]
+    for i in range(0, max_no_of_objects):
+        inputs.append('_Object'+str(i)+'_')
+
+    r2 = table.freq(table, inputs=inputs)
+    length = len(r2.Frequency)
+    for l in range(0, length):
+        name = r2.Frequency.iloc[l]['CharVar'].strip()
+        if len(name) > 0:
+            value = r2.Frequency.iloc[l]['Frequency']
+            if name in classes:
+                classes[name] += value
+            else:
+                classes[name] = value
+
+    return classes, max_no_of_objects
+
+
 def create_segmentation_table(conn, path_to_images, path_to_ground_truth, output_table_name='seg_data'):
     '''
 
