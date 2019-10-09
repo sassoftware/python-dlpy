@@ -171,7 +171,7 @@ Finally, add the output layer:
      * [Text classification and text generation using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=943)
      * [Time series forecasting using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=1185)
   * DLPy v1.1 examples:
-     * [Leverage Functional APIs to Build Complex Models](ttps://www.youtube.com/watch?v=guCDi2C-mNQ&t=115s)
+     * [Leverage Functional APIs to Build Complex Models](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=115s)
      * [Image Segmentation with U-Net](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=399s)
      * [Object Detection with Faster-RCNN](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=688s)
      * [Image Classification with ShuffleNet and MobileNet](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=1158s)
