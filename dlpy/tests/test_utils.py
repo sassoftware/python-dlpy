@@ -43,7 +43,7 @@ class TestUtils(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
+        cls.s = swat.CAS('dlgrd009', 13300)
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -398,6 +398,7 @@ class TestUtils(unittest.TestCase):
     def test_caslibify_subdirectory_permission(self):
         self.s.addcaslib(path = self.data_dir, name='data', subdirectories=False)
         self.assertRaises(DLPyError, lambda: caslibify(self.s, path = self.data_dir + 'segmentation_data'))
+        self.s.dropcaslib(caslib='data')
 
     def test_caslibify_context_subdirectory_permission(self):
         self.s.addcaslib(path = self.data_dir, name='data', subdirectories=False)
@@ -405,8 +406,11 @@ class TestUtils(unittest.TestCase):
             with caslibify_context(self.s, path = self.data_dir + 'segmentation_data'):
                 a = 1+1
         except DLPyError:
+            self.s.dropcaslib(caslib = 'data')
             return
+        self.s.dropcaslib(caslib = 'data')
         raise DLPyError('caslibify_context() expected to throw a DLPyError')
+
 
     def test_user_defined_labels(self):
         if self.data_dir is None:
@@ -479,5 +483,15 @@ class TestUtils(unittest.TestCase):
 
     def test_print_predefined_models(self):
         print_predefined_models()
+
+    def test_create_instance_segmentation_castable(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        create_instance_segmentation_table(self.s, coord_type='yolo', output='instance_seg',
+                                           data_path=self.data_dir + 'instance_segmentation_data',
+                                           local_path=os.path.join(self.data_dir_local, 'instance_segmentation_data'))
+        self.assertTrue(self.s.numrows('instance_seg').numrows == 1)
 
 

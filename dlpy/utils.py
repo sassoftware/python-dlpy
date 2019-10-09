@@ -33,7 +33,6 @@ import string
 import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
-import warnings
 import platform
 import collections
 from itertools import repeat
@@ -42,6 +41,8 @@ from contextlib import contextmanager
 import locale
 import inspect
 from glob import glob
+
+from . import __dev__
 
 
 def random_name(name='ImageData', length=6):
@@ -1150,56 +1151,110 @@ def _convert_coco(size, box, resize):
     return (x_min, y_min, x_max, y_max)
 
 
-def _convert_xml_annotation(filename, coord_type, resize, name_file = None):
+def _convert_xml_annotation(filename, coord_type, resize, task = 'object detection', name_file = None):
+    # installing opencv2 is a painful experience in a variety of systems and cases,
+    # Ignore import cv2 when doing object detection task.
+    try:
+        import cv2
+    except ModuleNotFoundError:
+        pass
     # always use en locale since we use this locale to generate our internal txt files
     locale.setlocale(locale.LC_ALL, 'en-US')
 
-    in_file = open(filename)
-    filename, file_extension = os.path.splitext(filename)
-    tree = ET.parse(in_file)
-    root = tree.getroot()
-    object_ = root.find('object')
-    # if a xml is empty, just skip it.
-    if object_ is None:
-        in_file.close()
-        print('WARNING: There is no object in the annotation file {}.xml. The observation is ignored.'.format(filename))
-        return
-    size = root.find('size')
-    width = int(size.find('width').text)
-    height = int(size.find('height').text)
-    if width <= 0 or height <= 0:
-        in_file.close()
-        print('WARNING: Please check the annotation file, {}.xml, '
-              'in which either width or height is smaller than 0. The observation is ignored.'.format(filename))
-        return
-    # write in all classes
-    if name_file:
-        with open(name_file, 'r') as nf:
-            line = nf.readlines()
-            cls_list = [l.strip() for l in line]
-    out_file = open(filename + ".txt", 'w')  # write to test files
-    for obj in root.iter('object'):
-        cls = obj.find('name').text
-        xmlbox = obj.find('bndbox')
-        boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
-                 float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
-        # convert to two formats
-        if coord_type == 'yolo':
-            boxes = _convert_yolo((width, height), boxes)
-        elif coord_type == 'coco':
-            boxes = _convert_coco((width, height), boxes, resize)
-        # name_file is not None, write into comma separated
+    with open(filename) as in_file:
+        filename, file_extension = os.path.splitext(filename)
+        tree = ET.parse(in_file)
+        root = tree.getroot()
+        object_ = root.find('object')
+        # if a xml is empty, just skip it.
+        if object_ is None:
+            in_file.close()
+            print('WARNING: There is no object in the annotation file {}.xml. The observation is ignored.'.format(filename))
+            return
+        size = root.find('size')
+        width = int(size.find('width').text)
+        height = int(size.find('height').text)
+        if width <= 0 or height <= 0:
+            in_file.close()
+            print('WARNING: Please check the annotation file, {}.xml, '
+                  'in which either width or height is smaller than 0. The observation is ignored.'.format(filename))
+            return
+        # write in all classes
         if name_file:
-            try:
-                idx = str(cls_list.index(str(cls)))
-            except ValueError:
-                # throw error if having a class other than name file has
-                raise DLPyError('{} is not in name file'.format(str(cls)))
-            out_file.write(idx + " " + " ".join([str(box) for box in boxes]) + '\n')
-        else:
-            out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
-    in_file.close()
-    out_file.close()
+            with open(name_file, 'r') as nf:
+                line = nf.readlines()
+                cls_list = [l.strip() for l in line]
+        if task == 'instance segmentation':
+            mask = np.zeros((height, width))
+            instance_idx = 1
+            parent, file = os.path.split(filename)
+            mask_saved_as = os.path.join(parent, 'mask', file) + '.png'
+
+        with open(filename + ".txt", 'w') as out_file:
+            for obj in root.iter('object'):
+                cls = obj.find('name').text
+                # if cls is named 'ignore, it is not an object
+                if cls != 'ignore':
+                    # bbox tag
+                    xmlbox = obj.find('bndbox')
+                    xmin = float(xmlbox.find('xmin').text)
+                    xmax = float(xmlbox.find('xmax').text)
+                    ymin = float(xmlbox.find('ymin').text)
+                    ymax = float(xmlbox.find('ymax').text)
+                    if xmin >= xmax or ymin >= ymax:
+                        print('WARNING: Please check the annotation file, {}.xml, '
+                              'which contains an invalid bounding box.'.format(filename))
+                    boxes = (xmin, ymin, xmax, ymax)
+                    # convert to two formats
+                    if coord_type == 'yolo':
+                        boxes = _convert_yolo((width, height), boxes)
+                    elif coord_type == 'coco':
+                        boxes = _convert_coco((width, height), boxes, resize)
+                    # name_file is not None, write into comma separated
+                    if name_file:
+                        try:
+                            idx = str(cls_list.index(str(cls)))
+                        except ValueError:
+                            # throw error if having a class other than name file has
+                            raise DLPyError('{} is not in name file'.format(str(cls)))
+                        out_file.write(idx + " " + " ".join([str(box) for box in boxes]) + '\n')
+                    else:
+                        out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
+                if task == 'instance segmentation':
+                    if obj.find('polygon'):
+                        contour = obj.find('polygon')
+                        n_tags_per_point = 2
+                    elif obj.find('cubic_bezier'):
+                        contour = obj.find('cubic_bezier')
+                        n_tags_per_point = 6
+                    else:
+                        raise DLPyError('Cannot find valid segmentation tag in {}.'.format(filename + ".xml"))
+                    vertices = []
+                    for i in range(int(len(contour)/n_tags_per_point)):
+                        x = int(contour.find('x{}'.format(str(i+1))).text)
+                        y = int(contour.find('y{}'.format(str(i+1))).text)
+                        vertices.append([x, y])
+                    try:
+                        # fill mask with instance_idx+1; 0 is background
+                        vertices = np.array(vertices)
+                        mask = cv2.fillConvexPoly(mask, vertices, instance_idx)
+                        # if class is ignore, do not count it.
+                        if cls != 'ignore':
+                            instance_idx += 1
+                    except NameError:
+                        raise ModuleNotFoundError('No module named \'cv2\'')
+
+            if task == 'instance segmentation':
+                # resize the mask using nearest interpolation
+                # cv2.imwrite(mask_saved_as, mask)
+                mask = cv2.resize(mask, resize, interpolation = cv2.INTER_NEAREST)
+                # check if there is an instance missed after resizing
+                if np.unique(mask).shape[0] == instance_idx:
+                    cv2.imwrite(mask_saved_as, mask)
+                elif np.unique(mask).shape[0] < instance_idx:
+                    print('WARNING: Instances in {} disappears due to resize.'.format(filename + '.xml'))
+                else:
+                    raise DLPyError('Something happens when resizing mask.')
 
     # reset this locale back to the default
     locale.setlocale(locale.LC_ALL, '')
@@ -1277,7 +1332,8 @@ def convert_txt_to_xml(path):
     os.chdir(cwd)
 
 
-def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_files = None, name_file = None):
+def get_txt_annotation(local_path, coord_type, image_size=(416, 416), label_files=None,
+                       task='object detection', name_file=None):
     '''
     Parse object detection annotation files based on Pascal VOC format and save as txt files.
 
@@ -1303,6 +1359,10 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
         Specifies the list of filename with XML extension under local_path to be parsed.
         If label_files is not specified, all of XML files under local_path will be parsed .
         Default: None
+    task : str, optional
+        Specifies the task of table.
+        Valid Values: object detection, instance segmentation
+        Default: object detection
     name_file : str, optional
         Specifies the path of name_file which lists all of the names for the classes in your dataset.
         If you specify the option, the function will generate txt using index to represent category
@@ -1327,7 +1387,7 @@ def get_txt_annotation(local_path, coord_type, image_size = (416, 416), label_fi
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
     for filename in label_files:
-        _convert_xml_annotation(filename, coord_type, image_size, name_file)
+        _convert_xml_annotation(filename, coord_type, image_size, task, name_file)
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
@@ -1378,6 +1438,117 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     A list of variables that are the labels of the object detection table
 
     '''
+
+    return create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
+                                                   local_path, image_size, task='object detection')
+
+
+def create_instance_segmentation_table(conn, data_path, coord_type, output, local_path=None, image_size=(416, 416)):
+    '''
+    Create an instance segmentation table
+
+    Parameters
+    ----------
+    conn : session
+        CAS connection object
+    data_path : string
+        Specifies a location where annotation files and image files are stored.
+        Annotation files should be XML file based on Pascal VOC format
+        Notice that the path should be accessible by CAS server.
+    coord_type : string
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    output : string
+        Specifies the name of the instance segmentation table.
+    local_path : string, optional
+        Local_path and data_path point to the same location.
+        The parameter local_path will be optional (default=None) if the
+        Python client has the same OS as CAS server or annotation files
+        in TXT format are placed in data_path.
+        Otherwise, the path that depends on the Python client OS needs to be specified.
+        For example:
+        Windows client with linux CAS server:
+        data_path=/path/to/data/path
+        local_path=\\path\to\data\path
+        Linux clients with Windows CAS Server:
+        data_path=\\path\to\data\path
+        local_path=/path/to/data/path
+    image_size : tuple or integer, optional
+        Specifies the size of images to resize.
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
+
+    Returns
+    -------
+    A list of variables that are the labels of the object detection task and the label of instance segmentation task
+
+    '''
+
+    return create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
+                                                   local_path, image_size, task='instance segmentation')
+
+
+def create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
+                                            local_path=None, image_size=(416, 416), task='object detection'):
+    '''
+    Create an table based on PASCAL VOC format annoation files.
+
+    Parameters
+    ----------
+    conn : session
+        CAS connection object
+    data_path : string
+        Specifies a location where annotation files and image files are stored.
+        Annotation files should be XML file based on Pascal VOC format
+        Notice that the path should be accessible by CAS server.
+    coord_type : string
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    output : string
+        Specifies the name of the object detection table.
+    local_path : string, optional
+        Local_path and data_path point to the same location.
+        The parameter local_path will be optional (default=None) if the
+        Python client has the same OS as CAS server or annotation files
+        in TXT format are placed in data_path.
+        Otherwise, the path that depends on the Python client OS needs to be specified.
+        For example:
+        Windows client with linux CAS server:
+        data_path=/path/to/data/path
+        local_path=\\path\to\data\path
+        Linux clients with Windows CAS Server:
+        data_path=\\path\to\data\path
+        local_path=/path/to/data/path
+    image_size : tuple or integer, optional
+        Specifies the size of images to resize.
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
+    task : str, optional
+        Specifies the task of table.
+        Valid Values: object detection, instance segmentation
+        Default: object detection
+
+    Returns
+    -------
+    A list of variables that are the labels of the specified task
+
+    '''
+
+    # check parameters
     if coord_type.lower() not in ['yolo', 'coco']:
         raise ValueError('coord_type, {}, is not supported'.format(coord_type))
     with sw.option_context(print_messages=False):
@@ -1414,6 +1585,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     image_size = _pair(image_size)  # ensure image_size is a pair
     det_img_table = random_name('DET_IMG')
 
+    # loading _image_ and processing to required image size
     with caslibify_context(conn, data_path, 'load') as (caslib, path_after_caslib), \
             sw.option_context(print_messages=False):
         if caslib is None and path_after_caslib is None:
@@ -1442,16 +1614,23 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             for msg in res.messages:
                 print(msg)
         else:
-            print("NOTE: Images are processed.")
+            print("NOTE: Images are loaded and processed.")
 
+    # 1. parse xml files and generate according txt files in data_path
+    # 2. load txt files into CAS Server
+    # 3. create a column, idjoin, for later to use
     with caslibify_context(conn, data_path, 'save') as (caslib, path_after_caslib):
         # find all of annotation files under the directory
         label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
         # if client and server are on different type of operation system, we assume user parse xml files and put
         # txt files in data_path folder. So skip get_txt_annotation()
         # parse xml or json files and create txt files
-        if need_to_parse:
-            get_txt_annotation(local_path, coord_type, image_size, label_files)
+        if need_to_parse or task == 'instance segmentation':
+            mask_folder = os.path.join(local_path, 'mask')
+            if task == 'instance segmentation':
+                if not os.path.exists(mask_folder):
+                    os.makedirs(mask_folder)
+            get_txt_annotation(local_path, coord_type, image_size, label_files, task)
 
         label_tbl_name = random_name('obj_det')
         # load all of txt files into cas server
@@ -1542,6 +1721,9 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     if res.severity > 0:
         raise DLPyError('ERROR: Fail to create the object detection table.')
 
+    if __dev__:
+        print('Object detection label has been generated.')
+
     # parse and create dljoin id column
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
@@ -1553,7 +1735,7 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                             computedvarsprogram = image_sas_code,
                             vars = [{'name': '_image_'}])
 
-    # join the image table and label table together
+    # join the image table and object detection label table together
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
@@ -1566,8 +1748,55 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
 
-    print("NOTE: Object detection table is successfully created.")
-    return var_order[2:]
+    if task == 'object detection':
+        print("NOTE: Object detection table is successfully created.")
+        return var_order[2:]
+
+    # all below for creating instance segmentation data set
+
+    if __dev__:
+        print('Object detection part is done. Start loading masks.')
+
+    mask_img_table = random_name('MASK_IMG')
+
+    with caslibify_context(conn, data_path+sep+'mask', 'load') as (caslib, path_after_caslib), \
+            sw.option_context(print_messages=False):
+        if caslib is None and path_after_caslib is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+        # load mask
+        res = conn.image.loadImages(path=path_after_caslib,
+                                    recurse=False,
+                                    labelLevels=-1,
+                                    caslib=caslib,
+                                    casout={'name': mask_img_table, 'replace':True})
+        if res.severity > 0:
+            for msg in res.messages:
+                if not msg.startswith('WARNING'):
+                    print(msg)
+
+        print("NOTE: Masks are processed.")
+
+    # rename _image_ column to mask
+    conn.altertable(name = mask_img_table, columns = [dict(name = '_image_', rename = 'mask')])
+
+    mask_tbl = conn.CASTable(mask_img_table,
+                             computedvars = ['idjoin'],
+                             computedvarsprogram = image_sas_code,
+                             vars = [{'name': 'mask'}])
+
+    # join the image table and object detection label table together
+    res = conn.deepLearn.dljoin(table = mask_tbl, annotation = output, id = 'idjoin',
+                                casout = {'name': output, 'replace': True, 'replication': 0})
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the instance segmentation table.')
+
+    # with sw.option_context(print_messages=False):
+    #     conn.table.droptable(mask_img_table)
+
+    print("NOTE: Instance segmentation table is successfully created.")
+
+    return var_order[2:], 'mask'
 
 
 def create_segmentation_table(conn, path_to_images, path_to_ground_truth, output_table_name='seg_data'):
