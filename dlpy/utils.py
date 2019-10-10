@@ -1192,7 +1192,11 @@ def _convert_xml_annotation(filename, coord_type, resize, task = 'object detecti
                 line = nf.readlines()
                 cls_list = [l.strip() for l in line]
         if task == 'instance segmentation':
+            # initialize instance mask
             mask = np.zeros((height, width))
+            # initialize ignore mask
+            ignore_mask = np.ones_like(mask)
+            # instance index
             instance_idx = 1
             parent, file = os.path.split(filename)
             mask_saved_as = os.path.join(parent, 'mask', file) + '.png'
@@ -1227,6 +1231,8 @@ def _convert_xml_annotation(filename, coord_type, resize, task = 'object detecti
                         out_file.write(idx + " " + " ".join([str(box) for box in boxes]) + '\n')
                     else:
                         out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
+
+                # creating instance index mask
                 if task == 'instance segmentation':
                     if obj.find('polygon'):
                         contour = obj.find('polygon')
@@ -1241,17 +1247,25 @@ def _convert_xml_annotation(filename, coord_type, resize, task = 'object detecti
                         x = int(contour.find('x{}'.format(str(i+1))).text)
                         y = int(contour.find('y{}'.format(str(i+1))).text)
                         vertices.append([x, y])
+
+                    vertices = np.array(vertices)
+
                     try:
-                        # fill mask with instance_idx+1; 0 is background
-                        vertices = np.array(vertices)
-                        mask = cv2.fillConvexPoly(mask, vertices, instance_idx)
-                        # if class is ignore, do not count it.
                         if cls != 'ignore':
+                            # fill mask with instance_idx+1; 0 is background
+                            mask = cv2.fillConvexPoly(mask, vertices, instance_idx)
+                            # if class is ignore, do not count it.
                             instance_idx += 1
+                        else:
+                            # fill 0 as background
+                            ignore_mask = cv2.fillConvexPoly(ignore_mask, vertices, 0)
+
                     except NameError:
                         raise ModuleNotFoundError('No module named \'cv2\'')
 
             if task == 'instance segmentation':
+                # multiply the two mask to create final mask
+                mask = np.multiply(mask, ignore_mask)
                 # resize the mask using nearest interpolation
                 # cv2.imwrite(mask_saved_as, mask)
                 mask = cv2.resize(mask, resize, interpolation = cv2.INTER_NEAREST)
