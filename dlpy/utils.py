@@ -1158,15 +1158,6 @@ def _convert_xml_annotation(filename, coord_type, resize, task = 'object detecti
         import cv2
     except ModuleNotFoundError:
         pass
-    # always use en locale since we use this locale to generate our internal txt files
-    try:
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-    except:
-        try:
-            locale.setlocale(locale.LC_ALL, 'en_US')
-        except:
-            print("Could not set the locale to english and it is now using the system's locale")
-            locale.setlocale(locale.LC_ALL, '')
 
     with open(filename) as in_file:
         filename, file_extension = os.path.splitext(filename)
@@ -1276,9 +1267,6 @@ def _convert_xml_annotation(filename, coord_type, resize, task = 'object detecti
                     print('WARNING: Instances in {} disappears due to resize.'.format(filename + '.xml'))
                 else:
                     raise DLPyError('Something happens when resizing mask.')
-
-    # reset this locale back to the default
-    locale.setlocale(locale.LC_ALL, '')
 
 
 def _convert_json_annotation(filename_w_ext, coord_type, resize):
@@ -1407,8 +1395,21 @@ def get_txt_annotation(local_path, coord_type, image_size=(416, 416), label_file
         label_files = [os.path.join(local_path, f) for f in label_files if f.endswith('.xml')]
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
+
+    # always use en locale since we use this locale to generate our internal txt files
+    try:
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+        except:
+            print("Could not set the locale to english and it is now using the system's locale")
+            locale.setlocale(locale.LC_ALL, '')
     for filename in label_files:
         _convert_xml_annotation(filename, coord_type, image_size, task, name_file)
+
+    # reset this locale back to the default
+    locale.setlocale(locale.LC_ALL, '')
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
