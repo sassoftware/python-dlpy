@@ -1404,7 +1404,7 @@ def get_txt_annotation(local_path, coord_type, image_size=(416, 416), label_file
             locale.setlocale(locale.LC_ALL, 'en_US')
         except:
             print("Could not set the locale to english and it is now using the system's locale")
-            locale.setlocale(locale.LC_ALL, '')
+
     for filename in label_files:
         _convert_xml_annotation(filename, coord_type, image_size, task, name_file)
 
