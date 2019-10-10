@@ -335,7 +335,7 @@ class Layer(object):
         # calculate FLOPS per layer type. Note that bias computation is ignored.
         if self.__class__ in [Conv2d, Conv2DTranspose, Conv1d]:
             kernel_wh = int(self.config['height']) * int(self.config['width'])
-            self.FLOPS = feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh
+            self.FLOPS = int(feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh)
         elif self.__class__ == GroupConv2d:
             kernel_wh = int(self.config['height']) * int(self.config['width'])
             self.FLOPS = int(feature_map_size * self.src_layers[0].output_size[-1] * kernel_wh / self.n_groups)
@@ -1019,10 +1019,11 @@ class Conv2DTranspose(Conv2d):
     def output_size(self):
         if self._output_size is None:
             input_size = self.src_layers[0].output_size[:-1]
-            output_height = (input_size[0]-1)*self.stride[0]-2*self.padding[0]+self.config['height']+self.output_padding[0]
-            output_width = (input_size[1]-1)*self.stride[1]-2*self.padding[1]+self.config['width']+self.output_padding[1]
+            output_height = int((input_size[0]-1)*self.stride[0]-2*self.padding[0]+self.config['height']+self.output_padding[0])
+            output_width = int((input_size[1]-1)*self.stride[1]-2*self.padding[1]+self.config['width']+self.output_padding[1])
             self._output_size = (output_height, output_width, int(self.config['n_filters']))
-        return self._output_size
+        # cast element as integer
+        return tuple([int(i) for i in self._output_size])
 
     @property
     def num_weights(self):
