@@ -666,7 +666,16 @@ class Network(Layer):
                 l.layer_id = layer_ids[l.name.lower()]
 
     def print_summary(self):
-        ''' Display a table that summarizes the model architecture '''
+        '''
+
+        Display a table that summarizes the model architecture
+
+        Returns
+        -------
+        :pandas data frame
+
+        '''
+
         try:
             if len(self.layers) > 0 and self.layers[0].layer_id is None:
                 self.__load_layer_ids()
