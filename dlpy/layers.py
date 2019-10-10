@@ -2098,6 +2098,12 @@ class Reshape(Layer):
         Specifies the depth of the feature maps.
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
+    order : string, optional
+        Specifies how to reshape the source layer.
+        Valid Values: AUTO, WHD, WDH, DWH, HWD, DHW, HDW. For AUTO, when the output channel is 1,
+        the reshape order is depth (D), width (W), and height (H).
+        When the output channel is evenly divisible by the input channel,
+        the reshape order is width (W), height (H), and depth (D).
 
     Returns
     -------
@@ -2111,7 +2117,7 @@ class Reshape(Layer):
     number_of_instances = 0
 
     def __init__(self, name=None, act='AUTO', fcmp_act=None, width=None, height=None, depth=None, src_layers=None,
-                 **kwargs):
+                 order=None, **kwargs):
 
         if not __dev__ and len(kwargs) > 0:
             raise DLPyError('**kwargs can be used only in development mode.')

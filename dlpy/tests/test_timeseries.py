@@ -1101,3 +1101,9 @@ class TestTimeseriesTable(unittest.TestCase):
         figure = plot_timeseries(pandas_df1, 'date', 'series', groupid=dict(id1var=1, id2var=1))
 
         figure2 = plot_timeseries(pandas_df2, 'date', 'series')
+
+    def test_table_accumulation_user_defined(self):
+        with self.assertRaises(DLPyError):
+            self.table1.timeseries_accumlation(acc_interval='day',
+                                               groupby=['id1var', 'id2var'],
+                                               user_defined_interval='obs10')

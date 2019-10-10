@@ -717,7 +717,7 @@ def get_cas_host_type(conn):
     htype = 'nohdfs'
     if out['server'].loc[0, 'nodes'] == 1:
         stype = 'smp'
-    if ostype.startswith('LIN'):
+    if ostype.startswith('LIN') or ostype.startswith('LX'):
         ostype = 'linux'
     elif ostype.startswith('WIN'):
         ostype = 'windows'
@@ -1159,7 +1159,14 @@ def _convert_xml_annotation(filename, coord_type, resize, task = 'object detecti
     except ModuleNotFoundError:
         pass
     # always use en locale since we use this locale to generate our internal txt files
-    locale.setlocale(locale.LC_ALL, 'en-US')
+    try:
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+        except:
+            print("Could not set the locale to english and it is now using the system's locale")
+            locale.setlocale(locale.LC_ALL, '')
 
     with open(filename) as in_file:
         filename, file_extension = os.path.splitext(filename)
@@ -1663,8 +1670,9 @@ def create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
                 run;
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code = fmt_code, _messagelevel = 'error')
-    cls_col_format_length = conn.columninfo(output).ColumnInfo['RawLength'][0]  # max class name length
+    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
+
     conn.altertable(name = output, columns = [dict(name = 'Var1', rename = var_name[0]),
                                               dict(name = 'Var2', rename = var_name[1]),
                                               dict(name = 'Var3', rename = var_name[2]),
@@ -1797,6 +1805,50 @@ def create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
     print("NOTE: Instance segmentation table is successfully created.")
 
     return var_order[2:], 'mask'
+
+
+def get_info_for_object_detection( sess, table):
+    '''
+
+    parameters
+    ----------
+    sess : CAS Session
+        Specifies the CAS session
+    table : CAS table
+        Specifies the table containing the object detection metadata
+
+    Returns
+    -------
+    classes : dict
+        Specifies the frequency distribution of the classes in the metadata
+    max_no_of_objects : int
+        Specifies the maximum number of objects that can found in an image.
+
+    '''
+    if isinstance(table, str):
+        t = sess.CASTable(table)
+    else:
+        t = table
+    r = table.summary(table, inputs=[dict(name='_nObjects_')])
+    max_no_of_objects = int(r.Summary.iloc[0]['Max'])
+
+    classes={}
+    inputs=[]
+    for i in range(0, max_no_of_objects):
+        inputs.append('_Object'+str(i)+'_')
+
+    r2 = table.freq(table, inputs=inputs)
+    length = len(r2.Frequency)
+    for l in range(0, length):
+        name = r2.Frequency.iloc[l]['CharVar'].strip()
+        if len(name) > 0:
+            value = r2.Frequency.iloc[l]['Frequency']
+            if name in classes:
+                classes[name] += value
+            else:
+                classes[name] = value
+
+    return classes, max_no_of_objects
 
 
 def create_segmentation_table(conn, path_to_images, path_to_ground_truth, output_table_name='seg_data'):
@@ -2707,6 +2759,13 @@ def print_predefined_models():
     models_name = [m[0] for m in models_meta if m[1].__module__.startswith(dlpy.applications.__name__) and
                    not m[1].__module__.endswith('application_utils')]
     print('DLPy supports predefined models as follows: \n{}.'.format(', '.join(models_name)))
+
+
+def check_layer_class(layer_to_check, layer_class):
+    if layer_to_check:
+        if type(layer_to_check) != layer_class:
+            raise DLPyError('The layer to be checked does not match '
+                            'the layer class, {}.'.format(str(layer_class)))
 
 
 class DLPyDict(collections.MutableMapping):

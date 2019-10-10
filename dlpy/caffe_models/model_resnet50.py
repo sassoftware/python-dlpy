@@ -57,7 +57,7 @@ def ResNet50_Model(s, model_table='RESNET50', n_channels=3, width=224, height=22
     random_mutation : string, optional
         Specifies how to apply data augmentations/mutations to the data in the input layer.
         Valid Values: 'none', 'random'
-    reshape_after_input : Layer Reshape, optional
+    reshape_after_input : :class:`Reshape`, optional
         Specifies whether to add a reshape layer after the input layer.
 
     Returns

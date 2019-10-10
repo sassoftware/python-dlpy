@@ -43,7 +43,7 @@ class TestUtils(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS('dlgrd009', 13300)
+        cls.s = swat.CAS()
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -129,10 +129,31 @@ class TestUtils(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         # If coord_type is not either 'yolo' or 'coco', an error should be thrown
-        self.assertRaises(ValueError, lambda:create_object_detection_table(self.s, 
-                                      data_path = self.data_dir + 'dlpy_obj_det_test',
-                                      coord_type = 'invalid_val',
-                                      output = 'output'))
+        self.assertRaises(ValueError, lambda:create_object_detection_table(self.s,
+                                                                           data_path=self.data_dir+'dlpy_obj_det_test',
+                                                                           coord_type='invalid_val',
+                                                                           output='output'))
+
+    def test_create_object_detection_table_4(self):
+        # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type='yolo',
+                                      output='output')
+
+        a = self.s.CASTable('output')
+        from dlpy.utils import get_info_for_object_detection
+        c, m = get_info_for_object_detection( self.s, a)
+        d = {'Black King': 10.0,
+             'White King': 9.0,
+             'White Rook': 10.0,
+             'White Kinghuh': 1.0}
+
+        self.assertEqual(len(d), 4)
+        self.assertEqual(d, c)
+        self.assertEqual(m, 3)
 
     def test_create_object_detection_table_non_square(self):
         # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
@@ -484,14 +505,17 @@ class TestUtils(unittest.TestCase):
     def test_print_predefined_models(self):
         print_predefined_models()
 
+    def test_check_layer_type(self):
+        from dlpy.layers import Conv2DTranspose, Conv2d
+        layer = Conv2DTranspose(10)
+        self.assertRaises(DLPyError, lambda: check_layer_class(layer, Conv2d))
+
     def test_create_instance_segmentation_castable(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
-        create_instance_segmentation_table(self.s, coord_type='yolo', output='instance_seg',
-                                           data_path=self.data_dir + 'instance_segmentation_data',
-                                           local_path=os.path.join(self.data_dir_local, 'instance_segmentation_data'))
+        create_instance_segmentation_table(self.s, coord_type = 'yolo', output = 'instance_seg',
+                                           data_path = self.data_dir + 'instance_segmentation_data',
+                                           local_path = os.path.join(self.data_dir_local, 'instance_segmentation_data'))
         self.assertTrue(self.s.numrows('instance_seg').numrows == 1)
-
-

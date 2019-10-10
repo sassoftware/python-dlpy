@@ -420,9 +420,8 @@ class TestApplications(unittest.TestCase):
     def test_resnet50_3(self):
         from dlpy.applications import ResNet50_Caffe
 
-        #reshape = Reshape(width=224, height=224, depth=3, order='WHD')
-        reshape = Reshape(width=224, height=224, depth=3)
-        model = ResNet50_Caffe(self.s, reshape_after_input = reshape)
+        reshape = Reshape(width=224, height=224, depth=3, order='WHD')
+        model = ResNet50_Caffe(self.s, reshape_after_input=reshape)
         model.print_summary()
 
         # test it with pretrained weights
@@ -441,6 +440,13 @@ class TestApplications(unittest.TestCase):
         self.assertEqual(res.iloc[1, 6][0], 224)
         self.assertEqual(res.iloc[1, 6][1], 224)
         self.assertEqual(res.iloc[1, 6][2], 3)
+
+    # test resnet50 with the wrong reshape layer
+    def test_resnet50_4(self):
+        from dlpy.applications import ResNet50_Caffe
+
+        reshape = Pooling(width=2, height=2, stride=2)
+        self.assertRaises(DLPyError, lambda: ResNet50_Caffe(self.s, reshape_after_input=reshape))
 
     def test_resnet101(self):
         from dlpy.applications import ResNet101_SAS

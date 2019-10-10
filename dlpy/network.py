@@ -2289,6 +2289,8 @@ def extract_reshape_layer(layer_table):
     reshape_layer_config = dict()
     reshape_layer_config.update(get_num_configs(num_keys, 'reshapeopts', layer_table))
     reshape_layer_config.update(get_str_configs(str_keys, 'reshapeopts', layer_table))
+    if reshape_layer_config['act'] == 'Automatic':
+        reshape_layer_config['act'] = 'AUTO'
     reshape_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
     layer = Reshape(**reshape_layer_config)
     return layer

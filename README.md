@@ -171,11 +171,11 @@ Finally, add the output layer:
      * [Text classification and text generation using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=943)
      * [Time series forecasting using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=1185)
   * DLPy v1.1 examples:
-     * [Leverage Functional APIs to Build Complex Models](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=115s)
-     * [Image Segmentation with U-Net](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=399s)
-     * [Object Detection with Faster-RCNN](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=688s)
-     * [Image Classification with ShuffleNet and MobileNet](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=1158s)
-     * [Multi-class Deep learning](https://www.youtube.com/watch?v=JTCMeaYFrWw&t=1648s) 
+     * [Leverage Functional APIs to Build Complex Models](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=115s)
+     * [Image Segmentation with U-Net](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=399s)
+     * [Object Detection with Faster-RCNN](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=688s)
+     * [Image Classification with ShuffleNet and MobileNet](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=1158s)
+     * [Multi-class Deep learning](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=1648s)
 - [SAS Deep Learning with Python made easy using DLPy](https://blogs.sas.com/content/subconsciousmusings/2019/03/13/sas-deep-learning-with-python-made-easy-using-dlpy/)
 
 ### Contributing
