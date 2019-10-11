@@ -770,7 +770,8 @@ class Model(Network):
             raise DLPyError('model.fit should be run before calling plot_training_history')
 
     def evaluate(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
-                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False):
+                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False,
+                 random_crop='none', random_flip='none',  random_mutation='none'):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -821,6 +822,29 @@ class Model(Network):
             error saved during a previous training is used while scoring
             input data rather than the final weights from the training.
             Default: False
+        random_flip : string, optional
+            Specifies how to flip the data in the input layer when image data is used.
+            H stands for horizontal
+            V stands for vertical
+            HW stands for horizontal and vertical
+            Approximately half of the input data is subject to flipping.
+            Default: NONE
+            Valid Values: NONE, H, V, HV
+        random_crop : string, optional
+            Specifies how to crop the data in the input layer when image
+            data is used. Images are cropped to the values that are specified
+            in the width and height parameters. Only the images with one or
+            both dimensions that are larger than those sizes are cropped.
+            UNIQUE: specifies to crop images to the size specified in the
+            height and width parameters. Images that are less than or equal
+            to the size are not modified. For images that are larger, the
+            cropping begins at a random offset for x and y.
+            Default: NONE
+            Valid Values: NONE, UNIQUE
+        random_mutation : string, optional
+            Specifies how to mutate images.
+            Default: NONE
+            Valid Values: NONE, RANDOM
 
         Returns
         -------
@@ -855,7 +879,8 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl),
                              encode_name=en, text_parms=text_parms, layer_out=lo,
                              layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
-                             top_probs=top_probs, buffer_size=buffer_size)
+                             top_probs=top_probs, buffer_size=buffer_size,
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
         else:
             if self.model_weights is None:
                 raise DLPyError('We need some weights to do scoring.')
@@ -864,7 +889,8 @@ class Model(Network):
                                  copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl),
                                  encode_name=en, text_parms=text_parms, layer_out=lo,
                                  layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
-                                 buffer_size=buffer_size, top_probs=top_probs)
+                                 buffer_size=buffer_size, top_probs=top_probs,
+                                 random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
         if res.severity > 1:
             raise DLPyError('something is wrong while scoring the input data with the model.')
@@ -1094,7 +1120,8 @@ class Model(Network):
 
     def predict(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=10,
                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None,
-                layer_image_type=None, log_level=0):
+                layer_image_type=None, log_level=0,
+                random_crop='none', random_flip='none',  random_mutation='none'):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -1162,6 +1189,30 @@ class Model(Network):
             Setting the value to 1 sends start and end messages.
             Setting the value to 2 adds the iteration history to the client messaging.
             default: 0
+        random_flip : string, optional
+            Specifies how to flip the data in the input layer when image data is used.
+            H stands for horizontal
+            V stands for vertical
+            HW stands for horizontal and vertical
+            Approximately half of the input data is subject to flipping.
+            Default: NONE
+            Valid Values: NONE, H, V, HV
+        random_crop : string, optional
+            Specifies how to crop the data in the input layer when image
+            data is used. Images are cropped to the values that are specified
+            in the width and height parameters. Only the images with one or
+            both dimensions that are larger than those sizes are cropped.
+            UNIQUE: specifies to crop images to the size specified in the
+            height and width parameters. Images that are less than or equal
+            to the size are not modified. For images that are larger, the
+            cropping begins at a random offset for x and y.
+            Default: NONE
+            Valid Values: NONE, UNIQUE
+        random_mutation : string, optional
+            Specifies how to mutate images.
+            Default: NONE
+            Valid Values: NONE, RANDOM
+
         Returns
         -------
         :class:`CASResults`
@@ -1191,7 +1242,8 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level)
+                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level,
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res
         else:
@@ -1199,7 +1251,8 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level)
+                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level,
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res    
         
