@@ -42,8 +42,6 @@ import locale
 import inspect
 from glob import glob
 
-from . import __dev__
-
 
 def random_name(name='ImageData', length=6):
     '''
@@ -1461,8 +1459,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
 
     '''
 
-    return create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
-                                                   local_path, image_size, task='object detection')
+    return create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
+                                               local_path, image_size, task='object detection')
 
 
 def create_instance_segmentation_table(conn, data_path, coord_type, output, local_path=None, image_size=(416, 416)):
@@ -1513,14 +1511,14 @@ def create_instance_segmentation_table(conn, data_path, coord_type, output, loca
 
     '''
 
-    return create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
-                                                   local_path, image_size, task='instance segmentation')
+    return create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
+                                               local_path, image_size, task='instance segmentation')
 
 
-def create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
-                                            local_path=None, image_size=(416, 416), task='object detection'):
+def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
+                                        local_path=None, image_size=(416, 416), task='object detection'):
     '''
-    Create an table based on PASCAL VOC format annoation files.
+    Create an table from PASCAL VOC format annotation files.
 
     Parameters
     ----------
@@ -1744,9 +1742,6 @@ def create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
     if res.severity > 0:
         raise DLPyError('ERROR: Fail to create the object detection table.')
 
-    if __dev__:
-        print('Object detection label has been generated.')
-
     # parse and create dljoin id column
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
@@ -1776,9 +1771,6 @@ def create_table_based_on_pascal_voc_format(conn, data_path, coord_type, output,
         return var_order[2:]
 
     # all below for creating instance segmentation data set
-
-    if __dev__:
-        print('Object detection part is done. Start loading masks.')
 
     mask_img_table = random_name('MASK_IMG')
 

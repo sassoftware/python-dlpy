@@ -651,13 +651,15 @@ class Network(Layer):
             return pd.concat([x.rnn_summary for x in self.layers], ignore_index = True)
 
     def __load_layer_ids(self):
+        import math
         try:
-            model_table_rows = self.conn.table.fetch(self.model_table, maxrows = 1000000, to = 1000000).Fetch
+            # only check each layer once
+            model_table_rows = self.conn.table.fetch(table=dict(self.model_table, where='_DLKey1_ eq "layertype"'),
+                                                     maxrows=1000000, to=1000000).Fetch
         except:
             model_table_rows = None
         if model_table_rows is not None:
             layer_ids = {}
-            import math
             for index, row in model_table_rows.iterrows():
                 if not math.isnan(row['_DLLayerID_']):
                     layer_ids[row['_DLKey0_']] = int(row['_DLLayerID_'])
