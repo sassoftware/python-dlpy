@@ -2775,6 +2775,35 @@ def check_layer_class(layer_to_check, layer_class):
                             'the layer class, {}.'.format(str(layer_class)))
 
 
+def file_exist_on_server(conn, file):
+    '''
+    Check if a file exists on server side
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    file : str
+        Specifies the path of file on server side
+
+    Returns
+    -------
+    :class: 'bool'
+
+    '''
+
+    sep = get_server_path_sep(conn)
+    _, file_name = file.rsplit(sep, 1)
+    with caslibify_context(conn, path=file, task='load') as (caslib, path):
+        fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
+        # if server doesn't find that, it will return 0
+        exit_ = fileinfo.FileInfo.query('Name == "{}"'.format(file_name)).shape[0]
+    if exit_:
+        return True
+    else:
+        return False
+
+
 class DLPyDict(collections.MutableMapping):
     """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
 
