@@ -25,7 +25,8 @@ import matplotlib.image as mpimg
 from dlpy.utils import DLPyError
 import random
 
-def get_image_features(conn,model,image_table,dense_layer,target='_filename_0'):
+
+def get_image_features(conn, model, image_table, dense_layer, target='_filename_0'):
     '''
     Generate CASTable of image features
 
@@ -50,12 +51,12 @@ def get_image_features(conn,model,image_table,dense_layer,target='_filename_0'):
     '''
     width = model.summary['Output Size'][0][1]
     height = model.summary['Output Size'][0][0]
-    image_table.resize(width=width,height=height)
+    image_table.resize(width=width, height=height)
 
     if dense_layer not in list(model.summary['Layer']):
         raise DLPyError('Specified dense_layer not a layer in model')
 
-    X, y = model.get_features(data=image_table,dense_layer=dense_layer,target=target)
+    X, y = model.get_features(data=image_table, dense_layer=dense_layer, target=target)
 
     # initialize dictionary with columns
     table_dict = {}
@@ -71,7 +72,7 @@ def get_image_features(conn,model,image_table,dense_layer,target='_filename_0'):
         X_list = X[idx]
         for i in range(len(X[0])):
             table_dict['f{}'.format(i)].append(X_list[i])
-    features = CASTable.from_dict(conn,table_dict)
+    features = CASTable.from_dict(conn, table_dict)
 
     return features
 
@@ -117,21 +118,21 @@ def create_captions_table(conn, captions_file, caption_col_name='Var', delimiter
     # initialize dictionary
     captions_dict['_filename_0'] = list()
     for i in range(num_captions):
-        captions_dict['{}{}'.format(caption_col_name,i)] = list()
+        captions_dict['{}{}'.format(caption_col_name, i)] = list()
 
     # add filenames and captions to dictionary
     for line in line_list:
         items = line.split(delimiter)
         captions_dict['_filename_0'].append(items[0])
         for j in range(num_captions):
-            captions_dict['{}{}'.format(caption_col_name,j)].append(items[j+1].strip())
+            captions_dict['{}{}'.format(caption_col_name, j)].append(items[j + 1].strip())
     captions = CASTable.from_dict(conn, captions_dict)
 
     return captions
 
 
 def create_embeddings_from_object_detection(conn, image_table, detection_model, word_embeddings_file,
-                                            n_threads=None,gpu=None,max_objects=5, word_delimiter='\t'):
+                                            n_threads=None, gpu=None, max_objects=5, word_delimiter='\t'):
     '''
     Builds CASTable with objects detected in images as numeric data
 
@@ -168,7 +169,7 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
     if not os.path.exists(word_embeddings_file):
         raise DLPyError('word_embeddings_file does not exist')
 
-    if not isinstance(image_table,ImageTable):
+    if not isinstance(image_table, ImageTable):
         raise DLPyError('image_table must be an ImageTable object')
 
     conn.loadactionset('deepLearn')
@@ -176,10 +177,10 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
 
     width = detection_model.summary['Output Size'][0][1]
     height = detection_model.summary['Output Size'][0][0]
-    image_table.resize(width=width,height=height)
+    image_table.resize(width=width, height=height)
     scoring_error = False
     try:
-        scored = detection_model.predict(data=image_table,n_threads=n_threads,gpu=gpu)
+        scored = detection_model.predict(data=image_table, n_threads=n_threads, gpu=gpu)
     except:
         scoring_error = True
     if scoring_error or scored is None:
@@ -190,9 +191,9 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
     first_objects = object_table.copy()
 
     first_objects['first_objects'] = first_objects['_Object0_'] + ","
-    if max_objects>5:
+    if max_objects > 5:
         max_objects = 5
-    for i in range(1,max_objects):
+    for i in range(1, max_objects):
         objects = first_objects['_Object{}_'.format(i)] + ","
         first_objects['first_objects'] = first_objects['first_objects'].add(objects)
 
@@ -206,7 +207,7 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
     df2 = first_objects.to_frame()
     objects = pd.merge(df1, df2, left_on='_id_', right_on='_id_', how='left')
 
-    objects = conn.upload_frame(objects,casout=dict(name='objects',replace=True))
+    objects = conn.upload_frame(objects, casout=dict(name='objects', replace=True))
     # remove unnecessary columns
     useful_vars = list(objects_numeric.columns)
     useful_vars.append('_filename_0')
@@ -217,7 +218,7 @@ def create_embeddings_from_object_detection(conn, image_table, detection_model, 
     return final_objects
 
 
-def numeric_parse_text(conn,table,word_embeddings_file,word_delimiter='\t',parse_column='first_objects'):
+def numeric_parse_text(conn, table, word_embeddings_file, word_delimiter='\t', parse_column='first_objects'):
     '''
     Parses text data into numeric data using a word-embeddings file
 
@@ -256,7 +257,7 @@ def numeric_parse_text(conn,table,word_embeddings_file,word_delimiter='\t',parse
     return objects_numeric
 
 
-def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
+def reshape_caption_columns(conn, table, caption_col_name='Var', num_captions=5, ):
     '''
     Reshapes table so there is only one caption per row of the table
 
@@ -314,15 +315,15 @@ def reshape_caption_columns(conn,table,caption_col_name='Var',num_captions=5,):
             cnt += 1
 
     # create CASTable from dictionary
-    rnn_input = CASTable.from_dict(conn,new_tbl)
+    rnn_input = CASTable.from_dict(conn, new_tbl)
 
     return rnn_input
 
 
 def create_captioning_table(conn, image_table, features_model, captions_file,
-                            obj_detect_model=None,word_embeddings_file=None,
-                            num_captions=5,dense_layer='fc7',captions_delimiter='\t', 
-                            caption_col_name='Var',embeddings_delimiter='\t',n_threads=None,gpu=None):
+                            obj_detect_model=None, word_embeddings_file=None,
+                            num_captions=5, dense_layer='fc7', captions_delimiter='\t',
+                            caption_col_name='Var', embeddings_delimiter='\t', n_threads=None, gpu=None):
     '''
     Builds CASTable wtih all necessary info to train an image captioning model
 
@@ -375,14 +376,15 @@ def create_captioning_table(conn, image_table, features_model, captions_file,
 
     '''
     # get all necessary tables
-    image_features = get_image_features(conn,features_model,image_table,dense_layer)
-    captions_table = create_captions_table(conn,captions_file,delimiter=captions_delimiter,caption_col_name=caption_col_name)
+    image_features = get_image_features(conn, features_model, image_table, dense_layer)
+    captions_table = create_captions_table(conn, captions_file, delimiter=captions_delimiter,
+                                           caption_col_name=caption_col_name)
 
     # merge features and captions tables
     df1 = captions_table.to_frame()
     df2 = image_features.to_frame()
-    captions_features = pd.merge(df1,df2,left_on='_filename_0',right_on='_filename_0',how='left')
-    result = conn.upload_frame(captions_features,casout=dict(name='captions_features',replace=True))
+    captions_features = pd.merge(df1, df2, left_on='_filename_0', right_on='_filename_0', how='left')
+    result = conn.upload_frame(captions_features, casout=dict(name='captions_features', replace=True))
     # conn.dljoin(table=captions_table,annotatedTable=image_features,
     #             id='_filename_0',casOut=dict(name='captions_features',replace=True))
     # result = conn.CASTable('captions_features')
@@ -392,26 +394,29 @@ def create_captioning_table(conn, image_table, features_model, captions_file,
             raise DLPyError("word_embeddings_file required for object detection")
         else:
             # resize images for object detection scoring
-            detected_objects = create_embeddings_from_object_detection(conn,image_table,obj_detect_model,word_embeddings_file,word_delimiter=embeddings_delimiter,
-                                                      n_threads=n_threads,gpu=gpu)
+            detected_objects = create_embeddings_from_object_detection(conn, image_table, obj_detect_model,
+                                                                       word_embeddings_file,
+                                                                       word_delimiter=embeddings_delimiter,
+                                                                       n_threads=n_threads, gpu=gpu)
             # conn.dljoin(table=dict(name='captions_features'),annotatedTable=detected_objects,
             #             id='_filename_0',casOut=dict(name='obj_capt_feats',replace=True))
             df1 = detected_objects.to_frame()
             df2 = result.to_frame()
-            obj_capt_feat = pd.merge(df1,df2,left_on='_filename_0',right_on='_filename_0',how='left')
-            result = conn.upload_frame(obj_capt_feat,casout=dict(name='full_table',replace=True))
+            obj_capt_feat = pd.merge(df1, df2, left_on='_filename_0', right_on='_filename_0', how='left')
+            result = conn.upload_frame(obj_capt_feat, casout=dict(name='full_table', replace=True))
 
-    final_table = reshape_caption_columns(conn,result,caption_col_name=caption_col_name,num_captions=num_captions)
+    final_table = reshape_caption_columns(conn, result, caption_col_name=caption_col_name, num_captions=num_captions)
     drop_columns = set(final_table.columns) - set(captions_table.columns) - set(image_features.columns)
     if obj_detect_model:
         drop_columns = set(drop_columns) - set(detected_objects.columns)
     drop_columns.remove('caption')
-    final_table.drop(drop_columns,axis=1,inplace=True)
+    final_table.drop(drop_columns, axis=1, inplace=True)
 
     return final_table
 
-def ImageCaptioning(conn,model_name='image_captioning',num_blocks=3,neurons=50,
-                    rnn_type='LSTM',max_output_len=15):
+
+def ImageCaptioning(conn, model_name='image_captioning', num_blocks=3, neurons=50,
+                    rnn_type='LSTM', max_output_len=15):
     '''
     Builds an RNN to be used for image captioning
 
@@ -458,7 +463,9 @@ def ImageCaptioning(conn,model_name='image_captioning',num_blocks=3,neurons=50,
     print('OutputLayer added named "output"')
     return model
 
-def display_predicted_image_captions(conn,result_tbl,npreds=2,ncol=2,img_path=None,figsize=None):
+
+def display_predicted_image_captions(conn, result_tbl, npreds=2, ncol=2, img_path=None, figsize=None,
+                                     filename_col='_filename_0', caption_col='caption', image_col='_image'):
     '''
     Shows caption prediction for random images
 
@@ -481,42 +488,113 @@ def display_predicted_image_captions(conn,result_tbl,npreds=2,ncol=2,img_path=No
     figsize : tuple of ints, optional
         Specifies size of images to be displayed
         Default : (16,(16 / ncol*nrow))
+    filename_col : str, optional
+            Specifies the column name for the filename data.
+            Default = '_filename_0'
+    caption_col : str, optional
+            Specifies the column name for the ground-truth caption data.
+            Default = 'caption'
+    image_col : str, optional
+            Specifies the column name for the image data.
+            Default = '_image_'
 
     '''
-    results = scored_results_to_dict(result_tbl)
+    results = scored_results_to_dict(result_tbl=result_tbl, filename_col=filename_col, caption_col=caption_col)
 
     nimages = min(npreds, len(results))
 
+    if nimages > ncol:
+        nrow = nimages // ncol + 1
+    else:
+        nrow = 1
+        ncol = nimages
+    if figsize is None:
+        figsize = (16, 16 // ncol * nrow)
+
     if img_path is None:
+
+        # check whether display images
+        display_image = False
+        if image_col in result_tbl.columns:
+            display_image = True
+            fig = plt.figure(figsize=figsize)
+            conn.loadactionset('image', _messagelevel='error')
+
         for i in range(nimages):
-            r = random.randint(0, len(results) - 1)
+
+            # no need display randomly
+            if nimages == len(results):
+                r = i
+            else:
+                r = random.randint(0, len(results) - 1)
 
             f_name = list(results.keys())[r]
-            actual_caps = (conn.CASTable(result_tbl.name, where='''_filename_0="{}"'''.format(f_name)).iloc[:, 'caption']).values
-            truth = "\n\t".join(actual_caps)
-            objects = (conn.CASTable(result_tbl.name, where='''_filename_0="{}"'''.format(f_name)).iloc[:, 'first_objects']).values
-            objects = "\n\t".join(objects[0].split(','))
+            if caption_col in result_tbl.columns:
+                actual_caps = (
+                    conn.CASTable(result_tbl.name, where='''{}="{}"'''.format(filename_col, f_name)).iloc[:,
+                    caption_col]).values
+                truth = "\n".join(actual_caps)
+            else:
+                truth = "N/A"
+
             rand_row = results[f_name]
             prediction = rand_row[1]
-            print("Filename: {}\nObjects: {}\nGround Truth: {}\nPredicted: {}\n".format(f_name, objects, truth,
-                                                                                        prediction))
+
+            # display ground truth, objects, and prediction if do not display images
+            if 'first_objects' in result_tbl.columns:
+                # when the table contains objects
+                objects = (
+                    conn.CASTable(result_tbl.name, where='''{}="{}"'''.format(filename_col, f_name)).iloc[:,
+                    'first_objects']).values
+                objects = "\n\t".join(objects[0].split(','))
+                display_objects = True
+                if not display_image:
+                    print("Filename: {}\nObjects: {}\nGround Truth: {}\nPredicted: {}\n".format(f_name, objects, truth,
+                                                                                                prediction))
+            else:
+                if not display_image:
+                    print("Filename: {}\nGround Truth: {}\nPredicted: {}\n".format(f_name, truth, prediction))
+                display_objects = False
+
+            # now display images along with captions and objects
+            if display_image:
+                temp_tbl = conn.retrieve('image.fetchimages', to=1, image=image_col,
+                                         _messagelevel='error',
+                                         table=dict(name=result_tbl.name,
+                                                    where='''{}="{}"'''.format(filename_col, f_name)))
+                ax = fig.add_subplot(nrow, ncol, i + 1)
+                if display_objects:
+                    ax.set_title('Objects: {}\nGround Truth: {}\nPredicted: {}'.format(objects, truth, prediction))
+                else:
+                    ax.set_title('Ground Truth: {}\nPredicted: {}'.format(truth, prediction))
+                plt.imshow(temp_tbl['Images']['Image'][0])
+                plt.xticks([]), plt.yticks([])
+        if display_image:
+            plt.tight_layout()
+            plt.show()
     else:
-        if nimages > ncol:
-            nrow = nimages // ncol + 1
-        else:
-            nrow = 1
-            ncol = nimages
-        if figsize is None:
-            figsize = (16, 16 // ncol * nrow)
         fig = plt.figure(figsize=figsize)
 
         for i in range(nimages):
-            r = random.randint(0, len(results) - 1)
+
+            # no need display randomly
+            if nimages == len(results):
+                r = i
+            else:
+                r = random.randint(0, len(results) - 1)
+
             f_name = list(results.keys())[r]
             rand_row = results[f_name]
-            actual_caps = (conn.CASTable(result_tbl.name, where='''_filename_0="{}"'''.format(f_name)).iloc[:, 'caption']).values
-            truth = "\n".join(actual_caps)
-            objects = (conn.CASTable(result_tbl.name, where='''_filename_0="{}"'''.format(f_name)).iloc[:, 'first_objects']).values
+            if caption_col in result_tbl.columns:
+                actual_caps = (
+                    conn.CASTable(result_tbl.name, where='''{}="{}"'''.format(filename_col, f_name)).iloc[:,
+                    caption_col]).values
+                truth = "\n".join(actual_caps)
+            else:
+                truth = "N/A"
+            objects = (
+                conn.CASTable(result_tbl.name, where='''{}="{}"'''.format(filename_col, f_name)).iloc[:,
+                'first_objects']).values
             objects = objects[0]
             caption = rand_row[1]
             if '/' in img_path:
@@ -530,9 +608,11 @@ def display_predicted_image_captions(conn,result_tbl,npreds=2,ncol=2,img_path=No
             ax.set_title('Objects: {}\nGround Truth: {}\nPredicted: {}'.format(objects, truth, caption))
             plt.imshow(image)
             plt.xticks([]), plt.yticks([])
+        plt.tight_layout()
         plt.show()
 
-def scored_results_to_dict(result_tbl):
+
+def scored_results_to_dict(result_tbl, filename_col='_filename_0', caption_col='caption'):
     '''
     Converts results in CASResults table to a dictionary of values
 
@@ -540,6 +620,12 @@ def scored_results_to_dict(result_tbl):
     ----------
     result_tbl : CASResults object
         Table containing results from scoring the test data
+    filename_col : str, optional
+            Specifies the column name for the filename data.
+            Default = '_filename_0'
+    caption_col : str, optional
+            Specifies the column name for the ground-truth caption data.
+            Default = 'caption'
 
     Returns
     -------
@@ -554,13 +640,18 @@ def scored_results_to_dict(result_tbl):
     if exists is False:
         raise DLPyError('Specified result_tbl could not be located in the caslib')
 
-    filename_idx = result_columns.index('_filename_0')
-    caption_idx = result_columns.index('caption')
+    filename_idx = result_columns.index(filename_col)
+    caption_idx = None
+    if caption_col in result_tbl.columns:
+        caption_idx = result_columns.index(caption_col)
     prediction_idx = result_columns.index('_DL_Pred_')
 
     result_values = dict()
     for row in list(result_tbl.values):
-        tuple1 = [row[caption_idx].strip(), row[prediction_idx].strip()]
+        if caption_idx:
+            tuple1 = [row[caption_idx].strip(), row[prediction_idx].strip()]
+        else:
+            tuple1 = ["N/A", row[prediction_idx].strip()]
         result_values[row[filename_idx]] = tuple(tuple1)
 
     return result_values
