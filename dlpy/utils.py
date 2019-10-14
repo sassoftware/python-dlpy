@@ -2506,7 +2506,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                 run;
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code=fmt_code, _messagelevel='error')
-    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    #cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
     print('labels are being processed')

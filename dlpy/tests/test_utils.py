@@ -515,7 +515,12 @@ class TestUtils(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
-        create_instance_segmentation_table(self.s, coord_type = 'yolo', output = 'instance_seg',
+
+        try:
+            import cv2
+            create_instance_segmentation_table(self.s, coord_type = 'yolo', output = 'instance_seg',
                                            data_path = self.data_dir + 'instance_segmentation_data',
                                            local_path = os.path.join(self.data_dir_local, 'instance_segmentation_data'))
-        self.assertTrue(self.s.numrows('instance_seg').numrows == 1)
+            self.assertTrue(self.s.numrows('instance_seg').numrows == 1)
+        except:
+            unittest.TestCase.skipTest(self, "no cv2")
