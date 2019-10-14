@@ -173,6 +173,35 @@ class Network(Layer):
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
         self.num_params = 0
+
+        # before addLayer, self.layers are reordered based on layer_id
+        # the new id is created based on model.summary which contains layer_id.
+        # since it is not compiled, it might contains None or index from it original model summary.
+        orig_ids = self.summary['Layer Id']
+        offset_id = 0
+        new_ids = []  # store new ids
+        pool = []  # pool to store index has been added
+        for idx, l_id in enumerate(orig_ids):
+            # encounter None id or duplicated id, start a new Model
+            if l_id is None or l_id in pool:
+                offset_id = idx
+                pool = []
+            else:
+                pool.append(l_id)
+
+            # calculate new index for the layer
+            if l_id is None:
+                l_id = offset_id
+            else:
+                l_id += offset_id
+
+            new_ids.append(l_id)
+
+        # reassign layer_id
+        for i, l in enumerate(self.layers):
+            l.layer_id = new_ids[i]
+        self.layers.sort()  # sort based on layer_id
+
         for layer in self.layers:
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
@@ -622,13 +651,15 @@ class Network(Layer):
             return pd.concat([x.rnn_summary for x in self.layers], ignore_index = True)
 
     def __load_layer_ids(self):
+        import math
         try:
-            model_table_rows = self.conn.table.fetch(self.model_table, maxrows = 1000000, to = 1000000).Fetch
+            # only check each layer once
+            model_table_rows = self.conn.table.fetch(table=dict(self.model_table, where='_DLKey1_ eq "layertype"'),
+                                                     maxrows=1000000, to=1000000).Fetch
         except:
             model_table_rows = None
         if model_table_rows is not None:
             layer_ids = {}
-            import math
             for index, row in model_table_rows.iterrows():
                 if not math.isnan(row['_DLLayerID_']):
                     layer_ids[row['_DLKey0_']] = int(row['_DLLayerID_'])

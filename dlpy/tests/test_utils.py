@@ -416,6 +416,23 @@ class TestUtils(unittest.TestCase):
         df = self.s.caslibinfo().CASLibInfo['Name']
         self.assertEqual(df[df == tmp_caslib].shape[0], 0)
 
+    def test_caslibify_subdirectory_permission(self):
+        self.s.addcaslib(path = self.data_dir, name='data', subdirectories=False)
+        self.assertRaises(DLPyError, lambda: caslibify(self.s, path = self.data_dir + 'segmentation_data'))
+        self.s.dropcaslib(caslib='data')
+
+    def test_caslibify_context_subdirectory_permission(self):
+        self.s.addcaslib(path = self.data_dir, name='data', subdirectories=False)
+        try:
+            with caslibify_context(self.s, path = self.data_dir + 'segmentation_data'):
+                a = 1+1
+        except DLPyError:
+            self.s.dropcaslib(caslib = 'data')
+            return
+        self.s.dropcaslib(caslib = 'data')
+        raise DLPyError('caslibify_context() expected to throw a DLPyError')
+
+
     def test_user_defined_labels(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -492,3 +509,13 @@ class TestUtils(unittest.TestCase):
         from dlpy.layers import Conv2DTranspose, Conv2d
         layer = Conv2DTranspose(10)
         self.assertRaises(DLPyError, lambda: check_layer_class(layer, Conv2d))
+
+    def test_create_instance_segmentation_castable(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        create_instance_segmentation_table(self.s, coord_type = 'yolo', output = 'instance_seg',
+                                           data_path = self.data_dir + 'instance_segmentation_data',
+                                           local_path = os.path.join(self.data_dir_local, 'instance_segmentation_data'))
+        self.assertTrue(self.s.numrows('instance_seg').numrows == 1)
