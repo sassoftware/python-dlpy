@@ -322,7 +322,7 @@ class ImageTable(CASTable):
 
         return out
 
-    def show(self, nimages=5, ncol=8, randomize=False, figsize=None, where=None):
+    def show(self, nimages=5, ncol=8, randomize=False, figsize=None, where=None, id=None):
 
         '''
 
@@ -346,6 +346,8 @@ class ImageTable(CASTable):
             Specifies the SAS Where clause for selecting images to be shown.
             One example is as follows:
             my_images.show(nimages=2, where='_id_ eq 57')
+        id : string, optional
+            Specifies the identifier column in the image table to be shown.
 
         '''
 
@@ -371,9 +373,11 @@ class ImageTable(CASTable):
                                                              'rand("UNIFORM");',
                                          **self.to_table_params()),
                                      image=self.running_image_column,
-                                     sortby='random_index', to=nimages)
+                                     sortby='random_index', to=nimages,
+                                     fetchImagesVars=id)
         else:
-            temp_tbl = self._retrieve('image.fetchimages', to=nimages, image=self.running_image_column)
+            temp_tbl = self._retrieve('image.fetchimages', to=nimages, image=self.running_image_column,
+                                      fetchImagesVars=id)
 
         # remove the where clause
         self.params['where'] = None
@@ -391,7 +395,11 @@ class ImageTable(CASTable):
             image = temp_tbl['Images']['Image'][i]
             label = temp_tbl['Images']['Label'][i]
             ax = fig.add_subplot(nrow, ncol, i + 1)
-            ax.set_title('{}'.format(label))
+            if id:
+                id_content = temp_tbl['Images'][id][i]
+                ax.set_title('{}\n{}'.format(label, id_content))
+            else:
+                ax.set_title('{}'.format(label))
             if len(image.size) == 2:
                 plt.imshow(np.array(image), cmap='Greys_r')
             else:
