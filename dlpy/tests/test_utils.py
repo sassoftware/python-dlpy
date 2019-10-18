@@ -524,3 +524,9 @@ class TestUtils(unittest.TestCase):
             self.assertTrue(self.s.numrows('instance_seg').numrows == 1)
         except:
             unittest.TestCase.skipTest(self, "no cv2")
+
+    def test_file_exist_on_server(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        check_file = self.data_dir + 'vgg16.sashdat'
+        self.assertTrue(file_exist_on_server(self.s, file=check_file))

@@ -22,7 +22,7 @@ import os
 
 from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, \
-    underscore_to_camelcase, caslibify_context, isnotebook
+    underscore_to_camelcase, caslibify_context, isnotebook, file_exist_on_server
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
     Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
 import dlpy.model
@@ -1263,8 +1263,7 @@ class Network(Layer):
 
         '''
         server_sep = get_server_path_sep(self.conn)
-        
-        if os.path.isfile(path):
+        if file_exist_on_server(self.conn, path):
             if server_sep in path:
                 dir_name, file_name = path.rsplit(server_sep, 1)
             else:

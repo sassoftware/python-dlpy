@@ -32,7 +32,7 @@ from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Conv1d, Pooling, Dense, OutputLayer,
                          Recurrent, Keypoints, BN, Res, Concat, Reshape, GlobalAveragePooling1D)
-from dlpy.utils import caslibify
+from dlpy.utils import caslibify, caslibify_context
 from dlpy.applications import Tiny_YoloV2
 import unittest
 
@@ -1003,6 +1003,12 @@ class TestModel(unittest.TestCase):
         model_m.print_summary()
         # 1d print summary numerical check
         self.assertEqual(model_m.summary.iloc[1, -1], 240000)
+
+    def test_load_weights_attr(self):
+        model = Model(self.s)
+        model.load(path=self.data_dir+'Simple_CNN1.sashdat')
+        # load_weights_attr table from server; expect to be clean
+        model.load_weights_attr(self.data_dir+'Simple_CNN1_weights_attr.sashdat')
 
     @classmethod
     def tearDownClass(cls):
