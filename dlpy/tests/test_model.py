@@ -53,7 +53,7 @@ class TestModel(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
+        cls.s = swat.CAS('dlgrd009', 13305)
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -1009,6 +1009,29 @@ class TestModel(unittest.TestCase):
         model.load(path=self.data_dir+'Simple_CNN1.sashdat')
         # load_weights_attr table from server; expect to be clean
         model.load_weights_attr(self.data_dir+'Simple_CNN1_weights_attr.sashdat')
+
+    def test_mobilenetv2(self):
+        try:
+            import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
+        except:
+            unittest.TestCase.skipTest(self, 'onnx package not found')
+
+        from dlpy.model import Model
+
+        path = '/cas/DeepLearn/weshiz/onnx/image_classification/mobilenetv2-1.0.onnx'
+
+        onnx_model = onnx.load_model(path)
+        model1 = Model.from_onnx_model(self.s,
+                                       onnx_model,
+                                       output_model_table='mobilenetv2',
+                                       offsets=255*[0.485, 0.456, 0.406],
+                                       norm_stds=255*[0.229, 0.224, 0.225])
 
     @classmethod
     def tearDownClass(cls):

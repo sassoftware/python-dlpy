@@ -27,7 +27,7 @@ from onnx import numpy_helper
 from onnx.shape_inference import infer_shapes
 
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
-                         BN, Concat, Res)
+                         BN, Concat, Res, GroupConv2d, GlobalAveragePooling2D)
 from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
 from dlpy.model_conversion.onnx_transforms import (ConstToInitializer,
                                                    InitReshape, InitUnsqueeze,
@@ -367,7 +367,7 @@ def get_dlpy_layer(layers, name):
 def onnx_extract_conv(graph, node, layers):
     ''' 
     Construct convo layer from ONNX op 
-    
+
     Parameters
     ----------
     graph : ONNX GraphProto
@@ -379,16 +379,16 @@ def onnx_extract_conv(graph, node, layers):
 
     Returns
     -------
-    :class:`Conv2d`
+    :class:`Conv2d` or 'GroupConv2d'
 
     '''
     previous = onnx_find_previous_compute_layer(graph, node)
-    
+
     if not previous:
         src_names = [find_input_layer_name(graph)]
     else:
         src_names = [p.name for p in previous]
-    
+
     src = [get_dlpy_layer(layers, i) for i in src_names]
 
     height = None
@@ -402,6 +402,7 @@ def onnx_extract_conv(graph, node, layers):
     n_filters = None
     include_bias = False
     act = 'identity'
+    group = None
 
     # if padding is not present, default to 0
     is_padding = False
@@ -424,7 +425,7 @@ def onnx_extract_conv(graph, node, layers):
                 continue
             elif attr_s == 'NOTSET':
                 continue
-            else: # 'VALID'
+            else:  # 'VALID'
                 padding = 0
         elif attr.name == 'pads':
             is_padding = True
@@ -434,6 +435,8 @@ def onnx_extract_conv(graph, node, layers):
                       + node.name + ' setting equal padding instead.')
                 padding_height = max(padding_height, p_h2)
                 padding_width = max(padding_width, p_w2)
+        elif attr.name == 'group':
+            group = attr.i
 
     if not is_padding:
         padding = 0
@@ -442,7 +445,7 @@ def onnx_extract_conv(graph, node, layers):
     for init in graph.initializer:
         if init.name == node.input[1]:
             n_filters = numpy_helper.to_array(init).shape[0]
-    
+
     # if not in initializer, check inferred shapes in graph
     if n_filters is None:
         for v in graph.value_info:
@@ -454,24 +457,40 @@ def onnx_extract_conv(graph, node, layers):
         include_bias = True
     # check if bias is added by the next op
     else:
-        out = onnx_get_out_nodes(graph, node) 
+        out = onnx_get_out_nodes(graph, node)
         for n in out:
             if is_bias_op(graph, n):
                 include_bias = True
-   
-    return Conv2d(n_filters=n_filters,
-                  width=width,
-                  height=height,
-                  stride=stride,
-                  name=node.name,
-                  stride_horizontal=stride_horizontal,
-                  stride_vertical=stride_vertical,
-                  padding=padding,
-                  padding_width=padding_width,
-                  padding_height=padding_height,
-                  act=act,
-                  include_bias=include_bias,
-                  src_layers=src) 
+
+    if group and group > 1:
+        return GroupConv2d(n_groups=group,
+                           n_filters=n_filters,
+                           width=width,
+                           height=height,
+                           stride=stride,
+                           name=node.name,
+                           stride_horizontal=stride_horizontal,
+                           stride_vertical=stride_vertical,
+                           padding=padding,
+                           padding_width=padding_width,
+                           padding_height=padding_height,
+                           act=act,
+                           include_bias=include_bias,
+                           src_layers=src)
+    else:
+        return Conv2d(n_filters=n_filters,
+                      width=width,
+                      height=height,
+                      stride=stride,
+                      name=node.name,
+                      stride_horizontal=stride_horizontal,
+                      stride_vertical=stride_vertical,
+                      padding=padding,
+                      padding_width=padding_width,
+                      padding_height=padding_height,
+                      act=act,
+                      include_bias=include_bias,
+                      src_layers=src)
 
     
 def onnx_extract_pool(graph, node, layers, pool='MAX'):
@@ -598,7 +617,7 @@ def onnx_extract_globalpool(graph, node, layers):
     
     return Pooling(width=width,
                    height=height,
-                   stride=1,
+                   stride=width,
                    name=node.name,
                    padding=0,
                    pool='AVERAGE',
@@ -1156,7 +1175,7 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
     import os
     temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.onnxmodel.h5'.format(name))
     f_out = h5py.File(temp_HDF5, 'w')
-    weight_layers = [l for l in layers if l.type in ['convo', 'fc', 'batchnorm']]
+    weight_layers = [l for l in layers if l.type in ['convo', 'fc', 'batchnorm', 'groupconvo']]
     f_out.attrs['layer_names'] = [l.name.encode('utf8') for l in weight_layers]
     for layer in weight_layers:
         new_weight_names = []
@@ -1165,7 +1184,7 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
         weights = [np.array(tensor_dict[i], dtype=np.float32) for i in node.input
                                   if tensor_dict.get(i) is not None]
 
-        if layer.type in ['convo', 'fc']:
+        if layer.type in ['convo', 'fc', 'groupconvo']:
             # check bias op following the node
             # to see if we need to include any bias weights
             for n in onnx_get_out_nodes(graph, node):
@@ -1199,8 +1218,16 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
             if len(weights) != 4:
                 raise OnnxParseError('Incorrect batchnorm weights') 
             for idx, w in enumerate(weights):
-                g_out.create_dataset(template_names[idx].encode('utf8'), data=w) 
-                new_weight_names.append(template_names[idx].encode('utf8'))
+                if idx == 3:
+                    # sas bn require std for moving variance
+                    w = np.sqrt(w)
+                    # clip variance to avoid error on cas
+                    w = np.clip(w, a_min=1e-5, a_max=1e10)
+                    g_out.create_dataset(template_names[idx].encode('utf8'), data=w)
+                    new_weight_names.append(template_names[idx].encode('utf8'))
+                else:
+                    g_out.create_dataset(template_names[idx].encode('utf8'), data=w)
+                    new_weight_names.append(template_names[idx].encode('utf8'))
 
         g_out.attrs['weight_names'] = new_weight_names
 

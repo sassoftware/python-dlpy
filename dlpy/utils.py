@@ -359,7 +359,7 @@ def find_caslib(conn, path):
         Specifies the name of the caslib that contains the path.
 
     '''
-    paths = conn.caslibinfo().CASLibInfo.Path.tolist()
+    caslib_paths = conn.caslibinfo().CASLibInfo.Path.tolist()
     caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
 
     server_type = get_cas_host_type(conn).lower()
@@ -372,11 +372,10 @@ def find_caslib(conn, path):
     if not path.endswith(sep):
         path += sep
 
-    if path in paths:
-        caslibname = caslibs[paths.index(path)]
-        return caslibname
-    else:
-        return None
+    for caslib_name, caslib_path in zip(caslibs, caslib_paths):
+        if path.find(caslib_path) == 0:
+            return caslib_name
+    return None
 
 
 def get_imagenet_labels_table(conn, label_length=None):
@@ -499,8 +498,8 @@ def caslibify_context(conn, path, task='save'):
             remaining_path += sep
 
         if caslib is not None:
-            access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
-                                          caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
+            access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                          caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
             if access_subdir:
                 yield caslib, remaining_path
             else:
@@ -533,9 +532,11 @@ def caslibify_context(conn, path, task='save'):
 
         if len(path_split) == 2:
             caslib = find_caslib(conn, path_split[0])
+            caslib_path = conn.retrieve('caslibinfo', _messagelevel='error', caslib=caslib).CASLibInfo.loc[0, 'Path']
+            path_split[1] = path[len(caslib_path):]
             if caslib is not None:
-                access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
-                                              caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
+                access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                              caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
                     yield caslib, path_split[1]
                 else:

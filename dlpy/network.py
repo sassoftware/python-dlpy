@@ -564,8 +564,8 @@ class Network(Layer):
         return model, use_gpu
 
     @classmethod
-    def from_onnx_model(cls, conn, onnx_model, output_model_table = None,
-                        offsets = None, scale = None, std = None, output_layer = None):
+    def from_onnx_model(cls, conn, onnx_model, output_model_table=None,
+                        offsets=None, scale=None, std=None, norm_stds=None, output_layer=None):
         '''
         Generate a Model object from ONNX model.
 
@@ -586,6 +586,9 @@ class Network(Layer):
         std : string, optional
             Specifies how to standardize the variables in the input layer.
             Valid Values: MIDRANGE, NONE, STD
+        norm_stds : float-list, optional
+            Specifies a standard deviation for each channel in the input data.
+            The final input data is normalized with specified means and standard deviations.
         output_layer : Layer object, optional
             Specifies the output layer of the model. If no output
             layer is specified, the last layer is automatically set
@@ -615,6 +618,8 @@ class Network(Layer):
             _layers[0].config.update(scale = scale)
         if std is not None:
             _layers[0].config.update(std = std)
+        if norm_stds is not None:
+            _layers[0].config.update(norm_stds=norm_stds)
         if len(_layers) == 0:
             raise DLPyError('Unable to import ONNX model.')
 
