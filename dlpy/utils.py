@@ -1655,6 +1655,7 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
 
         label_tbl_name = random_name('obj_det')
         # load all of txt files into cas server
+        label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
         label_files = [x for x in label_files if x.endswith('.txt')]
         if len(label_files) == 0:
             raise DLPyError('Can not find any txt file under data_path.')
@@ -1674,6 +1675,15 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                                            comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
                                                                                               filename[:-len('.txt')])),
                               casout = dict(name = tbl_name, replace = True))
+                # add sequence id that is used to build column name in transpose process
+                sas_code = '''
+                           data {0};
+                           set {0};
+                              seq_id=_n_-1;
+                           run;
+                           '''.format(tbl_name)
+                # nthreads=1 to make sure that order of observation is consistent
+                conn.runcode(code = sas_code, nthreads = 1, _messagelevel = 'error')
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
     string_input_tbl_name = ' '.join(input_tbl_name)
@@ -1683,7 +1693,8 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                 set {1}; 
                 run;
                 '''.format(output, string_input_tbl_name)
-    conn.runcode(code = fmt_code, _messagelevel = 'error')
+    # nthreads=1 to make sure that order of observation is consistent
+    conn.runcode(code = fmt_code, nthreads=1, _messagelevel = 'error')
     cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
@@ -1692,17 +1703,6 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                                               dict(name = 'Var3', rename = var_name[2]),
                                               dict(name = 'Var4', rename = var_name[3]),
                                               dict(name = 'Var5', rename = var_name[4])])
-    # add sequence id that is used to build column name in transpose process
-    sas_code = '''
-               data {0};
-                  set {0} ;
-                  by idjoin;
-                  seq_id+1;
-                  if first.idjoin then seq_id=0;
-                  output;
-               run;
-               '''.format(output)
-    conn.runcode(code = sas_code, _messagelevel = 'error')
     # convert long table to wide table
     with sw.option_context(print_messages = False):
         for var in var_name:
@@ -2507,7 +2507,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                 run;
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code=fmt_code, _messagelevel='error')
-    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    #cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
     print('labels are being processed')

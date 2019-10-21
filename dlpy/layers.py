@@ -2520,10 +2520,6 @@ class EmbeddingLoss(Layer):
     ----------
     name : string, optional
         Specifies the name of the layer.
-    distance : string, optional
-        Specifies the distance measure for the embedding loss layer.
-        Valid Values: AUTO, COS, L1, L2
-        Default: L2
     margin : double, optional
         Specifies the margin value that defines a radius for dissimilar pair contributions.
         Default: 2

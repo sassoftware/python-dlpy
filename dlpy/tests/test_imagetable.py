@@ -212,8 +212,11 @@ class TestImageTable(unittest.TestCase):
 
         img_path = self.data_dir+'giraffe_dolphin_small'
         my_images = ImageTable.load_files(self.s, path=img_path)
-        # the test shold be clean, even if selected are less than nimages
+        # the test should be clean, even if selected are less than nimages
         my_images.show(nimages=2, where='_id_ eq 57')
+
+        # test id
+        my_images.show(nimages=2, id='_filename_0')
 
     def test_show_invalid_whereclause(self):
 
