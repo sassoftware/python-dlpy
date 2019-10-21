@@ -532,9 +532,10 @@ def caslibify_context(conn, path, task='save'):
 
         if len(path_split) == 2:
             caslib = find_caslib(conn, path_split[0])
-            caslib_path = conn.retrieve('caslibinfo', _messagelevel='error', caslib=caslib).CASLibInfo.loc[0, 'Path']
-            path_split[1] = path[len(caslib_path):]
             if caslib is not None:
+                caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                            caslib = caslib).CASLibInfo.loc[0, 'Path']
+                path_split[1] = path[len(caslib_path):]
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
@@ -648,6 +649,9 @@ def caslibify(conn, path, task='save'):
         if len(path_split) == 2:
             caslib = find_caslib(conn, path_split[0])
             if caslib is not None:
+                caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                            caslib = caslib).CASLibInfo.loc[0, 'Path']
+                path_split[1] = path[len(caslib_path):]
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
