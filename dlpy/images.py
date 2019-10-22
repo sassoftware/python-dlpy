@@ -462,7 +462,7 @@ class ImageTable(CASTable):
             out.crop(x=x, y=y, width=width, height=height)
             return out
 
-    def resize(self, width=None, height=None, inplace=True):
+    def resize(self, width=None, height=None, inplace=True, columns=None):
 
         '''
 
@@ -478,6 +478,8 @@ class ImageTable(CASTable):
         inplace : bool, optional
             Specifies whether to update the original table, or to create
             a new one.
+        columns : list, optional
+            Specifies a list of column names to be copied over to the resulting table.
 
         Returns
         -------
@@ -498,8 +500,15 @@ class ImageTable(CASTable):
         column_names = ['_filename_{}'.format(i) for i in range(self.patch_level + 1)]
 
         if inplace:
+            if columns is not None:
+                set1 = set(column_names)
+                set2 = set(columns)
+                set3 = set2 - set1
+                r_list = column_names + list(set3)
+            else:
+                r_list = column_names
             self._retrieve('image.processimages',
-                           copyvars=column_names,
+                           copyvars=r_list,
                            image=self.running_image_column,
                            casout=dict(replace=True, blocksize=blocksize,
                                        **self.to_outtable_params()),
@@ -508,7 +517,7 @@ class ImageTable(CASTable):
                                                          w=width, h=height))])
         else:
             out = self.copy_table()
-            out.resize(width=width, height=height)
+            out.resize(width=width, height=height, columns=columns)
             return out
 
     def as_patches(self, x=0, y=0, width=None, height=None, step_size=None,
