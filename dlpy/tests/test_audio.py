@@ -61,6 +61,13 @@ class TestAudioTable(unittest.TestCase):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
 
+        if "DLPY_DATA_DIR_LOCAL" in os.environ:
+            cls.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
+
+        # the server path that points to DLPY_DATA_DIR_LOCAL
+        if "DLPY_DATA_DIR_SERVER" in os.environ:
+            cls.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests
@@ -163,6 +170,31 @@ class TestAudioTable(unittest.TestCase):
                                                     full_filename, casout=self.conn.CASTable('name99'))
         self.assertTrue(audio_table is not None)
 
+    def test_audio_local_audio_path(self):
 
+        if self.local_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
+        server_audio_dir = self.server_dir + 'lang_id' + '/train'
+
+        audio_table = AudioTable.load_audio_files(self.conn,
+                                                  local_audio_path=local_audio_dir,
+                                                  server_audio_path=server_audio_dir)
+        numrows = audio_table.numrows()
+        print(numrows['numrows'])
+        self.assertEqual(numrows['numrows'], 15)
+
+        # test extracting features
+        feature_table = audio_table.create_audio_feature_table()
+        print(feature_table.summary())
+
+        # test extracting features with labels
+        feature_table = audio_table.create_audio_feature_table(label_level=-2)
+        print(feature_table.freq(inputs='_label_'))
+        print(feature_table.label_freq)
 
 
