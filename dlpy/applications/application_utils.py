@@ -47,3 +47,30 @@ def get_layer_options(layer_options, local_options):
         if key in layer_options:
             layer_options_dict[key] = value
     return layer_options_dict
+
+
+def not_supported_feature(feature, action=None):
+
+    '''
+    Returns a templated note for the specified feature indicating that it is not supported.
+
+    Parameters
+    ----------
+
+    feature : string
+        Specifies the feature that is not supported. This will be inserted into the templated note message.
+
+    action : string, optional
+        Specifies if an action is taken for the not supported feature.
+
+    Returns
+    -------
+    warning_message : str
+
+    '''
+
+    if action is None:
+        return '*** NOTE: '+feature+' is not supported yet.'
+    else:
+        return '*** NOTE: '+feature+' is not supported yet. We took the following action: '+action
+
