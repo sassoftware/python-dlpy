@@ -647,15 +647,41 @@ def convert_audio_files(local_audio_path, recurse=True):
 
     '''
 
+    number_files = 0
+
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            number_files = number_files + len(f)
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
+                number_files = number_files + 1
+
+    print('File path: {}'.format(local_audio_path))
+    print('Number of Files: {}'.format(number_files))
+
+    print_freq = 1000
+
+    number_files = 0
     if recurse:
         for r, d, f in os.walk(local_audio_path):
             for file in f:
                 local_file = os.path.join(r, file)
                 local_file_wav = os.path.splitext(local_file)[0] + '.wav'
                 convert_one_audio_file(local_file, local_file_wav)
+                number_files = number_files + 1
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
     else:
         for f in os.listdir(local_audio_path):
             local_file = os.path.join(local_audio_path, f)
             if os.path.isfile(local_file):
                 local_file_wav = os.path.join(local_audio_path, os.path.splitext(f)[0] + '.wav')
                 convert_one_audio_file(local_file, local_file_wav)
+                number_files = number_files + 1
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+
+    print('File conversions are finished.')
+

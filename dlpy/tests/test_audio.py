@@ -196,5 +196,5 @@ class TestAudioTable(unittest.TestCase):
         feature_table = audio_table.create_audio_feature_table(label_level=-2)
         print(feature_table.freq(inputs='_label_'))
         print(feature_table.label_freq)
-
-
+        print(feature_table.feature_vars)
+        self.assertEqual(feature_table.feature_vars[0], '_f0_v0_')

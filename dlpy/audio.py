@@ -30,6 +30,9 @@ class AudioTable(CASTable):
     ''' CAS Table for Audio '''
 
     running_caslib = None
+    feature_size = None
+    num_of_frames_col = None
+    label_col = None
 
     @classmethod
     def load_audio_files(cls, conn, path=None, casout=None, caslib=None,
@@ -187,7 +190,10 @@ class AudioTable(CASTable):
     def __extract_audio_features(conn, table, frame_shift=10, frame_length=25, n_bins=40, n_ceps=40,
                                  feature_scaling_method='STANDARDIZATION', n_output_frames=500, casout=None,
                                  label_level=0,
+                                 random_shuffle=True,
                                  **kwargs):
+
+        conn.loadactionset('audio', _messagelevel='error')
 
         if isinstance(table, AudioTable) is False and isinstance(table, CASTable) is False:
             return None
@@ -228,16 +234,28 @@ class AudioTable(CASTable):
             ctable = CASTable(casout['name'], computedvars=['_fName_'],
                               computedvarsprogram=scode)
 
-        conn.table.partition(table=ctable, casout=dict(name=casout['name'], replace=True))
+        if random_shuffle:
+            conn.table.shuffle(table=ctable, casout=dict(name=casout['name'], replace=True))
+        else:
+            conn.table.partition(table=ctable, casout=dict(name=casout['name'], replace=True))
 
         out = AudioTable(casout['name'])
         out.set_connection(connection=conn)
+
+        out.feature_size = n_ceps
+        out.num_of_frames_col = '_num_frames_'
+
+        if label_level:
+            out.label_col = '_label_'
+        else:
+            out.label_col = None
 
         return out
 
     @classmethod
     def extract_audio_features(cls, conn, table, frame_shift=10, frame_length=25, n_bins=40, n_ceps=40,
-                               feature_scaling_method='STANDARDIZATION', n_output_frames=500, casout=None, **kwargs):
+                               feature_scaling_method='STANDARDIZATION', n_output_frames=500, casout=None,
+                               random_shuffle=True, **kwargs):
         '''
         Extracts audio features from the audio files
 
@@ -268,6 +286,9 @@ class AudioTable(CASTable):
             Default: 500
         casout : dict or string or CASTable, optional
             CAS Output table
+        random_shuffle : bool, optional
+            Specifies whether shuffle the generated CAS table randomly.
+            Default: True
         kwargs : keyword-arguments, optional
             Additional parameter for feature extraction.
 
@@ -281,7 +302,8 @@ class AudioTable(CASTable):
         '''
 
         return cls.__extract_audio_features(conn, table, frame_shift, frame_length, n_bins, n_ceps,
-                                            feature_scaling_method, n_output_frames, casout, 0, **kwargs)
+                                            feature_scaling_method, n_output_frames, casout, 0,
+                                            random_shuffle, **kwargs)
 
     @classmethod
     def load_audio_metadata_speechrecognition(cls, conn, path, audio_path):
@@ -498,7 +520,7 @@ class AudioTable(CASTable):
 
     def create_audio_feature_table(self, frame_shift=10, frame_length=25, n_bins=40, n_ceps=40,
                                    feature_scaling_method='STANDARDIZATION', n_output_frames=500,
-                                   casout=None, label_level=0):
+                                   casout=None, label_level=0, random_shuffle=True):
         '''
         Extracts audio features from the audio table and create a new CASTable that contains the features.
 
@@ -532,6 +554,9 @@ class AudioTable(CASTable):
             (check https://www.sascrunch.com/scan-function.html for more details).
             In default, no class labels are generated.
             Default: 0
+        random_shuffle : bool, optional
+            Specifies whether shuffle the generated CAS table randomly.
+            Default: True
 
         Returns
         -------
@@ -548,7 +573,7 @@ class AudioTable(CASTable):
 
         return self.__extract_audio_features(conn, table, frame_shift, frame_length, n_bins, n_ceps,
                                              feature_scaling_method, n_output_frames, casout, label_level,
-                                             copyvars=['_path_'])
+                                             copyvars=['_path_'], random_shuffle=random_shuffle)
 
     @property
     def label_freq(self):
@@ -568,3 +593,99 @@ class AudioTable(CASTable):
         out.index.name = None
         out = out.astype('int64')
         return out
+
+    @property
+    def feature_vars(self):
+        '''
+        Create the feature variable list
+
+        Returns
+        -------
+        :class:`pd.Series`
+        '''
+
+        # build regex to search the columns
+        import re
+        p = re.compile('_f\d*_v\d*_')
+
+        out = self._retrieve('table.columninfo', table=self)['ColumnInfo']['Column']
+
+        # create the feature variable list
+        out_var = []
+        for index, value in out.items():
+            if p.match(value):
+                out_var.append(value)
+
+        return out_var
+
+    @classmethod
+    def from_audio_sashdat(cls, conn, path, casout=None):
+
+        '''
+
+        Create an AudioTable from a sashdat file
+
+        Parameters
+        ----------
+        conn : CAS
+            CAS connection object
+        path : string, optional
+            Path to the audio sashdat file. This path must user the server-side style and can be access by the server.
+        casout : dict, string, or CASTable, optional
+            The output CAS table specification. When not given, a CASTable with a random name will be generated.
+
+        Returns
+        -------
+        :class:`AudioTable`
+
+        '''
+
+        if casout is None:
+            casout = dict(name=random_name('AudioTable', 6))
+        elif isinstance(casout, CASTable):
+            casout = casout.to_outtable_params()
+
+        # get the os of the server
+        server_type = get_cas_host_type(conn).lower()
+
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            path_split = path.rsplit("/", 1)
+        else:
+            path_split = path.rsplit("\\", 1)
+
+        # try accessing the file
+        if len(path_split) == 2:
+            caslib = find_caslib(conn, path_split[0])
+            if caslib is not None:
+                rt2 = conn.retrieve('table.loadtable', _messagelevel='error', casout=casout,
+                                    caslib=caslib, path=path_split[1])
+                if rt2.severity > 1:
+                    for msg in rt2.messages:
+                        print(msg)
+                    raise DLPyError('cannot load the audio sashdat file {}, something is wrong!'.format(path))
+                cls.running_caslib = path_split[0]
+                out = AudioTable(casout['name'])
+                out.set_connection(connection=conn)
+                return out
+            else:
+                caslib = random_name('Caslib', 6)
+                rt2 = conn.retrieve('addcaslib', _messagelevel='error', name=caslib, path=path_split[0],
+                                    activeonadd=False, subdirectories=True, datasource={'srctype':'path'})
+                if rt2.severity < 2:
+                    # call loadTable directly to load binary audio data
+                    rt3 = conn.retrieve('table.loadtable', _messagelevel='error', casout=casout,
+                                        caslib=caslib, path=path_split[1])
+                    if rt3.severity > 1:
+                        for msg in rt3.messages:
+                            print(msg)
+                        raise DLPyError('cannot load the audio sashdat file {}, something is wrong!'.format(path))
+                    else:
+                        cls.running_caslib = path_split[0]
+                        out = AudioTable(casout['name'])
+                        out.set_connection(connection=conn)
+                        return out
+        else:
+            print("WARNING: Specified path could not be reached. Make sure that the path is accessible by"
+                  " the CAS server.")
+            return None
+
