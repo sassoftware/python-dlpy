@@ -20,7 +20,8 @@
 
 from swat.cas.table import CASTable
 
-from dlpy.speech_utils import convert_audio_files
+from dlpy import ImageTable
+from dlpy.speech_utils import convert_audio_files, convert_audio_files_to_specgrams
 from .data_clean import DataClean
 from .utils import random_name, find_caslib, get_cas_host_type, find_path_of_caslib
 from dlpy.utils import DLPyError
@@ -36,7 +37,8 @@ class AudioTable(CASTable):
 
     @classmethod
     def load_audio_files(cls, conn, path=None, casout=None, caslib=None,
-                         local_audio_path=None, server_audio_path=None):
+                         local_audio_path=None, server_audio_path=None,
+                         as_specgram=False, label_level=0):
         '''
         Load audio files from path
 
@@ -70,11 +72,23 @@ class AudioTable(CASTable):
             When caslib is specified, the server_audio_path option will be ignored.
             When caslib is None and the existing caslibs on the server contain the server_audio_path,
             the corresponding caslib will be used. Otherwise, a caslib with a random name will be created.
+        as_specgram: bool, optional
+            when True, the audio files under local_audio_path will be converted into PNG files
+            that contain spectrograms and will be loaded as images into the server.
+            Default: False
+        label_level : optional
+            Specifies which path level should be used to generate the class labels for each image
+            when as_specgram is True.
+            For instance, label_level = 1 means the first directory and label_level = -2 means the last directory.
+            This internally use the SAS scan function
+            (check https://www.sascrunch.com/scan-function.html for more details).
+            In default, no class labels are generated. If the label column already exists, this option will be ignored.
+            Default: 0
 
         Returns
         -------
-        :class:`AudioTable`
-            If audio files are found
+        :class:`AudioTable` or `ImageTable`
+            If audio files are found, return AudioTable. When as_specgram is True, return ImageTable
         None
             If no audio files are found
 
@@ -99,7 +113,18 @@ class AudioTable(CASTable):
         # convert audio files when local_audio_path is specified
         if local_audio_path:
             path = None
-            convert_audio_files(local_audio_path, recurse=True)
+            if as_specgram:
+                convert_audio_files_to_specgrams(local_audio_path, recurse=True)
+            else:
+                convert_audio_files(local_audio_path, recurse=True)
+        else:
+            # as_specgram is only supported when local_audio_path is specified
+            as_specgram = False
+
+        if as_specgram:
+            file_type = 'IMAGE'
+        else:
+            file_type = 'AUDIO'
 
         conn.loadactionset('audio', _messagelevel='error')
 
@@ -128,7 +153,7 @@ class AudioTable(CASTable):
                         # call loadTable directly to load binary audio data
                         rt2 = conn.retrieve('table.loadtable', _messagelevel='error', casout=casout,
                                             caslib=caslib, path='',
-                                            importOptions=dict(fileType='audio', contents=True, recurse=True))
+                                            importOptions=dict(fileType=file_type, contents=True, recurse=True))
                     else:
                         rt2 = conn.retrieve('audio.loadaudio', _messagelevel='error', casout=casout,
                                             caslib=caslib, path=path_split[1])
@@ -137,7 +162,11 @@ class AudioTable(CASTable):
                             print(msg)
                         raise DLPyError('cannot load audio files, something is wrong!')
                     cls.running_caslib = path_split[0]
-                    out = AudioTable(casout['name'])
+                    if as_specgram:
+                        out = ImageTable.from_table(conn.CASTable(casout['name']), columns=['_path_'],
+                                                    label_level=label_level, casout=casout)
+                    else:
+                        out = AudioTable(casout['name'])
                     out.set_connection(connection=conn)
                     return out
                 else:
@@ -149,7 +178,7 @@ class AudioTable(CASTable):
                             # call loadTable directly to load binary audio data
                             rt3 = conn.retrieve('table.loadtable', _messagelevel='error', casout=casout,
                                                 caslib=caslib, path='',
-                                                importOptions=dict(fileType='audio', contents=True, recurse=True))
+                                                importOptions=dict(fileType=file_type, contents=True, recurse=True))
                         else:
                             rt3 = conn.retrieve('audio.loadaudio', _messagelevel='error', casout=casout,
                                                 caslib=caslib, path=path_split[1])
@@ -159,7 +188,11 @@ class AudioTable(CASTable):
                             raise DLPyError('cannot load audio files, something is wrong!')
                         else:
                             cls.running_caslib = path_split[0]
-                            out = AudioTable(casout['name'])
+                            if as_specgram:
+                                out = ImageTable.from_table(conn.CASTable(casout['name']), columns=['_path_'],
+                                                            label_level=label_level, casout=casout)
+                            else:
+                                out = AudioTable(casout['name'])
                             out.set_connection(connection=conn)
                             return out
             else:
@@ -172,7 +205,7 @@ class AudioTable(CASTable):
                 # call loadTable directly to load binary audio data
                 rt4 = conn.retrieve('table.loadtable', _messagelevel='error', casout=casout,
                                     caslib=caslib, path='',
-                                    importOptions=dict(fileType='audio', contents=True, recurse=True))
+                                    importOptions=dict(fileType=file_type, contents=True, recurse=True))
             else:
                 rt4 = conn.retrieve('audio.loadaudio', _messagelevel='error', casout=casout,
                                     caslib=caslib, path=path)
@@ -181,7 +214,11 @@ class AudioTable(CASTable):
                     print(msg)
                 raise DLPyError('cannot load audio files, something is wrong!')
             cls.running_caslib = find_path_of_caslib(conn, caslib)
-            out = AudioTable(casout['name'])
+            if as_specgram:
+                out = ImageTable.from_table(conn.CASTable(casout['name']), columns=['_path_'],
+                                            label_level=label_level, casout=casout)
+            else:
+                out = AudioTable(casout['name'])
             out.set_connection(connection=conn)
             return out
 

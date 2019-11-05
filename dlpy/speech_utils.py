@@ -669,8 +669,12 @@ def convert_audio_files(local_audio_path, recurse=True):
             for file in f:
                 local_file = os.path.join(r, file)
                 local_file_wav = os.path.splitext(local_file)[0] + '.wav'
-                convert_one_audio_file(local_file, local_file_wav)
-                number_files = number_files + 1
+                try:
+                    convert_one_audio_file(local_file, local_file_wav)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+
                 if number_files % print_freq == 0:
                     print('Number of files processed: {}'.format(number_files))
     else:
@@ -678,8 +682,124 @@ def convert_audio_files(local_audio_path, recurse=True):
             local_file = os.path.join(local_audio_path, f)
             if os.path.isfile(local_file):
                 local_file_wav = os.path.join(local_audio_path, os.path.splitext(f)[0] + '.wav')
-                convert_one_audio_file(local_file, local_file_wav)
+                try:
+                    convert_one_audio_file(local_file, local_file_wav)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+
+    print('File conversions are finished.')
+
+
+def convert_one_audio_file_to_specgram(local_audio_file, converted_local_png_file):
+    '''
+    Convert a local audio file into a png format with spectrogram.
+
+    Parameters
+    ----------
+    local_audio_file : string
+        Local location to the audio file to be converted.
+
+    converted_local_png_file : string
+        Local location to store the converted audio file
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    try:
+        import soundfile as sf
+        import matplotlib.pylab as plt
+    except (ModuleNotFoundError, ImportError):
+        raise DLPyError('cannot import soundfile')
+
+    data, sampling_rate = sf.read(local_audio_file)
+
+    fig, ax = plt.subplots(1)
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax.axis('off')
+    ax.specgram(x=data, Fs=sampling_rate)
+    ax.axis('off')
+    fig.savefig(converted_local_png_file, dpi=300, frameon='false')
+    # this is the key to avoid mem leaking in notebook
+    plt.ioff()
+    plt.close(fig)
+
+
+def convert_audio_files_to_specgrams(local_audio_path, recurse=True):
+    '''
+    Convert audio files under a local path into the images (PNG) that contain spectrogram.
+
+    Parameters
+    ----------
+    local_audio_path : string
+        Local location to the audio files that will be converted. The new image files will be stored under this path.
+        Note if the files are already in the PNG format, they will be overwritten.
+
+    recurse : bool, optional
+        Specifies whether to recursively convert all the audio files.
+        Default : True
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    number_files = 0
+
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            number_files = number_files + len(f)
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
                 number_files = number_files + 1
+
+    print('File path: {}'.format(local_audio_path))
+    print('Number of Files: {}'.format(number_files))
+
+    print_freq = 1000
+
+    number_files = 0
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            for file in f:
+                local_file = os.path.join(r, file)
+                local_file_png = os.path.splitext(local_file)[0] + '.png'
+                try:
+                    convert_one_audio_file_to_specgram(local_file, local_file_png)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
+                local_file_png = os.path.join(local_audio_path, os.path.splitext(f)[0] + '.png')
+                try:
+                    convert_one_audio_file_to_specgram(local_file, local_file_png)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
                 if number_files % print_freq == 0:
                     print('Number of files processed: {}'.format(number_files))
 

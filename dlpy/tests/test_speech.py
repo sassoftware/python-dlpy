@@ -364,6 +364,28 @@ class TestSpeechUtils(unittest.TestCase):
                 if file.endswith(".wav"):
                     os.remove(os.path.join(r, file))
 
+    def test_convert_one_audio_file_to_specgram(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        audio_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',
+                                  'en_f_5dff2b7b319207972450f91d569b5a16.fragment1.flac')
+        output_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',
+                                   'en_f_5dff2b7b319207972450f91d569b5a16.fragment1.png')
+        convert_one_audio_file_to_specgram(audio_file, output_file)
+        os.remove(output_file)
+
+    def test_convert_audio_files_to_specgrams(self):
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        audio_dir = os.path.join(self.data_dir_local, 'lang_id', 'train')
+        convert_audio_files_to_specgrams(audio_dir)
+
+        # remove the generated wav file
+        for r, d, f in os.walk(audio_dir):
+            for file in f:
+                if file.endswith(".png"):
+                    os.remove(os.path.join(r, file))
+
 class TestSpeechToTextInit(unittest.TestCase):
     conn = None
     server_type = None

@@ -198,3 +198,53 @@ class TestAudioTable(unittest.TestCase):
         print(feature_table.label_freq)
         print(feature_table.feature_vars)
         self.assertEqual(feature_table.feature_vars[0], '_f0_v0_')
+
+    def test_audio_local_audio_path_specgram(self):
+
+        if self.local_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
+        server_audio_dir = self.server_dir + 'lang_id' + '/train'
+
+        image_table = AudioTable.load_audio_files(self.conn,
+                                                  local_audio_path=local_audio_dir,
+                                                  server_audio_path=server_audio_dir,
+                                                  as_specgram=True)
+        numrows = image_table.numrows()
+        print(numrows['numrows'])
+        self.assertEqual(numrows['numrows'], 15)
+
+        print(image_table.columns)
+
+        image_table.show(id='_path_', ncol=2, nimages=2)
+
+    def test_audio_local_audio_path_specgram_label_level(self):
+
+        if self.local_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
+        server_audio_dir = self.server_dir + 'lang_id' + '/train'
+
+        image_table = AudioTable.load_audio_files(self.conn,
+                                                  local_audio_path=local_audio_dir,
+                                                  server_audio_path=server_audio_dir,
+                                                  as_specgram=True, label_level=-2)
+        numrows = image_table.numrows()
+        print(numrows['numrows'])
+        self.assertEqual(numrows['numrows'], 15)
+
+        print(image_table.columns)
+
+        print(image_table.label_freq)
+
+        self.assertEqual(image_table.label_freq['Frequency'][0], 5)
+
+        image_table.show(id='_path_', ncol=2, nimages=2)
