@@ -937,10 +937,10 @@ class Model(Network):
             temp_columns = self.valid_res_tbl.columns.tolist()
 
             # the model might not use the image data
-            do_image=False
+            do_image = False
             for col in temp_columns:
                 if col.lower() == '_image_':
-                    do_image=True
+                    do_image = True
                     break
 
             # when do images, fetch some images back to client
