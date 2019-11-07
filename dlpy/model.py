@@ -275,15 +275,15 @@ class Model(Network):
                 list(self._retrieve_('table.tableinfo').TableInfo.Name):
             if train_from_scratch:
                 print('NOTE: Ignoring the existing weights and training from scratch.')
-                init_weights = self.model_weights
-                self.n_epochs == 0
+                init_weights = None
+                self.n_epochs = 0
             else:
                 print('NOTE: Training based on existing weights.')
                 init_weights = self.model_weights
         else:
             print('NOTE: Training from scratch.')
             init_weights = None
-            self.n_epochs == 0
+            self.n_epochs = 0
 
         # when model_weights is none, reset it
         if self.model_weights is None:
@@ -937,14 +937,14 @@ class Model(Network):
             temp_columns = self.valid_res_tbl.columns.tolist()
 
             # the model might not use the image data
-            doImage=False
+            do_image=False
             for col in temp_columns:
                 if col.lower() == '_image_':
-                    doImage=True
+                    do_image=True
                     break
 
             # when do images, fetch some images back to client
-            if doImage:
+            if do_image:
                 columns = [item for item in temp_columns if item[0:9] == 'P_' + self.target or item == 'I_' + self.target]
                 img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
                 img_table = img_table.Images
