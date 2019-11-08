@@ -416,6 +416,7 @@ class TestSpeechUtils(unittest.TestCase):
                 if file.endswith(".png"):
                     os.remove(os.path.join(r, file))
 
+
 class TestSpeechToTextInit(unittest.TestCase):
     conn = None
     server_type = None
