@@ -317,6 +317,14 @@ class TestSpeechUtils(unittest.TestCase):
     def test_functions_for_one_audio_file(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        try:
+            import soundfile
+        except ImportError:
+            unittest.TestCase.skipTest(self, 'The soundfile package is not found.')
+
         audio_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',
                                   'en_f_5dff2b7b319207972450f91d569b5a16.fragment1.flac')
         play_one_audio_file(audio_file)
@@ -325,6 +333,14 @@ class TestSpeechUtils(unittest.TestCase):
     def test_functions_for_one_audio_file_1(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        try:
+            import soundfile
+        except ImportError:
+            unittest.TestCase.skipTest(self, 'The soundfile package is not found.')
+
         audio_file = os.path.join(self.data_dir_local, 'lang_id', 'train')
         play_one_audio_file(audio_file)
         display_spectrogram_for_one_audio_file(audio_file)
@@ -332,6 +348,11 @@ class TestSpeechUtils(unittest.TestCase):
     def test_convert_one_audio_file(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        try:
+            import soundfile
+        except ImportError:
+            unittest.TestCase.skipTest(self, 'the soundfile package is not found')
+
         audio_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',
                                   'en_f_5dff2b7b319207972450f91d569b5a16.fragment1.flac')
         output_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',
@@ -365,8 +386,17 @@ class TestSpeechUtils(unittest.TestCase):
                     os.remove(os.path.join(r, file))
 
     def test_convert_one_audio_file_to_specgram(self):
+
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        try:
+            import soundfile
+        except ImportError:
+            unittest.TestCase.skipTest(self, 'The soundfile package is not found.')
+
         audio_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',
                                   'en_f_5dff2b7b319207972450f91d569b5a16.fragment1.flac')
         output_file = os.path.join(self.data_dir_local, 'lang_id', 'train', 'en',

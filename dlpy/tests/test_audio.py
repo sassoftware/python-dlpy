@@ -41,6 +41,8 @@ class TestAudioTable(unittest.TestCase):
     conn = None
     server_sep = '/'
     data_dir = None
+    local_dir = None
+    server_dir = None
 
     @classmethod
     def setUpClass(cls):
