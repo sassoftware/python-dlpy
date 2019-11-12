@@ -1445,6 +1445,198 @@ class TestModel(unittest.TestCase):
         shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
         shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
 
+    def test_tensorboard_response_cb(self):
+        try:
+            import tensorflow as tf
+            import numpy as np
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
+        
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        train, valid = dlpy.splitting.two_way_split(s.CASTable('eee'), test_rate=20, 
+                                       stratify=True, im_table=True,
+                                       stratify_by='_label_', image_col='_image_')
+
+        response = swat.cas.response.CASResponse(swat.cas.rest.response.REST_CASResponse({}),connection=cls.s)
+        userdata = None
+        tensor_board = TensorBoard(model1, './data/')
+
+        # Check initial values for userdata
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertTrue(isinstance(userdata, swat.cas.results.CASResults()))
+        self.assertIsNone(userdata.message)
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 0)
+
+        # Add a response message and check if passed to userdata
+        response.messages.append('str1')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'str1')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 0)
+
+        # Add another response message
+        response.messages.pop()
+        response.messages.append('str2')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'str2')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 0)
+
+        # Check on Epoch changes at_scalar
+        response.messages.pop()
+        response.messages.append('Epoch')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'Epoch')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 0)
+
+        # Check scalar values are logged and epoch increases
+        response.messages.pop()
+        response.messages.append('NOTE:          1            2       3        4          5              6           7')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Check for correct scalar values
+        tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['learning_rate'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 1)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 2.0, places=4)
+
+        tfevent_file = os.listdir(userdata.writer_dict['loss'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['loss'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 1)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 3.0, places=4)
+
+        tfevent_file = os.listdir(userdata.writer_dict['error'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['error'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 1)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 4.0, places=4)
+        
+        tfevent_file = os.listdir(userdata.writer_dict['valid_loss'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_loss'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 1)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 5.0, places=4)
+
+        tfevent_file = os.listdir(userdata.writer_dict['valid_error'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_error'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 1)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 6.0, places=4)
+
+        # Check on Batch
+        response.messages.pop()
+        response.messages.append('Batch')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'Batch')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Check on Epoch changes at_scalar
+        response.messages.pop()
+        response.messages.append('Epoch')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'Epoch')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Check scalar values are logged and epoch increases
+        response.messages.pop()
+        response.messages.append('NOTE:          1            2       3        4          5              6           7')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 2)
+
+        # Check for correct scalar values
+        tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['learning_rate'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 2)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 2.0, places=4)
+
+        tfevent_file = os.listdir(userdata.writer_dict['loss'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['loss'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 2)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 3.0, places=4)
+
+        tfevent_file = os.listdir(userdata.writer_dict['error'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['error'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 2)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 4.0, places=4)
+        
+        tfevent_file = os.listdir(userdata.writer_dict['valid_loss'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_loss'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 2)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 5.0, places=4)
+
+        tfevent_file = os.listdir(userdata.writer_dict['valid_error'].get_logdir())
+        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_error'].get_logdir() + tfevent_file[0]):
+            self.assertEquals(len(e.summary.value), 2)
+            for v in e.summary.value:
+                self.assertAlmostEqual(v.simple_value, 6.0, places=4)
+
+        # On optimization changes at_scalar
+        response.messages.pop()
+        response.messages.append('optimization')
+        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'optimization')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(userdata.epoch_count, 2)
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests

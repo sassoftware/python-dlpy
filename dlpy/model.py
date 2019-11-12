@@ -2806,7 +2806,7 @@ class TensorBoard():
         Callback function to handle the CASResponse message while model training is run. 
         This function is called after each iteration of Model.fit() in order to capture 
         the scalar training metrics that are being monitored. This function calls log_scalar() 
-        to write the needed tfevents files for tensorboard
+        to write the needed tfevents files for tensorboard.
 
         Parameters
         ----------
@@ -2820,27 +2820,24 @@ class TensorBoard():
 
         Returns
         -------
-        swat.cas.results.CASResults() or arbitrary user data structure
+        swat.cas.results.CASResults()
             Each time function is called it returns whatever is stored in userdata
             and is passed into subsequent function calls as the userdata parameter.
         '''
+        # Initialize userdata as a CASResults instance to hold results of action 
+        # Initialize userdata attribute, message, to store the response message from action,
+        # at_scalar to determine when to log, writer_dict to hold our summary writers for each
+        # scalar, and epoch_count to keep track of correct epoch value for model.
         if userdata is None:
-            # Initialize userdata as a CASResults instance to hold results of action 
-            # Initialize userdata attribute, severity, for warnings/errors as action runs
-            # Initialize userdata attribute, message, to store the response message
             userdata = swat.cas.results.CASResults()
-            userdata.severity = 0
             userdata.message = None
             userdata.at_scaler = False
             userdata.writer_dict = self.build_summary_writer()
-            userdata.epoch_count = self.model.n_epochs + 1
+            userdata.epoch_count = self.model.n_epochs
             
         # Store the CASResults in userdata
         for k,v in response:
             userdata[k] = v
-            
-        # Update userdata severity 
-        userdata.severity = response.disposition.severity
             
         # Get the initial response message
         if userdata.message is None:
@@ -2856,11 +2853,11 @@ class TensorBoard():
             userdata.message = userdata.message[0].split()
 
             # Change at_scaler flag when done training
-            if userdata.message[2] == 'optimization':
+            if 'optimization' in userdata.message:
                 userdata.at_scaler = False
 
             # Wait until next epoch
-            if userdata.message[1] == 'Batch':
+            if 'Batch' in userdata.message:
                 userdata.at_scaler = False
             
             # Log scalers at each epoch
@@ -2881,7 +2878,7 @@ class TensorBoard():
                 userdata.epoch_count += 1
                 
             # Change at_scaler flag if we are ready to log
-            if userdata.message[1] == 'Epoch':
+            if 'Epoch' in userdata.message:
                 userdata.at_scaler = True
 
             # Get next response
