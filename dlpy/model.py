@@ -2833,7 +2833,7 @@ class TensorBoard():
             userdata.message = None
             userdata.at_scaler = False
             userdata.writer_dict = self.build_summary_writer()
-            userdata.epoch_count = self.model.n_epochs
+            userdata.epoch_count = self.model.n_epochs + 1
             
         # Store the CASResults in userdata
         for k,v in response:

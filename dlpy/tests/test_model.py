@@ -1490,7 +1490,7 @@ class TestModel(unittest.TestCase):
         self.assertIsNone(userdata.message)
         self.assertFalse(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 0)
+        self.assertEquals(userdata.epoch_count, 1)
 
         # Add a response message and check if passed to userdata
         response.messages.append('str1')
@@ -1499,7 +1499,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'str1')
         self.assertFalse(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 0)
+        self.assertEquals(userdata.epoch_count, 1)
 
         # Add another response message
         response.messages.pop()
@@ -1509,7 +1509,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'str2')
         self.assertFalse(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 0)
+        self.assertEquals(userdata.epoch_count, 1)
 
         # Check on Epoch changes at_scalar
         response.messages.pop()
@@ -1519,7 +1519,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'Epoch')
         self.assertTrue(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 0)
+        self.assertEquals(userdata.epoch_count, 1)
 
         # Check scalar values are logged and epoch increases
         response.messages.pop()
@@ -1529,7 +1529,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
         self.assertTrue(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 1)
+        self.assertEquals(userdata.epoch_count, 2)
 
         # Check for correct scalar values
         tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
@@ -1570,7 +1570,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'Batch')
         self.assertFalse(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 1)
+        self.assertEquals(userdata.epoch_count, 2)
 
         # Check on Epoch changes at_scalar
         response.messages.pop()
@@ -1580,7 +1580,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'Epoch')
         self.assertTrue(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 1)
+        self.assertEquals(userdata.epoch_count, 2)
 
         # Check scalar values are logged and epoch increases
         response.messages.pop()
@@ -1590,7 +1590,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
         self.assertTrue(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 2)
+        self.assertEquals(userdata.epoch_count, 3)
 
         # Check for correct scalar values
         tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
@@ -1631,7 +1631,7 @@ class TestModel(unittest.TestCase):
         self.assertEquals(userdata.message[0], 'optimization')
         self.assertFalse(userdata.at_scaler)
         self.assertEquals(len(userdata.writer_dict), 3)
-        self.assertEquals(userdata.epoch_count, 2)
+        self.assertEquals(userdata.epoch_count, 3)
 
         # Clean up for next test
         shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
