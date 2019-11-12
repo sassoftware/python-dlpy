@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import collections
 import sys
+import swat
 try:
     import tensorflow as tf
 except ImportError:

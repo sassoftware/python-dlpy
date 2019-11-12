@@ -28,6 +28,7 @@ import shutil
 import swat
 import swat.utils.testing as tm
 from swat.cas.table import CASTable
+from swat.cas.results import CASResults
 from dlpy.model import Model, Optimizer, AdamSolver, Sequence, TensorBoard
 from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
@@ -1476,161 +1477,177 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        train, valid = dlpy.splitting.two_way_split(s.CASTable('eee'), test_rate=20, 
-                                       stratify=True, im_table=True,
-                                       stratify_by='_label_', image_col='_image_')
-
-        response = swat.cas.response.CASResponse(swat.cas.rest.response.REST_CASResponse({}),connection=cls.s)
+        response = swat.cas.response.CASResponse(swat.cas.rest.response.REST_CASResponse({}),connection=self.s)
         userdata = None
-        tensor_board = TensorBoard(model1, './data/')
+        tensor_board = TensorBoard(model1, log_dir, use_valid=True)
 
         # Check initial values for userdata
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
-        self.assertTrue(isinstance(userdata, swat.cas.results.CASResults()))
-        self.assertIsNone(userdata.message)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertTrue(isinstance(userdata, CASResults))
+        self.assertEquals(len(userdata.message), 0)
         self.assertFalse(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 1)
 
         # Add a response message and check if passed to userdata
         response.messages.append('str1')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'str1')
         self.assertFalse(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 1)
 
         # Add another response message
         response.messages.pop()
         response.messages.append('str2')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'str2')
         self.assertFalse(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 1)
 
         # Check on Epoch changes at_scalar
         response.messages.pop()
         response.messages.append('Epoch')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'Epoch')
         self.assertTrue(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 1)
 
         # Check scalar values are logged and epoch increases
         response.messages.pop()
         response.messages.append('NOTE:          1            2       3        4          5              6           7')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
         self.assertTrue(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 2)
 
         # Check for correct scalar values
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['learning_rate'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 1)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 2.0, places=4)
+                count += 1
+        self.assertEquals(count, 1)
 
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['loss'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['loss'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 1)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 3.0, places=4)
-
+                count += 1
+        self.assertEquals(count, 1)
+        
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['error'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['error'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 1)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 4.0, places=4)
-        
+                count += 1
+        self.assertEquals(count, 1)
+
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['valid_loss'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_loss'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 1)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 5.0, places=4)
-
+                count += 1
+        self.assertEquals(count, 1)
+        
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['valid_error'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_error'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 1)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 6.0, places=4)
+                count += 1
+        self.assertEquals(count, 1)
 
         # Check on Batch
         response.messages.pop()
         response.messages.append('Batch')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'Batch')
         self.assertFalse(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 2)
 
         # Check on Epoch changes at_scalar
         response.messages.pop()
         response.messages.append('Epoch')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'Epoch')
         self.assertTrue(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 2)
 
         # Check scalar values are logged and epoch increases
         response.messages.pop()
         response.messages.append('NOTE:          1            2       3        4          5              6           7')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
         self.assertTrue(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 3)
 
         # Check for correct scalar values
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['learning_rate'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 2)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 2.0, places=4)
+                count += 1
+        self.assertEquals(count, 2)
 
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['loss'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['loss'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 2)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 3.0, places=4)
-
+                count += 1
+        self.assertEquals(count, 2)
+        
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['error'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['error'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 2)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 4.0, places=4)
-        
+                count += 1
+        self.assertEquals(count, 2)
+
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['valid_loss'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_loss'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 2)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 5.0, places=4)
-
+                count += 1
+        self.assertEquals(count, 2)
+        
+        count = 0
         tfevent_file = os.listdir(userdata.writer_dict['valid_error'].get_logdir())
         for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_error'].get_logdir() + tfevent_file[0]):
-            self.assertEquals(len(e.summary.value), 2)
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 6.0, places=4)
+                count += 1
+        self.assertEquals(count, 2)
 
         # On optimization changes at_scalar
         response.messages.pop()
         response.messages.append('optimization')
-        userdata = tensor_board.tensorboard_response_cb(response, cls.s, userdata)
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
         self.assertEquals(len(userdata.message), 1)
         self.assertEquals(userdata.message[0], 'optimization')
         self.assertFalse(userdata.at_scaler)
-        self.assertEquals(len(userdata.writer_dict), 3)
+        self.assertEquals(len(userdata.writer_dict), 5)
         self.assertEquals(userdata.epoch_count, 3)
 
         # Clean up for next test
