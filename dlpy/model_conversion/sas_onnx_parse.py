@@ -198,12 +198,9 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
                                     act='IDENTITY',
                                     n=n,
                                     include_bias=False,
+                                    full_connect = False,
                                     src_layers=[dlpy_layers[-1]])
             dlpy_layers.append(out_layer)
-            identity = np.identity(n).astype(np.float32)
-            f = h5py.File(hdf5_out)
-            f['output/output/kernel:0'] = identity
-            f.close()
     else:
         # connect output_layer to previous layer
         output_layer.src_layers = [dlpy_layers[-1]]

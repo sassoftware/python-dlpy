@@ -1790,8 +1790,10 @@ class OutputLayer(Layer):
     def kernel_size(self):
         if 'n' not in self.config:
             return None
-        if not self.config['full_connect']:
+        if self.config['full_connect']:
             return (int(self.num_features), int(self.config['n']))
+        else:
+            return None
 
     @property
     def num_weights(self):

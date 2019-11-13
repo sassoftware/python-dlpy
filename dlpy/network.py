@@ -2341,6 +2341,11 @@ def extract_output_layer(layer_table):
     else:
         output_layer_config['include_bias'] = True
 
+    if layer_table['_DLNumVal_'][layer_table['_DLKey1_'] == 'outputopts.noFullConnect'].any():
+        output_layer_config['full_connect'] = False
+    else:
+        output_layer_config['full_connect'] = True
+
     if 'trunc_fact' in output_layer_config:
         output_layer_config['truncation_factor'] = output_layer_config['trunc_fact']
         del output_layer_config['trunc_fact']
