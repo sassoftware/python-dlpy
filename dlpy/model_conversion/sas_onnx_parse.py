@@ -270,9 +270,17 @@ def onnx_input_layer(value_info):
     
     '''
     input_layer_name = value_info.name
-    _, C, H, W = list(d.dim_value for d in
-                      value_info.type.tensor_type.shape.dim)
-    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    dims = tuple(d.dim_value for d in
+                 value_info.type.tensor_type.shape.dim)
+    if len(dims) == 3:
+        # Assume single channel image
+        N, H, W = dims
+        return InputLayer(n_channels=1, width=W, height=H, name=input_layer_name)
+    elif len(dims) == 4:
+        _, C, H, W = dims
+        return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    else:
+        raise OnnxParseError('Cannot parse input dimensions, expecting NCHW or NHW.')
 
 
 def onnx_extract_sas_layer(graph, node, layers):
