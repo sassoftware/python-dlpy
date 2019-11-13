@@ -30,6 +30,7 @@ import collections
 import pandas as pd
 import swat as sw
 from copy import deepcopy
+from swat.cas.table import CASTable
 from . import __dev__
 
 
@@ -753,16 +754,27 @@ class Network(Layer):
             Specifies the weights CAS table for the model
 
         '''
-        weight_tbl = input_table_check(weight_tbl)
         weight_name = self.model_name + '_weights'
 
-        if weight_tbl['name'].lower() != weight_name.lower():
-            self._retrieve_('table.partition',
-                            casout=dict(replace=True, name=self.model_name + '_weights'),
-                            table=weight_tbl)
+        if type(weight_tbl) == WeightsTable:
+            model_mapper = self.create_layer_id_name_mapping()
+            if weight_tbl.weights_mapping != model_mapper:
+                weight_tbl.remap_layer_ids(model_mapper, weight_name)
+            weight_tbl = dict(name=weight_name)
+            if weight_tbl['name'].lower() != weight_name.lower():
+                self.conn.altertable(name='weight_name.lower()', rename=weight_name)
+        else:
+            weight_tbl = input_table_check(weight_tbl)
+            if weight_tbl['name'].lower() != weight_name.lower():
+                self._retrieve_('table.partition',
+                                casout=dict(replace=True, name=weight_name),
+                                table=weight_tbl)
 
-        self.model_weights = self.conn.CASTable(name=self.model_name + '_weights')
-        print('NOTE: Model weights attached successfully!')
+        self.model_weights = self.conn.CASTable(name=weight_name)
+        if self.conn.tableexists(weight_name).exists:
+            print('NOTE: Model weights attached successfully!')
+        else:
+            raise DLPyError('Model weights attached unsuccessfully!')
 
     def load(self, path, display_note=True):
         '''
@@ -912,6 +924,8 @@ class Network(Layer):
         Currently support HDF5 and sashdat files.
 
         '''
+        if not file_exist_on_server(self.conn, path):
+            raise DLPyError('The file, {}, doesn\'t exist on the server-side.'.format(path))
 
         server_sep = get_server_path_sep(self.conn)
 
@@ -1582,6 +1596,120 @@ class Network(Layer):
             count += num_weights + num_bias
         return int(count)
 
+    def create_layer_id_name_mapping(self):
+        """
+        Create a dictionary which maps layer id to layer name.
+
+        Returns
+        -------
+        :class:`dict`
+
+        """
+        m_frame = self.conn.fetch(dict(name=self.model_name, where='_DLKey1_ eq "layertype"'), to=100000).Fetch
+        layer_names = m_frame['_DLKey0_'].values
+        layer_ids = m_frame['_DLLayerID_'].values
+        return dict(zip(layer_ids, layer_names))
+
+
+class WeightsTable:
+
+    '''
+
+    Specialized WeightsTable
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_tbl_name: string
+        Specifies the name of CASTable containing weights of the deep learning model.
+    weights_tbl_name: string
+        Specifies the name of CAS table to store the deep learning model.
+
+    Returns
+    -------
+    :class:`WeightsTable`
+
+    '''
+
+    def __init__(self, conn, weights_tbl_name, model_tbl_name):
+        self.conn = conn
+        self._weights_tbl_name = weights_tbl_name
+        self._model_tbl_name = model_tbl_name
+
+    @ property
+    def weights_tbl_name(self):
+        return self._weights_tbl_name
+
+    @property
+    def model_tbl_name(self):
+        return self._model_tbl_name
+
+    @property
+    def weights_mapping(self):
+        m_frame = self.conn.fetch(dict(name = self.model_tbl_name,
+                                       where = '_DLKey1_ eq "layertype"'), to = 100000).Fetch
+        layer_names = m_frame['_DLKey0_'].values
+        layer_ids = m_frame['_DLLayerID_'].values
+        return dict(zip(layer_names, layer_ids))
+
+    def remap_layer_ids(self, mapper, casout):
+        '''
+        Remap and generate a new weights table given specified mapper.
+
+        Parameters
+        ----------
+        mapper : dict
+            Specifies the mapper to remap the original weights table. The dictionrary maps layer id to layer name.
+            Example:
+                {3.0: 'convo.1_3',
+                 4.0: 'pool1_3',
+                 0.0: 'input_layer_00',
+                 6.0: 'pool2_3',
+                 2.0: 'input_layer_02',
+                 1.0: 'input_layer_01',
+                 5.0: 'convo.2_3'}
+        casout : string
+            Specifies the name of the new weights table.
+
+        '''
+        if self.conn.tableexists(casout).exists:
+            print('WARNING: The table, {}, has already existed. It will be deleted and recreated.'.format(casout))
+            self.conn.droptable(casout)
+
+        tmp_col = random_name('TMPCOL')
+        tmp_tbl = random_name('TMPTBL')  # each layer
+        tmp_res_tbl = random_name('TMPRESTBL')  # final results
+        orig_weights_tbl = self.weights_tbl_name
+        if orig_weights_tbl == casout:
+            print('WARNING: casout is the same as original weights table name, the original one will be overwritten.')
+        old_mapper = self.weights_mapping
+        for new_layer_id, layer_name in mapper.items():
+            orig_weights_cas_tbl = self.conn.CASTable(orig_weights_tbl)
+            try:
+                old_layer_id = old_mapper[layer_name]
+            except KeyError as k:
+                print("WARNING: The layer, {}, is not found in {}.".format(k.args[0], self.model_tbl_name))
+                continue
+            orig_weights_cas_tbl.append_where('_LayerID_ eq {}'.format(old_layer_id))
+            orig_weights_cas_tbl.append_computedvarsprogram('{} = {}'.format(tmp_col, new_layer_id))
+            if self.conn.tableexists(tmp_res_tbl).exists:
+                self.conn.partition(table=input_table_check(orig_weights_cas_tbl),
+                                    casout=dict(name=tmp_tbl, replace=True))
+                tmp_res_cas_tbl = self.conn.CASTable(tmp_res_tbl)
+                tmp_cas_tbl = self.conn.CASTable(tmp_tbl)
+                tmp_res_cas_tbl.append(tmp_cas_tbl, casout=dict(name=tmp_res_tbl, replace=True))
+            else:
+                self.conn.partition(table=input_table_check(orig_weights_cas_tbl),
+                                    casout=dict(name=tmp_res_tbl, replace=True))
+
+        self.conn.altertable(name=tmp_res_tbl, rename=casout, drop='_LayerID_')
+        self.conn.altertable(name=casout, columns=[dict(name=tmp_col, rename='_LayerID_')],
+                             columnOrder=['_LayerID_', '_WeightID_', '_Weight_'])
+        with sw.option_context(print_messages = False):
+            self.conn.droptable(tmp_tbl)
+            self.conn.droptable(tmp_res_tbl)
+
 
 def layer_to_node(layer):
     '''
@@ -2103,6 +2231,7 @@ def extract_fc_layer(layer_table):
     layer = Dense(**fc_layer_config)
     return layer
 
+
 def extract_recurrent_layer(layer_table):
     '''
     Extract layer configuration from a recurrent layer table
@@ -2180,6 +2309,7 @@ def extract_recurrent_layer(layer_table):
 
     layer = Recurrent(**recurrent_layer_config)
     return layer
+
 
 def extract_output_layer(layer_table):
     '''
