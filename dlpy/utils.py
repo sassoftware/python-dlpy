@@ -377,7 +377,57 @@ def find_caslib(conn, path):
         return caslibname
     else:
         return None
+        
+def extract_caslib_and_relative_path(conn, path):
+    '''
+    Extracts caslib associated with the specified path in the current session.
 
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object
+
+    path : str
+        Specifies the name of the path.
+
+    Returns
+    -------
+    string
+        Specifies the name of the caslib that contains the path.
+    string
+        Specifies remaining path relative to the caslib.
+
+    '''
+
+    sep = get_server_path_sep(conn)
+
+    if path.endswith(sep):
+        path = path[:-1]
+
+    path_split = path.split(sep)
+    caslib = None
+    new_path = sep
+    if path.startswith(sep):
+        start = 1
+    else:
+        start = 0
+
+    end = len(path_split)
+    while caslib is None and start < end:
+
+        new_path += path_split[start]+sep
+        caslib = find_caslib(conn, new_path)
+        start += 1
+        
+    if caslib is None:
+        return None, None
+    else:
+        remaining_path = ''
+        for i in range(start, end):
+            remaining_path += path_split[i]
+            remaining_path += sep
+                
+        return caslib, remaining_path
 
 def get_imagenet_labels_table(conn, label_length=None):
     temp_name = random_name('new_label_table', 6)
@@ -473,30 +523,32 @@ def caslibify_context(conn, path, task='save'):
     '''
     if task == 'save':
 
-        sep = get_server_path_sep(conn)
+        # sep = get_server_path_sep(conn)
 
-        if path.endswith(sep):
-            path = path[:-1]
+        # if path.endswith(sep):
+            # path = path[:-1]
 
-        path_split = path.split(sep)
-        caslib = None
-        new_path = sep
-        if path.startswith(sep):
-            start = 1
-        else:
-            start = 0
+        # path_split = path.split(sep)
+        # caslib = None
+        # new_path = sep
+        # if path.startswith(sep):
+            # start = 1
+        # else:
+            # start = 0
 
-        end = len(path_split)
-        while caslib is None and start < end:
+        # end = len(path_split)
+        # while caslib is None and start < end:
 
-            new_path += path_split[start]+sep
-            caslib = find_caslib(conn, new_path)
-            start += 1
+            # new_path += path_split[start]+sep
+            # caslib = find_caslib(conn, new_path)
+            # start += 1
 
-        remaining_path = ''
-        for i in range(start, end):
-            remaining_path += path_split[i]
-            remaining_path += sep
+        # remaining_path = ''
+        # for i in range(start, end):
+            # remaining_path += path_split[i]
+            # remaining_path += sep
+            
+        caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
         if caslib is not None:
             access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
@@ -530,14 +582,16 @@ def caslibify_context(conn, path, task='save'):
             path_split = path.rsplit("/", 1)
         else:
             path_split = path.rsplit("\\", 1)
-
+            
         if len(path_split) == 2:
-            caslib = find_caslib(conn, path_split[0])
+            #caslib = find_caslib(conn, path_split[0])
+            caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
                                               caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
-                    yield caslib, path_split[1]
+                    #yield caslib, path_split[1]
+                    yield caslib, remaining_path+path_split[1]
                 else:
                     raise DLPyError('{} is the subpath of the caslib, {}. '
                                     'You don\'t have permission to access the subdirectory of the caslib. '
@@ -591,30 +645,32 @@ def caslibify(conn, path, task='save'):
     '''
     if task == 'save':
 
-        sep = get_server_path_sep(conn)
+        # sep = get_server_path_sep(conn)
 
-        if path.endswith(sep):
-            path = path[:-1]
+        # if path.endswith(sep):
+            # path = path[:-1]
 
-        path_split = path.split(sep)
-        caslib = None
-        new_path = sep
-        if path.startswith(sep):
-            start = 1
-        else:
-            start = 0
+        # path_split = path.split(sep)
+        # caslib = None
+        # new_path = sep
+        # if path.startswith(sep):
+            # start = 1
+        # else:
+            # start = 0
 
-        end = len(path_split)
-        while caslib is None and start < end:
+        # end = len(path_split)
+        # while caslib is None and start < end:
 
-            new_path += path_split[start]+sep
-            caslib = find_caslib(conn, new_path)
-            start += 1
+            # new_path += path_split[start]+sep
+            # caslib = find_caslib(conn, new_path)
+            # start += 1
 
-        remaining_path = ''
-        for i in range(start, end):
-            remaining_path += path_split[i]
-            remaining_path += sep
+        # remaining_path = ''
+        # for i in range(start, end):
+            # remaining_path += path_split[i]
+            # remaining_path += sep
+            
+        caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
         if caslib is not None:
             access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
@@ -645,12 +701,14 @@ def caslibify(conn, path, task='save'):
             path_split = path.rsplit("\\", 1)
 
         if len(path_split) == 2:
-            caslib = find_caslib(conn, path_split[0])
+            #caslib = find_caslib(conn, path_split[0])
+            caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
-                    return caslib, path_split[1], False
+                    #return caslib, path_split[1], False
+                    return caslib, remaining_path+path_split[1], False
                 else:
                     raise DLPyError('{} is the subpath of the caslib, {}. '
                                     'You don\'t have permission to access the subdirectory of the caslib.'
