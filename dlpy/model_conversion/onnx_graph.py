@@ -401,7 +401,7 @@ class OnnxGraph(object):
             if not node.name:
                 node.name = '{}_{}'.format(node.op_type, idx)
             elif '/' in node.name:
-                node.name.replace('/', '_')
+                node.name = node.name.replace('/', '_')
         graph_.connect_nodes()
         # add initialized tensors to nodes
         for node in graph_.node:
