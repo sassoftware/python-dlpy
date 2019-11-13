@@ -1219,10 +1219,8 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
                 raise OnnxParseError('Incorrect batchnorm weights') 
             for idx, w in enumerate(weights):
                 if idx == 3:
-                    # sas bn require std for moving variance
-                    w = np.sqrt(w)
                     # clip variance to avoid error on cas
-                    w = np.clip(w, a_min=1e-5, a_max=1e10)
+                    w = np.clip(w, a_min = 1e-12, a_max = 1e10)
                     g_out.create_dataset(template_names[idx].encode('utf8'), data=w)
                     new_weight_names.append(template_names[idx].encode('utf8'))
                 else:
