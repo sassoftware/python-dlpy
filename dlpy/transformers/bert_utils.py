@@ -405,7 +405,7 @@ def write_block_information(pymodel, layer_info, keywords, f_out):
                 g_out.attrs['weight_names'] = new_weight_names            
 
 def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, target=None, 
-                      obs_weight=None, neutral_label=None, train_fraction=None, 
+                      obs_weight=None, extra_var=None, neutral_label=None, train_fraction=None, 
                       classification_problem=True, seed=777777777, verbose=False):
     '''
     Prepare data for a BERT model
@@ -430,6 +430,13 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
     obs_weight: list of float/integers
         Specifies the observation weights.
         Default: None
+    extra_var: list of dictionaries
+        Specifies the extra variable(s) to include in the Viya table(s).
+        Each dictionary in the list must have the following keys
+            name: string, specifies the name of the extra variable
+            values: list, specifies the variable values
+            type: string, must be either VARCHAR for characer values or NUMERIC for numeric values
+        Default: None
     neutral_label: int, optional
         Specifies the "don't care" or neutral target label for multi-target classification tasks.
         This is not optional if target is a list of lists.
@@ -451,7 +458,7 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
     Returns
     -------
      -> number of target variables (if target specified) or None.
-     -> if train fraction specified : names of the CAS tables that hold the training and test data sets 
+     -> if train fraction specified : names of the Viya tables that hold the training and test/validation data sets 
         otherwise : name of the data set
         
     '''    
@@ -495,7 +502,36 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             
         # weight variable
         ds_vars['weight_var'] = BertCommon['variable_names']['weight_var']
+
+    if extra_var is not None:
+        extra_var_names = [None]*len(extra_var)
+        extra_var_types = [None]*len(extra_var)
         
+        if not isinstance(extra_var, list):
+            raise DLPyError('Extra variables must be a list')
+            
+        for ii,ev_dict in enumerate(extra_var):
+            if not isinstance(ev_dict, dict):
+                raise DLPyError('Argument extra_var must be a list of dictionaries')
+                
+            if 'name' in ev_dict.keys():
+                extra_var_names[ii] = ev_dict['name']
+            else:
+                raise DLPyError('extra_var[' + str(ii) + '] missing "name" key.')
+                
+            if ('type' in ev_dict.keys()) and (ev_dict['type'].upper() in ['VARCHAR','NUMERIC']):
+                extra_var_types[ii] = ev_dict['type'].upper()
+            else:
+                raise DLPyError('extra_var[' + str(ii) + '] missing "type" key, or an invalid type was specified.')
+            
+            if ('values' not in ev_dict.keys()) or (not (isinstance(ev_dict['values'], list) and (len(input_a) == len(ev_dict['values'])))):
+                raise DLPyError('extra_var[' + str(ii) + '] missing "values" key, the values are not a list object,'
+                                'or there is a mismatch in lengths of input A and values lists.')
+                                
+    else:
+        extra_var_names = None
+        extra_var_types = None
+                    
     if (train_fraction is not None) and ((train_fraction < 0.0) or (train_fraction > 1.0)):
         raise DLPyError('train_fraction must be between 0 and 1')
                     
@@ -508,6 +544,8 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
         tgtlen_array = [None] * len(input_a)
     if obs_weight is not None:
         weight_array = [None] * len(input_a)
+    if extra_var is not None:
+        extra_var_array = [None] * len(input_a)
     
     num_truncated = 0
     obs_idx = 0
@@ -546,14 +584,22 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
         else:
             cur_tgt = None
 
-        # 
+        # observation weight
         if obs_weight is not None:
             cur_wgt = obs_weight[ii]
             if not isinstance(cur_wgt, Number):
                 raise DLPyError('Observation weights must be a numeric type.')
         else:
             cur_wgt = None
-
+            
+        # extra variable(s)
+        if extra_var is not None:
+            cur_extra_var = [None]*len(extra_var)
+            for jj,ev_dict in enumerate(extra_var):
+                cur_extra_var[jj] = ev_dict['values'][ii]
+        else:
+            cur_extra_var = None
+                
         # tokenize input A
         tmp_tokens_a = tokenizer.tokenize(txt_a)
         
@@ -659,9 +705,9 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                 if classification_problem:
                     if isinstance(cur_tgt, list):
                         # zero pad target list
-                        target_array[obs_index] = [0]*max_seq_len
+                        target_array[obs_idx] = [0]*max_seq_len
                         for jj, tgt in enumerate(cur_tgt):
-                            target_array[obs_index][jj] = str(int(tgt))
+                            target_array[obs_idx][jj] = str(int(tgt))
                             
                         tgtlen_array[obs_idx] = len(cur_tgt)
                     else:
@@ -677,6 +723,10 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             # weight
             if cur_wgt is not None:
                 weight_array[obs_idx] = cur_wgt
+                
+            # extra variable(s)
+            if cur_extra_var is not None:
+                extra_var_array[obs_idx] = cur_extra_var
                 
             # increment the valid observation index
             obs_idx += 1
@@ -698,6 +748,8 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             tgtlen_array = tgtlen_array[0:obs_idx]
         if obs_weight is not None:
             weight_array = weight_array[0:obs_idx]
+        if extra_var is not None:
+            extra_var_array = extra_var_array[0:obs_idx]
             
         print('NOTE: observations with empty/invalid input or targets were discarded.  There are\n' 
               '' + str(obs_idx) + ' out of ' + str(len(input_a)) + ' observations remaining.\n')
@@ -727,6 +779,10 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
     if obs_weight is not None:
         var_names += [ds_vars['weight_var']]
         var_type += ['NUMERIC']
+        
+    if extra_var is not None:
+        var_names += extra_var_names
+        var_type += extra_var_types
 
     # check whether splitting to training/testing data sets or just a single data set
     if (train_fraction is not None) and (train_fraction > 0.0):
@@ -758,6 +814,10 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             train_weight_array = [None] * num_train
             #
             test_weight_array = [None] * num_test
+        if extra_var is not None:
+            train_extra_var_array = [None] * num_train
+            #
+            test_extra_var_array = [None] * num_test
             
         train_idx = 0
         test_idx = 0
@@ -767,13 +827,17 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                 train_position_strings[train_idx] = position_strings[ii]
                 train_segment_strings[train_idx] = segment_strings[ii]
                 
-                # NOTE: train target array is a list of lists
+                # NOTE: each element of train target array may be a value or a list
                 if target is not None:
                     train_target_array[train_idx] = target_array[ii]
                     train_tgtlen_array[train_idx] = tgtlen_array[ii]
                     
                 if obs_weight is not None:
                     train_weight_array[train_idx] = weight_array[ii]
+
+                # NOTE: each element of train extra var array is a list
+                if extra_var is not None:
+                    train_extra_var_array[train_idx] = extra_var_array[ii]
                 
                 train_idx += 1
             else:                               # test data set
@@ -781,32 +845,45 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                 test_position_strings[test_idx] = position_strings[ii]
                 test_segment_strings[test_idx] = segment_strings[ii]
                 
-                # NOTE: test target array is a list of lists
+                # NOTE: each element of test target array may be a value or a list
                 if target is not None:
                     test_target_array[test_idx] = target_array[ii]                    
                     test_tgtlen_array[test_idx] = tgtlen_array[ii]
                     
                 if obs_weight is not None:
                     test_weight_array[test_idx] = weight_array[ii]
+
+                # NOTE: each element of test extra var array is a list
+                if extra_var is not None:
+                    test_extra_var_array[test_idx] = extra_var_array[ii]
                 
                 test_idx += 1
                 
         # create CAS table for training data
         train_data_set = 'bert_train_data'
         dlist = [train_token_strings, train_position_strings, train_segment_strings]
+        
         if target is not None:
-            dlist += [train_target_array]
+            if isinstance(train_target_array[0],list):
+                for ii in range(len(train_target_array[0])):
+                    tmp_array = [train_target_array[jj][ii] for jj in range(train_idx)]
+                    dlist += [tmp_array]
+            else:   
+                dlist += [train_target_array]
+                
             dlist += [train_tgtlen_array]
+            
         if obs_weight is not None:
             dlist += [train_weight_array]
+
+        if extra_var is not None:
+            for ii in range(len(train_extra_var_array[0])):
+                tmp_array = [train_extra_var_array[jj][ii] for jj in range(train_idx)]
+                dlist += [tmp_array]
         
         if verbose:
             print("NOTE: uploading training data to table " + train_data_set + ".")
             print("NOTE: there are " + str(num_train) + " observations in the training data set.\n")
-            #tmp = [len(train_token_strings[ii].split(BertCommon['text_delimiter'])) for ii in range(num_train)]
-            #print("NOTE: minimum number of tokens in an observation = " + str(min(tmp)))
-            #print("NOTE: maximum number of tokens in an observation = " + str(max(tmp)))
-            #print("NOTE: average number of tokens in an observation = " + str(sum(tmp)/num_train) + '\n')
             
         handler1 = BertDMH(dlist,var_names,var_type)
         conn.retrieve('table.addtable', _messagelevel='error',
@@ -817,19 +894,28 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
         # create CAS table for test data
         test_data_set = 'bert_test_validation_data'
         dlist = [test_token_strings, test_position_strings, test_segment_strings]
+        
         if target is not None:
-            dlist += [test_target_array]
+            if isinstance(test_target_array[0],list):
+                for ii in range(len(test_target_array[0])):
+                    tmp_array = [test_target_array[jj][ii] for jj in range(test_idx)]
+                    dlist += [tmp_array]
+            else:
+                dlist += [test_target_array]
+                
             dlist += [test_tgtlen_array]
+            
         if obs_weight is not None:
             dlist += [test_weight_array]
+
+        if extra_var is not None:
+            for ii in range(len(test_extra_var_array[0])):
+                tmp_array = [test_extra_var_array[jj][ii] for jj in range(test_idx)]
+                dlist += [tmp_array]
 
         if verbose:
             print("NOTE: uploading test/validation data to table " + test_data_set + ".")
             print("NOTE: there are " + str(num_test) + " observations in the test/validation data set.\n")
-            #tmp = [len(test_token_strings[ii].split(BertCommon['text_delimiter'])) for ii in range(num_test)]
-            #print("NOTE: minimum number of tokens in an observation = " + str(min(tmp)))
-            #print("NOTE: maximum number of tokens in an observation = " + str(max(tmp)))
-            #print("NOTE: average number of tokens in an observation = " + str(sum(tmp)/num_test) + '\n')
         
         handler2 = BertDMH(dlist,var_names,var_type)
         conn.retrieve('table.addtable', _messagelevel='error',
@@ -845,19 +931,28 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
         # single data set
         unified_data_set = 'bert_data'
         dlist = [token_strings, position_strings, segment_strings]
+        
         if target is not None:
-            dlist += [target_array]
+            if isinstance(target_array[0],list):
+                for ii in range(len(target_array[0])):
+                    tmp_array = [target_array[jj][ii] for jj in range(obs_idx)]
+                    dlist += [tmp_array]
+            else:
+                dlist += [target_array]
+                
             dlist += [tgtlen_array]
+        
         if obs_weight is not None:
             dlist += [weight_array]
+
+        if extra_var is not None:
+            for ii in range(len(extra_var_array[0])):
+                tmp_array = [extra_var_array[jj][ii] for jj in range(obs_idx)]
+                dlist += [tmp_array]
 
         if verbose:
             print("NOTE: uploading data to table " + unified_data_set + ".")
             print("NOTE: there are " + str(obs_idx) + " observations in the data set.\n")
-            #tmp = [len(token_strings[ii].split(BertCommon['text_delimiter'])) for ii in range(obs_idx)]
-            #print("NOTE: minimum number of tokens in an observation = " + str(min(tmp)))
-            #print("NOTE: maximum number of tokens in an observation = " + str(max(tmp)))
-            #print("NOTE: average number of tokens in an observation = " + str(sum(tmp)/num_test) + '\n')
         
         handler = BertDMH(dlist,var_names,var_type)
         conn.retrieve('table.addtable', _messagelevel='error',
@@ -897,13 +992,18 @@ def display_obs(conn, table_name, num_obs=5, random_draw=True, columns=None):
     r = conn.retrieve('table.recordcount', _messagelevel='error',
                       table=table_name)
     num_rows = r['RecordCount']['N'].values[0]
-    rand_int_array = np.random.randint(0,num_rows,num_obs)
-
-    for ii in rand_int_array:
+    if random_draw:
+        obs_index = np.random.randint(1,num_rows+1,min([num_rows,num_obs]))
+    else:
+        obs_index = [ii+1 for ii in range(min([num_rows,num_obs]))]
+        
+    for ii in obs_index:
         tmp = conn.retrieve('table.fetch', _messagelevel='error',
                             table=table_name, maxrows=1, from_=ii)
-        col_names = list(tmp['Fetch'])   
+        col_names = list(tmp['Fetch'])
+        
         print('------- Observation: ',ii,'-------\n')
+        
         if columns is None:
             rint = random.randint(0,len(col_names)-1)
             print(col_names[rint],': ',tmp['Fetch'][col_names[rint]].to_list()[0])
@@ -939,7 +1039,7 @@ def summary(conn, table_name, full_table=True, subset_fraction=0.1):
     r = conn.retrieve('table.recordcount', _messagelevel='error',
                       table=table_name)
     num_obs = r['RecordCount']['N'].values[0]
-    print("NOTE: there are " + str(num_obs) + " observations in the training data set.")
+    print("NOTE: there are " + str(num_obs) + " observations in the Viya table.")
 
     if not full_table:
         num_obs_calc = int(round(num_obs*subset_fraction))
