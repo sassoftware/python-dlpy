@@ -30,6 +30,7 @@ from dlpy.images import ImageTable
 import unittest
 import os
 from dlpy.image_captioning import *
+from dlpy.utils import file_exist_on_server
 
 
 class TestImageCaptioning(unittest.TestCase):
@@ -112,6 +113,8 @@ class TestImageCaptioning(unittest.TestCase):
     def test_get_image_features_3(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5'):
+            unittest.TestCase.skipTest(self, "File not found.")
         img_path = self.data_dir + 'imageCaptioning_images'
         image_table = ImageTable.load_files(self.s,path=img_path)
         image_table.resize(width=224)
@@ -149,6 +152,10 @@ class TestImageCaptioning(unittest.TestCase):
     def test_object_table_1(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir + 'YOLOV2_MULTISIZE.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
+        if not file_exist_on_server(self.s, self.data_dir + 'YoloV2_Multisize_weights.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
 
@@ -171,6 +178,10 @@ class TestImageCaptioning(unittest.TestCase):
     def test_object_table_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir + 'YOLOV2_MULTISIZE.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
+        if not file_exist_on_server(self.s, self.data_dir + 'YoloV2_Multisize_weights.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
         img_path = self.data_dir + 'imageCaptioning_images'
         image_table = ImageTable.load_files(self.s, path=img_path)
         image_table.resize(width=416)
@@ -188,6 +199,10 @@ class TestImageCaptioning(unittest.TestCase):
     def test_object_table_3(self):
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir + 'YOLOV2_MULTISIZE.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
+        if not file_exist_on_server(self.s, self.data_dir + 'YoloV2_Multisize_weights.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
         captions_file = self.data_dir_local + 'image_captions.txt'
         image_table = create_captions_table(self.s, captions_file)
 
@@ -231,6 +246,8 @@ class TestImageCaptioning(unittest.TestCase):
     def test_captioning_table_1(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5'):
+            unittest.TestCase.skipTest(self, "File not found.")
 
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
@@ -251,6 +268,10 @@ class TestImageCaptioning(unittest.TestCase):
     def test_captioning_table_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5'):
+            unittest.TestCase.skipTest(self, "File not found.")
+        if not file_exist_on_server(self.s, self.data_dir+'YoloV2_Multisize_weights.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
 
@@ -277,6 +298,12 @@ class TestImageCaptioning(unittest.TestCase):
     def test_captioning_table_3(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        if not file_exist_on_server(self.s, self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5'):
+            unittest.TestCase.skipTest(self, "File not found.")
+        if not file_exist_on_server(self.s, self.data_dir + 'YOLOV2_MULTISIZE.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
+        if not file_exist_on_server(self.s, self.data_dir + 'YoloV2_Multisize_weights.sashdat'):
+            unittest.TestCase.skipTest(self, "File not found.")
         if self.data_dir_local is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
 

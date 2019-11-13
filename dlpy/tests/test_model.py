@@ -32,7 +32,7 @@ from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Conv1d, Pooling, Dense, OutputLayer,
                          Recurrent, Keypoints, BN, Res, Concat, Reshape, GlobalAveragePooling1D)
-from dlpy.utils import caslibify, caslibify_context
+from dlpy.utils import caslibify, caslibify_context, file_exist_on_server
 from dlpy.applications import Tiny_YoloV2
 import unittest
 
@@ -53,7 +53,7 @@ class TestModel(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS('dlgrd009', 13305)
+        cls.s = swat.CAS()
         cls.server_type = tm.get_cas_host_type(cls.s)
         cls.server_sep = '\\'
         if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
@@ -948,6 +948,8 @@ class TestModel(unittest.TestCase):
     def test_heat_map_analysis(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR is not set in the environment variables')
+        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-50-model.caffemodel.h5'):
+            unittest.TestCase.skipTest(self, "File not found.")
 
         from dlpy.applications import ResNet50_Caffe
         from dlpy.images import ImageTable
