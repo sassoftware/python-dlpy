@@ -122,6 +122,8 @@ def confusion_matrix(y_true, y_pred, castable=None, labels=None, id_vars=None):
     elif target_dtype.startswith('int'):
         target_index_dtype = getattr(np, target_dtype)
         #conf_mat[y_true] = conf_mat[y_true].astype(target_index_dtype)
+    else:
+        target_index_dtype = 'str'
 
     conf_mat.index = conf_mat.index.astype(target_index_dtype)
     #conf_mat.set_index(y_true, inplace=True)

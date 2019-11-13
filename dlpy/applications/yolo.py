@@ -20,7 +20,7 @@
 from dlpy.sequential import Sequential
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, Detection, Dense, Reshape, Concat
 from dlpy.utils import DLPyError
-from .application_utils import get_layer_options, input_layer_options
+from .application_utils import get_layer_options, input_layer_options, not_supported_feature
 
 
 def YoloV2(conn, anchors, model_table='YoloV2', n_channels=3, width=416, height=416, scale=1.0 / 255,
@@ -149,6 +149,11 @@ def YoloV2(conn, anchors, model_table='YoloV2', n_channels=3, width=416, height=
 
     parameters = locals()
     input_parameters = get_layer_options(input_layer_options, parameters)
+
+    if input_parameters['width'] != input_parameters['height']:
+        print(not_supported_feature('Non-square yolo model training', 'height=width'))
+        input_parameters['height'] = input_parameters['width']
+
     model.add(InputLayer(**input_parameters))
 
     # conv1 224 416
@@ -353,6 +358,11 @@ def YoloV2_MultiSize(conn, anchors, model_table='YoloV2-MultiSize', n_channels=3
 
     parameters = locals()
     input_parameters = get_layer_options(input_layer_options, parameters)
+
+    if input_parameters['width'] != input_parameters['height']:
+        print(not_supported_feature('Non-square yolo model training', 'height=width'))
+        input_parameters['height'] = input_parameters['width']
+
     model.add(InputLayer(**input_parameters))
 
     # conv1 224 416
@@ -580,6 +590,10 @@ def Tiny_YoloV2(conn, anchors, model_table='Tiny-Yolov2', n_channels=3, width=41
 
     parameters = locals()
     input_parameters = get_layer_options(input_layer_options, parameters)
+    if input_parameters['width'] != input_parameters['height']:
+        print(not_supported_feature('Non-square yolo model training', 'height=width'))
+        input_parameters['height'] = input_parameters['width']
+
     model.add(InputLayer(**input_parameters))
 
     # conv1 416 448
@@ -746,6 +760,10 @@ def YoloV1(conn, model_table='YoloV1', n_channels=3, width=448, height=448, scal
 
     parameters = locals()
     input_parameters = get_layer_options(input_layer_options, parameters)
+    if input_parameters['width'] != input_parameters['height']:
+        print(not_supported_feature('Non-square yolo model training', 'height=width'))
+        input_parameters['height'] = input_parameters['width']
+
     model.add(InputLayer(**input_parameters))
 
     # conv1 448
@@ -936,6 +954,10 @@ def Tiny_YoloV1(conn, model_table='Tiny-YoloV1', n_channels=3, width=448, height
 
     parameters = locals()
     input_parameters = get_layer_options(input_layer_options, parameters)
+    if input_parameters['width'] != input_parameters['height']:
+        print(not_supported_feature('Non-square yolo model training', 'height=width'))
+        input_parameters['height'] = input_parameters['width']
+
     model.add(InputLayer(**input_parameters))
 
     model.add(Conv2d(16, width=3, act=act, include_bias=False, stride=1))

@@ -106,7 +106,7 @@ class Model(Network):
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
             valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
             missing='mean', target_missing='mean', repeat_weight_table=False, force_equal_padding=None,
-            save_best_weights=False, n_threads=None, target_order='ascending'):
+            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None):
         """
         Fitting a deep learning model.
 
@@ -233,6 +233,8 @@ class Model(Network):
             training data samples.
             Valid Values: 'ascending', 'descending', 'hash'
             Default: 'ascending'
+        train_from_scratch : bool, optional
+            When set to True, it ignores the existing weights and trains the model from the scracth.
 
         Returns
         --------
@@ -271,11 +273,17 @@ class Model(Network):
         # check whether the field is none or not
         if self.model_weights is not None and self.model_weights.to_table_params()['name'].upper() in \
                 list(self._retrieve_('table.tableinfo').TableInfo.Name):
-            print('NOTE: Training based on existing weights.')
-            init_weights = self.model_weights
+            if train_from_scratch:
+                print('NOTE: Ignoring the existing weights and training from scratch.')
+                init_weights = None
+                self.n_epochs = 0
+            else:
+                print('NOTE: Training based on existing weights.')
+                init_weights = self.model_weights
         else:
             print('NOTE: Training from scratch.')
             init_weights = None
+            self.n_epochs = 0
 
         # when model_weights is none, reset it
         if self.model_weights is None:
@@ -771,7 +779,8 @@ class Model(Network):
 
     def evaluate(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
                  mini_batch_buf_size=None, top_probs=None, use_best_weights=False,
-                 random_crop='none', random_flip='none',  random_mutation='none'):
+                 random_crop='none', random_flip='none',  random_mutation='none',
+                 model_task=None):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -846,6 +855,10 @@ class Model(Network):
             Default: NONE
             Valid Values: NONE, RANDOM
 
+        model_task : string, optional
+            Specifies the model task type.
+            Valid Values: CLASSIFICATION, REGRESSION
+
         Returns
         -------
         :class:`CASResults`
@@ -872,6 +885,10 @@ class Model(Network):
         en = True
         if self.model_type == 'RNN':
             en = False
+
+        # use encoded name when model does classification or regression
+        if model_task and (model_task.upper() == 'CLASSIFICATION' or model_task.upper() == 'REGRESSION'):
+            en = True
 
         if use_best_weights and self.best_weights is not None:
             print('NOTE: Using the weights providing the smallest loss error.')
@@ -910,17 +927,29 @@ class Model(Network):
                 self.target = output_names[0][2:]
                 self.valid_conf_mat = self.conn.crosstab(table=valid_res_tbl, row=self.target, col='I_' + self.target)
 
+        # always set valid_res_tbl
+        self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
+
         if self.model_type == 'CNN':
             if not self.conn.has_actionset('image'):
                 self.conn.loadactionset(actionSet='image', _messagelevel='error')
 
-            self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             temp_columns = self.valid_res_tbl.columns.tolist()
-            columns = [item for item in temp_columns if item[0:9] == 'P_' + self.target or item == 'I_' + self.target]
-            img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
-            img_table = img_table.Images
 
-            self.valid_res = img_table
+            # the model might not use the image data
+            do_image = False
+            for col in temp_columns:
+                if col.lower() == '_image_':
+                    do_image = True
+                    break
+
+            # when do images, fetch some images back to client
+            if do_image:
+                columns = [item for item in temp_columns if item[0:9] == 'P_' + self.target or item == 'I_' + self.target]
+                img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
+                img_table = img_table.Images
+
+                self.valid_res = img_table
         else:
             self.valid_res = res
 

@@ -1530,7 +1530,7 @@ class Network(Layer):
 
         print('NOTE: ONNX model file saved successfully.')
 
-    def deploy(self, path, output_format = 'astore', model_weights = None, **kwargs):
+    def deploy(self, path, output_format='astore', model_weights=None, **kwargs):
         """
         Deploy the deep learning model to a data file
 
@@ -1571,7 +1571,7 @@ class Network(Layer):
         if output_format.lower() == 'astore':
             self.save_to_astore(path=path, **kwargs)
         elif output_format.lower() in ('castable', 'table'):
-            self.save_to_table(path = path)
+            self.save_to_table(path=path)
         elif output_format.lower() == 'onnx':
             self.save_to_onnx(path, model_weights = model_weights)
         else:
