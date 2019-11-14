@@ -1466,8 +1466,10 @@ class BN(Layer):
         if self._num_bias is None:
             if self.src_layers is None:
                 self._num_bias = 0
+            # if the input of layer is in hwc
             if isinstance(self.src_layers[0].output_size, Iterable):
                 self._num_bias = int(2 * self.src_layers[0].output_size[-1])
+            # if the input of layer is one dimension
             else:
                 self._num_bias = 2
         return self._num_bias
@@ -1602,8 +1604,10 @@ class Concat(Layer):
             # source layers' dimension should be consistent
             if len(set(n_dims)) != 1:
                 raise DLPyError('The dimension of source layers\' outputs are inconsistent.')
+            # if the input of layer is in hwc
             if isinstance(self.src_layers[0].output_size, Iterable):
                 n_dim = len(self.src_layers[0].output_size)
+            # if the input of layer is one dimension
             else:
                 n_dim = 1
             # last dimension should be sum of each layer's last dimension.

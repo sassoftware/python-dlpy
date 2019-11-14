@@ -949,7 +949,8 @@ class TestModel(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR is not set in the environment variables')
         if not file_exist_on_server(self.s, self.data_dir + 'ResNet-50-model.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(self.data_dir
+                                                                           + 'ResNet-50-model.caffemodel.h5'))
 
         from dlpy.applications import ResNet50_Caffe
         from dlpy.images import ImageTable
@@ -1027,6 +1028,9 @@ class TestModel(unittest.TestCase):
         from dlpy.model import Model
 
         path = '/cas/DeepLearn/weshiz/onnx/image_classification/mobilenetv2-1.0.onnx'
+
+        if not file_exist_on_server(self.s, self.data_dir + 'mobilenetv2-1.0.onnx'):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(self.data_dir + 'mobilenetv2-1.0.onnx'))
 
         onnx_model = onnx.load_model(path)
         model1 = Model.from_onnx_model(self.s,

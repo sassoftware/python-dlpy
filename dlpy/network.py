@@ -755,9 +755,10 @@ class Network(Layer):
 
         '''
         weight_name = self.model_name + '_weights'
-
+        # if weights_tbl is WeightsTable, we will remap layer id if necessary
         if type(weight_tbl) == WeightsTable:
             model_mapper = self.create_layer_id_name_mapping()
+            # check if need to remap
             if weight_tbl.weights_mapping != model_mapper:
                 weight_tbl.remap_layer_ids(model_mapper, weight_name)
             weight_tbl = dict(name=weight_name)
@@ -1599,6 +1600,12 @@ class Network(Layer):
     def create_layer_id_name_mapping(self):
         """
         Create a dictionary which maps layer id to layer name.
+        One use case is the model creates weights table given a pre-trained weights and a pre-trained model.
+        Example:
+            mapper = model.create_layer_id_name_mapping()
+            pretrained_weights_table = WeightsTable(conn, weights_tbl_name='my_pretrained_weights_table',
+                                                model_tbl_name='my_pretrained_model_table')
+            pretrained_weights_table.remap_layer_ids(mapper, casout='new_weights)
 
         Returns
         -------

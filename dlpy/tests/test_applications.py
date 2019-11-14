@@ -77,8 +77,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-50-model.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'ResNet-50-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
                                pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
@@ -99,7 +100,7 @@ class TestApplications(unittest.TestCase):
 
         # test random_mutation and crop on VDMML 8.4
         model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir + 'ResNet-101-model.caffemodel.h5',
+                               pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
                                pre_trained_weights=True,
                                include_top=False,
                                n_classes=120,
@@ -111,8 +112,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-50-model.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'ResNet-50-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
                                pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
@@ -136,8 +138,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-101-model.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'ResNet-101-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
                                 pre_trained_weights_file=self.data_dir + 'ResNet-101-model.caffemodel.h5',
@@ -179,8 +182,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-152-model.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'ResNet-152-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
                                 pre_trained_weights_file=self.data_dir + 'ResNet-152-model.caffemodel.h5',
@@ -290,8 +294,9 @@ class TestApplications(unittest.TestCase):
     def test_vgg16_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model1 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
@@ -354,8 +359,9 @@ class TestApplications(unittest.TestCase):
     def test_vgg19_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'VGG_ILSVRC_19_layers.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'VGG_ILSVRC_19_layers.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model1 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
@@ -428,8 +434,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-50-model.caffemodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'ResNet-50-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         reshape = Reshape(width=224, height=224, depth=3, order='WHD')
         model = ResNet50_Caffe(self.s, reshape_after_input=reshape)
@@ -655,8 +662,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'InceptionV3_weights.kerasmodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'InceptionV3_weights.kerasmodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         from dlpy.applications import InceptionV3
         model = InceptionV3(self.s,
@@ -688,8 +696,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-        if not file_exist_on_server(self.s, self.data_dir + 'InceptionV3_weights.kerasmodel.h5'):
-            unittest.TestCase.skipTest(self, "File not found.")
+        file_dependency = self.data_dir + 'InceptionV3_weights.kerasmodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         from dlpy.applications import InceptionV3
         model = InceptionV3(self.s,
