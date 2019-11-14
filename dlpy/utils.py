@@ -522,31 +522,6 @@ def caslibify_context(conn, path, task='save'):
         of the path folder. If it is a save task, then a caslib needs to be created to the path folder.
     '''
     if task == 'save':
-
-        # sep = get_server_path_sep(conn)
-
-        # if path.endswith(sep):
-            # path = path[:-1]
-
-        # path_split = path.split(sep)
-        # caslib = None
-        # new_path = sep
-        # if path.startswith(sep):
-            # start = 1
-        # else:
-            # start = 0
-
-        # end = len(path_split)
-        # while caslib is None and start < end:
-
-            # new_path += path_split[start]+sep
-            # caslib = find_caslib(conn, new_path)
-            # start += 1
-
-        # remaining_path = ''
-        # for i in range(start, end):
-            # remaining_path += path_split[i]
-            # remaining_path += sep
             
         caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
@@ -584,13 +559,11 @@ def caslibify_context(conn, path, task='save'):
             path_split = path.rsplit("\\", 1)
             
         if len(path_split) == 2:
-            #caslib = find_caslib(conn, path_split[0])
             caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
                                               caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
-                    #yield caslib, path_split[1]
                     yield caslib, remaining_path+path_split[1]
                 else:
                     raise DLPyError('{} is the subpath of the caslib, {}. '
@@ -644,31 +617,6 @@ def caslibify(conn, path, task='save'):
         of the path folder. If it is a save task, then a caslib needs to be created to the path folder.
     '''
     if task == 'save':
-
-        # sep = get_server_path_sep(conn)
-
-        # if path.endswith(sep):
-            # path = path[:-1]
-
-        # path_split = path.split(sep)
-        # caslib = None
-        # new_path = sep
-        # if path.startswith(sep):
-            # start = 1
-        # else:
-            # start = 0
-
-        # end = len(path_split)
-        # while caslib is None and start < end:
-
-            # new_path += path_split[start]+sep
-            # caslib = find_caslib(conn, new_path)
-            # start += 1
-
-        # remaining_path = ''
-        # for i in range(start, end):
-            # remaining_path += path_split[i]
-            # remaining_path += sep
             
         caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
@@ -701,13 +649,11 @@ def caslibify(conn, path, task='save'):
             path_split = path.rsplit("\\", 1)
 
         if len(path_split) == 2:
-            #caslib = find_caslib(conn, path_split[0])
             caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
-                    #return caslib, path_split[1], False
                     return caslib, remaining_path+path_split[1], False
                 else:
                     raise DLPyError('{} is the subpath of the caslib, {}. '
