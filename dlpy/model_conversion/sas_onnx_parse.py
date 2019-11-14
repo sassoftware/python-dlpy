@@ -270,9 +270,17 @@ def onnx_input_layer(value_info):
     
     '''
     input_layer_name = value_info.name
-    _, C, H, W = list(d.dim_value for d in
-                      value_info.type.tensor_type.shape.dim)
-    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    dims = tuple(d.dim_value for d in
+                 value_info.type.tensor_type.shape.dim)
+    if len(dims) == 3:
+        # Assume single channel image
+        N, H, W = dims
+        return InputLayer(n_channels=1, width=W, height=H, name=input_layer_name)
+    elif len(dims) == 4:
+        _, C, H, W = dims
+        return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    else:
+        raise OnnxParseError('Cannot parse input dimensions, expecting NCHW or NHW.')
 
 
 def onnx_extract_sas_layer(graph, node, layers):
@@ -794,36 +802,16 @@ def onnx_extract_matmul(graph, node, layers):
     act = 'identity'
     neurons = None
 
-    # determine dimensions of the multiply 
-    a_shape = None
-    b_shape = None
     # check initializer for weight tensors
     for init in graph.initializer:
-        if init.name == node.input[0]:
-            a_shape = numpy_helper.to_array(init).shape
         if init.name == node.input[1]:
-            b_shape = numpy_helper.to_array(init).shape
+            neurons = numpy_helper.to_array(init).shape[1]
     
-    # check inferred shapes in graph
-    for v in graph.value_info:
-        if v.name == node.input[0]:
-            a_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
-                       v.type.tensor_type.shape.dim[1].dim_value)
-        if v.name == node.input[1]:
-            b_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
-                       v.type.tensor_type.shape.dim[1].dim_value)
-
-    if a_shape is None or b_shape is None:
+    if neurons is None:
         raise OnnxParseError('Unable to determine number of neurons '
                              'in FC layer.')
     
-    # set number of neurons according to shape
-    if a_shape[0] == 1:
-        neurons = b_shape[1]
-    else:
-        neurons = a_shape[0]
-    
-    # check if bias is added by the next op
+   # check if bias is added by the next op
     out = onnx_get_out_nodes(graph, node) 
     for n in out:
         if is_bias_op(graph, n):

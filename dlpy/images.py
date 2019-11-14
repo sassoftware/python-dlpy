@@ -21,7 +21,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from swat.cas.table import CASTable
-from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep
+from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep, get_cas_host_type
 from warnings import warn
 
 
@@ -63,7 +63,7 @@ class ImageTable(CASTable):
 
     @classmethod
     def from_table(cls, tbl, image_col='_image_', label_col='_label_',
-                   path_col=None, columns=None, casout=None):
+                   path_col=None, columns=None, casout=None, label_level=0):
 
         '''
 
@@ -90,6 +90,13 @@ class ImageTable(CASTable):
             Default = None.
             Note : the options of replace=True, blocksize=32 will be automatically
             added to the casout option.
+        label_level : optional
+            Specifies which path level should be used to generate the class labels for each image.
+            For instance, label_level = 1 means the first directory and label_level = -2 means the last directory.
+            This internally use the SAS scan function
+            (check https://www.sascrunch.com/scan-function.html for more details).
+            In default, no class labels are generated. If the label column already exists, this option will be ignored.
+            Default: 0
 
         Returns
         -------
@@ -102,6 +109,18 @@ class ImageTable(CASTable):
         conn = tbl.get_connection()
         conn.loadactionset('image', _messagelevel='error')
 
+        # check whether generating labels
+        do_label_level = False
+        col_list = tbl.columninfo().ColumnInfo.Column.tolist()
+        if label_level != 0:
+            do_label_level = True
+
+        if '_label_' in col_list or label_col in col_list:
+            do_label_level = False
+
+        if '_path_' not in col_list:
+            do_label_level = False
+
         if casout is None:
             casout = {}
         elif isinstance(casout, CASTable):
@@ -110,15 +129,30 @@ class ImageTable(CASTable):
         if 'name' not in casout:
             casout['name'] = random_name()
 
-        if '_filename_0' in tbl.columninfo().ColumnInfo.Column.tolist():
-            computedvars = []
-            code = []
+        #create new vars
+        computedvars = []
+        code = []
+
+        server_type = get_cas_host_type(conn).lower()
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            fs = "/"
         else:
-            computedvars = ['_filename_0']
-            code = ['length _filename_0 varchar(*);']
+            fs = "\\"
+
+        if do_label_level:
+            if path_col is None:
+                path_col = '_path_'
+            computedvars.append('_label_')
+            scode = "length _label_ varchar(*); "
+            scode += ("_label_=scan({},{},'{}');".format(path_col, label_level, fs))
+            code.append(scode)
+
+        if '_filename_0' not in tbl.columninfo().ColumnInfo.Column.tolist():
+            computedvars.append('_filename_0')
+            code.append('length _filename_0 varchar(*);')
             if path_col is not None:
                 code.append(('_loc1 = LENGTH({0}) - '
-                             'INDEX(REVERSE({0}),\'/\')+2;').format(path_col))
+                             'INDEX(REVERSE({0}),"{1}")+2;').format(path_col, fs))
                 code.append('_filename_0 = SUBSTR({},_loc1);'.format(path_col))
             else:
                 code.append('call streaminit(-1);shuffle_id=rand("UNIFORM")*10**10;')
@@ -146,7 +180,12 @@ class ImageTable(CASTable):
                       table=table_opts,
                       casout=dict(replace=True, blocksize=32, **casout))
 
-        column_names = [cls.running_image_column, '_label_', '_filename_0', '_id_']
+        # the image table might not contain any label information
+        if '_label_' in tbl.columninfo().ColumnInfo.Column.tolist() or do_label_level:
+            column_names = [cls.running_image_column, '_label_', '_filename_0', '_id_']
+        else:
+            column_names = [cls.running_image_column, '_filename_0', '_id_']
+
         if columns is not None:
             if not isinstance(columns, list):
                 columns = list(columns)
@@ -393,7 +432,10 @@ class ImageTable(CASTable):
 
         for i in range(nimages):
             image = temp_tbl['Images']['Image'][i]
-            label = temp_tbl['Images']['Label'][i]
+            if 'Label' in temp_tbl['Images'].columns:
+                label = temp_tbl['Images']['Label'][i]
+            else:
+                label = 'N/A'
             ax = fig.add_subplot(nrow, ncol, i + 1)
             if id:
                 id_content = temp_tbl['Images'][id][i]

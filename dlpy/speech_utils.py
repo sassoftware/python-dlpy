@@ -1,3 +1,5 @@
+import random
+
 from dlpy.utils import DLPyError, random_name
 import wave
 import audioop
@@ -399,3 +401,407 @@ def clean_audio(listing_path_local, segment_path_local_list):
             is_removed = True
     if is_removed:
         print("Note: all temporary files are removed.")
+
+
+def random_file_from_dir(local_audio_file):
+    n=0
+    random.seed()
+    for r, d, f in os.walk(local_audio_file):
+      for name in f:
+        n=n+1
+        if random.uniform(0, n) < 1:
+            random_file=os.path.join(r, name)
+    return random_file
+
+
+def play_one_audio_file(local_audio_file):
+    '''
+    Play a local audio file using soundfile and sounddevice.
+
+    Parameters
+    ----------
+    local_audio_file : string
+        Local location to the audio file to be played. When it is a directory,
+        a file will be randomly chosen.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    try:
+        import soundfile as sf
+        import sounddevice as sd
+    except (ModuleNotFoundError, ImportError):
+        raise DLPyError('cannot import soundfile or sounddevice')
+
+    if os.path.isdir(local_audio_file):
+        local_audio_file_real = random_file_from_dir(local_audio_file)
+    else:
+        local_audio_file_real = local_audio_file
+
+    print('File location: {}'.format(local_audio_file_real))
+
+    data, sampling_rate = sf.read(local_audio_file_real)
+
+    print('Frequency [Hz]: {}'.format(sampling_rate))
+    print('Duration [s]: {}'.format(data.shape[0]/sampling_rate))
+    sd.play(data, sampling_rate)
+    sd.wait()
+
+def display_spectrogram_for_one_audio_file(local_audio_file):
+    '''
+    Display spectrogram for a local audio file using soundfile.
+
+    Parameters
+    ----------
+    local_audio_file : string
+        Local location to the audio file to be displayed.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    try:
+        import soundfile as sf
+        import matplotlib.pylab as plt
+    except (ModuleNotFoundError, ImportError):
+        raise DLPyError('cannot import soundfile')
+
+    if os.path.isdir(local_audio_file):
+        local_audio_file_real = random_file_from_dir(local_audio_file)
+    else:
+        local_audio_file_real = local_audio_file
+
+    print('File location: {}'.format(local_audio_file_real))
+
+    data, sampling_rate = sf.read(local_audio_file_real)
+
+    plt.specgram(data, Fs=sampling_rate)
+    # add axis labels
+    plt.ylabel('Frequency [Hz]')
+    plt.xlabel('Time [sec]')
+
+
+def display_raw_data_for_one_audio_file(local_audio_file):
+    '''
+    Display raw data for a local audio file using soundfile.
+
+    Parameters
+    ----------
+    local_audio_file : string
+        Local location to the audio file to be displayed.
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    try:
+        import soundfile as sf
+        import matplotlib.pylab as plt
+    except (ModuleNotFoundError, ImportError):
+        raise DLPyError('cannot import soundfile')
+
+    if os.path.isdir(local_audio_file):
+        local_audio_file_real = random_file_from_dir(local_audio_file)
+    else:
+        local_audio_file_real = local_audio_file
+
+    print('File location: {}'.format(local_audio_file_real))
+
+    data, sampling_rate = sf.read(local_audio_file_real)
+
+    plt.plot(data)
+
+
+def convert_one_audio_file(local_audio_file, converted_local_audio_file):
+    '''
+    Convert a local audio file into a wav format that only contains 1 channel with 16 bits and 16K HZ.
+
+    Parameters
+    ----------
+    local_audio_file : string
+        Local location to the audio file to be converted.
+
+    converted_local_audio_file : string
+        Local location to store the converted audio file
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    try:
+        import soundfile as sf
+    except (ModuleNotFoundError, ImportError):
+        raise DLPyError('cannot import soundfile')
+
+    audio_name = os.path.basename(local_audio_file)
+    output_dir = os.path.dirname(converted_local_audio_file)
+    required_sr = 16000
+    required_sw = 2
+
+    # check whether the audio file is a wave format
+    audio_ext = os.path.splitext(audio_name)[-1]
+    audio_name = os.path.splitext(audio_name)[0]
+    if audio_ext.lower() != '.wav':
+        audio_wav_file = output_dir + random_name(audio_name, 6) + '.wav'
+        data, sampling_rate = sf.read(local_audio_file)
+        sf.write(audio_wav_file, data, sampling_rate)
+    else:
+        audio_wav_file = local_audio_file
+
+    # convert the wav file to the required format: 1 channel, 16 bits, and 16K HZ
+    wave_reader, wave_params = read_audio(audio_wav_file)
+    is_framerate_desired = check_framerate(wave_params, required_sr)
+    is_sampwidth_desired = check_sampwidth(wave_params, required_sw)
+    is_stereo = check_stereo(wave_params)
+
+    if converted_local_audio_file == audio_wav_file:
+        real_converted_local_audio_file = converted_local_audio_file + '.tmp'
+    else:
+        real_converted_local_audio_file = converted_local_audio_file
+
+    with wave.open(real_converted_local_audio_file, "wb") as wave_writer:
+        wave_writer.setnchannels(1)
+        wave_writer.setframerate(required_sr)
+        # 16 bits
+        wave_writer.setsampwidth(2)
+        wave_writer.setcomptype(wave_params.comptype, wave_params.compname)
+        fragment = wave_reader.readframes(wave_params.nframes)
+
+        # 1 channel
+        if is_stereo:
+            fragment = convert_stereo_to_mono(fragment, wave_params.sampwidth)
+
+        # 16K HZ
+        if not is_framerate_desired:
+            fragment = convert_framerate(fragment, wave_params.sampwidth, 1,
+                                         wave_params.framerate, required_sr)
+
+        # 16 bits
+        if not is_sampwidth_desired:
+            fragment = convert_sampwidth(fragment, wave_params.sampwidth, required_sw)
+
+        wave_writer.writeframes(fragment)
+
+    wave_reader.close()
+
+    # remove the temporary wav file
+    if audio_wav_file != local_audio_file:
+        os.remove(audio_wav_file)
+
+    # rename the file to the desired one
+    if real_converted_local_audio_file != converted_local_audio_file:
+        os.replace(real_converted_local_audio_file, converted_local_audio_file)
+
+
+def convert_audio_files(local_audio_path, recurse=True):
+    '''
+    Convert audio files under a local path into wave files that only contains 1 channel with 16 bits and 16K HZ.
+
+    Parameters
+    ----------
+    local_audio_path : string
+        Local location to the audio files that will be converted. The new wave files will be stored under this path.
+        Note if the files are already in the wave format, they will be overwritten.
+
+    recurse : bool, optional
+        Specifies whether to recursively convert all the audio files.
+        Default : True
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    number_files = 0
+
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            number_files = number_files + len(f)
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
+                number_files = number_files + 1
+
+    print('File path: {}'.format(local_audio_path))
+    print('Number of Files: {}'.format(number_files))
+
+    print_freq = 1000
+
+    number_files = 0
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            for file in f:
+                local_file = os.path.join(r, file)
+                local_file_wav = os.path.splitext(local_file)[0] + '.wav'
+                try:
+                    convert_one_audio_file(local_file, local_file_wav)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
+                local_file_wav = os.path.join(local_audio_path, os.path.splitext(f)[0] + '.wav')
+                try:
+                    convert_one_audio_file(local_file, local_file_wav)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+
+    print('File conversions are finished.')
+
+
+def convert_one_audio_file_to_specgram(local_audio_file, converted_local_png_file):
+    '''
+    Convert a local audio file into a png format with spectrogram.
+
+    Parameters
+    ----------
+    local_audio_file : string
+        Local location to the audio file to be converted.
+
+    converted_local_png_file : string
+        Local location to store the converted audio file
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    try:
+        import soundfile as sf
+        import matplotlib.pylab as plt
+    except (ModuleNotFoundError, ImportError):
+        raise DLPyError('cannot import soundfile')
+
+    data, sampling_rate = sf.read(local_audio_file)
+
+    fig, ax = plt.subplots(1)
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    ax.axis('off')
+    ax.specgram(x=data, Fs=sampling_rate)
+    ax.axis('off')
+    fig.savefig(converted_local_png_file, dpi=300, frameon='false')
+    # this is the key to avoid mem leaking in notebook
+    plt.ioff()
+    plt.close(fig)
+
+
+def convert_audio_files_to_specgrams(local_audio_path, recurse=True):
+    '''
+    Convert audio files under a local path into the images (PNG) that contain spectrogram.
+
+    Parameters
+    ----------
+    local_audio_path : string
+        Local location to the audio files that will be converted. The new image files will be stored under this path.
+        Note if the files are already in the PNG format, they will be overwritten.
+
+    recurse : bool, optional
+        Specifies whether to recursively convert all the audio files.
+        Default : True
+
+    Returns
+    -------
+    None
+
+    Raises
+    ------
+    DLPyError
+        If anything goes wrong, it complains and prints the appropriate message.
+
+    '''
+
+    number_files = 0
+
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            number_files = number_files + len(f)
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
+                number_files = number_files + 1
+
+    print('File path: {}'.format(local_audio_path))
+    print('Number of Files: {}'.format(number_files))
+
+    print_freq = 1000
+
+    number_files = 0
+    if recurse:
+        for r, d, f in os.walk(local_audio_path):
+            for file in f:
+                local_file = os.path.join(r, file)
+                local_file_png = os.path.splitext(local_file)[0] + '.png'
+                try:
+                    convert_one_audio_file_to_specgram(local_file, local_file_png)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+    else:
+        for f in os.listdir(local_audio_path):
+            local_file = os.path.join(local_audio_path, f)
+            if os.path.isfile(local_file):
+                local_file_png = os.path.join(local_audio_path, os.path.splitext(f)[0] + '.png')
+                try:
+                    convert_one_audio_file_to_specgram(local_file, local_file_png)
+                    number_files = number_files + 1
+                except:
+                    print('Cannot convert file {}'.format(local_file))
+                if number_files % print_freq == 0:
+                    print('Number of files processed: {}'.format(number_files))
+
+    print('File conversions are finished.')
+
