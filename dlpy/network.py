@@ -1614,16 +1614,23 @@ class Network(Layer):
 class WeightsTable:
 
     '''
-
-    Specialized WeightsTable
+    WeightsTable
+    A weights table builds connection with a deep learning model.
+    One use case is a new model setting a pre-trained weights. Since SAS deep learning model loads weights according to
+    layer id and the order of layer id might be different between the new built model and the pre-trained model.
+    So, the instance of the class can remap layer id and generate a suitable weights table according to layer names.
+    Example:
+        pretrained_weights_table = WeightsTable(conn, weights_tbl_name='my_pretrained_weights_table',
+                                                model_tbl_name='my_pretrained_model_table')
+        new_model.set_weights(pretrained_weights_table)
 
     Parameters
     ----------
     conn : CAS
         Specifies the CAS connection object.
-    model_tbl_name: string
-        Specifies the name of CASTable containing weights of the deep learning model.
     weights_tbl_name: string
+        Specifies the name of CASTable containing weights of the deep learning model.
+    model_tbl_name: string
         Specifies the name of CAS table to store the deep learning model.
 
     Returns
