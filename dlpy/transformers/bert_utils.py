@@ -1016,9 +1016,9 @@ def display_obs(conn, table_name, num_obs=5, random_draw=True, columns=None):
                     print('Column ' + name + ' not found in ' + table_name + '.')
                 print('\n')
 
-def summary(conn, table_name, full_table=True, subset_fraction=0.1):
+def bert_summary(conn, table_name, full_table=True, subset_fraction=0.1):
     '''
-    Display summary statistics from a given CAS table
+    Display summary statistics for tokenized data from a given CAS table
 
     Parameters
     ----------
@@ -1057,6 +1057,10 @@ def summary(conn, table_name, full_table=True, subset_fraction=0.1):
         num_rows = min([chunk_size,num_obs_calc-ii])
         tmp = conn.retrieve('table.fetch', _messagelevel='error',
                             table=table_name, maxrows=num_rows, from_=ii, to=ii+num_rows)
+                            
+        col_names = list(tmp['Fetch'])
+        if token_var not in list(tmp['Fetch']):
+            raise DLPyError("Missing variable " + token_var + " in table " + table_name + ".")
         
         tmp_list = tmp['Fetch'][token_var].to_list()
         obs_num_tokens = [len(tmp_list[jj].split(' ')) for jj in range(num_rows)]
