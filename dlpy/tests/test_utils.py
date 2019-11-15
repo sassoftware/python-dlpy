@@ -530,3 +530,5 @@ class TestUtils(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         check_file = self.data_dir + 'vgg16.sashdat'
         self.assertTrue(file_exist_on_server(self.s, file=check_file))
+
+
