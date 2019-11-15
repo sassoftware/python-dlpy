@@ -756,6 +756,7 @@ class Network(Layer):
         '''
         weight_name = self.model_name + '_weights'
         # if weights_tbl is WeightsTable, we will remap layer id if necessary
+        # remapping is needed when the model's layer id mapping is different from original model's.
         if type(weight_tbl) == WeightsTable:
             model_mapper = self.create_layer_id_name_mapping()
             # check if need to remap
