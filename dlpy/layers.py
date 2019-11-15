@@ -1475,7 +1475,12 @@ class BN(Layer):
         if self._num_bias is None:
             if self.src_layers is None:
                 self._num_bias = 0
-            self._num_bias = int(2 * self.src_layers[0].output_size[2])
+            # if the input of layer is 3 dimensions in (height * width * channel) format
+            if isinstance(self.src_layers[0].output_size, Iterable):
+                self._num_bias = int(2 * self.src_layers[0].output_size[-1])
+            # if the input of layer is one dimension
+            else:
+                self._num_bias = 2
         return self._num_bias
 
 
@@ -1608,11 +1613,19 @@ class Concat(Layer):
             # source layers' dimension should be consistent
             if len(set(n_dims)) != 1:
                 raise DLPyError('The dimension of source layers\' outputs are inconsistent.')
-            n_dim = len(self.src_layers[0].output_size)
+            # if the input of layer is 3 dimensions in (height * width * channel) format
+            if isinstance(self.src_layers[0].output_size, Iterable):
+                n_dim = len(self.src_layers[0].output_size)
+            # if the input of layer is one dimension
+            else:
+                n_dim = 1
             # last dimension should be sum of each layer's last dimension.
             for i in reversed(range(n_dim)):
                 if i == n_dim-1:
-                    self._output_size.append(int(sum([item.output_size[i] for item in self.src_layers])))
+                    if n_dim == 1:
+                        self._output_size.append(int(sum([item.output_size for item in self.src_layers])))
+                    else:
+                        self._output_size.append(int(sum([item.output_size[i] for item in self.src_layers])))
                 else:
                     self._output_size.append(int(self.src_layers[0].output_size[i]))
             # reorder
@@ -1689,7 +1702,7 @@ class OutputLayer(Layer):
         Default: AUTO
     fcmp_act : string, optional
         Specifies the FCMP activation function for the layer.
-    fcmp_error : string, optional
+    fcmp_err : string, optional
         Specifies the FCMP error function for the output layer.
     error : int, optional
         Specifies the error function. This function is also known as
@@ -1739,7 +1752,7 @@ class OutputLayer(Layer):
     can_be_last_layer = True
     number_of_instances = 0
 
-    def __init__(self, name=None, act='softmax', fcmp_act=None, fcmp_error=None, error=None, init=None, std=None,
+    def __init__(self, name=None, act='softmax', fcmp_act=None, fcmp_err=None, error=None, init=None, std=None,
                  mean=None, truncation_factor=None, init_bias=None, n=None, n_softmax_samples=None, include_bias=None,
                  target_std=None, full_connect=None, src_layers=None, **kwargs):
 
@@ -1790,8 +1803,10 @@ class OutputLayer(Layer):
     def kernel_size(self):
         if 'n' not in self.config:
             return None
-        if not self.config['full_connect']:
+        if self.config['full_connect']:
             return (int(self.num_features), int(self.config['n']))
+        else:
+            return None
 
     @property
     def num_weights(self):
@@ -2768,6 +2783,71 @@ class LayerNormalization(Layer):
             return self.src_layers[0].output_size[1]                    # list is HWD, only supporting RNN models for now
         else:
             raise DLPyError('Source layers for multi-head attention layer must have an integer output dimension')
+
+class FCMPLayer(Layer):
+    '''
+    FCMP layer
+
+    Parameters
+    ----------
+    width : int
+        Specifies the width of feature maps for this layer.
+    height : int
+        Specifies the height of feature maps for this layer.
+    depth : int
+        Specifies the depth of feature maps for this layer.
+    n_weights : int
+        Specifies the number of weights used in the FCMP layer.
+    forward_func : string
+        specifies the custom function for the FCMP layer's forward pass.
+    backward_func : string
+        Specifies the custom function for the FCMP layer's backward pass.
+    name : string, optional
+        Specifies the name of the layer.
+    src_layers : iter-of-Layers, optional
+        Specifies the layers directed to this layer.
+
+    Returns
+    -------
+    :class:`FCMPLayer`
+
+    '''
+    type = 'FCMP'
+    type_label = 'FCMP'
+    type_desc = 'FCMP layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, width, height, depth, n_weights, forward_func, backward_func,
+                 name = None, src_layers = None, **kwargs):
+
+        if not __dev__ and len(kwargs) > 0:
+            raise DLPyError('**kwargs can be used only in development mode.')
+
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        # _clean_parameters(parameters)
+        Layer.__init__(self, name, parameters, src_layers)
+        self._n_weights = n_weights
+        self._output_size = (height, width, depth)
+        self.color_code = get_color(self.type)
+
+    @property
+    def kernel_size(self):
+        return None
+
+    @property
+    def num_weights(self):
+        return self._n_weights
+
+    @property
+    def output_size(self):
+        return self._output_size
+
+    @property
+    def num_bias(self):
+        return 0
+
 
 def _clean_input_parameters(parameters):
     del parameters['self']

@@ -359,7 +359,7 @@ def find_caslib(conn, path):
         Specifies the name of the caslib that contains the path.
 
     '''
-    paths = conn.caslibinfo().CASLibInfo.Path.tolist()
+    caslib_paths = conn.caslibinfo().CASLibInfo.Path.tolist()
     caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
 
     server_type = get_cas_host_type(conn).lower()
@@ -526,8 +526,8 @@ def caslibify_context(conn, path, task='save'):
         caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
         if caslib is not None:
-            access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
-                                          caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
+            access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                          caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
             if access_subdir:
                 yield caslib, remaining_path
             else:
@@ -561,8 +561,11 @@ def caslibify_context(conn, path, task='save'):
         if len(path_split) == 2:
             caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
-                access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
-                                              caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
+                caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                            caslib = caslib).CASLibInfo.loc[0, 'Path']
+                path_split[1] = path[len(caslib_path):]
+                access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                              caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
                     yield caslib, remaining_path+path_split[1]
                 else:
@@ -651,6 +654,9 @@ def caslibify(conn, path, task='save'):
         if len(path_split) == 2:
             caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
+                caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                            caslib = caslib).CASLibInfo.loc[0, 'Path']
+                path_split[1] = path[len(caslib_path):]
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:

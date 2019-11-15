@@ -32,7 +32,7 @@ from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Conv1d, Pooling, Dense, OutputLayer,
                          Recurrent, Keypoints, BN, Res, Concat, Reshape, GlobalAveragePooling1D)
-from dlpy.utils import caslibify, caslibify_context
+from dlpy.utils import caslibify, caslibify_context, file_exist_on_server
 from dlpy.applications import Tiny_YoloV2
 import unittest
 
@@ -948,6 +948,9 @@ class TestModel(unittest.TestCase):
     def test_heat_map_analysis(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, 'DLPY_DATA_DIR is not set in the environment variables')
+        if not file_exist_on_server(self.s, self.data_dir + 'ResNet-50-model.caffemodel.h5'):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(self.data_dir
+                                                                           + 'ResNet-50-model.caffemodel.h5'))
 
         from dlpy.applications import ResNet50_Caffe
         from dlpy.images import ImageTable
@@ -1009,6 +1012,32 @@ class TestModel(unittest.TestCase):
         model.load(path=self.data_dir+'Simple_CNN1.sashdat')
         # load_weights_attr table from server; expect to be clean
         model.load_weights_attr(self.data_dir+'Simple_CNN1_weights_attr.sashdat')
+
+    def test_mobilenetv2(self):
+        try:
+            import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
+        except:
+            unittest.TestCase.skipTest(self, 'onnx package not found')
+
+        from dlpy.model import Model
+
+        path = '/cas/DeepLearn/weshiz/onnx/image_classification/mobilenetv2-1.0.onnx'
+
+        if not file_exist_on_server(self.s, self.data_dir + 'mobilenetv2-1.0.onnx'):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(self.data_dir + 'mobilenetv2-1.0.onnx'))
+
+        onnx_model = onnx.load_model(path)
+        model1 = Model.from_onnx_model(self.s,
+                                       onnx_model,
+                                       output_model_table='mobilenetv2',
+                                       offsets=255*[0.485, 0.456, 0.406],
+                                       norm_stds=255*[0.229, 0.224, 0.225])
 
     @classmethod
     def tearDownClass(cls):
