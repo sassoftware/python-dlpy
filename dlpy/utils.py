@@ -372,11 +372,10 @@ def find_caslib(conn, path):
     if not path.endswith(sep):
         path += sep
 
-    if path in paths:
-        caslibname = caslibs[paths.index(path)]
-        return caslibname
-    else:
-        return None
+    for caslib_name, caslib_path in zip(caslibs, caslib_paths):
+        if path.find(caslib_path) == 0:
+            return caslib_name
+    return None
         
 def extract_caslib_and_relative_path(conn, path):
     '''
