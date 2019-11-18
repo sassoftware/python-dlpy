@@ -566,7 +566,7 @@ def caslibify_context(conn, path, task='save'):
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
-                    yield caslib, remaining_path+path_split[1]
+                    yield caslib, path_split[1]
                 else:
                     raise DLPyError('{} is the subpath of the caslib, {}. '
                                     'You don\'t have permission to access the subdirectory of the caslib. '
@@ -659,7 +659,7 @@ def caslibify(conn, path, task='save'):
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
                 if access_subdir:
-                    return caslib, remaining_path+path_split[1], False
+                    return caslib, path_split[1], False
                 else:
                     raise DLPyError('{} is the subpath of the caslib, {}. '
                                     'You don\'t have permission to access the subdirectory of the caslib.'
@@ -2805,8 +2805,12 @@ def file_exist_on_server(conn, file):
     sep = get_server_path_sep(conn)
     _, file_name = file.rsplit(sep, 1)
     with caslibify_context(conn, path=file, task='load') as (caslib, path):
-        fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
-        # if server doesn't find that, it will return 0
+        path_split = path.rsplit(sep,1)
+        if len(path_split) == 2:
+            fileinfo = conn.fileinfo(caslib=caslib,path=path_split[0],allFiles=True)
+        else:
+            fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
+         # if server doesn't find that, it will return 0
         exit_ = fileinfo.FileInfo.query('Name == "{}"'.format(file_name)).shape[0]
     if exit_:
         return True
