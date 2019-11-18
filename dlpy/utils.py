@@ -2805,12 +2805,18 @@ def file_exist_on_server(conn, file):
     sep = get_server_path_sep(conn)
     _, file_name = file.rsplit(sep, 1)
     with caslibify_context(conn, path=file, task='load') as (caslib, path):
+        # handle situation of pure path and path plus file name
         path_split = path.rsplit(sep,1)
         if len(path_split) == 2:
             fileinfo = conn.fileinfo(caslib=caslib,path=path_split[0],allFiles=True)
         else:
             fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
-         # if server doesn't find that, it will return 0
+            
+        # check for action errors
+        if fileinfo.severity > 0:
+            return False
+
+        # if server doesn't find that, it will return 0
         exit_ = fileinfo.FileInfo.query('Name == "{}"'.format(file_name)).shape[0]
     if exit_:
         return True
