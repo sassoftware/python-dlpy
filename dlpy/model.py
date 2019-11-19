@@ -2776,7 +2776,7 @@ class TensorBoard():
 
     def build_summary_writer(self):
         '''
-        Creates a tf.summary.FileWriter object for logging scalar events 
+        Creates a SummaryWriter object for logging scalar events 
         to the appropriate directory. Will return a dictionary of writers
         with elements for each scalar to be monitored.
 
@@ -2784,25 +2784,25 @@ class TensorBoard():
         -------
         dictionary
             dictionary with keys for each scalar and values a list of 
-            FileWriters for train and valid partitions.
+            SummaryWriter for train and valid partitions.
         '''
         writer_dict = {}
 
         for i in self.scalars:
-            writer_dict[i] =  tf.summary.FileWriter(
+            writer_dict[i] =  tf.summary.create_file_writer(
                 self.log_dir + self.model.model_table['name'] + '/' + i + '/'
             )
                 
         return writer_dict
 
-    def log_scalar(self, file_writer, scalar_name, scalar_value, scalar_global_step):
+    def log_scalar(self, summary_writer, scalar_name, scalar_value, scalar_global_step):
         '''
         Writes a scalar summary value as a tfevents file.
 
         Parameters
         ----------
-        file_writer : tf.summary.FileWriter
-            The FileWriter object for a particular scalar (e.g. the FileWriter for learning rate).
+        summary_writer : SummaryWriter
+            The SummaryWriter object for a particular scalar (e.g. the SummaryWriter for learning rate).
         scalar_name : string
             The scalar that is being recorded (e.g. learning rate).
         scalar_value : str
@@ -2812,10 +2812,9 @@ class TensorBoard():
             A substring of the CASResponse message that contains the step (iteration) value of the scalar so far
             (e.g. "10" would be the 10th iteration of a certain scalar, by default using the epoch count).
         '''
-        summary = tf.Summary()
-        summary.value.add(tag=scalar_name, simple_value=scalar_value)
-        file_writer.add_summary(summary, global_step=scalar_global_step)
-        file_writer.flush()
+        with summary_writer.as_default():
+            tf.summary.scalar(name=scalar_name, data=scalar_value, step=scalar_global_step)
+            summary_writer.flush()
 
     def tensorboard_response_cb(self, response, connection, userdata):
         '''
@@ -2855,7 +2854,7 @@ class TensorBoard():
         # Store the CASResults in userdata
         for k,v in response:
             userdata[k] = v
-            
+
         # Update userdata severity 
         userdata.severity = response.disposition.severity
 
