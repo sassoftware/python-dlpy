@@ -424,6 +424,11 @@ class Model(Network):
         if best_weights is not None:
             b_w = dict(replace=True, name=best_weights)
 
+        if not tensorboard:
+            tb_responsefunc = None
+        else:
+            tb_responsefunc = tensor_board.tensorboard_response_cb
+
         parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
                               valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
                               model_weights=model_weights, target=target, target_sequence=target_sequence,
@@ -431,7 +436,7 @@ class Model(Network):
                               record_seed=record_seed, missing=missing, optimizer=optimizer,
                               target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
                               force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
-                              target_order=target_order, tensorboard=tensorboard)
+                              target_order=target_order, responsefunc=tb_responsefunc)
 
         rt = self._retrieve_('deeplearn.dltrain', message_level='note', **parameters)
 
