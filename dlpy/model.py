@@ -111,7 +111,7 @@ class Model(Network):
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
             valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
             missing='mean', target_missing='mean', repeat_weight_table=False, force_equal_padding=None,
-            save_best_weights=False, n_threads=None, target_order='ascending'):
+            save_best_weights=False, n_threads=None, target_order='ascending', tensorboard=None):
         """
         Fitting a deep learning model.
 
@@ -229,7 +229,10 @@ class Model(Network):
             of the labels or order them in the order they are recieved with
             training data samples.
             Valid Values: 'ascending', 'descending', 'hash'
-            Default: 'ascending'
+            Default : 'ascending'
+        tensorboard: :class:`TensorBoard`, optional
+            Specifies the TensorBoard instance to log model training statistics.
+            Default : None
 
         Returns
         --------
@@ -276,6 +279,10 @@ class Model(Network):
         if save_best_weights and self.best_weights is None:
             self.best_weights = random_name('model_best_weights', 6)
 
+        if tensorboard:
+            if tensorboard.use_valid and not valid_table:
+                raise DLPyError('Cannot log validation data without a valid_table')
+
         r = self.train(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
                        optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
                        sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
@@ -283,7 +290,7 @@ class Model(Network):
                        missing=missing, target_missing=target_missing, repeat_weight_table=repeat_weight_table,
                        force_equal_padding=force_equal_padding, init_weights=init_weights, target_order=target_order,
                        best_weights=self.best_weights, model=self.model_table, n_threads=n_threads,
-                       model_weights=dict(replace=True, **self.model_weights.to_table_params()))
+                       model_weights=dict(replace=True, **self.model_weights.to_table_params()), tensorboard=tensorboard)
 
         try:
             temp = r.OptIterHistory
@@ -311,7 +318,7 @@ class Model(Network):
               model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
               sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
               optimizer=None, target_missing='mean', best_weights=None, repeat_weight_table=False,
-              force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending'):
+              force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending', tensorboard=None):
         """
         Trains a deep learning model
 
@@ -403,6 +410,9 @@ class Model(Network):
             of the labels or order them in the order of the process.
             Valid Values: 'ascending', 'descending', 'hash'
             Default: 'ascending'
+        tensorboard: :class:`TensorBoard`, optional
+            Specifies the TensorBoard instance to log model training statistics.
+            Default : None
 
         Returns
         -------
@@ -421,7 +431,7 @@ class Model(Network):
                               record_seed=record_seed, missing=missing, optimizer=optimizer,
                               target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
                               force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
-                              target_order=target_order)
+                              target_order=target_order, tensorboard=tensorboard)
 
         rt = self._retrieve_('deeplearn.dltrain', message_level='note', **parameters)
 
