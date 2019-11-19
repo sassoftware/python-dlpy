@@ -427,7 +427,7 @@ class Model(Network):
         if not tensorboard:
             tb_responsefunc = None
         else:
-            tb_responsefunc = tensor_board.tensorboard_response_cb
+            tb_responsefunc = tensorboard.tensorboard_response_cb
 
         parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
                               valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
