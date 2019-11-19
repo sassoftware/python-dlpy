@@ -2848,6 +2848,7 @@ class TensorBoard():
             userdata = swat.cas.results.CASResults()
             userdata.message = None
             userdata.at_scaler = False
+            userdata.severity = 0
             userdata.writer_dict = self.build_summary_writer()
             userdata.epoch_count = self.model.n_epochs + 1
             
@@ -2855,6 +2856,9 @@ class TensorBoard():
         for k,v in response:
             userdata[k] = v
             
+        # Update userdata severity 
+        userdata.severity = response.disposition.severity
+
         # Get the initial response message
         if userdata.message is None:
             userdata.message = response.messages
