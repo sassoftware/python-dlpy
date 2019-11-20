@@ -1363,7 +1363,7 @@ class TestModel(unittest.TestCase):
         default_scalar_list = ['learning_rate', 'loss', 'error']
         default_scalar_dict = {}
         for i in default_scalar_list:
-            default_scalar_dict[i] =  tf.summary.FileWriter(
+            default_scalar_dict[i] =  tf.summary.create_file_writer(
                 log_dir + 'Simple_CNN1' + '/' + i + '/'
             )
         for k,v in default_scalar_dict.items():
@@ -1380,7 +1380,7 @@ class TestModel(unittest.TestCase):
         valid_scalar_list = ['learning_rate', 'loss', 'error', 'valid_loss', 'valid_error']
         valid_scalar_dict = {}
         for i in valid_scalar_list:
-            valid_scalar_dict[i] =  tf.summary.FileWriter(
+            valid_scalar_dict[i] =  tf.summary.create_file_writer(
                log_dir + 'Simple_CNN1' + '/' + i + '/'
             )
         for k,v in default_scalar_dict.items():
