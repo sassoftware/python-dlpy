@@ -1379,6 +1379,7 @@ class TestModel(unittest.TestCase):
         try:
             import tensorflow as tf
             import numpy as np
+            from tensorflow.core.util import event_pb2
         except:
             unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
         
@@ -1411,12 +1412,16 @@ class TestModel(unittest.TestCase):
             tensorboard.log_scalar(writers['loss'], 'loss', test_loss_values[i], i)
 
         # Check event files for correct output data
-        tfevent_file = os.listdir(log_dir + '/loss/')
         count = 0
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/loss/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, test_loss_values[count], places=4)
-                count += 1
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, test_loss_values[count], places=4)
+                    count += 1
 
         # Clean up for next test
         shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
@@ -1426,6 +1431,7 @@ class TestModel(unittest.TestCase):
         try:
             import tensorflow as tf
             import numpy as np
+            from tensorflow.core.util import event_pb2
         except:
             unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
         
@@ -1506,44 +1512,64 @@ class TestModel(unittest.TestCase):
 
         # Check for correct scalar values
         count = 0
-        tfevent_file = os.listdir(log_dir + '/learning_rate/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/learning_rate/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 2.0, places=4)
-                count += 1
-        self.assertEquals(count, 1)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 2.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
 
         count = 0
-        tfevent_file = os.listdir(log_dir + '/loss/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/loss/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 3.0, places=4)
-                count += 1
-        self.assertEquals(count, 1)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 3.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
         
         count = 0
-        tfevent_file = os.listdir(log_dir + '/error/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/error/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 4.0, places=4)
-                count += 1
-        self.assertEquals(count, 1)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 4.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
 
         count = 0
-        tfevent_file = os.listdir(log_dir + '/valid_loss/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_loss/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 5.0, places=4)
-                count += 1
-        self.assertEquals(count, 1)
-        
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 5.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
+
         count = 0
-        tfevent_file = os.listdir(log_dir + '/valid_error/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_error/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 6.0, places=4)
-                count += 1
-        self.assertEquals(count, 1)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 6.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
 
         # Check on Batch
         response.messages.pop()
@@ -1577,44 +1603,64 @@ class TestModel(unittest.TestCase):
 
         # Check for correct scalar values
         count = 0
-        tfevent_file = os.listdir(log_dir + '/learning_rate/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/learning_rate/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 2.0, places=4)
-                count += 1
-        self.assertEquals(count, 2)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 2.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
 
         count = 0
-        tfevent_file = os.listdir(log_dir + '/loss/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/loss/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 3.0, places=4)
-                count += 1
-        self.assertEquals(count, 2)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 3.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
         
         count = 0
-        tfevent_file = os.listdir(log_dir + '/error/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/error/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 4.0, places=4)
-                count += 1
-        self.assertEquals(count, 2)
-
-        count = 0
-        tfevent_file = os.listdir(log_dir + '/valid_loss/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_loss/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 5.0, places=4)
-                count += 1
-        self.assertEquals(count, 2)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 4.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
         
         count = 0
-        tfevent_file = os.listdir(log_dir + '/valid_error/')
-        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_error/' + tfevent_file[0]):
-            for v in e.summary.value:
-                self.assertAlmostEqual(v.simple_value, 6.0, places=4)
-                count += 1
-        self.assertEquals(count, 2)
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 5.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
+        
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 6.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
 
         # On optimization changes at_scalar
         response.messages.pop()

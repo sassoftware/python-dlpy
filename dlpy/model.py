@@ -2805,9 +2805,8 @@ class TensorBoard():
             The SummaryWriter object for a particular scalar (e.g. the SummaryWriter for learning rate).
         scalar_name : string
             The scalar that is being recorded (e.g. learning rate).
-        scalar_value : str
+        scalar_value : np.float64
             A substring of the CASResponse message that contains the scalar value to log
-            (e.g. "1.0" would be the value representing loss).
         scalar_global_step : str
             A substring of the CASResponse message that contains the step (iteration) value of the scalar so far
             (e.g. "10" would be the 10th iteration of a certain scalar, by default using the epoch count).
