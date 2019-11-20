@@ -2783,8 +2783,8 @@ class TensorBoard():
         Returns
         -------
         dictionary
-            dictionary with keys for each scalar and values a list of 
-            SummaryWriter for train and valid partitions.
+            dictionary where keys are individual scalars and values are the 
+            SummaryWriter for a scalar.
         '''
         writer_dict = {}
 

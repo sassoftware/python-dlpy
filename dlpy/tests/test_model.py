@@ -1361,40 +1361,16 @@ class TestModel(unittest.TestCase):
         tensorboard = TensorBoard(model1, log_dir)
         writer = tensorboard.build_summary_writer()
         default_scalar_list = ['learning_rate', 'loss', 'error']
-        default_scalar_dict = {}
         for i in default_scalar_list:
-            default_scalar_dict[i] =  tf.summary.create_file_writer(
-                log_dir + 'Simple_CNN1' + '/' + i + '/'
-            )
-        for k,v in default_scalar_dict.items():
-            if k == 'learning_rate':
-                self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
-            if k == 'loss':
-                self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
-            if k == 'error':
-                self.assertEqual(writer[k].get_logdir(), default_scalar_dict[k].get_logdir())
+            assertTrue(i in writer)
                         
         # Test with validation scalars
         tensorboard = TensorBoard(model1, log_dir, use_valid=True)
         valid_writer = tensorboard.build_summary_writer()
         valid_scalar_list = ['learning_rate', 'loss', 'error', 'valid_loss', 'valid_error']
-        valid_scalar_dict = {}
         for i in valid_scalar_list:
-            valid_scalar_dict[i] =  tf.summary.create_file_writer(
-               log_dir + 'Simple_CNN1' + '/' + i + '/'
-            )
-        for k,v in default_scalar_dict.items():
-            if k == 'learning_rate':
-                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
-            if k == 'loss':
-                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
-            if k == 'error':
-                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
-            if k == 'valid_loss':
-                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
-            if k == 'valid_error':
-                self.assertEqual(valid_writer[k].get_logdir(), valid_scalar_dict[k].get_logdir())
-
+            assertTrue(i in valid_writer)
+                        
         # Clean up for next test
         shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
         shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
