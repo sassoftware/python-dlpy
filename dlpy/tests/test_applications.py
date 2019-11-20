@@ -26,11 +26,14 @@
 import swat
 import swat.utils.testing as tm
 from dlpy.applications import *
+from dlpy.utils import file_exist_on_server
 import unittest
+import json
+import os
+import pandas as pd
 
 
 class TestApplications(unittest.TestCase):
-
     server_type = None
     s = None
     server_sep = '/'
@@ -54,6 +57,12 @@ class TestApplications(unittest.TestCase):
                 cls.data_dir = cls.data_dir[:-1]
             cls.data_dir += cls.server_sep
 
+        filename = os.path.join('datasources', 'sample_syntax_for_test.json')
+        project_path = os.path.dirname(os.path.abspath(__file__))
+        full_filename = os.path.join(project_path, filename)
+        with open(full_filename) as f:
+            cls.sample_syntax = json.load(f)
+
     @classmethod
     def tearDownClass(cls):
         # tear down tests
@@ -68,9 +77,12 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'ResNet-50-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
                                pre_trained_weights=True,
                                include_top=False,
                                n_classes=120,
@@ -78,7 +90,7 @@ class TestApplications(unittest.TestCase):
         model.print_summary()
 
         model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
                                pre_trained_weights=True,
                                include_top=False,
                                n_classes=120,
@@ -86,27 +98,32 @@ class TestApplications(unittest.TestCase):
                                offsets=None)
         model.print_summary()
 
+        # test random_mutation and crop on VDMML 8.4
+        model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                               pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights=True,
+                               include_top=False,
+                               n_classes=120,
+                               random_crop='RESIZETHENCROP',
+                               random_mutation='random',
+                               offsets=None)
+
     def test_resnet50_caffe_caslib_msg(self):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'ResNet-50-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'data/ResNet-50-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='unique')
-
-        model = ResNet50_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-50-model.caffemodel.h5',
+                               pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
                                pre_trained_weights=True,
                                include_top=False,
                                n_classes=120,
                                random_crop='unique')
 
         model.print_summary()
-
 
     def test_resnet50_layerid(self):
 
@@ -121,66 +138,88 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'ResNet-101-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='unique')
+                                pre_trained_weights_file=self.data_dir + 'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='unique')
         model.print_summary()
-
 
         model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop=None,
-                               offsets=None)
+                                pre_trained_weights_file=self.data_dir + 'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop=None,
+                                offsets=None)
         model.print_summary()
 
+        self.assertRaises(ValueError,
+                          lambda: ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                                                  pre_trained_weights_file=self.data_dir + 'ResNet-101-model.caffemodel.h5',
+                                                  pre_trained_weights=True,
+                                                  include_top=False,
+                                                  n_classes=120,
+                                                  random_crop='wrong_val'))
 
-        self.assertRaises(ValueError, 
-                               lambda:ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-101-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='wrong_val'))
-
+        # test random_mutation and crop on VDMML 8.4
+        model = ResNet101_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                                pre_trained_weights_file=self.data_dir + 'ResNet-101-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='RESIZETHENCROP',
+                                random_mutation='random',
+                                offsets=None)
+        model.print_summary()
 
     def test_resnet152_caffe(self):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'ResNet-152-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='unique')
+                                pre_trained_weights_file=self.data_dir + 'ResNet-152-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='unique')
         model.print_summary()
-
 
         model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop=None,
-                               offsets=None)
+                                pre_trained_weights_file=self.data_dir + 'ResNet-152-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop=None,
+                                offsets=None)
         model.print_summary()
 
-
-        self.assertRaises(ValueError, 
-                               lambda:ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
-                               pre_trained_weights_file=self.data_dir+'ResNet-152-model.caffemodel.h5',
-                               pre_trained_weights=True,
-                               include_top=False,
-                               n_classes=120,
-                               random_crop='wrong_val'))
+        self.assertRaises(ValueError,
+                          lambda: ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                                                  pre_trained_weights_file=self.data_dir + 'ResNet-152-model.caffemodel.h5',
+                                                  pre_trained_weights=True,
+                                                  include_top=False,
+                                                  n_classes=120,
+                                                  random_crop='wrong_val'))
+        # test random_mutation and crop on VDMML 8.4
+        model = ResNet152_Caffe(self.s, n_channels=3, height=224, random_flip='HV',
+                                pre_trained_weights_file=self.data_dir + 'ResNet-152-model.caffemodel.h5',
+                                pre_trained_weights=True,
+                                include_top=False,
+                                n_classes=120,
+                                random_crop='RESIZETHENCROP',
+                                random_mutation='random',
+                                offsets=None)
+        model.print_summary()
 
     def test_lenet5(self):
         from dlpy.applications import LeNet5
@@ -192,79 +231,172 @@ class TestApplications(unittest.TestCase):
         model = VGG11(self.s)
         model.print_summary()
 
+        # test random_crop and mutation
+        model1 = VGG11(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop='unique',
+                       random_flip='hv',
+                       random_mutation='random')
+
+        model1.print_summary()
+        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        print(res1)
+
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
+
     def test_vgg13(self):
         from dlpy.applications import VGG13
         model = VGG13(self.s)
         model.print_summary()
 
+        # test random_crop and mutation
+        model1 = VGG13(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop='unique',
+                       random_flip='hv',
+                       random_mutation='random')
+
+        model1.print_summary()
+        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        print(res1)
+
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
+
     def test_vgg16(self):
         from dlpy.applications import VGG16
+
+        pd.set_option('display.max_columns', 40)
+
         model = VGG16(self.s)
         model.print_summary()
+        res = self.s.fetch(table=model.model_name, sortby='_dllayerid_')
+        print(res)
+
+        # test random_crop and mutation
+        model1 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop='unique',
+                       random_flip='hv',
+                       random_mutation='random',
+                       include_top=True)
+        model1.print_summary()
+        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        print(res1)
+
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
 
     def test_vgg16_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
-        model1 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3, 
+        model1 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
                        offsets=(103.939, 116.779, 123.68),
                        pre_trained_weights=True,
-                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
+                       pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
                        include_top=True)
-
+        model1.print_summary()
 
         model2 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
                        offsets=None,
                        random_crop=None,
                        pre_trained_weights=True,
-                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
+                       pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
                        include_top=True)
+        model2.print_summary()
 
-        self.assertRaises(ValueError, 
-                               lambda:VGG16(self.s, model_table='VGG16', 
-                               n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                               offsets=None,
-                               random_crop='wrong_val',
-                               pre_trained_weights=True,
-                               pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_16_layers.caffemodel.h5',
-                               include_top=True))
+        self.assertRaises(ValueError,
+                          lambda: VGG16(self.s, model_table='VGG16',
+                                        n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+                                        offsets=None,
+                                        random_crop='wrong_val',
+                                        pre_trained_weights=True,
+                                        pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
+                                        include_top=True))
+
+        # test random_crop and mutation
+        model3 = VGG16(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop='unique',
+                       random_flip='hv',
+                       random_mutation='random',
+                       pre_trained_weights=True,
+                       pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
+                       include_top=True)
+        model3.print_summary()
 
     def test_vgg19(self):
         from dlpy.applications import VGG19
         model = VGG19(self.s)
         model.print_summary()
 
+        # test random_crop and mutation
+        model1 = VGG19(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop='unique',
+                       random_flip='hv',
+                       random_mutation='random',
+                       include_top=True)
+        model1.print_summary()
+        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        print(res1)
+
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
 
     def test_vgg19_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'VGG_ILSVRC_19_layers.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
-        model1 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3, 
+        model1 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
                        offsets=(103.939, 116.779, 123.68),
                        pre_trained_weights=True,
-                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
+                       pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_19_layers.caffemodel.h5',
                        include_top=True)
 
-        model2 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3, 
+        model2 = VGG19(self.s, model_table='VGG19', n_classes=1000, n_channels=3,
                        width=224, height=224, scale=1,
                        offsets=None,
                        random_crop=None,
                        pre_trained_weights=True,
-                       pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
+                       pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_19_layers.caffemodel.h5',
                        include_top=True)
 
-        self.assertRaises(ValueError, 
-                               lambda:VGG19(self.s, model_table='VGG19', 
-                               n_classes=1000, n_channels=3, width=224, height=224, scale=1,
-                               offsets=None,
-                               random_crop='wrong_val',
-                               pre_trained_weights=True,
-                               pre_trained_weights_file=self.data_dir+'VGG_ILSVRC_19_layers.caffemodel.h5',
-                               include_top=True))
-
+        self.assertRaises(ValueError,
+                          lambda: VGG19(self.s, model_table='VGG19',
+                                        n_classes=1000, n_channels=3, width=224, height=224, scale=1,
+                                        offsets=None,
+                                        random_crop='wrong_val',
+                                        pre_trained_weights=True,
+                                        pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_19_layers.caffemodel.h5',
+                                        include_top=True))
+        # test random_crop and mutation
+        model3 = VGG19(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                       width=224, height=224, scale=1,
+                       offsets=None,
+                       random_crop='unique',
+                       random_flip='hv',
+                       random_mutation='random',
+                       pre_trained_weights=True,
+                       pre_trained_weights_file=self.data_dir + 'VGG_ILSVRC_16_layers.caffemodel.h5',
+                       include_top=True)
+        model3.print_summary()
 
     def test_resnet18(self):
         from dlpy.applications import ResNet18_SAS
@@ -295,6 +427,44 @@ class TestApplications(unittest.TestCase):
         from dlpy.applications import ResNet50_Caffe
         model = ResNet50_Caffe(self.s)
         model.print_summary()
+
+    # test resnet50 with reshape
+    def test_resnet50_3(self):
+        from dlpy.applications import ResNet50_Caffe
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'ResNet-50-model.caffemodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
+
+        reshape = Reshape(width=224, height=224, depth=3, order='WHD')
+        model = ResNet50_Caffe(self.s, reshape_after_input=reshape)
+        model.print_summary()
+
+        # test it with pretrained weights
+        model1 = ResNet50_Caffe(self.s, model_table='Resnet50', n_classes=1000, n_channels=3,
+                                width=224, height=224, scale=1,
+                                offsets=None,
+                                random_crop='unique',
+                                random_flip='hv',
+                                random_mutation='random',
+                                pre_trained_weights=True,
+                                pre_trained_weights_file=self.data_dir + 'ResNet-50-model.caffemodel.h5',
+                                include_top=True,
+                                reshape_after_input=reshape)
+        res = model1.print_summary()
+        print(res)
+        self.assertEqual(res.iloc[1, 6][0], 224)
+        self.assertEqual(res.iloc[1, 6][1], 224)
+        self.assertEqual(res.iloc[1, 6][2], 3)
+
+    # test resnet50 with the wrong reshape layer
+    def test_resnet50_4(self):
+        from dlpy.applications import ResNet50_Caffe
+
+        reshape = Pooling(width=2, height=2, stride=2)
+        self.assertRaises(DLPyError, lambda: ResNet50_Caffe(self.s, reshape_after_input=reshape))
 
     def test_resnet101(self):
         from dlpy.applications import ResNet101_SAS
@@ -374,7 +544,7 @@ class TestApplications(unittest.TestCase):
     def test_yolov2(self):
         with self.assertRaises(DLPyError):
             from dlpy.applications import YoloV2
-            anchors=[]
+            anchors = []
             anchors.append(1)
             anchors.append(1)
             model = YoloV2(self.s, anchors)
@@ -382,7 +552,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_2(self):
         from dlpy.applications import YoloV2
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         model = YoloV2(self.s, anchors, predictions_per_grid=1)
@@ -390,7 +560,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_3(self):
         from dlpy.applications import YoloV2
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         anchors.append(1)
@@ -400,7 +570,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_4(self):
         from dlpy.applications import YoloV2
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         anchors.append(1)
@@ -410,7 +580,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_multi(self):
         from dlpy.applications import YoloV2_MultiSize
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         anchors.append(1)
@@ -420,7 +590,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_multi_2(self):
         from dlpy.applications import YoloV2_MultiSize
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         anchors.append(1)
@@ -430,7 +600,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_tiny(self):
         from dlpy.applications import Tiny_YoloV2
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         anchors.append(1)
@@ -440,7 +610,7 @@ class TestApplications(unittest.TestCase):
 
     def test_yolov2_tiny_2(self):
         from dlpy.applications import Tiny_YoloV2
-        anchors=[]
+        anchors = []
         anchors.append(1)
         anchors.append(1)
         anchors.append(1)
@@ -492,6 +662,9 @@ class TestApplications(unittest.TestCase):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'InceptionV3_weights.kerasmodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         from dlpy.applications import InceptionV3
         model = InceptionV3(self.s,
@@ -503,14 +676,29 @@ class TestApplications(unittest.TestCase):
                             scale=1,
                             offsets=(103.939, 116.779, 123.68),
                             pre_trained_weights=True,
-                            pre_trained_weights_file=self.data_dir+'InceptionV3_weights.kerasmodel.h5',
+                            pre_trained_weights_file=self.data_dir + 'InceptionV3_weights.kerasmodel.h5',
                             include_top=True)
         model.print_summary()
+
+        # test random_crop and mutation
+        model2 = InceptionV3(self.s, model_table='VGG16', n_classes=1000, n_channels=3,
+                             width=299, height=299, scale=1,
+                             offsets=None,
+                             random_crop='unique',
+                             random_flip='hv',
+                             random_mutation='random',
+                             pre_trained_weights=True,
+                             pre_trained_weights_file=self.data_dir + 'InceptionV3_weights.kerasmodel.h5',
+                             include_top=True)
+        model2.print_summary()
 
     def test_inceptionv3_3(self):
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'InceptionV3_weights.kerasmodel.h5'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         from dlpy.applications import InceptionV3
         model = InceptionV3(self.s,
@@ -522,7 +710,7 @@ class TestApplications(unittest.TestCase):
                             scale=1,
                             offsets=(103.939, 116.779, 123.68),
                             pre_trained_weights=True,
-                            pre_trained_weights_file=self.data_dir+'InceptionV3_weights.kerasmodel.h5',
+                            pre_trained_weights_file=self.data_dir + 'InceptionV3_weights.kerasmodel.h5',
                             include_top=False)
         model.print_summary()
 
@@ -565,4 +753,103 @@ class TestApplications(unittest.TestCase):
     def test_speech_recognition_1(self):
         from dlpy.applications import SpeechRecognition
         model = SpeechRecognition(self.s, n_blocks=1)
+        model.print_summary()
+
+    def test_fast_rcnn(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s)
+        model.print_summary()
+
+    def test_fast_rcnn_2(self):
+        from dlpy.applications import Faster_RCNN
+        anchor_num_to_sample = 64
+        anchor_ratio = [2312312, 2, 2]
+        anchor_scale = [1.2, 2.3, 3.4, 5.6]
+        coord_type = 'rect'
+        model = Faster_RCNN(self.s, model_table='fast', anchor_num_to_sample=anchor_num_to_sample,
+                            anchor_ratio=anchor_ratio, anchor_scale=anchor_scale, coord_type=coord_type)
+        self.assertTrue(model.layers[20].config == self.sample_syntax['faster_rcnn1'])
+        model.print_summary()
+
+    def test_fast_rcnn_3(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50')
+        model.print_summary()
+
+    def test_fast_rcnn_4(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50', number_of_neurons_in_fc=1024)
+        model.print_summary()
+
+    def test_fast_rcnn_5(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50', number_of_neurons_in_fc=[1024, 1024])
+        model.print_summary()
+
+    def test_fast_rcnn_6(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet50', number_of_neurons_in_fc=[1024])
+        model.print_summary()
+
+    def test_fast_rcnn_7(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet18', number_of_neurons_in_fc=[1024, 1024])
+        model.print_summary()
+
+    def test_fast_rcnn_8(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='resnet34')
+        model.print_summary()
+
+    def test_fast_rcnn_9(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='mobilenetv1')
+        model.print_summary()
+
+    def test_fast_rcnn_10(self):
+        from dlpy.applications import Faster_RCNN
+        model = Faster_RCNN(self.s, backbone='mobilenetv2', width=123, height=321)
+        model.print_summary()
+
+    def test_mobilenetv1(self):
+        from dlpy.applications import MobileNetV1
+        model = MobileNetV1(self.s, n_classes=2, n_channels=3, depth_multiplier=10, alpha=2)
+        self.assertTrue(len(model.layers) == 57)
+        self.assertTrue(model.layers[49]._output_size == (7, 7, 2048))
+        model.print_summary()
+        self.assertEqual(model.summary.iloc[7, -1], 36126720)
+
+    def test_mobilenetv2(self):
+        from dlpy.applications import MobileNetV2
+        model = MobileNetV2(self.s, n_classes=2, n_channels=3, alpha=2)
+        self.assertTrue(len(model.layers) == 117)
+        self.assertTrue(model.layers[112]._output_size == (7, 7, 640))
+        model.print_summary()
+
+    def test_shufflenetv1(self):
+        from dlpy.applications import ShuffleNetV1
+        model = ShuffleNetV1(self.s, n_classes=2, n_channels=3, scale_factor=2, num_shuffle_units=[2, 2, 3, 4],
+                             bottleneck_ratio=0.4, groups=2)
+        self.assertTrue(len(model.layers) == 130)
+        self.assertTrue(model.layers[127]._output_size == (4, 4, 3200))
+        model.print_summary()
+
+    def test_unet(self):
+        from dlpy.applications import UNet
+        model = UNet(self.s, width=1024, height=1024, offsets=[1.25], scale=0.0002)
+        self.assertTrue(len(model.layers) == 33)
+        self.assertTrue(model.layers[12].output_size == (64, 64, 512))
+        model.print_summary()
+        # transpose conv print summary numerical check
+        model = UNet(self.s, width=256, height=256, offsets=[1.25], scale=0.0002)
+        model.print_summary()
+        self.assertEqual(model.summary.iloc[23, -1], 4831838208)
+
+    def test_unet_with_bn(self):
+        from dlpy.applications import UNet
+        # append bn layer right after conv
+        model = UNet(self.s, width=1024, height=1024, offsets=[1.25], scale=0.0002,
+                     bn_after_convolutions=True)
+        self.assertTrue(len(model.layers) == 33 + 9 * 2)
+        self.assertTrue(model.layers[12].output_size == (256, 256, 256))
         model.print_summary()

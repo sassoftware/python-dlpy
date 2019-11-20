@@ -25,10 +25,11 @@ import pandas as pd
 import collections
 import sys
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
-from .utils import filter_by_image_id, filter_by_filename
+from .utils import filter_by_image_id, filter_by_filename, isnotebook
 from dlpy.timeseries import TimeseriesTable
 from dlpy.timeseries import _get_first_obs, _get_last_obs, _combine_table, _prepare_next_input
-from dlpy.utils import DLPyError, Box
+from dlpy.utils import DLPyError, Box, DLPyDict
+from dlpy.lr_scheduler import _LRScheduler, FixedLR, StepLR, FCMPLR
 from dlpy.network import Network
 
 
@@ -46,7 +47,6 @@ class Model(Network):
     train_tbl = None
     valid_tbl = None
     score_message_level = 'note'
-    
 
     def change_labels(self, label_file, id_column, label_column):
         '''
@@ -106,9 +106,17 @@ class Model(Network):
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
             valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
             missing='mean', target_missing='mean', repeat_weight_table=False, force_equal_padding=None,
-            save_best_weights=False, n_threads=None, target_order='ascending'):
+            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None):
         """
         Fitting a deep learning model.
+
+        Note that this function surfaces several parameters from other parameters. For example,
+        while learning rate is a parameter of Solver (that is a parameter of Optimizer), it is leveled up
+        so that our users can easily set learning rate without changing the default optimizer and solver.
+        If a non-default solver or optimizer is passed, then these leveled-up
+        parameters will be ignored - even they are set - and the ones coming from
+        the custom solver and custom optimizer  will be used. In addition to learning_rate (lr),
+        max_epochs and log_level are another examples of such parameters.
 
         Parameters
         ----------
@@ -225,6 +233,8 @@ class Model(Network):
             training data samples.
             Valid Values: 'ascending', 'descending', 'hash'
             Default: 'ascending'
+        train_from_scratch : bool, optional
+            When set to True, it ignores the existing weights and trains the model from the scracth.
 
         Returns
         --------
@@ -260,13 +270,24 @@ class Model(Network):
         if target is None and '_label_' in input_table.columns.tolist():
             target = '_label_'
 
-        if self.model_weights.to_table_params()['name'].upper() in \
+        # check whether the field is none or not
+        if self.model_weights is not None and self.model_weights.to_table_params()['name'].upper() in \
                 list(self._retrieve_('table.tableinfo').TableInfo.Name):
-            print('NOTE: Training based on existing weights.')
-            init_weights = self.model_weights
+            if train_from_scratch:
+                print('NOTE: Ignoring the existing weights and training from scratch.')
+                init_weights = None
+                self.n_epochs = 0
+            else:
+                print('NOTE: Training based on existing weights.')
+                init_weights = self.model_weights
         else:
             print('NOTE: Training from scratch.')
             init_weights = None
+            self.n_epochs = 0
+
+        # when model_weights is none, reset it
+        if self.model_weights is None:
+            self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
 
         if save_best_weights and self.best_weights is None:
             self.best_weights = random_name('model_best_weights', 6)
@@ -301,6 +322,266 @@ class Model(Network):
             self.target = target
 
         return r
+
+    def fit_and_visualize(self, data, inputs=None, target=None, data_specs=None, mini_batch_size=1, max_epochs=5,
+                          lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None,
+                          text_parms=None, valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None,
+                          seed=0, record_seed=0, missing='mean', target_missing='mean', repeat_weight_table=False,
+                          force_equal_padding=None, save_best_weights=False, n_threads=None, target_order='ascending',
+                          visualize_freq=100):
+        """
+        Fitting a deep learning model while visulizing the fit and loss at each iteration.
+        This is exactly the same as the "fit()" function and if called, the training history, fiterror and loss,
+        in the iteration level is visualized with a line chart. This setting overrides the log-level and sets it
+        to 3 as it is the only level with iteration training history. It drops a point to the
+        graph for every visualize_freq (default=100).
+
+        NOTE THAT this function is experimental only as I did a lot of work-arounds to make it work
+        in Jupyter notebooks.
+
+        Parameters
+        ----------
+
+        data : string
+            This is the input data. It might be a string that is the
+            name of a cas table. Alternatively, this might be a cas table.
+        inputs : string or list-of-strings, optional
+            Specifies the input variables to use in the analysis.
+        target : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        data_specs : :class:`DataSpec`, optional
+            Specifies the parameters for the multiple input cases.
+        mini_batch_size : int, optional
+            Specifies the number of observations per thread in a
+            mini-batch. You can use this parameter to control the number of
+            observations that the action uses on each worker for each thread
+            to compute the gradient prior to updating the weights. Larger
+            values use more memory. When synchronous SGD is used (the
+            default), the total mini-batch size is equal to
+            miniBatchSize * number of threads * number of workers. When
+            asynchronous SGD is used (by specifying the elasticSyncFreq
+            parameter), each worker trains its own local model. In this case,
+            the total mini-batch size for each worker is
+            miniBatchSize * number of threads.
+        max_epochs : int, optional
+            specifies the maximum number of epochs. For SGD with a
+            single-machine server or a session that uses one worker on a
+            distributed server, one epoch is reached when the action passes
+            through the data one time. For a session that uses more than one
+            worker, one epoch is reached when all the workers exchange the
+            weights with the controller one time. The syncFreq parameter
+            specifies the number of times each worker passes through the
+            data before exchanging weights with the controller. For L-BFGS
+            with full batch, each L-BFGS iteration might process more than
+            one epoch, and final number of epochs might exceed the maximum
+            number of epochs.
+        log_level : int, optional
+            Specifies how progress messages are sent to the client. The
+            default value, 0, indicates that no messages are sent. Specify 1
+            to receive start and end messages. Specify 2 to include the
+            iteration history.
+        lr : double, optional
+            Specifies the learning rate.
+        optimizer : :class:`Optimizer`, optional
+            Specifies the parameters for the optimizer.
+        nominals : string or list-of-strings, optional
+            Specifies the nominal input variables to use in the analysis.
+        texts : string or list-of-strings, optional
+            Specifies the character variables to treat as raw text.
+            These variables must be specified in the inputs parameter.
+        target_sequence : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        sequence : :class:`Sequence`, optional
+            Specifies the settings for sequence data.
+        text_parms : :class:`TextParms`, optional
+            Specifies the parameters for the text inputs.
+        valid_table : string or CASTable, optional
+            Specifies the table with the validation data. The validation
+            table must have the same columns and data types as the training table.
+        valid_freq : int, optional
+            Specifies the frequency for scoring the validation table.
+        gpu : :class:`Gpu`, optional
+            When specified, the action uses graphical processing unit hardware.
+            The simplest way to use GPU processing is to specify "gpu=1".
+            In this case, the default values of other GPU parameters are used.
+            Setting gpu=1 enables all available GPU devices for use. Setting
+            gpu=0 disables GPU processing.
+        attributes : string or list-of-strings, optional
+            Specifies temporary attributes, such as a format, to apply to
+            input variables.
+        weight : string, optional
+            Specifies the variable/column name in the input table containing the
+            prior weights for the observation.
+        seed : double, optional
+            specifies the random number seed for the random number generator
+            in SGD. The default value, 0, and negative values indicate to use
+            random number streams based on the computer clock. Specify a value
+            that is greater than 0 for a reproducible random number sequence.
+        record_seed : double, optional
+            specifies the random number seed for the random record selection
+            within a worker. The default value 0 disables random record selection.
+            Records are read as they are laid out in memory.
+            Negative values indicate to use random number streams based on the
+            computer clock.
+        missing : string, optional
+            Specifies the policy for replacing missing values with imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        target_missing : string, optional
+            Specifies the policy for replacing target missing values with
+            imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        repeat_weight_table : bool, optional
+            Replicates the entire weight table on each worker node when saving
+            weights.
+            Default: False
+        force_equal_padding : bool, optional
+            For convolution or pooling layers, this setting forces left padding
+            to equal right padding, and top padding to equal bottom padding.
+            This setting might result in an output image that is
+            larger than the input image.
+            Default: False
+        save_best_weights : bool, optional
+            When set to True, it keeps the weights that provide the smallest
+            loss error.
+        n_threads : int, optional
+            Specifies the number of threads to use. If nothing is set then
+            all of the cores available in the machine(s) will be used.
+        target_order : string, optional
+            Specifies the order of the labels. It can follow the natural order
+            of the labels or order them in the order they are recieved with
+            training data samples.
+            Valid Values: 'ascending', 'descending', 'hash'
+            Default: 'ascending'
+        visualize_freq: int, optional
+            Specifies the frequency of the points in the visualization history. Note that the chart will
+            get crowded, and possibly get slower, with more points.
+            Default: 100
+
+        Returns
+        --------
+        :class:`CASResults`
+
+        """
+        # set reference to the training and validation table
+        self.train_tbl = data
+        self.valid_tbl = valid_table
+
+        input_tbl_opts = input_table_check(data)
+        input_table = self.conn.CASTable(**input_tbl_opts)
+
+        if data_specs is None and inputs is None:
+            from dlpy.images import ImageTable
+            if isinstance(input_table, ImageTable):
+                inputs = input_table.running_image_column
+            elif '_image_' in input_table.columns.tolist():
+                print('NOTE: Inputs=_image_ is used')
+                inputs = '_image_'
+            else:
+                raise DLPyError('either dataspecs or inputs need to be non-None')
+
+        if optimizer is None:
+            optimizer = Optimizer(algorithm=VanillaSolver(learning_rate=lr),  mini_batch_size=mini_batch_size,
+                                  max_epochs=max_epochs, log_level=3)
+        else:
+            if not isinstance(optimizer, Optimizer):
+                raise DLPyError('optimizer should be an Optimizer object')
+
+        max_epochs = optimizer['maxepochs']
+
+        if target is None and '_label_' in input_table.columns.tolist():
+            target = '_label_'
+
+        if self.model_weights.to_table_params()['name'].upper() in \
+                list(self._retrieve_('table.tableinfo').TableInfo.Name):
+            print('NOTE: Training based on existing weights.')
+            init_weights = self.model_weights
+        else:
+            print('NOTE: Training from scratch.')
+            init_weights = None
+
+        if save_best_weights and self.best_weights is None:
+            self.best_weights = random_name('model_best_weights', 6)
+
+        if isnotebook() is True:
+            # prep work for visualization
+            freq=[]
+            freq.append(visualize_freq)
+            x = []
+            y = []
+            y_loss = []
+            e = []
+            total_sample_size = []
+            iter_history = []
+            status = []
+            status.append(0)
+
+            self._train_visualize(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
+                                  optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
+                                  sequence=sequence, text_parms=text_parms, valid_table=valid_table,
+                                  valid_freq=valid_freq, gpu=gpu, attributes=attributes, weight=weight, seed=seed,
+                                  record_seed=record_seed, missing=missing, target_missing=target_missing,
+                                  repeat_weight_table=repeat_weight_table, force_equal_padding=force_equal_padding,
+                                  init_weights=init_weights, target_order=target_order, best_weights=self.best_weights,
+                                  model=self.model_table, n_threads=n_threads,
+                                  model_weights=dict(replace=True, **self.model_weights.to_table_params()),
+                                  x=x, y=y, y_loss=y_loss, total_sample_size=total_sample_size, e=e,
+                                  iter_history=iter_history, freq=freq, status=status)
+            if status[0] == 0:
+                try:
+                    temp = iter_history[0]
+                    temp.Epoch += 1  # Epochs should start from 1
+                    temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
+
+                    if self.n_epochs == 0:
+                        self.n_epochs = max_epochs
+                        self.training_history = temp
+                    else:
+                        temp.Epoch += self.n_epochs
+                        self.training_history = self.training_history.append(temp)
+                        self.n_epochs += max_epochs
+
+                    self.training_history.index = range(0, self.n_epochs)
+                except:
+                    pass
+            else:
+                print('Could not train the model')
+        else:
+            print('DLPy supports training history visualization in only Jupyter notebooks. '
+                  'We are calling the fit method in anyways')
+
+            r = self.train(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
+                           optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
+                           sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
+                           gpu=gpu, attributes=attributes, weight=weight, seed=seed, record_seed=record_seed,
+                           missing=missing, target_missing=target_missing, repeat_weight_table=repeat_weight_table,
+                           force_equal_padding=force_equal_padding, init_weights=init_weights,
+                           target_order=target_order, best_weights=self.best_weights, model=self.model_table,
+                           n_threads=n_threads,
+                           model_weights=dict(replace=True, **self.model_weights.to_table_params()))
+
+            try:
+                temp = r.OptIterHistory
+                temp.Epoch += 1  # Epochs should start from 1
+                temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
+
+                if self.n_epochs == 0:
+                    self.n_epochs = max_epochs
+                    self.training_history = temp
+                else:
+                    temp.Epoch += self.n_epochs
+                    self.training_history = self.training_history.append(temp)
+                    self.n_epochs += max_epochs
+
+                self.training_history.index = range(0, self.n_epochs)
+            except:
+                pass
+
+            if r.severity < 2:
+                self.target = target
+
+            return r
 
     def train(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None, valid_freq=1,
               model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
@@ -497,7 +778,9 @@ class Model(Network):
             raise DLPyError('model.fit should be run before calling plot_training_history')
 
     def evaluate(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
-                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False):
+                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False,
+                 random_crop='none', random_flip='none',  random_mutation='none',
+                 model_task=None):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -548,6 +831,33 @@ class Model(Network):
             error saved during a previous training is used while scoring
             input data rather than the final weights from the training.
             Default: False
+        random_flip : string, optional
+            Specifies how to flip the data in the input layer when image data is used.
+            H stands for horizontal
+            V stands for vertical
+            HW stands for horizontal and vertical
+            Approximately half of the input data is subject to flipping.
+            Default: NONE
+            Valid Values: NONE, H, V, HV
+        random_crop : string, optional
+            Specifies how to crop the data in the input layer when image
+            data is used. Images are cropped to the values that are specified
+            in the width and height parameters. Only the images with one or
+            both dimensions that are larger than those sizes are cropped.
+            UNIQUE: specifies to crop images to the size specified in the
+            height and width parameters. Images that are less than or equal
+            to the size are not modified. For images that are larger, the
+            cropping begins at a random offset for x and y.
+            Default: NONE
+            Valid Values: NONE, UNIQUE
+        random_mutation : string, optional
+            Specifies how to mutate images.
+            Default: NONE
+            Valid Values: NONE, RANDOM
+
+        model_task : string, optional
+            Specifies the model task type.
+            Valid Values: CLASSIFICATION, REGRESSION
 
         Returns
         -------
@@ -576,13 +886,18 @@ class Model(Network):
         if self.model_type == 'RNN':
             en = False
 
+        # use encoded name when model does classification or regression
+        if model_task and (model_task.upper() == 'CLASSIFICATION' or model_task.upper() == 'REGRESSION'):
+            en = True
+
         if use_best_weights and self.best_weights is not None:
             print('NOTE: Using the weights providing the smallest loss error.')
             res = self.score(table=input_table, model=self.model_table, init_weights=self.best_weights,
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl),
                              encode_name=en, text_parms=text_parms, layer_out=lo,
                              layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
-                             top_probs=top_probs, buffer_size=buffer_size)
+                             top_probs=top_probs, buffer_size=buffer_size,
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
         else:
             if self.model_weights is None:
                 raise DLPyError('We need some weights to do scoring.')
@@ -591,7 +906,8 @@ class Model(Network):
                                  copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl),
                                  encode_name=en, text_parms=text_parms, layer_out=lo,
                                  layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
-                                 buffer_size=buffer_size, top_probs=top_probs)
+                                 buffer_size=buffer_size, top_probs=top_probs,
+                                 random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
         if res.severity > 1:
             raise DLPyError('something is wrong while scoring the input data with the model.')
@@ -611,17 +927,29 @@ class Model(Network):
                 self.target = output_names[0][2:]
                 self.valid_conf_mat = self.conn.crosstab(table=valid_res_tbl, row=self.target, col='I_' + self.target)
 
+        # always set valid_res_tbl
+        self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
+
         if self.model_type == 'CNN':
             if not self.conn.has_actionset('image'):
                 self.conn.loadactionset(actionSet='image', _messagelevel='error')
 
-            self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             temp_columns = self.valid_res_tbl.columns.tolist()
-            columns = [item for item in temp_columns if item[0:9] == 'P_' + self.target or item == 'I_' + self.target]
-            img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
-            img_table = img_table.Images
 
-            self.valid_res = img_table
+            # the model might not use the image data
+            do_image = False
+            for col in temp_columns:
+                if col.lower() == '_image_':
+                    do_image = True
+                    break
+
+            # when do images, fetch some images back to client
+            if do_image:
+                columns = [item for item in temp_columns if item[0:9] == 'P_' + self.target or item == 'I_' + self.target]
+                img_table = self._retrieve_('image.fetchimages', fetchimagesvars=columns, imagetable=self.valid_res_tbl, to=1000)
+                img_table = img_table.Images
+
+                self.valid_res = img_table
         else:
             self.valid_res = res
 
@@ -662,8 +990,8 @@ class Model(Network):
         if coord_type.lower() not in ['yolo', 'coco']:
             raise ValueError('coord_type, {}, is not supported'.format(coord_type))
 
-        self.conn.update(table=dict(name = self.model_name, where='_DLChrVal_ eq "iouThreshold"'),
-                         set=[{'var':'_DLNumVal_', 'value':'0.5'}])
+        #self.conn.update(table=dict(name = self.model_name, where='_DLChrVal_ eq "iouThreshold"'),
+        #                 set=[{'var':'_DLNumVal_', 'value':'0.5'}])
 
         if detection_data is not None:
             input_tbl_opts = input_table_check(detection_data)
@@ -820,7 +1148,9 @@ class Model(Network):
         return results
 
     def predict(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=10,
-                mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None):
+                mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None,
+                layer_image_type=None, log_level=0,
+                random_crop='none', random_flip='none',  random_mutation='none'):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -876,6 +1206,41 @@ class Model(Network):
         n_threads : int, optional
             Specifies the number of threads to use. If nothing is set then
             all of the cores available in the machine(s) will be used.
+        layer_image_type : string, optional
+            Specifies the image type to store in the output layers table.
+            JPG means a compressed image (e.g, jpg, png, and tiff)
+            WIDE means a pixel per column
+            Default: jpg
+            Valid Values: JPG, WIDE
+        log_level : int, optional
+            specifies the reporting level for progress messages sent to the client.
+            The default level 0 indicates that no messages are sent.
+            Setting the value to 1 sends start and end messages.
+            Setting the value to 2 adds the iteration history to the client messaging.
+            default: 0
+        random_flip : string, optional
+            Specifies how to flip the data in the input layer when image data is used.
+            H stands for horizontal
+            V stands for vertical
+            HW stands for horizontal and vertical
+            Approximately half of the input data is subject to flipping.
+            Default: NONE
+            Valid Values: NONE, H, V, HV
+        random_crop : string, optional
+            Specifies how to crop the data in the input layer when image
+            data is used. Images are cropped to the values that are specified
+            in the width and height parameters. Only the images with one or
+            both dimensions that are larger than those sizes are cropped.
+            UNIQUE: specifies to crop images to the size specified in the
+            height and width parameters. Images that are less than or equal
+            to the size are not modified. For images that are larger, the
+            cropping begins at a random offset for x and y.
+            Default: NONE
+            Valid Values: NONE, UNIQUE
+        random_mutation : string, optional
+            Specifies how to mutate images.
+            Default: NONE
+            Valid Values: NONE, RANDOM
 
         Returns
         -------
@@ -906,7 +1271,8 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads)
+                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level,
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res
         else:
@@ -914,12 +1280,13 @@ class Model(Network):
                              copy_vars=copy_vars, casout=dict(replace=True, name=valid_res_tbl), encode_name=en,
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
-                             n_threads=n_threads)
+                             n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level,
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res    
         
-    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None, 
-                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None, 
+    def forecast(self, test_table=None, horizon=1, train_table=None, layer_out=None,
+                 layers=None, gpu=None, buffer_size=10, mini_batch_buf_size=None,
                  use_best_weights=False, n_threads=None, casout=None):
         """
         Make forecasts based on deep learning models trained on `TimeseriesTable`.
@@ -1082,10 +1449,10 @@ class Model(Network):
 
                 if horizon == 1:
                     self.predict(test_table, layer_out=layer_out, layers=layers,
-                             gpu=gpu, buffer_size=buffer_size,
-                             mini_batch_buf_size=mini_batch_buf_size,
-                             use_best_weights=use_best_weights,
-                             n_threads=n_threads)
+                                 gpu=gpu, buffer_size=buffer_size,
+                                 mini_batch_buf_size=mini_batch_buf_size,
+                                 use_best_weights=use_best_weights,
+                                 n_threads=n_threads)
 
                     output_tbl = self.valid_res_tbl
 
@@ -1096,7 +1463,7 @@ class Model(Network):
                     output_tbl = _combine_table(output_tbl,  casout=casout)
                 else:
                     cur_input = _get_first_obs(test_table, self.train_tbl.timeid,
-                             groupby=self.train_tbl.groupby_var)
+                                               groupby=self.train_tbl.groupby_var)
 
                     for i in range(horizon):
                         if i > 0:
@@ -1136,7 +1503,7 @@ class Model(Network):
                 train_valid_tbl = _combine_table(self.train_tbl, self.valid_tbl)
 
                 cur_results = _get_last_obs(train_valid_tbl, self.train_tbl.timeid,
-                                         groupby=self.train_tbl.groupby_var)
+                                            groupby=self.train_tbl.groupby_var)
 
                 self.conn.retrieve('table.droptable', _messagelevel='error', name=train_valid_tbl.name)
 
@@ -1183,7 +1550,6 @@ class Model(Network):
                     else:
                         output_tbl = _combine_table(output_tbl, cur_results, casout=output_tbl)
 
-
         self.score_message_level = 'note'
 
         return output_tbl
@@ -1191,7 +1557,8 @@ class Model(Network):
     def score(self, table, model=None, init_weights=None, text_parms=None, layer_out=None,
               layer_image_type='jpg', layers=None, copy_vars=None, casout=None, gpu=None, buffer_size=10,
               mini_batch_buf_size=None, encode_name=False, random_flip='none', random_crop='none', top_probs=None,
-              random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None):
+              random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None,
+              log_level=None):
         """
         Inference of input data with the trained deep learning model
 
@@ -1279,6 +1646,12 @@ class Model(Network):
         n_threads : int, optional
             Specifies the number of threads to use. If nothing is set then
             all of the cores available in the machine(s) will be used.
+        log_level : int, optional
+            specifies the reporting level for progress messages sent to the client.
+            The default level 0 indicates that no messages are sent.
+            Setting the value to 1 sends start and end messages.
+            Setting the value to 2 adds the iteration history to the client messaging.
+            default: 0
 
         Returns
         -------
@@ -1290,18 +1663,160 @@ class Model(Network):
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
                                   layer_image_type=layer_image_type, layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
-                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
-                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
+                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
+                                  random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,
+                                  random_mutation=random_mutation, log_level=log_level)
         else:
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
                                   layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
-                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads, random_flip=random_flip,
-                                  random_crop=random_crop, top_probs=top_probs, random_mutation=random_mutation)
-
+                                  layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
+                                  random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,
+                                  random_mutation=random_mutation, log_level=log_level)
 
         return self._retrieve_('deeplearn.dlscore', message_level=self.score_message_level, **parameters)
 
+    def _train_visualize(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None,
+                         valid_freq=1, model=None, init_weights=None, model_weights=None, target=None,
+                         target_sequence=None, sequence=None, text_parms=None, weight=None, gpu=None, seed=0,
+                         record_seed=None, missing='mean', optimizer=None, target_missing='mean', best_weights=None,
+                         repeat_weight_table=False, force_equal_padding=None, data_specs=None, n_threads=None,
+                         target_order='ascending', x=None, y=None, y_loss=None, total_sample_size=None, e=None,
+                         iter_history=None, freq=None, status=None):
+        """
+        Function that calls the training action enriched with training history visualization.
+        This is an internal private function and for documentation, please refer to fit() or train()
+
+        """
+        self._train_visualization()
+
+        b_w = None
+        if best_weights is not None:
+            b_w = dict(replace=True, name=best_weights)
+        if optimizer is not None:
+            optimizer['log_level'] = 3
+        else:
+            optimizer=Optimizer(log_level=3)
+
+        parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
+                              valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
+                              model_weights=model_weights, target=target, target_sequence=target_sequence,
+                              sequence=sequence, text_parms=text_parms, weight=weight, gpu=gpu, seed=seed,
+                              record_seed=record_seed, missing=missing, optimizer=optimizer,
+                              target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
+                              force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
+                              target_order=target_order)
+        import swat
+        from ipykernel.comm import Comm
+        comm = Comm(target_name='%(plot_id)s_comm' % dict(plot_id='foo'))
+
+        with swat.option_context(print_messages=False):
+            self._retrieve_('deeplearn.dltrain', message_level='note',
+                            responsefunc=_pre_parse_results(x, y, y_loss, total_sample_size,
+                                                            e, comm, iter_history, freq, status),
+                            **parameters)
+
+        if status[0] == 0:
+            self.model_ever_trained = True
+            return iter_history[0]
+        else:
+            return None
+
+    def _train_visualization(self):
+        from IPython.display import display, HTML
+        display(HTML('''
+        <canvas id='%(plot_id)s_canvas' style='width: %(plot_width)spx; height: %(plot_height)spx'></canvas>
+
+        <script language='javascript'>
+        <!--
+        requirejs.config({
+            paths: {
+                Chart: ['//cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min']
+            }
+        });
+
+        require(['jquery', 'Chart'], function($, Chart) {
+
+            var comm = Jupyter.notebook.kernel.comm_manager.new_comm('%(plot_id)s_comm')
+            var ctx = document.getElementById('%(plot_id)s_canvas').getContext('2d');
+            var chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'FitError',
+                        borderColor: '#FF0000',
+                        backgroundColor: '#FF0000',
+                        fill: false,
+                        data: [],
+                        yAxisID: 'y-axis-1'
+                    }, {
+                        label: 'Loss',
+                        borderColor: '#0000FF',
+                        backgroundColor: '#0000FF',
+                        fill: false,
+                        data: [],
+                        yAxisID: 'y-axis-2'
+                    }],
+                },
+                options: {
+                    stacked: false,
+                    scales: {
+                        yAxes: [{
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            id: 'y-axis-1',
+                            data: []
+                        }, {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            id: 'y-axis-2',
+                            data: [],
+
+                            // grid line settings
+                            gridLines: {
+                                drawOnChartArea: false, // only want the grid lines for one axis to show up
+                            },
+                        }],
+                    }
+                }
+            });
+
+            Jupyter.notebook.kernel.comm_manager.register_target('%(plot_id)s_comm',
+                function(comm, msg) {
+                    comm.on_msg(function(msg) {
+                        var data = msg.content.data;
+                        chart.data.labels.push(data.label);
+                        for ( var i = 0; i < chart.data.datasets.length; i++ ) {
+                            chart.data.datasets[i].data.push(data.data[i]);
+                        }
+                        chart.update(0);
+                    })
+
+                    comm.on_close(function() {
+                        comm.send({'command': 'stop'});
+                    })
+
+                    // Send message when plot is removed
+                    $.event.special.destroyed = {
+                        remove: function(o) {
+                            if (o.handler) {
+                                o.handler()
+                            }
+                        }
+                    }
+
+                    $('#%(plot_id)s_canvas').bind('destroyed', function() {
+                        comm.send({'command': 'stop'});
+                    });
+                }
+            );
+
+        });
+        //-->
+        </script>''' % dict(plot_id='foo', plot_width='950', plot_height='400')))
 
     def plot_evaluate_res(self, cas_table=None, img_type='A', image_id=None, filename=None, n_images=5,
                           target='_label_', predicted_class=None, label_class=None, randomize=False,
@@ -1760,7 +2275,7 @@ class Model(Network):
         image_id_list = temp_table['_parentId_'].unique().tolist()
         n_masks = len(temp_table['_id_'].unique())
 
-        prob_tensor = np.empty((output_width, output_height, n_masks))
+        prob_tensor = np.empty((output_height, output_width, n_masks))
         prob_tensor[:] = np.nan
         model_explain_table = dict()
         count_for_subject = dict()
@@ -1930,7 +2445,6 @@ class Model(Network):
         plt.show()
 
 
-
 class FeatureMaps(object):
     '''
     Feature Maps object
@@ -2012,39 +2526,6 @@ class FeatureMaps(object):
         plt.show()
 
 
-class DLPyDict(collections.MutableMapping):
-    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
-
-    def __init__(self, *args, **kwargs):
-        for k in kwargs:
-            self.__setitem__(k, kwargs[k])
-
-    def __getitem__(self, key):
-        return self.__dict__[self.__keytransform__(key)]
-
-    def __setitem__(self, key, value):
-        if value is not None:
-            self.__dict__[self.__keytransform__(key)] = value
-        else:
-            if key in self.__dict__:
-                self.__delitem__[key]
-
-    def __delitem__(self, key):
-        del self.__dict__[self.__keytransform__(key)]
-
-    def __iter__(self):
-        return iter(self.__dict__)
-
-    def __len__(self):
-        return len(self.__dict__)
-
-    def __keytransform__(self, key):
-        return key.lower().replace("_", "")
-
-    def __str__(self):
-        return str(self.__dict__)
-
-
 class Solver(DLPyDict):
     '''
     Solver object
@@ -2078,6 +2559,19 @@ class Solver(DLPyDict):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2085,10 +2579,31 @@ class Solver(DLPyDict):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
+
         DLPyDict.__init__(self, learning_rate=learning_rate, learning_rate_policy=learning_rate_policy, gamma=gamma,
                           step_size=step_size, power=power, use_locking=use_locking, clip_grad_max=clip_grad_max,
-                          clip_grad_min=clip_grad_min, steps=steps)
+                          clip_grad_min=clip_grad_min, steps=steps, fcmp_learning_rate=fcmp_learning_rate)
+
+        # lr_scheduler default as None and if it is specified, it will overwrite lr option in _solver
+        if lr_scheduler is not None:
+            if not isinstance(lr_scheduler, _LRScheduler):
+                raise TypeError('{} is not an LRScheduler'.format(type(lr_scheduler).__name__))
+
+            if lr_scheduler.get('fcmp_learning_rate'):
+                self.pop('learning_rate_policy', 0)
+
+            args_wrapped_in_lr_scheduler = ['learning_rate', 'learning_rate_policy', 'gamma', 'step_size',
+                                            'power', 'steps', 'fcmp_learning_rate']
+
+            not_none_args = [i for i in args_wrapped_in_lr_scheduler if self.get(i) is not None]
+
+            if len(not_none_args) > 0:
+                print('The following argument(s) {} are overwritten by the according arguments '
+                      'specified in lr_scheduler.'.format(', '.join(not_none_args)))
+            for key, value in lr_scheduler.items():
+                self.__setitem__(key, value)
 
     def set_method(self, method):
         '''
@@ -2152,6 +2667,19 @@ class VanillaSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2159,9 +2687,10 @@ class VanillaSolver(Solver):
 
     '''
     def __init__(self, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75,
-                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('vanilla')
 
 
@@ -2200,6 +2729,19 @@ class MomentumSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth,
         ninth, and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2207,9 +2749,10 @@ class MomentumSolver(Solver):
 
     '''
     def __init__(self, momentum=0.9, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1, step_size=10,
-                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('momentum')
         self.add_parameter('momentum', momentum)
 
@@ -2253,6 +2796,19 @@ class AdamSolver(Solver):
         value of the gamma parameter. For example, if you specify {5, 9, 13},
         then the learning rate is multiplied by gamma after the fifth, ninth,
         and thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2260,9 +2816,10 @@ class AdamSolver(Solver):
 
     '''
     def __init__(self, beta1=0.9, beta2=0.999, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('adam')
         self.add_parameter('beta1', beta1)
         self.add_parameter('beta2', beta2)
@@ -2316,6 +2873,19 @@ class LBFGSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2324,9 +2894,9 @@ class LBFGSolver(Solver):
     '''
     def __init__(self, m, max_line_search_iters, max_iters, backtrack_ratio, learning_rate=0.001,
                  learning_rate_policy='fixed', gamma=0.1, step_size=10, power=0.75, use_locking=True,
-                 clip_grad_max=None, clip_grad_min=None, steps=None):
+                 clip_grad_max=None, clip_grad_min=None, steps=None, fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('lbfg')
         self.add_parameters('m', m)
         self.add_parameters('maxlinesearchiters', max_line_search_iters)
@@ -2369,6 +2939,19 @@ class NatGradSolver(Solver):
         of the gamma parameter. For example, if you specify {5, 9, 13}, then
         the learning rate is multiplied by gamma after the fifth, ninth, and
         thirteenth epochs.
+    fcmp_learning_rate : string, optional
+        specifies the FCMP learning rate function.
+    lr_scheduler : LRScheduler, optional
+        Specifies learning rate policy
+        DLPy provides you with some predefined learning rate policies.
+        1. FixedLR
+        2. StepLR
+        3. MultiStepLR
+        4. PolynomialLR
+        5. ReduceLROnPlateau
+        6. CyclicLR
+        Besides, you can also customize your own learning rate policy.
+        You can find more examples at DLPy example folder.
 
     Returns
     -------
@@ -2376,9 +2959,10 @@ class NatGradSolver(Solver):
 
     '''
     def __init__(self, approximation_type=1, learning_rate=0.001, learning_rate_policy='fixed', gamma=0.1,
-                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None):
+                 step_size=10, power=0.75, use_locking=True, clip_grad_max=None, clip_grad_min=None, steps=None,
+                 fcmp_learning_rate=None, lr_scheduler=None):
         Solver.__init__(self, learning_rate, learning_rate_policy, gamma, step_size, power, use_locking,
-                        clip_grad_max, clip_grad_min, steps)
+                        clip_grad_max, clip_grad_min, steps, fcmp_learning_rate, lr_scheduler)
         self.set_method('natgrad')
         self.add_parameter('approximationtype', approximation_type)
 
@@ -2471,9 +3055,6 @@ class Optimizer(DLPyDict):
     bn_src_layer_warnings : bool, optional
         Turns warning on or off, if batch normalization source layer has
         an atypical type, activation, or include_bias setting. Default: False
-        freeze_layers_to : string
-        Specifies a layer name to freeze this layer and all the layers before
-        this layer.
     total_mini_batch_size : int, optional
         specifies the number of observations in a mini-batch. You can use
         this parameter to control the number of observations that the action
@@ -2496,6 +3077,13 @@ class Optimizer(DLPyDict):
         the bufferSize. The only disadvantage to specifying a small value is
         that run time can increase because multiple smaller matrices must be
         multiplied instead of a single large matrix multiply.
+    freeze_layers_to : string
+        Specifies a layer name to freeze this layer and all the layers before
+        this layer.
+    freeze_batch_norm_stats : Boolean
+        When set to True, freezes the statistics of all batch normalization layers.
+    freeze_layers : list of string
+        Specifies a list of layer names whose trainable parameters will be frozen.
 
     Returns
     -------
@@ -2505,14 +3093,16 @@ class Optimizer(DLPyDict):
     def __init__(self, algorithm=VanillaSolver(), mini_batch_size=1, seed=0, max_epochs=1, reg_l1=0, reg_l2=0,
                  dropout=0, dropout_input=0, dropout_type='standard', stagnation=0, threshold=0.00000001, f_conv=0,
                  snapshot_freq=0, log_level=0, bn_src_layer_warnings=True, freeze_layers_to=None, flush_weights=False,
-                 total_mini_batch_size=None, mini_batch_buf_size=None):
+                 total_mini_batch_size=None, mini_batch_buf_size=None,
+                 freeze_layers=None, freeze_batch_norm_stats=None):
         DLPyDict.__init__(self, algorithm=algorithm, mini_batch_size=mini_batch_size, seed=seed, max_epochs=max_epochs,
                           reg_l1=reg_l1, reg_l2=reg_l2, dropout=dropout, dropout_input=dropout_input,
                           dropout_type=dropout_type, stagnation=stagnation, threshold=threshold, f_conv=f_conv,
                           snapshot_freq=snapshot_freq, log_level=log_level,
                           bn_src_layer_warnings=bn_src_layer_warnings, freeze_layers_to=freeze_layers_to,
                           flush_weights=flush_weights, total_mini_batch_size=total_mini_batch_size,
-                          mini_batch_buf_size=mini_batch_buf_size)
+                          mini_batch_buf_size=mini_batch_buf_size,
+                          freeze_layers=freeze_layers, freeze_batch_norm_stats=freeze_batch_norm_stats)
 
     def add_optimizer_mode(self, solver_mode_type='sync', sync_freq=None, alpha=None, damping=None):
         '''
@@ -2698,18 +3288,22 @@ class DataSpec(DLPyDict):
 
     Parameters
     -----------
-    type_ : string, optional
+    type_ : string
         Specifies the type of the input data in the data spec.
         Valid Values: NUMERICNOMINAL, NUMNOM, TEXT, IMAGE, OBJECTDETECTION
-    layer : string, optional
+    layer : string
         Specifies the name of the layer to data spec.
     data : list, optional
         Specifies the name of the columns/variables as the data, this might
         be input or output based on layer type.
+    data_layer : string, optional
+        Specifies the name of the input layer that binds to the output layer.
     nominals : list, optional
         Specifies the nominal input variables to use in the analysis.
     numeric_nominal_parms : :class:`DataSpecNumNomOpts`, optional
         Specifies the parameters for the numeric nominal data spec inputs.
+    loss_scale_factor : double, optional
+        Specifies the value to scale the loss for a given task layer. This option only affects the task layers.
 
     Returns
     -------
@@ -2717,6 +3311,68 @@ class DataSpec(DLPyDict):
         A dictionary of data spec parameters.
 
     """
-    def __init__(self, type_, layer, data, nominals=None, numeric_nominal_parms=None):
-        DLPyDict.__init__(self, type=type_, layer=layer, data=data, nominals=nominals,
-                          numeric_nominal_parms=numeric_nominal_parms)
+    def __init__(self, type_, layer, data=None, data_layer=None, nominals=None, numeric_nominal_parms=None,
+                 loss_scale_factor=None):
+        DLPyDict.__init__(self, type=type_, layer=layer, data=data, data_layer=data_layer, nominals=nominals,
+                          numeric_nominal_parms=numeric_nominal_parms, loss_scale_factor=loss_scale_factor)
+
+
+def _pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, freq, status):
+
+    def parse_results(response, connection, userdata):
+
+        if len(response.messages) == 0:
+            for key, value in response:
+                if key == 'OptIterHistory':
+                    iter_history.append(value)
+        elif len(response.messages) == 1:
+            line = response.messages[0].split(" ")
+            numbers=[]
+            for l in line:
+                if len(l.strip()) > 0 and l.strip().replace('.','',1).isdigit():
+                    numbers.append( float(l.strip()))
+
+            #print(line)
+            if len(numbers) == 5:
+                t = 1 # this is for when epoch history hits
+                #print('geldi')
+                # TODO: do something with epoch values, maybe another graph
+            elif len(numbers) >= 6:
+                batch_id = numbers[0]
+                sample_size = numbers[1]
+                learning_rate = numbers[2]
+                loss = numbers[3]
+                fit_error = numbers[4]
+
+                le = len(x)
+
+                if le == 0:
+                    y.append( fit_error)
+                    y_loss.append( loss)
+                    x.append( len(x))
+                    total_sample_size.append( sample_size)
+                else:
+                    temp = (y[-1]*total_sample_size[0])
+                    temp += (fit_error * sample_size)
+                    temp2 = (y_loss[-1]*total_sample_size[0])
+                    temp2 += (loss * sample_size)
+
+                    total_sample_size[0] += sample_size
+                    if total_sample_size[0] > 0:
+                        y.append( temp / total_sample_size[0])
+                        y_loss.append( temp2 / total_sample_size[0])
+                    else:
+                        y.append( y[-1])
+                        y_loss.append( y_loss[-1])
+
+                    x.append( len(x))
+
+                    if le % freq[0] == 0:
+                        comm.send({'label': x[-1], 'data': [y[-1], y_loss[-1]]})
+
+        if response.disposition.status_code != 0:
+            status[0] = response.disposition.status_code
+            print(response.disposition.status)
+            print(response.disposition.debug)
+
+    return parse_results

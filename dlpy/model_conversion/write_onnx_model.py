@@ -76,10 +76,14 @@ def sas_to_onnx(layers, model_table, model_weights):
                                                        shape=[1, C, H, W])
             inputs.append(value_info)
 
-        elif layer.type == 'convo':
+        elif layer.type == 'convo' or layer.type == 'groupconvo':
             H = int(layer.config['height'])
             W = int(layer.config['width'])
             M = int(layer.config['n_filters'])
+            # get group
+            group = 1
+            if 'n_groups' in layer.config:
+                group = layer.config['n_groups']
             # set stride
             S_h, S_w = get_strides(layer)
             # set padding
@@ -122,7 +126,8 @@ def sas_to_onnx(layers, model_table, model_weights):
                                        outputs=conv_output,
                                        pads=padding,
                                        kernel_shape=[H, W],
-                                       strides=[S_h, S_w])
+                                       strides=[S_h, S_w],
+                                       group=group)
             nodes.append(conv_op)
 
             # activation op

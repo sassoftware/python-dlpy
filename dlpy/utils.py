@@ -23,6 +23,7 @@ import os
 import platform
 import random
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 import pandas as pd
 import re
@@ -32,11 +33,14 @@ import string
 import xml.etree.ElementTree as ET
 from swat.cas.table import CASTable
 from PIL import Image
-import warnings
 import platform
 import collections
 from itertools import repeat
 import math
+from contextlib import contextmanager
+import locale
+import inspect
+from glob import glob
 
 
 def random_name(name='ImageData', length=6):
@@ -355,7 +359,7 @@ def find_caslib(conn, path):
         Specifies the name of the caslib that contains the path.
 
     '''
-    paths = conn.caslibinfo().CASLibInfo.Path.tolist()
+    caslib_paths = conn.caslibinfo().CASLibInfo.Path.tolist()
     caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
 
     server_type = get_cas_host_type(conn).lower()
@@ -368,11 +372,10 @@ def find_caslib(conn, path):
     if not path.endswith(sep):
         path += sep
 
-    if path in paths:
-        caslibname = caslibs[paths.index(path)]
-        return caslibname
-    else:
-        return None
+    for caslib_name, caslib_path in zip(caslibs, caslib_paths):
+        if path.find(caslib_path) == 0:
+            return caslib_name
+    return None
 
 
 def get_imagenet_labels_table(conn, label_length=None):
@@ -390,12 +393,36 @@ def get_user_defined_labels_table(conn, label_file_name, label_length=None):
 
     full_filename = label_file_name
 
-    if label_length is None:
-        char_length = 200
-    else:
-        char_length = label_length
-    
-    labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False)
+    labels = pd.read_csv(full_filename, skipinitialspace=True, index_col=False, keep_default_na=False)
+
+    # make sure proper columns exist
+    if ('label' in labels.columns) and ('label_id' in labels.columns):
+        if label_length is None:
+
+            # check for columns that might be using space as label.  These labels would be
+            # ignored due to specifying skipinitialspace=True in Pandas read_csv function
+            for ii in range(labels.shape[0]):
+                if len(labels.loc[ii,'label']) == 0:
+                    labels.loc[ii,'label'] = " "
+
+            # set number of characters based on maximum label length
+            char_length = 0
+            warn_unequal_lengths = False
+            for ii in range(labels.shape[0]):
+                char_length = max([char_length, len(labels.loc[ii,'label'])])
+                if char_length != len(labels.loc[0,'label']):
+                    warn_unequal_lengths = True
+
+            if warn_unequal_lengths:
+                print('WARNING: not all target labels have the same length.'
+                      'Setting the label length to ' + str(char_length) + ' characters.')
+
+        else:
+            char_length = label_length
+
+    else: 
+        raise DLPyError('The label table is missing one or both of the "label" and "label_id" columns.')
+
     conn.upload_frame(labels, casout=dict(name=temp_name, replace=True),
                       importoptions={'vars':[
                           {'name': 'label_id', 'type': 'int64'},
@@ -424,6 +451,128 @@ def get_server_path_sep(conn):
     if server_type.startswith("lin") or server_type.startswith("osx"):
         sep = '/'
     return sep
+
+
+@contextmanager
+def caslibify_context(conn, path, task='save'):
+    '''
+    This is a utility context function to find or create a caslib for a given path and for a given task.
+    This function also checks the root folders to see if there is a caslib created, if so return that caslib along
+    with the normalized path. Otherwise creates one.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    path : string
+        Specifies the path to be analyzed for creating a caslib.
+    task : string
+        Specifies the task. If it is a load task, then a caslib needs to be created to the parent folder
+        of the path folder. If it is a save task, then a caslib needs to be created to the path folder.
+    '''
+    if task == 'save':
+
+        sep = get_server_path_sep(conn)
+
+        if path.endswith(sep):
+            path = path[:-1]
+
+        path_split = path.split(sep)
+        caslib = None
+        new_path = sep
+        if path.startswith(sep):
+            start = 1
+        else:
+            start = 0
+
+        end = len(path_split)
+        while caslib is None and start < end:
+
+            new_path += path_split[start]+sep
+            caslib = find_caslib(conn, new_path)
+            start += 1
+
+        remaining_path = ''
+        for i in range(start, end):
+            remaining_path += path_split[i]
+            remaining_path += sep
+
+        if caslib is not None:
+            access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                          caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
+            if access_subdir:
+                yield caslib, remaining_path
+            else:
+                raise DLPyError('{} is the subpath of the caslib, {}. '
+                                'You don\'t have permission to access the subdirectory of the caslib. '
+                                'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                                ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                             caslib,
+                                                                                                             caslib))
+        else:
+            new_caslib = random_name('Caslib', 6)
+            rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
+                               activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
+
+            if rt.severity > 1:
+                raise DLPyError('something went wrong while adding the caslib for the specified path.')
+            else:
+                # try-finally construct guarantees that the tear-down is always executed
+                try:
+                    yield new_caslib, ''
+                finally:
+                    if new_caslib is not None:
+                        conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
+    else:
+        server_type = get_cas_host_type(conn).lower()
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            path_split = path.rsplit("/", 1)
+        else:
+            path_split = path.rsplit("\\", 1)
+
+        if len(path_split) == 2:
+            caslib = find_caslib(conn, path_split[0])
+            if caslib is not None:
+                caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                            caslib = caslib).CASLibInfo.loc[0, 'Path']
+                path_split[1] = path[len(caslib_path):]
+                access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                              caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
+                if access_subdir:
+                    yield caslib, path_split[1]
+                else:
+                    raise DLPyError('{} is the subpath of the caslib, {}. '
+                                    'You don\'t have permission to access the subdirectory of the caslib. '
+                                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                                 caslib,
+                                                                                                                 caslib))
+            else:
+                new_caslib = random_name('Caslib', 6)
+                rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path_split[0],
+                                   activeonadd=False, subdirectories=True, datasource={'srctype': 'path'})
+
+                if rt.severity > 1:
+                    print('Something went wrong. Most likely, one of the subpaths of the provided path'
+                          'is part of an existing caslib. A workaround is to put the file under that subpath or'
+                          'move to a different location. It sounds and is inconvenient but it is to protect '
+                          'your privacy granted by your system admin. '
+                          'That said, you can run caslibinfo action to see if the path is colliding with'
+                          'any of the existing caslibs. Note that we try to create a caslib for you '
+                          'and look for existing ones; however, if there is a caslib created on a child'
+                          'folder of the path, then that also errors out. caslibinfo is to way to check that.')
+                    yield None, None
+                else:
+                    # try-finally construct guarantees that the tear-down is always executed
+                    try:
+                        yield new_caslib, path_split[1]
+                    finally:
+                        if new_caslib is not None:
+                            conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
+        else:
+            raise DLPyError('We need more than one level of directories. e.g., /dir1/dir2. '
+                            'This usually happens when you pass a Windows path to a Unix CAS server, '
+                            'or vice versa. Please do check the path parameter.')
 
 
 def caslibify(conn, path, task='save'):
@@ -470,7 +619,17 @@ def caslibify(conn, path, task='save'):
             remaining_path += sep
 
         if caslib is not None:
-            return caslib, remaining_path, False
+            access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                          caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
+            if access_subdir:
+                return caslib, remaining_path, False
+            else:
+                raise DLPyError('{} is the subpath of the caslib, {}. '
+                                'You don\'t have permission to access the subdirectory of the caslib. '
+                                'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                                ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                             caslib,
+                                                                                                             caslib))
         else:
             new_caslib = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
@@ -490,7 +649,20 @@ def caslibify(conn, path, task='save'):
         if len(path_split) == 2:
             caslib = find_caslib(conn, path_split[0])
             if caslib is not None:
-                return caslib, path_split[1], False
+                caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
+                                            caslib = caslib).CASLibInfo.loc[0, 'Path']
+                path_split[1] = path[len(caslib_path):]
+                access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
+                                              caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
+                if access_subdir:
+                    return caslib, path_split[1], False
+                else:
+                    raise DLPyError('{} is the subpath of the caslib, {}. '
+                                    'You don\'t have permission to access the subdirectory of the caslib.'
+                                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                                 caslib,
+                                                                                                                 caslib))
             else:
                 new_caslib = random_name('Caslib', 6)
                 rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path_split[0],
@@ -500,7 +672,11 @@ def caslibify(conn, path, task='save'):
                     print('Something went wrong. Most likely, one of the subpaths of the provided path'
                           'is part of an existing caslib. A workaround is to put the file under that subpath or'
                           'move to a different location. It sounds and is inconvenient but it is to protect '
-                          'your privacy granted by your system admin.')
+                          'your privacy granted by your system admin. '
+                          'That said, you can run caslibinfo action to see if the path is colliding with'
+                          'any of the existing caslibs. Note that we try to create a caslib for you '
+                          'and look for existing ones; however, if there is a caslib created on a child'
+                          'folder of the path, then that also errors out. caslibinfo is to way to check that.')
                     return None, None, False
                 else:
                     return new_caslib, path_split[1], True
@@ -544,12 +720,12 @@ def get_cas_host_type(conn):
     htype = 'nohdfs'
     if out['server'].loc[0, 'nodes'] == 1:
         stype = 'smp'
-    if ostype.startswith('LIN'):
+    if ostype.startswith('LIN') or ostype.startswith('LX'):
         ostype = 'linux'
     elif ostype.startswith('WIN'):
         ostype = 'windows'
     elif ostype.startswith('OSX'):
-        ostype = 'mac'
+        ostype = 'osx'
     else:
         raise ValueError('Unknown OS type: ' + ostype)
 
@@ -797,6 +973,7 @@ def get_anchors(conn, data, coord_type, image_size=None, grid_number=13,
                 print('Error: Only support Yolo and CoCo coordType so far')
                 return
             boxes.append(Box(0, 0, width, height))
+
     centroid_indices = np.random.choice(len(boxes), n_anchors)
     centroids = []
     for centroid_index in centroid_indices:
@@ -968,8 +1145,8 @@ def _convert_yolo(size, box):
 
 
 def _convert_coco(size, box, resize):
-    w_ratio = float(resize) / size[0]
-    h_ratio = float(resize) / size[1]
+    w_ratio = float(resize[0]) / size[0]
+    h_ratio = float(resize[1]) / size[1]
     x_min = box[0] * w_ratio
     y_min = box[1] * h_ratio
     x_max = box[2] * w_ratio
@@ -977,27 +1154,122 @@ def _convert_coco(size, box, resize):
     return (x_min, y_min, x_max, y_max)
 
 
-def _convert_xml_annotation(filename, coord_type, resize):
-    in_file = open(filename)
-    filename, file_extension = os.path.splitext(filename)
-    out_file = open(filename+".txt", 'w')
-    tree = ET.parse(in_file)
-    root = tree.getroot()
-    size = root.find('size')
-    width = int(size.find('width').text)
-    height = int(size.find('height').text)
-    for obj in root.iter('object'):
-        cls = obj.find('name').text
-        xmlbox = obj.find('bndbox')
-        boxes = (float(xmlbox.find('xmin').text), float(xmlbox.find('ymin').text),
-                 float(xmlbox.find('xmax').text), float(xmlbox.find('ymax').text))
-        if coord_type == 'yolo':
-            boxes = _convert_yolo((width, height), boxes)
-        elif coord_type == 'coco':
-            boxes = _convert_coco((width, height), boxes, resize)
-        out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
-    in_file.close()
-    out_file.close()
+def _convert_xml_annotation(filename, coord_type, resize, task = 'object detection', name_file = None):
+    # installing opencv2 is a painful experience in a variety of systems and cases,
+    # Ignore import cv2 when doing object detection task.
+    try:
+        import cv2
+    except ModuleNotFoundError:
+        pass
+
+    with open(filename) as in_file:
+        filename, file_extension = os.path.splitext(filename)
+        tree = ET.parse(in_file)
+        root = tree.getroot()
+        object_ = root.find('object')
+        # if a xml is empty, just skip it.
+        if object_ is None:
+            in_file.close()
+            print('WARNING: There is no object in the annotation file {}.xml. The observation is ignored.'.format(filename))
+            return
+        size = root.find('size')
+        width = int(size.find('width').text)
+        height = int(size.find('height').text)
+        if width <= 0 or height <= 0:
+            in_file.close()
+            print('WARNING: Please check the annotation file, {}.xml, '
+                  'in which either width or height is smaller than 0. The observation is ignored.'.format(filename))
+            return
+        # write in all classes
+        if name_file:
+            with open(name_file, 'r') as nf:
+                line = nf.readlines()
+                cls_list = [l.strip() for l in line]
+        if task == 'instance segmentation':
+            # initialize instance mask
+            mask = np.zeros((height, width))
+            # initialize ignore mask
+            ignore_mask = np.ones_like(mask)
+            # instance index
+            instance_idx = 1
+            parent, file = os.path.split(filename)
+            mask_saved_as = os.path.join(parent, 'mask', file) + '.png'
+
+        with open(filename + ".txt", 'w') as out_file:
+            for obj in root.iter('object'):
+                cls = obj.find('name').text
+                # if cls is named 'ignore, it is not an object
+                if cls != 'ignore':
+                    # bbox tag
+                    xmlbox = obj.find('bndbox')
+                    xmin = float(xmlbox.find('xmin').text)
+                    xmax = float(xmlbox.find('xmax').text)
+                    ymin = float(xmlbox.find('ymin').text)
+                    ymax = float(xmlbox.find('ymax').text)
+                    if xmin >= xmax or ymin >= ymax:
+                        print('WARNING: Please check the annotation file, {}.xml, '
+                              'which contains an invalid bounding box.'.format(filename))
+                    boxes = (xmin, ymin, xmax, ymax)
+                    # convert to two formats
+                    if coord_type == 'yolo':
+                        boxes = _convert_yolo((width, height), boxes)
+                    elif coord_type == 'coco':
+                        boxes = _convert_coco((width, height), boxes, resize)
+                    # name_file is not None, write into comma separated
+                    if name_file:
+                        try:
+                            idx = str(cls_list.index(str(cls)))
+                        except ValueError:
+                            # throw error if having a class other than name file has
+                            raise DLPyError('{} is not in name file'.format(str(cls)))
+                        out_file.write(idx + " " + " ".join([str(box) for box in boxes]) + '\n')
+                    else:
+                        out_file.write(str(cls) + "," + ",".join([str(box) for box in boxes]) + '\n')
+
+                # creating instance index mask
+                if task == 'instance segmentation':
+                    if obj.find('polygon'):
+                        contour = obj.find('polygon')
+                        n_tags_per_point = 2
+                    elif obj.find('cubic_bezier'):
+                        contour = obj.find('cubic_bezier')
+                        n_tags_per_point = 6
+                    else:
+                        raise DLPyError('Cannot find valid segmentation tag in {}.'.format(filename + ".xml"))
+                    vertices = []
+                    for i in range(int(len(contour)/n_tags_per_point)):
+                        x = int(contour.find('x{}'.format(str(i+1))).text)
+                        y = int(contour.find('y{}'.format(str(i+1))).text)
+                        vertices.append([x, y])
+
+                    vertices = np.array(vertices)
+
+                    try:
+                        if cls != 'ignore':
+                            # fill mask with instance_idx+1; 0 is background
+                            mask = cv2.fillConvexPoly(mask, vertices, instance_idx)
+                            # if class is ignore, do not count it.
+                            instance_idx += 1
+                        else:
+                            # fill 0 as background
+                            ignore_mask = cv2.fillConvexPoly(ignore_mask, vertices, 0)
+
+                    except NameError:
+                        raise ModuleNotFoundError('No module named \'cv2\'')
+
+            if task == 'instance segmentation':
+                # multiply the two mask to create final mask
+                mask = np.multiply(mask, ignore_mask)
+                # resize the mask using nearest interpolation
+                # cv2.imwrite(mask_saved_as, mask)
+                mask = cv2.resize(mask, resize, interpolation = cv2.INTER_NEAREST)
+                # check if there is an instance missed after resizing
+                if np.unique(mask).shape[0] == instance_idx:
+                    cv2.imwrite(mask_saved_as, mask)
+                elif np.unique(mask).shape[0] < instance_idx:
+                    print('WARNING: Instances in {} disappears due to resize.'.format(filename + '.xml'))
+                else:
+                    raise DLPyError('Something happens when resizing mask.')
 
 
 def _convert_json_annotation(filename_w_ext, coord_type, resize):
@@ -1072,7 +1344,8 @@ def convert_txt_to_xml(path):
     os.chdir(cwd)
 
 
-def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = None):
+def get_txt_annotation(local_path, coord_type, image_size=(416, 416), label_files=None,
+                       task='object detection', name_file=None):
     '''
     Parse object detection annotation files based on Pascal VOC format and save as txt files.
 
@@ -1091,31 +1364,59 @@ def get_txt_annotation(local_path, coord_type, image_size = 416, label_files = N
         bounding boxes.
         The values are relative to parameter image_size.
         Valid Values: yolo, coco
-    image_size : integer, optional
+    image_size : tuple or integer, optional
         Specifies the size of images to resize.
-        Default: 416
+        Default: (416, 416)
     label_files : list, optional
         Specifies the list of filename with XML extension under local_path to be parsed.
         If label_files is not specified, all of XML files under local_path will be parsed .
         Default: None
+    task : str, optional
+        Specifies the task of table.
+        Valid Values: object detection, instance segmentation
+        Default: object detection
+    name_file : str, optional
+        Specifies the path of name_file which lists all of the names for the classes in your dataset.
+        If you specify the option, the function will generate txt using index to represent category
+        and space as separator. For example:
+            0 0.539766 0.492976 0.317406 0.345796
+            0 0.557742 0.265619 0.083922 0.087191
+        where the first element of lines, 0, represents the index of category, person.
+        Otherwise, it will generate the format can be consumed by SAS platform.
+            person,0.539766,0.492976,0.317406,0.345796
+            person,0.557742,0.265619,0.083922,0.087191
+        Here is one example of name file for COCO dataset: datasources/coco.names
+        Default: None
 
     '''
-
-    cwd = os.getcwd()
-    os.chdir(local_path)
+    image_size = _pair(image_size)  # ensure image_size is a pair
     # if label_files = None, that means we call it directly and parse annotation files.
     if label_files is None:
-        label_files = os.listdir(local_path)
-    label_files = [x for x in label_files if x.endswith('.xml')]
+        # get all xml file under the local_path
+        label_files = glob(os.path.join(local_path, '*.xml'))
+    else:
+        label_files = [os.path.join(local_path, f) for f in label_files if f.endswith('.xml')]
     if len(label_files) == 0:
         raise DLPyError('Can not find any xml file under data_path')
-    for idx, filename in enumerate(label_files):
-        _convert_xml_annotation(filename, coord_type, image_size)
-    os.chdir(cwd)
+
+    # always use en locale since we use this locale to generate our internal txt files
+    try:
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US')
+        except:
+            print("Could not set the locale to english and it is now using the system's locale")
+
+    for filename in label_files:
+        _convert_xml_annotation(filename, coord_type, image_size, task, name_file)
+
+    # reset this locale back to the default
+    locale.setlocale(locale.LC_ALL, '')
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
-                                  local_path=None, image_size=416):
+                                  local_path=None, image_size=(416, 416)):
     '''
     Create an object detection table
 
@@ -1152,15 +1453,127 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         Linux clients with Windows CAS Server:
         data_path=\\path\to\data\path
         local_path=/path/to/data/path
-    image_size : integer, optional
+    image_size : tuple or integer, optional
         Specifies the size of images to resize.
-        Default: 416
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
 
     Returns
     -------
     A list of variables that are the labels of the object detection table
 
     '''
+
+    return create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
+                                               local_path, image_size, task='object detection')
+
+
+def create_instance_segmentation_table(conn, data_path, coord_type, output, local_path=None, image_size=(416, 416)):
+    '''
+    Create an instance segmentation table
+
+    Parameters
+    ----------
+    conn : session
+        CAS connection object
+    data_path : string
+        Specifies a location where annotation files and image files are stored.
+        Annotation files should be XML file based on Pascal VOC format
+        Notice that the path should be accessible by CAS server.
+    coord_type : string
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    output : string
+        Specifies the name of the instance segmentation table.
+    local_path : string, optional
+        Local_path and data_path point to the same location.
+        The parameter local_path will be optional (default=None) if the
+        Python client has the same OS as CAS server or annotation files
+        in TXT format are placed in data_path.
+        Otherwise, the path that depends on the Python client OS needs to be specified.
+        For example:
+        Windows client with linux CAS server:
+        data_path=/path/to/data/path
+        local_path=\\path\to\data\path
+        Linux clients with Windows CAS Server:
+        data_path=\\path\to\data\path
+        local_path=/path/to/data/path
+    image_size : tuple or integer, optional
+        Specifies the size of images to resize.
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
+
+    Returns
+    -------
+    A list of variables that are the labels of the object detection task and the label of instance segmentation task
+
+    '''
+
+    return create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
+                                               local_path, image_size, task='instance segmentation')
+
+
+def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
+                                        local_path=None, image_size=(416, 416), task='object detection'):
+    '''
+    Create an table from PASCAL VOC format annotation files.
+
+    Parameters
+    ----------
+    conn : session
+        CAS connection object
+    data_path : string
+        Specifies a location where annotation files and image files are stored.
+        Annotation files should be XML file based on Pascal VOC format
+        Notice that the path should be accessible by CAS server.
+    coord_type : string
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    output : string
+        Specifies the name of the object detection table.
+    local_path : string, optional
+        Local_path and data_path point to the same location.
+        The parameter local_path will be optional (default=None) if the
+        Python client has the same OS as CAS server or annotation files
+        in TXT format are placed in data_path.
+        Otherwise, the path that depends on the Python client OS needs to be specified.
+        For example:
+        Windows client with linux CAS server:
+        data_path=/path/to/data/path
+        local_path=\\path\to\data\path
+        Linux clients with Windows CAS Server:
+        data_path=\\path\to\data\path
+        local_path=/path/to/data/path
+    image_size : tuple or integer, optional
+        Specifies the size of images to resize.
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
+    task : str, optional
+        Specifies the task of table.
+        Valid Values: object detection, instance segmentation
+        Default: object detection
+
+    Returns
+    -------
+    A list of variables that are the labels of the specified task
+
+    '''
+
+    # check parameters
     if coord_type.lower() not in ['yolo', 'coco']:
         raise ValueError('coord_type, {}, is not supported'.format(coord_type))
     with sw.option_context(print_messages=False):
@@ -1181,6 +1594,12 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'deepLearn')
     conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'transpose')
 
+    # get os path seperator
+    if server_type.startswith("lin") or server_type.startswith("osx"):
+        sep = '/'
+    else:
+        sep = '\\'
+
     # label variables, _ : category;
     yolo_var_name = ['_', '_x', '_y', '_width', '_height']
     coco_var_name = ['_', '_xmin', '_ymin', '_xmax', '_ymax']
@@ -1188,15 +1607,16 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         var_name = yolo_var_name
     elif coord_type.lower() == 'coco':
         var_name = coco_var_name
-
+    image_size = _pair(image_size)  # ensure image_size is a pair
     det_img_table = random_name('DET_IMG')
 
-    caslib, path_after_caslib, tmp_caslib = caslibify(conn, data_path, task='load')
-    if caslib is None and path_after_caslib is None:
-        print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
-              'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+    # loading _image_ and processing to required image size
+    with caslibify_context(conn, data_path, 'load') as (caslib, path_after_caslib), \
+            sw.option_context(print_messages=False):
+        if caslib is None and path_after_caslib is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
 
-    with sw.option_context(print_messages=False):
         res = conn.image.loadImages(path=path_after_caslib,
                                     recurse=False,
                                     labelLevels=-1,
@@ -1210,8 +1630,8 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         res = conn.image.processImages(table={'name': det_img_table},
                                        imagefunctions=[
                                            {'options': {'functiontype': 'RESIZE',
-                                                        'height': image_size,
-                                                        'width': image_size}}
+                                                        'height': image_size[1],
+                                                        'width': image_size[0]}}
                                        ],
                                        casout={'name': det_img_table, 'replace': True})
 
@@ -1219,48 +1639,55 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             for msg in res.messages:
                 print(msg)
         else:
-            print("NOTE: Images are processed.")
+            print("NOTE: Images are loaded and processed.")
 
-    if (caslib is not None) and tmp_caslib:
-        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
+    # 1. parse xml files and generate according txt files in data_path
+    # 2. load txt files into CAS Server
+    # 3. create a column, idjoin, for later to use
+    with caslibify_context(conn, data_path, 'save') as (caslib, path_after_caslib):
+        # find all of annotation files under the directory
+        label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
+        # if client and server are on different type of operation system, we assume user parse xml files and put
+        # txt files in data_path folder. So skip get_txt_annotation()
+        # parse xml or json files and create txt files
+        if need_to_parse or task == 'instance segmentation':
+            mask_folder = os.path.join(local_path, 'mask')
+            if task == 'instance segmentation':
+                if not os.path.exists(mask_folder):
+                    os.makedirs(mask_folder)
+            get_txt_annotation(local_path, coord_type, image_size, label_files, task)
 
-    with sw.option_context(print_messages = False):
-        caslib = find_caslib(conn, data_path)
-        if caslib is None:
-            caslib = random_name('Caslib', 6)
-            rt = conn.retrieve('addcaslib', _messagelevel = 'error', name = caslib, path = data_path,
-                               activeonadd = False, subdirectories = True, datasource = {'srctype': 'path'})
-            if rt.severity > 1:
-                raise DLPyError('something went wrong while adding the caslib for the specified path.')
-
-    # find all of annotation files under the directory
-    label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    # if client and server are on different type of operation system, we assume user parse xml files and put
-    # txt files in data_path folder. So skip get_txt_annotation()
-    # parse xml or json files and create txt files
-    if need_to_parse:
-        get_txt_annotation(local_path, coord_type, image_size, label_files)
-
-    label_tbl_name = random_name('obj_det')
-    # load all of txt files into cas server
-    label_files = conn.fileinfo(caslib = caslib, allfiles = True).FileInfo['Name'].values
-    label_files = [x for x in label_files if x.endswith('.txt')]
-    if len(label_files) == 0:
-        raise DLPyError('Can not find any txt file under data_path.')
-    idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
-    with sw.option_context(print_messages = False):
-        for idx, filename in enumerate(label_files):
-            tbl_name = '{}_{}'.format(label_tbl_name, idx)
-            conn.retrieve('loadtable', caslib = caslib, path = filename,
-                          casout = dict(name = tbl_name, replace = True),
-                          importOptions = dict(fileType = 'csv', getNames = False,
-                                               varChars = True, delimiter = ','))
-            conn.retrieve('partition',
-                          table = dict(name = tbl_name,
-                                       compvars = ['idjoin'],
-                                       comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
-                                                                                          filename[:-len('.txt')])),
-                          casout = dict(name = tbl_name, replace = True))
+        label_tbl_name = random_name('obj_det')
+        # load all of txt files into cas server
+        label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
+        label_files = [x for x in label_files if x.endswith('.txt')]
+        if len(label_files) == 0:
+            raise DLPyError('Can not find any txt file under data_path.')
+        idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
+        with sw.option_context(print_messages = False):
+            for idx, filename in enumerate(label_files):
+                tbl_name = '{}_{}'.format(label_tbl_name, idx)
+                if path_after_caslib != '':
+                    filename = path_after_caslib + sep + filename
+                conn.retrieve('loadtable', caslib = caslib, path = filename,
+                              casout = dict(name = tbl_name, replace = True),
+                              importOptions = dict(fileType = 'csv', getNames = False,
+                                                   varChars = True, delimiter = ','))
+                conn.retrieve('partition',
+                              table = dict(name = tbl_name,
+                                           compvars = ['idjoin'],
+                                           comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
+                                                                                              filename[:-len('.txt')])),
+                              casout = dict(name = tbl_name, replace = True))
+                # add sequence id that is used to build column name in transpose process
+                sas_code = '''
+                           data {0};
+                           set {0};
+                              seq_id=_n_-1;
+                           run;
+                           '''.format(tbl_name)
+                # nthreads=1 to make sure that order of observation is consistent
+                conn.runcode(code = sas_code, nthreads = 1, _messagelevel = 'error')
 
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
     string_input_tbl_name = ' '.join(input_tbl_name)
@@ -1270,8 +1697,9 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                 set {1}; 
                 run;
                 '''.format(output, string_input_tbl_name)
-    conn.runcode(code = fmt_code, _messagelevel = 'error')
-    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    # nthreads=1 to make sure that order of observation is consistent
+    conn.runcode(code = fmt_code, nthreads=1, _messagelevel = 'error')
+    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
     conn.altertable(name = output, columns = [dict(name = 'Var1', rename = var_name[0]),
@@ -1279,17 +1707,6 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                                               dict(name = 'Var3', rename = var_name[2]),
                                               dict(name = 'Var4', rename = var_name[3]),
                                               dict(name = 'Var5', rename = var_name[4])])
-    # add sequence id that is used to build column name in transpose process
-    sas_code = '''
-               data {0};
-                  set {0} ;
-                  by idjoin;
-                  seq_id+1;
-                  if first.idjoin then seq_id=0;
-                  output;
-               run;
-               '''.format(output)
-    conn.runcode(code = sas_code, _messagelevel = 'error')
     # convert long table to wide table
     with sw.option_context(print_messages = False):
         for var in var_name:
@@ -1298,13 +1715,17 @@ def create_object_detection_table(conn, data_path, coord_type, output,
                            casout = dict(name = 'output{}'.format(var), replace = 1))
             conn.altertable(name = 'output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
     # dljoin the five label columns
-    conn.deeplearn.dljoin(table = 'output{}'.format(var_name[0]), id = 'idjoin',
-                          annotatedtable = 'output{}'.format(var_name[1]),
-                          casout = dict(name = output, replace = True), _messagelevel = 'error')
+    res = conn.deeplearn.dljoin(table = 'output{}'.format(var_name[0]), id = 'idjoin',
+                                annotatedtable = 'output{}'.format(var_name[1]),
+                                casout = dict(name = output, replace = True), _messagelevel = 'error')
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     for var in var_name[2:]:
-        conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
-                    casout = dict(name = output, replace = True))
+        res = conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
+                                    casout = dict(name = output, replace = True))
+        if res.severity > 0:
+            raise DLPyError('ERROR: Fail to create the object detection table.')
     # get number of objects in each image
     code = '''
             data {0};
@@ -1321,18 +1742,27 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             var_order.append('_Object'+str(i)+var)
     # change order of columns and unify the formattedlength of class columns
     format_ = '${}.'.format(cls_col_format_length)
-    conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
-                                              for i in range(max_instance)])
+    res = conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
+                                                    for i in range(max_instance)])
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
+
     # parse and create dljoin id column
     label_col_info = conn.columninfo(output).ColumnInfo
     filename_col_length = label_col_info.loc[label_col_info['Column'] == 'idjoin', ['FormattedLength']].values[0][0]
 
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                 len(data_path.split('\\')) - 2)
-    img_tbl = conn.CASTable(det_img_table, computedvars = ['idjoin'], computedvarsprogram = image_sas_code, vars = [{'name': '_image_'}])
-    # join the image table and label table together
+    img_tbl = conn.CASTable(det_img_table,
+                            computedvars = ['idjoin'],
+                            computedvarsprogram = image_sas_code,
+                            vars = [{'name': '_image_'}])
+
+    # join the image table and object detection label table together
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     with sw.option_context(print_messages=False):
         for name in input_tbl_name:
@@ -1341,10 +1771,151 @@ def create_object_detection_table(conn, data_path, coord_type, output,
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
 
-    conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
+    if task == 'object detection':
+        print("NOTE: Object detection table is successfully created.")
+        return var_order[2:]
 
-    print("NOTE: Object detection table is successfully created.")
-    return var_order[2:]
+    # all below for creating instance segmentation data set
+
+    mask_img_table = random_name('MASK_IMG')
+
+    with caslibify_context(conn, data_path+sep+'mask', 'load') as (caslib, path_after_caslib), \
+            sw.option_context(print_messages=False):
+        if caslib is None and path_after_caslib is None:
+            print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
+                  'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+        # load mask
+        res = conn.image.loadImages(path=path_after_caslib,
+                                    recurse=False,
+                                    labelLevels=-1,
+                                    caslib=caslib,
+                                    casout={'name': mask_img_table, 'replace':True})
+        if res.severity > 0:
+            for msg in res.messages:
+                if not msg.startswith('WARNING'):
+                    print(msg)
+
+        print("NOTE: Masks are processed.")
+
+    # rename _image_ column to mask
+    conn.altertable(name = mask_img_table, columns = [dict(name = '_image_', rename = 'mask')])
+
+    mask_tbl = conn.CASTable(mask_img_table,
+                             computedvars = ['idjoin'],
+                             computedvarsprogram = image_sas_code,
+                             vars = [{'name': 'mask'}])
+
+    # join the image table and object detection label table together
+    res = conn.deepLearn.dljoin(table = mask_tbl, annotation = output, id = 'idjoin',
+                                casout = {'name': output, 'replace': True, 'replication': 0})
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the instance segmentation table.')
+
+    # with sw.option_context(print_messages=False):
+    #     conn.table.droptable(mask_img_table)
+
+    print("NOTE: Instance segmentation table is successfully created.")
+
+    return var_order[2:], 'mask'
+
+
+def get_info_for_object_detection( sess, table):
+    '''
+
+    parameters
+    ----------
+    sess : CAS Session
+        Specifies the CAS session
+    table : CAS table
+        Specifies the table containing the object detection metadata
+
+    Returns
+    -------
+    classes : dict
+        Specifies the frequency distribution of the classes in the metadata
+    max_no_of_objects : int
+        Specifies the maximum number of objects that can found in an image.
+
+    '''
+    if isinstance(table, str):
+        t = sess.CASTable(table)
+    else:
+        t = table
+    r = table.summary(table, inputs=[dict(name='_nObjects_')])
+    max_no_of_objects = int(r.Summary.iloc[0]['Max'])
+
+    classes={}
+    inputs=[]
+    for i in range(0, max_no_of_objects):
+        inputs.append('_Object'+str(i)+'_')
+
+    r2 = table.freq(table, inputs=inputs)
+    length = len(r2.Frequency)
+    for l in range(0, length):
+        name = r2.Frequency.iloc[l]['CharVar'].strip()
+        if len(name) > 0:
+            value = r2.Frequency.iloc[l]['Frequency']
+            if name in classes:
+                classes[name] += value
+            else:
+                classes[name] = value
+
+    return classes, max_no_of_objects
+
+
+def create_segmentation_table(conn, path_to_images, path_to_ground_truth, output_table_name='seg_data'):
+    '''
+
+    Creates a segmentation table from two folders. 1) contains the original images,
+    and 2) contains the ground truth information. The ground truth information is usually embedded
+    in the images as each pixel in the original image should have a class. These classes are
+    represented by numbers. For example, if the ground truth image contains only values 0, 1, and 2
+    this means that there are three classes and each pixel is assigned with one of those numbers.
+    Note that .jpg images cannot fold this ground truth data.
+
+    Parameters
+    ----------
+
+    conn : CASConnection
+        Specifies a CAS connection
+    path_to_images : str
+        Specifies the location of the folder that contains the original images. Note that
+        server should have access to this folder.
+    path_to_ground_truth : str
+        Specifies the location of the folder that contains the ground truth images. Note that
+        server should have access to this folder. Each image name here should have a matching file in
+        the path_to_images folder with the exact same name.
+    output_table_name : str, optional
+        Specifies the name of the output table.
+        Default : seg_data
+
+    Returns
+    -------
+    `CASTable`
+
+    '''
+
+    from dlpy.images import ImageTable
+    raw = ImageTable.load_files(conn=conn, path=path_to_images)
+
+    if raw is not None:
+        print('NOTE: Images are loaded')
+
+    labels = ImageTable.load_files(conn=conn, path=path_to_ground_truth)
+    if labels is not None:
+        print('NOTE: Ground truth images are loaded')
+
+    # manipulate column names for easy access
+    conn.altertable(labels, columns=[dict(name='_image_', rename='labels')])
+    conn.altertable(labels, columns=[dict(name='_label_', drop=True)])
+    conn.altertable(labels, columns=[dict(name='_id_', drop=True)])
+
+    conn.loadactionset('deepLearn')
+    conn.deepLearn.dljoin(table=raw, annotatedtable=labels,
+                           id='_filename_0',
+                           casout=dict(name=output_table_name, replace=True))
+
+    return conn.CASTable(output_table_name)
 
 
 def display_object_detections(conn, table, coord_type, max_objects=10,
@@ -1444,6 +2015,63 @@ def display_object_detections(conn, table, coord_type, max_objects=10,
         conn.table.droptable(det_label_image_table)
 
 
+def plot_anchors(base_anchor_size, anchor_scale, anchor_ratio, image_size, fig_size=(10, 10)):
+    '''
+    Plot proposed anchor boxes in Region Proposal Layer
+
+    Parameters
+    ----------
+    base_anchor_size : int, optional
+        Specifies the basic anchor size in width and height (in pixels) in the original input image dimension
+        Default: 16
+    anchor_ratio : iter-of-float
+        Specifies the anchor height and width ratios (h/w) used.
+    anchor_scale : iter-of-float
+        Specifies the anchor scales used based on base_anchor_size.
+    image_size : iter-of-int
+        Specifies the shape of input images in two dimensions(h, w), such as (496, 1000).
+    fig_size : int, optional
+        Specifies the size of figure.
+
+    '''
+    # color map to draw anchor boxes
+    color_map = ['b', 'g', 'r', 'c', 'm', 'y']
+    img_height = image_size[0]
+    img_width = image_size[1]
+    anchors = []
+    max_anchor_height = image_size[0]
+    max_anchor_width = image_size[1]
+    # generate all of anchors based on base_anchor_size, anchor scale and anchor ratio
+    for ratio in anchor_ratio:
+        for scale in anchor_scale:
+            len_size = base_anchor_size * scale
+            area = len_size * len_size
+            height = math.sqrt(area * ratio)
+            width = height / ratio
+            anchors.append((height, width))
+    # get background height/width that is the largest value in the shape of the image and the largest anchor box.
+    for an in anchors:
+        max_anchor_height = max(max_anchor_height, an[0])
+        max_anchor_width = max(max_anchor_width, an[1])
+    fig, ax = plt.subplots(1, figsize = fig_size)
+    plt.xticks([]), plt.yticks([])
+    # draw the background
+    background = np.tile((255, 255, 255), (int(max_anchor_height), int(max_anchor_width), 1))
+    # draw the image region
+    image_region = (int((max_anchor_height - img_height) / 2), int((max_anchor_height + img_height) / 2),
+                    int((max_anchor_width - img_width) / 2), int((max_anchor_width + img_width) / 2))
+    background[image_region[0]: image_region[1], image_region[2]: image_region[3], :] = np.array((244, 203, 66))
+    ax.imshow(background)
+    # draw the anchor boxes
+    for i, anchor in enumerate(anchors):
+        centric_x = (max_anchor_width - anchor[1]) / 2  # x
+        centric_y = (max_anchor_height - anchor[0]) / 2  # y
+        color = color_map[i % len(anchor_scale)]
+        rect = patches.Rectangle((centric_x, centric_y), anchor[1], anchor[0], linewidth = 2,
+                                 edgecolor = color, facecolor = 'none')
+        ax.add_patch(rect)
+
+
 def get_mapping_dict():
     project_path = os.path.dirname(os.path.abspath(__file__))
     filename = os.path.join('datasources', 'mapping.json')
@@ -1528,25 +2156,236 @@ def int_to_double(conn, tbl_colinfo, input_tbl_name,
     conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
 
 
-def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None, image_size=416):
+def display_segmentation_images(conn, table, n_images=4, image_column='_image_',
+                                segmentation_labels_table=None, label_column='labels',
+                                fig_size=(50, 20)):
+    '''
 
+    This function is designed to display images of a castable. It also displays the segmentation labels
+    if it is set. Note that the ground truth (i.e., label) information in the segmentation task is also images.
+    On top of displaying images and labels, this function is also flexible enough to display the predictions.
+    It is always in the following order: images from the table table, images from the segmentation labels table
+    (if any), and images from the segmentation prediction table (if any).
+
+    conn : CAS
+        CAS connection object
+    table : string or CASTable
+        Specifies the input table that has an image column.
+    n_images : int
+        Specifies the number of images to be displayed.
+    image_column : string
+        Specifies the column name that holds the image data in the input table.
+    segmentation_labels_table : string or CASTable
+        Specifies the table that has the segmentation labels (or label images).
+    label_column : string
+        Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
+    fig_size : a list of two ints
+        Specifies the figure size.
+
+    '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
+    if not isinstance(table, CASTable):
+        tbl = conn.CASTable(table)
+    else:
+        tbl = table
+
+    images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                           table=tbl,
+                           to=n_images,
+                           image=image_column)
+
+    if len(images.Images) < 1:
+        raise DLPyError('input table does not have any images')
+
+    labels = None
+    if segmentation_labels_table is not None:
+        if not isinstance(segmentation_labels_table, CASTable):
+            seg_gt_tbl = conn.CASTable(segmentation_labels_table)
+        else:
+            seg_gt_tbl = segmentation_labels_table
+
+        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
+                               table=seg_gt_tbl,
+                               to=n_images,
+                               image=label_column)
+        if len(labels) == 0 or len(labels.Images) == 0:
+            print('WARNING: Something went wrong while extracting label images')
+
+    k = 1
+    n_row = 2
+    fig = plt.figure(figsize=fig_size)
+
+    for i in range(n_images):
+        ax = fig.add_subplot(n_row, n_images, k)
+        plt.imshow(images['Images']['Image'][i])
+        k += 1
+    if len(labels) > 0 and len(labels.Images) > 0:
+        for i in range(n_images):
+            ax = fig.add_subplot(n_row, n_images, k)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            k += 1
+
+
+def display_segmentation_results(conn, table, n_images=4, image_column='_image_',
+                                 segmentation_labels_table=None, label_column='labels',
+                                 segmentation_prediction_table=None, prediction_column=None,
+                                 filename_column=None,
+                                 fig_size=(15, 40)):
+    '''
+
+    This function is designed to display images of a castable. It also displays the segmentation labels
+    if it is set. Note that the ground truth (i.e., label) information in the segmentation task is also images.
+    On top of displaying images and labels, this function is also flexible enough to display the predictions.
+
+    conn : CAS
+        CAS connection object
+    table : string or CASTable
+        Specifies the input table that has an image column.
+    n_images : int
+        Specifies the number of images to be displayed.
+    image_column : string
+        Specifies the column name that holds the image data in the input table.
+    segmentation_labels_table : string or CASTable
+        Specifies the table that has the segmentation labels (or label images).
+    label_column : string
+        Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
+    segmentation_prediction_table : string or CASTable
+        Specifies the table that has the segmentation predictions.
+    prediction_column : string
+        Specifies the name of the column that holds the segmentation predictions in the segmentation prediction table.
+    filename_column : string
+        Specifies the name of the column that holds the filenames of the images. If this column set, the column names
+        will be displayed on top of each image.
+    fig_size : a list of two ints
+        Specifies the figure size.
+
+    '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
+    if not isinstance(table, CASTable):
+        tbl = conn.CASTable(table)
+    else:
+        tbl = table
+
+    images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                           table=tbl,
+                           to=n_images,
+                           image=image_column)
+
+    if len(images.Images) < 1:
+        raise DLPyError('input table does not have any images')
+
+    n_col = 1
+    labels = None
+    if segmentation_labels_table is not None:
+        if not isinstance(segmentation_labels_table, CASTable):
+            seg_gt_tbl = conn.CASTable(segmentation_labels_table)
+        else:
+            seg_gt_tbl = segmentation_labels_table
+
+        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
+                               table=seg_gt_tbl,
+                               to=n_images,
+                               image=label_column)
+        if len(labels) == 0 or len(labels.Images) == 0:
+            print('WARNING: Something went wrong while extracting label images')
+        else:
+            n_col += 1
+
+    predictions = None
+    if segmentation_prediction_table is not None:
+
+        if prediction_column is None:
+            raise DLPyError('Please set the prediction_column parameter')
+
+        if not isinstance(segmentation_prediction_table, CASTable):
+            seg_prediction_tbl = conn.CASTable(segmentation_prediction_table)
+        else:
+            seg_prediction_tbl = segmentation_prediction_table
+
+        if filename_column is not None:
+            predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
+                                        table=seg_prediction_tbl,
+                                        to=n_images,
+                                        fetchImagesVars=filename_column,
+                                        image=prediction_column)
+        else:
+            predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
+                                        table=seg_prediction_tbl,
+                                        to=n_images,
+                                        image=prediction_column)
+
+        if len(predictions) == 0 or len(predictions.Images) == 0:
+            print('WARNING: Something went wrong while extracting output (predicted) images')
+        else:
+            n_col += 1
+
+    k = 1
+    fig = plt.figure(figsize=fig_size)
+
+    for i in range(n_images):
+        ax = fig.add_subplot(n_images, n_col, k)
+        plt.imshow(images['Images']['Image'][i])
+        k += 1
+        if len(predictions) > 0 and len(predictions.Images) > 0:
+            plt.title(predictions.Images[filename_column][i] +' raw image')
+            plt.xticks([]), plt.yticks([])
+
+        if len(labels) > 0 and len(labels.Images) > 0:
+            ax = fig.add_subplot(n_images, n_col, k)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            k += 1
+            if len(predictions) > 0 and len(predictions.Images) > 0:
+                plt.title(predictions.Images[filename_column][i] +' ground truth')
+                plt.xticks([]), plt.yticks([])
+
+        if len(predictions) > 0 and len(predictions.Images) > 0:
+            ax = fig.add_subplot(n_images, n_col, k)
+            plt.imshow(np.array(predictions['Images']['Image'][i]))
+            k += 1
+            if len(predictions) > 0 and len(predictions.Images) > 0:
+                plt.title(predictions.Images[filename_column][i] +' prediction')
+                plt.xticks([]), plt.yticks([])
+
+
+def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None,
+                                         image_size=(416, 416)):
     '''
     This is an alternative function to create object detection table. This function is especially good if you are
     using Ethem's annotation tool (this one creates txt files directly).
 
-    conn : CAS connection
+    Parameters
+    ----------
+    conn : session
         CAS connection object
     data_path : string
-        Specifies the location of the images. The CAS server has to have access to this folder.
+        Specifies a location where annotation files and image files are stored.
+        Annotation files should be XML file based on Pascal VOC format
+        Notice that the path should be accessible by CAS server.
     coord_type : string
-        Specifies coordinate type of input table
-    output: string
-        Specifies the name of the output table.
+        Specifies the type of coordinate to convert into.
+        'yolo' specifies x, y, width and height, x, y is the center
+        location of the object in the grid cell. x, y, are between 0
+        and 1 and are relative to that grid cell. x, y = 0,0 corresponds
+        to the top left pixel of the grid cell.
+        'coco' specifies xmin, ymin, xmax, ymax that are borders of a
+        bounding boxes.
+        The values are relative to parameter image_size.
+        Valid Values: yolo, coco
+    output : string
+        Specifies the name of the object detection table.
     annotation_path: string
         Specifies the location of the annotations. This folder needs to be accessed by either the CAS server
         or DLPy.
-    image_size: int
-        Specifies the size of the image size.
+    image_size : tuple or integer, optional
+        Specifies the size of images to resize.
+        If a tuple is passed, the first integer is width and the second value is height.
+        Default: (416, 416)
+
+    Returns
+    -------
+    A list of variables that are the labels of the object detection table
 
     '''
 
@@ -1558,8 +2397,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     caslib_annotation = None
     annotation_data_is_in_the_client = 0
     label_files = []
-    with sw.option_context(print_messages=False):
-        caslib_annotation, path_after_ann_caslib, tmp_caslib = caslibify(conn, annotation_path, task='save')
+    with caslibify_context(conn, annotation_path, task='save') as (caslib_annotation, path_after_ann_caslib),\
+            sw.option_context(print_messages=False):
         if caslib_annotation is None:
             caslib_annotation = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel = 'error', name = caslib_annotation, path = annotation_path,
@@ -1596,45 +2435,39 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     if len(label_files) == 0:
         raise DLPyError('There is no annotation file in the annotation_path.')
 
-    if (caslib_annotation is not None) and tmp_caslib:
-        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib_annotation)
+    with caslibify_context(conn, data_path, task='load') as (caslib, path_after_caslib):
+        if caslib is None and path_after_caslib is None:
+            print('Cannot create a caslib for the provided (i.e., '+data_path+') path. Please make sure that the '
+                                                                              'path is accessible from'
+                                                                              'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
+        det_img_table = random_name('DET_IMG')
+        image_size = _pair(image_size)  # ensure image_size is a pair
+        with sw.option_context(print_messages=False):
+            res = conn.image.loadImages(path=path_after_caslib,
+                                        recurse=True,
+                                        labelLevels=-1,
+                                        caslib=caslib,
+                                        casout={'name': det_img_table, 'replace': True})
+            if res.severity > 0:
+                for msg in res.messages:
+                    if not msg.startswith('WARNING'):
+                        print(msg)
+            else:
+                print('NOTE: Images are loaded.')
 
-    caslib, path_after_caslib, tmp_caslib = caslibify(conn, data_path, task='load')
-    if caslib is None and path_after_caslib is None:
-        print('Cannot create a caslib for the provided (i.e., '+data_path+') path. Please make sure that the '
-                                                                          'path is accessible from'
-                                                                          'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
-    det_img_table = random_name('DET_IMG')
-    with sw.option_context(print_messages=False):
-        res = conn.image.loadImages(path=path_after_caslib,
-                                    recurse=True,
-                                    labelLevels=-1,
-                                    caslib=caslib,
-                                    casout={'name': det_img_table, 'replace': True})
-        if res.severity > 0:
-            for msg in res.messages:
-                if not msg.startswith('WARNING'):
+            res = conn.image.processImages(table={'name': det_img_table},
+                                           imagefunctions=[
+                                               {'options': {'functiontype': 'RESIZE',
+                                                            'height': image_size[1],
+                                                            'width': image_size[0]}}
+                                           ],
+                                           casout={'name': det_img_table, 'replace': True})
+
+            if res.severity > 0:
+                for msg in res.messages:
                     print(msg)
-        else:
-            print('NOTE: Images are loaded.')
-
-        res = conn.image.processImages(table={'name': det_img_table},
-                                       imagefunctions=[
-                                           {'options': {'functiontype': 'RESIZE',
-                                                        'height': image_size,
-                                                        'width': image_size}}
-                                       ],
-                                       casout={'name': det_img_table, 'replace': True})
-
-        if res.severity > 0:
-            for msg in res.messages:
-                print(msg)
-        else:
-            print("NOTE: Images are processed.")
-
-    if (caslib is not None) and tmp_caslib:
-        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib)
-        caslib=None
+            else:
+                print("NOTE: Images are processed.")
 
     if coord_type.lower() not in ['yolo', 'coco']:
         raise ValueError('coord_type, {}, is not supported'.format(coord_type))
@@ -1647,14 +2480,10 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     elif coord_type.lower() == 'coco':
         var_name = coco_var_name
 
-    if annotation_data_is_in_the_client == 0:
-        caslib_annotation, path_after_ann_caslib, tmp_caslib = caslibify(conn, annotation_path, task='save')
-    else:
-        tmp_caslib = False
-
-    label_tbl_name = random_name('obj_det')
-    idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
-    with sw.option_context(print_messages=False):
+    with caslibify_context(conn, annotation_path, task = 'save') as (caslib_annotation, path_after_ann_caslib), \
+            sw.option_context(print_messages = False):
+        label_tbl_name = random_name('obj_det')
+        idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
         for idx, filename in enumerate(label_files):
             tbl_name = '{}_{}'.format(label_tbl_name, idx)
             if annotation_data_is_in_the_client:
@@ -1682,7 +2511,8 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                 run;
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code=fmt_code, _messagelevel='error')
-    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    #cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
+    cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
     print('labels are being processed')
@@ -1711,13 +2541,17 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                            casout=dict(name='output{}'.format(var), replace=1))
             conn.altertable(name='output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
     # dljoin the five columns
-    conn.deeplearn.dljoin(table='output{}'.format(var_name[0]), id='idjoin',
+    res = conn.deeplearn.dljoin(table='output{}'.format(var_name[0]), id='idjoin',
                           annotatedtable='output{}'.format(var_name[1]),
                           casout=dict(name=output, replace=True), _messagelevel='error')
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     for var in var_name[2:]:
-        conn.deepLearn.dljoin(table=output, id='idjoin', annotatedtable='output{}'.format(var),
+        res = conn.deepLearn.dljoin(table=output, id='idjoin', annotatedtable='output{}'.format(var),
                               casout=dict(name=output, replace=True))
+        if res.severity > 0:
+            raise DLPyError('ERROR: Fail to create the object detection table.')
     # get number of objects in each image
     code = '''
             data {0};
@@ -1745,9 +2579,12 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                                                                                                  len(data_path.split('\\')) - 2)
     img_tbl = conn.CASTable(det_img_table, computedvars=['idjoin'], computedvarsprogram=image_sas_code, vars=[{'name': '_image_'}])
+
     # join the image table and label table together
     res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin',
                                 casout={'name': output, 'replace': True, 'replication': 0})
+    if res.severity > 0:
+        raise DLPyError('ERROR: Fail to create the object detection table.')
 
     with sw.option_context(print_messages=False):
         for name in input_tbl_name:
@@ -1755,9 +2592,6 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
         for var in var_name:
             conn.table.droptable('output{}'.format(var))
         conn.table.droptable(det_img_table)
-
-    if (caslib_annotation is not None) and tmp_caslib:
-        conn.retrieve('dropcaslib', _messagelevel='error', caslib=caslib_annotation)
 
     print("NOTE: Object detection table is successfully created.")
     return var_order[2:]
@@ -1780,6 +2614,19 @@ def _ntuple(n):
 
 _pair = _ntuple(2)
 _triple = _ntuple(3)
+
+
+def isnotebook():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
 
 
 def parameter_2d(param1, param2, param3, default_value):
@@ -1813,3 +2660,184 @@ def parameter_2d(param1, param2, param3, default_value):
             return (param2, default_value[1])
         else:
             return (param2, param3)
+
+
+def create_metadata_table(conn, folder='', task='image_classification',
+                          extensions_to_filter=None, caslib=None, output_name='metadata_table'):
+    '''
+    Creates a metadata table from the specified folder or folder and caslib information.
+    The code traverses the given folder recursively and creates a dataframe, which is then uploaded
+    to the CAS server. The function returns a metadata table, in the format of CAS Table.
+
+    It currently supports the following tasks:
+        image_classification: the code assumes that folder name of an image file is its label
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    folder : string
+        Specifies the location of the images.
+    task : str
+        Specifies the task where we are creating the metadata table
+        Default: image_classification
+    extensions_to_filter : list of extensions in str
+        Specifies the extensions that we are interested in while traversing the folders.
+    caslib : str
+        Specifies the caslib of the folder
+    output_name : str
+        Specifies the name of the output cas table
+
+    Returns
+    -------
+    :class:`CASTable`
+
+    '''
+    tasks = ['image_classification']
+    rel_path = ''
+    if task in tasks:
+        if caslib is not None:
+            if not conn.table.querycaslib(caslib=caslib)[caslib]:
+                raise DLPyError('caslib='+caslib+' cannot be found in the server.')
+            r = conn.table.caslibinfo(caslib=caslib)
+            rel_path = r.CASLibInfo.Path[0]
+            folder = os.path.join(rel_path, folder)
+        if task is 'image_classification':
+            return create_image_classification_metadata_table(conn, folder,
+                                                               extensions_to_filter, output_name, rel_path)
+    else:
+        raise DLPyError('We do not support this task yet, supported tasks are as follows: '+str(tasks))
+
+
+def create_image_classification_metadata_table(conn, folder, extensions_to_filter, output_name, rel_path):
+    '''
+    Creates a metadata table from the specified folder or folder and caslib information.
+    The code traverses the given folder recursively and creates a dataframe, which is then uploaded
+    to the CAS server. The function returns a metadata table, in the format of CAS Table.
+    This function is specific to the image classification task. It can be also as a reference
+    if a custom data metadata creator needs to be implemented.
+
+    Parameters
+    ----------
+    conn : CAS Connection
+        Specifies the CAS connection
+    folder : string
+        Specifies the location of the images.
+    extensions_to_filter : list of extensions in str
+        Specifies the extensions that we are interested in while traversing the folders.
+    output_name : str
+        Specifies the name of the output cas table
+    rel_path : str
+        Specifies the path of the caslib, this will be used to extract the relative path of an input file.
+
+    Returns
+    -------
+    :class:`CASTable`
+
+    '''
+    import os
+    try:
+        import pandas as pd
+    except:
+        raise DLPyError('pandas is not installed')
+
+    count = 0
+
+    data=[]
+    for root, dire, files in os.walk( folder):
+        for f in files:
+            if extensions_to_filter is None or any(f.endswith(end) for end in extensions_to_filter):
+                absolute_path = os.path.join(root, f)
+                dirname = os.path.dirname( absolute_path)
+                basename = os.path.basename( dirname)
+                fe = os.path.splitext(f)
+                fee = ''
+                if len(fe) > 1:
+                    fee = fe[0]
+                rp = ''
+                if len(rel_path) > 0:
+                    s = absolute_path.split(rel_path)
+                    if len(s) > 1:
+                        rp = s[1]
+                data.append([absolute_path, rp, f, fee, basename, count])
+                count +=1
+    df = pd.DataFrame(data, columns=['_filePath_', '_relativePath_', '_fileName_', '_fName_', '_label_', '_id_'])
+    return conn.upload_frame(df, casout=dict(name=output_name, replace=True))
+
+
+def print_predefined_models():
+    import dlpy.applications
+    models_meta = inspect.getmembers(dlpy.applications, inspect.isfunction)
+    # only keep function from application module instead of import ones; remove function starts with underscore.
+    models_name = [m[0] for m in models_meta if m[1].__module__.startswith(dlpy.applications.__name__) and
+                   not m[1].__module__.endswith('application_utils')]
+    print('DLPy supports predefined models as follows: \n{}.'.format(', '.join(models_name)))
+
+
+def check_layer_class(layer_to_check, layer_class):
+    if layer_to_check:
+        if type(layer_to_check) != layer_class:
+            raise DLPyError('The layer to be checked does not match '
+                            'the layer class, {}.'.format(str(layer_class)))
+
+
+def file_exist_on_server(conn, file):
+    '''
+    Check if a file exists on server side
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    file : str
+        Specifies the path of file on server side
+
+    Returns
+    -------
+    :class: 'bool'
+
+    '''
+
+    sep = get_server_path_sep(conn)
+    _, file_name = file.rsplit(sep, 1)
+    with caslibify_context(conn, path=file, task='load') as (caslib, path):
+        fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
+        # if server doesn't find that, it will return 0
+        exit_ = fileinfo.FileInfo.query('Name == "{}"'.format(file_name)).shape[0]
+    if exit_:
+        return True
+    else:
+        return False
+
+
+class DLPyDict(collections.MutableMapping):
+    """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
+
+    def __init__(self, *args, **kwargs):
+        for k in kwargs:
+            self.__setitem__(k, kwargs[k])
+
+    def __getitem__(self, key):
+        return self.__dict__[self.__keytransform__(key)]
+
+    def __setitem__(self, key, value):
+        if value is not None:
+            self.__dict__[self.__keytransform__(key)] = value
+        else:
+            if key in self.__dict__:
+                self.__delitem__[key]
+
+    def __delitem__(self, key):
+        del self.__dict__[self.__keytransform__(key)]
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
+
+    def __keytransform__(self, key):
+        return key.lower().replace("_", "")
+
+    def __str__(self):
+        return str(self.__dict__)

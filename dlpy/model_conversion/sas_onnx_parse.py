@@ -27,7 +27,7 @@ from onnx import numpy_helper
 from onnx.shape_inference import infer_shapes
 
 from dlpy.layers import (InputLayer, Conv2d, Pooling, Dense, OutputLayer,
-                         BN, Concat, Res)
+                         BN, Concat, Res, GroupConv2d, GlobalAveragePooling2D)
 from dlpy.model_conversion.onnx_graph import OnnxGraph, OnnxNode
 from dlpy.model_conversion.onnx_transforms import (ConstToInitializer,
                                                    InitReshape, InitUnsqueeze,
@@ -198,12 +198,9 @@ def onnx_to_sas(model, model_name=None, output_layer=None):
                                     act='IDENTITY',
                                     n=n,
                                     include_bias=False,
+                                    full_connect = False,
                                     src_layers=[dlpy_layers[-1]])
             dlpy_layers.append(out_layer)
-            identity = np.identity(n).astype(np.float32)
-            f = h5py.File(hdf5_out)
-            f['output/output/kernel:0'] = identity
-            f.close()
     else:
         # connect output_layer to previous layer
         output_layer.src_layers = [dlpy_layers[-1]]
@@ -270,9 +267,17 @@ def onnx_input_layer(value_info):
     
     '''
     input_layer_name = value_info.name
-    _, C, H, W = list(d.dim_value for d in
-                      value_info.type.tensor_type.shape.dim)
-    return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    dims = tuple(d.dim_value for d in
+                 value_info.type.tensor_type.shape.dim)
+    if len(dims) == 3:
+        # Assume single channel image
+        N, H, W = dims
+        return InputLayer(n_channels=1, width=W, height=H, name=input_layer_name)
+    elif len(dims) == 4:
+        _, C, H, W = dims
+        return InputLayer(n_channels=C, width=W, height=H, name=input_layer_name)
+    else:
+        raise OnnxParseError('Cannot parse input dimensions, expecting NCHW or NHW.')
 
 
 def onnx_extract_sas_layer(graph, node, layers):
@@ -367,7 +372,7 @@ def get_dlpy_layer(layers, name):
 def onnx_extract_conv(graph, node, layers):
     ''' 
     Construct convo layer from ONNX op 
-    
+
     Parameters
     ----------
     graph : ONNX GraphProto
@@ -379,16 +384,16 @@ def onnx_extract_conv(graph, node, layers):
 
     Returns
     -------
-    :class:`Conv2d`
+    :class:`Conv2d` or 'GroupConv2d'
 
     '''
     previous = onnx_find_previous_compute_layer(graph, node)
-    
+
     if not previous:
         src_names = [find_input_layer_name(graph)]
     else:
         src_names = [p.name for p in previous]
-    
+
     src = [get_dlpy_layer(layers, i) for i in src_names]
 
     height = None
@@ -402,6 +407,7 @@ def onnx_extract_conv(graph, node, layers):
     n_filters = None
     include_bias = False
     act = 'identity'
+    group = None
 
     # if padding is not present, default to 0
     is_padding = False
@@ -424,7 +430,7 @@ def onnx_extract_conv(graph, node, layers):
                 continue
             elif attr_s == 'NOTSET':
                 continue
-            else: # 'VALID'
+            else:  # 'VALID'
                 padding = 0
         elif attr.name == 'pads':
             is_padding = True
@@ -434,6 +440,8 @@ def onnx_extract_conv(graph, node, layers):
                       + node.name + ' setting equal padding instead.')
                 padding_height = max(padding_height, p_h2)
                 padding_width = max(padding_width, p_w2)
+        elif attr.name == 'group':
+            group = attr.i
 
     if not is_padding:
         padding = 0
@@ -442,7 +450,7 @@ def onnx_extract_conv(graph, node, layers):
     for init in graph.initializer:
         if init.name == node.input[1]:
             n_filters = numpy_helper.to_array(init).shape[0]
-    
+
     # if not in initializer, check inferred shapes in graph
     if n_filters is None:
         for v in graph.value_info:
@@ -454,24 +462,40 @@ def onnx_extract_conv(graph, node, layers):
         include_bias = True
     # check if bias is added by the next op
     else:
-        out = onnx_get_out_nodes(graph, node) 
+        out = onnx_get_out_nodes(graph, node)
         for n in out:
             if is_bias_op(graph, n):
                 include_bias = True
-   
-    return Conv2d(n_filters=n_filters,
-                  width=width,
-                  height=height,
-                  stride=stride,
-                  name=node.name,
-                  stride_horizontal=stride_horizontal,
-                  stride_vertical=stride_vertical,
-                  padding=padding,
-                  padding_width=padding_width,
-                  padding_height=padding_height,
-                  act=act,
-                  include_bias=include_bias,
-                  src_layers=src) 
+
+    if group and group > 1:
+        return GroupConv2d(n_groups=group,
+                           n_filters=n_filters,
+                           width=width,
+                           height=height,
+                           stride=stride,
+                           name=node.name,
+                           stride_horizontal=stride_horizontal,
+                           stride_vertical=stride_vertical,
+                           padding=padding,
+                           padding_width=padding_width,
+                           padding_height=padding_height,
+                           act=act,
+                           include_bias=include_bias,
+                           src_layers=src)
+    else:
+        return Conv2d(n_filters=n_filters,
+                      width=width,
+                      height=height,
+                      stride=stride,
+                      name=node.name,
+                      stride_horizontal=stride_horizontal,
+                      stride_vertical=stride_vertical,
+                      padding=padding,
+                      padding_width=padding_width,
+                      padding_height=padding_height,
+                      act=act,
+                      include_bias=include_bias,
+                      src_layers=src)
 
     
 def onnx_extract_pool(graph, node, layers, pool='MAX'):
@@ -598,7 +622,7 @@ def onnx_extract_globalpool(graph, node, layers):
     
     return Pooling(width=width,
                    height=height,
-                   stride=1,
+                   stride=width,
                    name=node.name,
                    padding=0,
                    pool='AVERAGE',
@@ -794,36 +818,16 @@ def onnx_extract_matmul(graph, node, layers):
     act = 'identity'
     neurons = None
 
-    # determine dimensions of the multiply 
-    a_shape = None
-    b_shape = None
     # check initializer for weight tensors
     for init in graph.initializer:
-        if init.name == node.input[0]:
-            a_shape = numpy_helper.to_array(init).shape
         if init.name == node.input[1]:
-            b_shape = numpy_helper.to_array(init).shape
+            neurons = numpy_helper.to_array(init).shape[1]
     
-    # check inferred shapes in graph
-    for v in graph.value_info:
-        if v.name == node.input[0]:
-            a_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
-                       v.type.tensor_type.shape.dim[1].dim_value)
-        if v.name == node.input[1]:
-            b_shape = (v.type.tensor_type.shape.dim[0].dim_value, 
-                       v.type.tensor_type.shape.dim[1].dim_value)
-
-    if a_shape is None or b_shape is None:
+    if neurons is None:
         raise OnnxParseError('Unable to determine number of neurons '
                              'in FC layer.')
     
-    # set number of neurons according to shape
-    if a_shape[0] == 1:
-        neurons = b_shape[1]
-    else:
-        neurons = a_shape[0]
-    
-    # check if bias is added by the next op
+   # check if bias is added by the next op
     out = onnx_get_out_nodes(graph, node) 
     for n in out:
         if is_bias_op(graph, n):
@@ -1156,7 +1160,7 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
     import os
     temp_HDF5 = os.path.join(os.getcwd(), '{}_weights.onnxmodel.h5'.format(name))
     f_out = h5py.File(temp_HDF5, 'w')
-    weight_layers = [l for l in layers if l.type in ['convo', 'fc', 'batchnorm']]
+    weight_layers = [l for l in layers if l.type in ['convo', 'fc', 'batchnorm', 'groupconvo']]
     f_out.attrs['layer_names'] = [l.name.encode('utf8') for l in weight_layers]
     for layer in weight_layers:
         new_weight_names = []
@@ -1165,7 +1169,7 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
         weights = [np.array(tensor_dict[i], dtype=np.float32) for i in node.input
                                   if tensor_dict.get(i) is not None]
 
-        if layer.type in ['convo', 'fc']:
+        if layer.type in ['convo', 'fc', 'groupconvo']:
             # check bias op following the node
             # to see if we need to include any bias weights
             for n in onnx_get_out_nodes(graph, node):
@@ -1199,8 +1203,14 @@ def write_weights_hdf5(layers, graph, tensor_dict, name):
             if len(weights) != 4:
                 raise OnnxParseError('Incorrect batchnorm weights') 
             for idx, w in enumerate(weights):
-                g_out.create_dataset(template_names[idx].encode('utf8'), data=w) 
-                new_weight_names.append(template_names[idx].encode('utf8'))
+                if idx == 3:
+                    # clip variance to avoid error on cas
+                    w = np.clip(w, a_min = 1e-12, a_max = 1e10)
+                    g_out.create_dataset(template_names[idx].encode('utf8'), data=w)
+                    new_weight_names.append(template_names[idx].encode('utf8'))
+                else:
+                    g_out.create_dataset(template_names[idx].encode('utf8'), data=w)
+                    new_weight_names.append(template_names[idx].encode('utf8'))
 
         g_out.attrs['weight_names'] = new_weight_names
 
