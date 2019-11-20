@@ -1362,14 +1362,14 @@ class TestModel(unittest.TestCase):
         writer = tensorboard.build_summary_writer()
         default_scalar_list = ['learning_rate', 'loss', 'error']
         for i in default_scalar_list:
-            assertTrue(i in writer)
+            self.assertTrue(i in writer)
                         
         # Test with validation scalars
         tensorboard = TensorBoard(model1, log_dir, use_valid=True)
         valid_writer = tensorboard.build_summary_writer()
         valid_scalar_list = ['learning_rate', 'loss', 'error', 'valid_loss', 'valid_error']
         for i in valid_scalar_list:
-            assertTrue(i in valid_writer)
+            self.assertTrue(i in valid_writer)
                         
         # Clean up for next test
         shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
@@ -1411,9 +1411,9 @@ class TestModel(unittest.TestCase):
             tensorboard.log_scalar(writers['loss'], 'loss', test_loss_values[i], i)
 
         # Check event files for correct output data
-        tfevent_file = os.listdir(writers['loss'].get_logdir())
+        tfevent_file = os.listdir(log_dir + '/loss/')
         count = 0
-        for e in tf.compat.v1.train.summary_iterator(writers['loss'].get_logdir() + tfevent_file[0]):
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/loss/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, test_loss_values[count], places=4)
                 count += 1
@@ -1506,40 +1506,40 @@ class TestModel(unittest.TestCase):
 
         # Check for correct scalar values
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['learning_rate'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/learning_rate/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/learning_rate/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 2.0, places=4)
                 count += 1
         self.assertEquals(count, 1)
 
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['loss'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['loss'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/loss/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/loss/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 3.0, places=4)
                 count += 1
         self.assertEquals(count, 1)
         
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['error'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['error'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/error/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/error/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 4.0, places=4)
                 count += 1
         self.assertEquals(count, 1)
 
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['valid_loss'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_loss'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/valid_loss/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_loss/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 5.0, places=4)
                 count += 1
         self.assertEquals(count, 1)
         
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['valid_error'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_error'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/valid_error/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_error/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 6.0, places=4)
                 count += 1
@@ -1577,40 +1577,40 @@ class TestModel(unittest.TestCase):
 
         # Check for correct scalar values
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['learning_rate'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['learning_rate'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/learning_rate/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/learning_rate/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 2.0, places=4)
                 count += 1
         self.assertEquals(count, 2)
 
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['loss'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['loss'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/loss/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/loss/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 3.0, places=4)
                 count += 1
         self.assertEquals(count, 2)
         
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['error'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['error'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/error/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/error/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 4.0, places=4)
                 count += 1
         self.assertEquals(count, 2)
 
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['valid_loss'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_loss'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/valid_loss/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_loss/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 5.0, places=4)
                 count += 1
         self.assertEquals(count, 2)
         
         count = 0
-        tfevent_file = os.listdir(userdata.writer_dict['valid_error'].get_logdir())
-        for e in tf.compat.v1.train.summary_iterator(userdata.writer_dict['valid_error'].get_logdir() + tfevent_file[0]):
+        tfevent_file = os.listdir(log_dir + '/valid_error/')
+        for e in tf.compat.v1.train.summary_iterator(log_dir + '/valid_error/' + tfevent_file[0]):
             for v in e.summary.value:
                 self.assertAlmostEqual(v.simple_value, 6.0, places=4)
                 count += 1
