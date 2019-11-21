@@ -23,17 +23,20 @@
 #       the CASPROTOCOL environment variable.
 
 import os
+import shutil
 #import onnx
 import swat
 import swat.utils.testing as tm
 from swat.cas.table import CASTable
-from dlpy.model import Model, Optimizer, AdamSolver, Sequence
+from swat.cas.results import CASResults
+from dlpy.model import Model, Optimizer, AdamSolver, Sequence, TensorBoard
 from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Conv1d, Pooling, Dense, OutputLayer,
                          Recurrent, Keypoints, BN, Res, Concat, Reshape, GlobalAveragePooling1D)
-from dlpy.utils import caslibify, caslibify_context, file_exist_on_server
+from dlpy.utils import caslibify, caslibify_context, file_exist_on_server, DLPyError
 from dlpy.applications import Tiny_YoloV2
+from dlpy.splitting import two_way_split
 import unittest
 
 
@@ -1038,7 +1041,822 @@ class TestModel(unittest.TestCase):
                                        output_model_table='mobilenetv2',
                                        offsets=255*[0.485, 0.456, 0.406],
                                        norm_stds=255*[0.229, 0.224, 0.225])
+        
+    def test_tensorboard_init_log_dir(self):
+        try:
+            import tensorflow as tf
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow not found in the libraries")
 
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+        # Clean up for DNE
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+
+        # Test log_dir DNE
+        self.assertRaises(OSError, lambda:TensorBoard(model1, self.data_dir + '_TB'))
+
+        # Test existing log_dir
+        os.mkdir(self.data_dir + '_TB')
+        tensorboard = TensorBoard(model1, self.data_dir + '_TB')
+        self.assertEqual(tensorboard.log_dir, self.data_dir + '_TB')
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+
+    def test_tensorboard_build_summary_writer(self):
+        try:
+            import tensorflow as tf
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow not found in the libraries")
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        # Test default scalars
+        tensorboard = TensorBoard(model1, log_dir)
+        writer = tensorboard.build_summary_writer()
+        default_scalar_list = ['learning_rate', 'loss', 'error']
+        for i in default_scalar_list:
+            self.assertTrue(i in writer)
+                        
+        # Test with validation scalars
+        tensorboard = TensorBoard(model1, log_dir, use_valid=True)
+        valid_writer = tensorboard.build_summary_writer()
+        valid_scalar_list = ['learning_rate', 'loss', 'error', 'valid_loss', 'valid_error']
+        for i in valid_scalar_list:
+            self.assertTrue(i in valid_writer)
+                        
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+
+    def test_tensorboard_log_scalar(self):
+        try:
+            import tensorflow as tf
+            import numpy as np
+            from tensorflow.core.util import event_pb2
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
+        
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        # Generate test data for writing scalar values
+        # np.random.seed(123)
+        test_loss_values = list(range(20))
+        # np.random.normal(size=10)
+        tensorboard = TensorBoard(model1, log_dir)
+        writers = tensorboard.build_summary_writer()
+        
+        # Write out test loss data as tfevents
+        for i in range(10):
+            tensorboard.log_scalar(writers['loss'], 'loss', test_loss_values[i], i)
+
+        # Check event files for correct output data
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    print(t,test_loss_values[count])
+                    self.assertAlmostEqual(t, test_loss_values[count], places=4)
+                    count += 1
+
+        # Continue logging
+        for i in range(10,20):
+            tensorboard.log_scalar(writers['loss'], 'loss', test_loss_values[i], i)
+
+        # Check event files for correct output data after additional log
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, test_loss_values[count], places=4)
+                    count += 1
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+
+    def test_tensorboard_response_cb(self):
+        try:
+            import tensorflow as tf
+            import numpy as np
+            from tensorflow.core.util import event_pb2
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
+        
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        response = swat.cas.response.CASResponse(swat.cas.rest.response.REST_CASResponse({}),connection=self.s)
+        userdata = None
+        tensor_board = TensorBoard(model1, log_dir, use_valid=True)
+
+        # Check initial values for userdata
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertTrue(isinstance(userdata, CASResults))
+        self.assertEquals(len(userdata.message), 0)
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Add a response message and check if passed to userdata
+        response.messages.append('str1')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'str1')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Add another response message
+        response.messages.pop()
+        response.messages.append('str2')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'str2')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Check on Epoch changes at_scalar
+        response.messages.pop()
+        response.messages.append('Epoch')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'Epoch')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 1)
+
+        # Check scalar values are logged and epoch increases
+        response.messages.pop()
+        response.messages.append('NOTE:          1            2       3        4          5              6           7')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 2)
+
+        # Check for correct scalar values
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 2.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
+
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 3.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
+        
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 4.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
+
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 5.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
+
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 6.0, places=4)
+                    count += 1
+            self.assertEquals(count, 1)
+
+        # Check on Batch
+        response.messages.pop()
+        response.messages.append('Batch')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'Batch')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 2)
+
+        # Check on Epoch changes at_scalar
+        response.messages.pop()
+        response.messages.append('Epoch')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'Epoch')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 2)
+
+        # Check scalar values are logged and epoch increases
+        response.messages.pop()
+        response.messages.append('NOTE:          1            2       3        4          5              6           7')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'NOTE:          1            2       3        4          5              6           7')
+        self.assertTrue(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 3)
+
+        # Check for correct scalar values
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 2.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
+
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 3.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
+        
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 4.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
+        
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 5.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
+        
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/valid_error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/valid_error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, 6.0, places=4)
+                    count += 1
+            self.assertEquals(count, 2)
+
+        # On optimization changes at_scalar
+        response.messages.pop()
+        response.messages.append('optimization')
+        userdata = tensor_board.tensorboard_response_cb(response, self.s, userdata)
+        self.assertEquals(len(userdata.message), 1)
+        self.assertEquals(userdata.message[0], 'optimization')
+        self.assertFalse(userdata.at_scaler)
+        self.assertEquals(len(userdata.writer_dict), 5)
+        self.assertEquals(userdata.epoch_count, 3)
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+
+    def test_tensorboard_fit(self):
+        try:
+            import tensorflow as tf
+            import numpy as np
+            from tensorflow.core.util import event_pb2
+        except:
+            unittest.TestCase.skipTest(self, "tensorflow and/or np not found in the libraries")
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if os.path.exists(self.data_dir + '_TB'):
+            log_dir = self.data_dir + '_TB'
+        else:
+            os.mkdir(self.data_dir + '_TB')
+            log_dir = self.data_dir + '_TB'
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+        self.s.table.loadtable(caslib=caslib, casout={'name': 'eee', 'replace': True}, path=path)
+
+        model0 = Sequential(self.s, model_table='Simple_CNN0')
+        model0.add(InputLayer(3, 224, 224))
+        model0.add(Conv2d(8, 7))
+        model0.add(Pooling(2))
+        model0.add(Conv2d(8, 7))
+        model0.add(Pooling(2))
+        model0.add(Dense(16))
+        model0.add(OutputLayer(act='softmax', n=2))
+
+        # Run without TB
+        r = model0.fit(data='eee', inputs='_image_', target='_label_', lr=0.0001)
+        self.assertTrue(r.severity <= 1)
+
+        # Run model1 with TB no valid - 5 epochs
+        model1 = Sequential(self.s, model_table='Simple_CNN1')
+        model1.add(InputLayer(3, 224, 224))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Conv2d(8, 7))
+        model1.add(Pooling(2))
+        model1.add(Dense(16))
+        model1.add(OutputLayer(act='softmax', n=2))
+
+        tensorboard = TensorBoard(model1, log_dir)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.0001, tensorboard=tensorboard)
+        
+        epochs = model1.training_history.Epoch.values
+        lr = model1.training_history.LearningRate.values
+        loss = model1.training_history.Loss.values
+        error = model1.training_history.FitError.values
+        self.assertTrue(len(epochs) == 5)
+
+        # Check number of event files created (1 for each call to fit)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')) == 1)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/loss/')) == 1)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/error/')) == 1)
+
+        # Check lr
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, lr[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+
+        # Check loss
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, loss[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+        
+        # Check error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, error[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+
+        # Run model1 with TB no valid - 5 more epochs (10 total)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.0001, tensorboard=tensorboard)
+        epochs = model1.training_history.Epoch.values
+        lr = model1.training_history.LearningRate.values
+        loss = model1.training_history.Loss.values
+        error = model1.training_history.FitError.values
+        
+        self.assertTrue(len(epochs) == 10)
+
+        # Check number of event files created (1 for each call to fit)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/loss/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/error/')) == 2)
+        
+        # Check lr
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        # Sort the event files by creation time to get correct order of events to test
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN1' + '/learning_rate/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, lr[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+
+        # Check loss
+        count = 0
+        tfevent_file = os.listdir(log_dir + 'Simple_CNN1' + '/loss/')
+        # Sort the event files by creation time to get correct order of events to test
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN1' + '/loss/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir + 'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, loss[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+        
+        # Check error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        # Sort the event files by creation time to get correct order of events to test
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN1' + '/error/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, error[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+
+        # Run seperate model with valid
+        train, test = two_way_split(self.s.CASTable('eee'))
+        
+        model2 = Sequential(self.s, model_table='Simple_CNN2')
+        model2.add(InputLayer(3, 224, 224))
+        model2.add(Conv2d(8, 7))
+        model2.add(Pooling(2))
+        model2.add(Conv2d(8, 7))
+        model2.add(Pooling(2))
+        model2.add(Dense(16))
+        model2.add(OutputLayer(act='softmax', n=2))
+
+        tensorboard2 = TensorBoard(model2, log_dir, use_valid=True)
+        r = model2.fit(data=train, valid_table=test, inputs='_image_', target='_label_', 
+            lr=0.001, tensorboard=tensorboard2, max_epochs=10)
+        
+        epochs2 = model2.training_history.Epoch.values
+        lr2 = model2.training_history.LearningRate.values
+        loss2 = model2.training_history.Loss.values
+        error2 = model2.training_history.FitError.values
+        v_loss2 = model2.training_history.ValidLoss.values
+        v_error2 = model2.training_history.ValidError.values
+        
+        self.assertTrue(len(epochs2) == 10)
+
+        # Check number of event files created (1 for each call to fit)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/learning_rate/')) == 1)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/loss/')) == 1)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/error/')) == 1)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/valid_loss/')) == 1)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/valid_error/')) == 1)
+        
+        # Check lr
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/learning_rate/')
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN2' + '/learning_rate/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, lr2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+
+        # Check loss
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, loss2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+        
+        # Check error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, error2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+
+        # Check valid loss
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/valid_loss/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/valid_loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, v_loss2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+        
+        # Check valid error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/valid_error/')
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/valid_error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, v_error2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+
+        # Run model2 with TB valid - 10 more epochs (20 total)
+        r = model2.fit(data=train, valid_table=test, inputs='_image_', target='_label_', 
+            lr=0.001, tensorboard=tensorboard2, max_epochs=10)
+        
+        epochs2 = model2.training_history.Epoch.values
+        lr2 = model2.training_history.LearningRate.values
+        loss2 = model2.training_history.Loss.values
+        error2 = model2.training_history.FitError.values
+        v_loss2 = model2.training_history.ValidLoss.values
+        v_error2 = model2.training_history.ValidError.values
+
+        self.assertTrue(len(epochs2) == 20)
+
+        # Check number of event files created (1 for each call to fit)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/learning_rate/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/loss/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/error/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/valid_loss/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN2' + '/valid_error/')) == 2)
+        
+        # Check lr
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/learning_rate/')
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN2' + '/learning_rate/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, lr2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+
+        # Check loss
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/loss/')
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN2' + '/loss/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, loss2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+        
+        # Check error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/error/')
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN2' + '/error/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, error2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+
+        # Check valid loss
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/valid_loss/')
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN2' + '/valid_loss/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/valid_loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, v_loss2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+        
+        # Check valid error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN2' + '/valid_error/')
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN2' + '/valid_error/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN2' + '/valid_error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, v_error2[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs2))
+
+        # Check model1 unchanged
+        # Check number of event files created (1 for each call to fit)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/loss/')) == 2)
+        self.assertTrue(len(os.listdir(log_dir +'Simple_CNN1' + '/error/')) == 2)
+        
+        # Check lr
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/learning_rate/')
+        # Sort the event files by creation time to get correct order of events to test
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN1' + '/learning_rate/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/learning_rate/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, lr[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+
+        # Check loss
+        count = 0
+        tfevent_file = os.listdir(log_dir + 'Simple_CNN1' + '/loss/')
+        # Sort the event files by creation time to get correct order of events to test
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN1' + '/loss/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir + 'Simple_CNN1' + '/loss/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, loss[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+        
+        # Check error
+        count = 0
+        tfevent_file = os.listdir(log_dir +'Simple_CNN1' + '/error/')
+        # Sort the event files by creation time to get correct order of events to test
+        tfevent_file.sort(key=lambda x: os.path.getmtime(log_dir + 'Simple_CNN1' + '/error/' + x))
+        for file in tfevent_file:
+            serialized_examples = tf.data.TFRecordDataset(log_dir +'Simple_CNN1' + '/error/' + file)
+            for serialized_example in serialized_examples:
+                event = event_pb2.Event.FromString(serialized_example.numpy())
+                for value in event.summary.value:
+                    t = tf.make_ndarray(value.tensor)
+                    self.assertAlmostEqual(t, error[count], places=3)
+                    count += 1
+        self.assertEquals(count, len(epochs))
+
+        # Check error condition
+        model3 = Sequential(self.s, model_table='Simple_CNN3')
+        model3.add(InputLayer(3, 224, 224))
+        model3.add(Conv2d(8, 7))
+        model3.add(Pooling(2))
+        model3.add(Conv2d(8, 7))
+        model3.add(Pooling(2))
+        model3.add(Dense(16))
+        model3.add(OutputLayer(act='softmax', n=2))
+
+        tensorboard3 = TensorBoard(model3, log_dir, use_valid=True)
+
+        self.assertRaises(DLPyError, lambda: model3.fit(data=train, valid_table=None, 
+            inputs='_image_', target='_label_', tensorboard=tensorboard3))
+
+        # Clean up for next test
+        shutil.rmtree(self.data_dir + '_TB', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN0', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN1', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN2', ignore_errors=True)
+        shutil.rmtree(self.data_dir + '_TBSimple_CNN3', ignore_errors=True)
+        
     @classmethod
     def tearDownClass(cls):
         # tear down tests

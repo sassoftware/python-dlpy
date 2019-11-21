@@ -24,6 +24,11 @@ import numpy as np
 import pandas as pd
 import collections
 import sys
+import swat
+try:
+    import tensorflow as tf
+except ImportError:
+    print("TensorFlow must be installed to use tensorboard")
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
 from .utils import filter_by_image_id, filter_by_filename, isnotebook
 from dlpy.timeseries import TimeseriesTable
@@ -106,7 +111,7 @@ class Model(Network):
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
             valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
             missing='mean', target_missing='mean', repeat_weight_table=False, force_equal_padding=None,
-            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None):
+            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None, tensorboard=None):
         """
         Fitting a deep learning model.
 
@@ -232,10 +237,14 @@ class Model(Network):
             of the labels or order them in the order they are recieved with
             training data samples.
             Valid Values: 'ascending', 'descending', 'hash'
+            Default : 'ascending'
+        tensorboard: :class:`TensorBoard`, optional
+            Specifies the TensorBoard instance to log model training statistics.
+            Default : None
             Default: 'ascending'
         train_from_scratch : bool, optional
             When set to True, it ignores the existing weights and trains the model from the scracth.
-
+            
         Returns
         --------
         :class:`CASResults`
@@ -292,6 +301,10 @@ class Model(Network):
         if save_best_weights and self.best_weights is None:
             self.best_weights = random_name('model_best_weights', 6)
 
+        if tensorboard:
+            if tensorboard.use_valid and not valid_table:
+                raise DLPyError('Cannot log validation data without a valid_table')
+
         r = self.train(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
                        optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
                        sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
@@ -299,7 +312,7 @@ class Model(Network):
                        missing=missing, target_missing=target_missing, repeat_weight_table=repeat_weight_table,
                        force_equal_padding=force_equal_padding, init_weights=init_weights, target_order=target_order,
                        best_weights=self.best_weights, model=self.model_table, n_threads=n_threads,
-                       model_weights=dict(replace=True, **self.model_weights.to_table_params()))
+                       model_weights=dict(replace=True, **self.model_weights.to_table_params()), tensorboard=tensorboard)
 
         try:
             temp = r.OptIterHistory
@@ -587,7 +600,7 @@ class Model(Network):
               model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
               sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
               optimizer=None, target_missing='mean', best_weights=None, repeat_weight_table=False,
-              force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending'):
+              force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending', tensorboard=None):
         """
         Trains a deep learning model
 
@@ -679,6 +692,9 @@ class Model(Network):
             of the labels or order them in the order of the process.
             Valid Values: 'ascending', 'descending', 'hash'
             Default: 'ascending'
+        tensorboard: :class:`TensorBoard`, optional
+            Specifies the TensorBoard instance to log model training statistics.
+            Default : None
 
         Returns
         -------
@@ -690,6 +706,11 @@ class Model(Network):
         if best_weights is not None:
             b_w = dict(replace=True, name=best_weights)
 
+        if not tensorboard:
+            tb_responsefunc = None
+        else:
+            tb_responsefunc = tensorboard.tensorboard_response_cb
+
         parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
                               valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
                               model_weights=model_weights, target=target, target_sequence=target_sequence,
@@ -697,7 +718,7 @@ class Model(Network):
                               record_seed=record_seed, missing=missing, optimizer=optimizer,
                               target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
                               force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
-                              target_order=target_order)
+                              target_order=target_order, responsefunc=tb_responsefunc)
 
         rt = self._retrieve_('deeplearn.dltrain', message_level='note', **parameters)
 
@@ -3376,3 +3397,167 @@ def _pre_parse_results(x, y, y_loss, total_sample_size, e, comm, iter_history, f
             print(response.disposition.debug)
 
     return parse_results
+  
+class TensorBoard():
+    '''
+    TensorBoard class provides functionality for viewing scalar metrics in TensorBoard
+
+    Parameters
+    ----------
+    model : dlpy.Model
+        Specifies the desired model object to monitor.
+    log_dir : string
+        Specifies the directory to write logs to.
+    use_valid : bool
+        Specifies whether to record validation statistics.
+        If set to True then user must pass valid_table to Model.fit().
+        Default: False
+
+    Returns
+    -------
+    :class:`TensorBoard`
+
+    '''
+    def __init__(self, model, log_dir, use_valid=False):
+        self.model = model
+        if os.path.exists(log_dir):
+            self.log_dir = log_dir
+        else:
+            raise OSError(log_dir + " does not exist. Please provide an existing directory to write event logs or create this directory.")
+        self.use_valid = use_valid
+
+        # Scalar metrics to log
+        self.scalars = ['learning_rate', 'loss', 'error']
+        if self.use_valid:
+            self.scalars.append('valid_' + self.scalars[1])
+            self.scalars.append('valid_' + self.scalars[2])
+
+    def build_summary_writer(self):
+        '''
+        Creates a SummaryWriter object for logging scalar events 
+        to the appropriate directory. Will return a dictionary of writers
+        with elements for each scalar to be monitored.
+
+        Returns
+        -------
+        dictionary
+            dictionary where keys are individual scalars and values are the 
+            SummaryWriter for a scalar.
+        '''
+        writer_dict = {}
+
+        for i in self.scalars:
+            writer_dict[i] =  tf.summary.create_file_writer(
+                self.log_dir + self.model.model_table['name'] + '/' + i + '/'
+            )
+                
+        return writer_dict
+
+    def log_scalar(self, summary_writer, scalar_name, scalar_value, scalar_global_step):
+        '''
+        Writes a scalar summary value as a tfevents file.
+
+        Parameters
+        ----------
+        summary_writer : SummaryWriter
+            The SummaryWriter object for a particular scalar (e.g. the SummaryWriter for learning rate).
+        scalar_name : string
+            The scalar that is being recorded (e.g. learning rate).
+        scalar_value : np.float64
+            A substring of the CASResponse message that contains the scalar value to log
+        scalar_global_step : str
+            A substring of the CASResponse message that contains the step (iteration) value of the scalar so far
+            (e.g. "10" would be the 10th iteration of a certain scalar, by default using the epoch count).
+        '''
+        with summary_writer.as_default():
+            tf.summary.scalar(name=scalar_name, data=scalar_value, step=scalar_global_step)
+            summary_writer.flush()
+
+    def tensorboard_response_cb(self, response, connection, userdata):
+        '''
+        Callback function to handle the CASResponse message while model training is run. 
+        This function is called after each iteration of Model.fit() in order to capture 
+        the scalar training metrics that are being monitored. This function calls log_scalar() 
+        to write the needed tfevents files for tensorboard.
+
+        Parameters
+        ----------
+        response : swat.cas.response.CASResponse
+            The CASResponse from a CAS action. 
+        connection : swat.cas.connection.CAS
+            The CAS connection object
+        userdata : swat.cas.results.CASResults() or arbitrary user data structure
+            Keeps state information between calls. The returned value of the function
+            will get passed in as the userdata argument on the next call.
+
+        Returns
+        -------
+        swat.cas.results.CASResults()
+            Each time function is called it returns whatever is stored in userdata
+            and is passed into subsequent function calls as the userdata parameter.
+        '''
+        # Initialize userdata as a CASResults instance to hold results of action 
+        # Initialize userdata attribute, message, to store the response message from action,
+        # at_scalar to determine when to log, writer_dict to hold our summary writers for each
+        # scalar, and epoch_count to keep track of correct epoch value for model.
+        if userdata is None:
+            userdata = swat.cas.results.CASResults()
+            userdata.message = None
+            userdata.at_scaler = False
+            userdata.severity = 0
+            userdata.writer_dict = self.build_summary_writer()
+            userdata.epoch_count = self.model.n_epochs + 1
+            
+        # Store the CASResults in userdata
+        for k,v in response:
+            userdata[k] = v
+
+        # Update userdata severity 
+        userdata.severity = response.disposition.severity
+
+        # Get the initial response message
+        if userdata.message is None:
+            userdata.message = response.messages
+            
+        # Skip if reponse is an empty list
+        if not userdata.message:
+            pass
+        
+        # Writing scalar data
+        else:
+            # Split current message
+            userdata.message = userdata.message[0].split()
+
+            # Change at_scaler flag when done training
+            if 'optimization' in userdata.message:
+                userdata.at_scaler = False
+
+            # Wait until next epoch
+            if 'Batch' in userdata.message:
+                userdata.at_scaler = False
+            
+            # Log scalers at each epoch
+            if userdata.at_scaler:
+                for k,v in userdata.writer_dict.items():
+                    if k == 'learning_rate':
+                        self.log_scalar(v, k, float(userdata.message[2]), userdata.epoch_count)
+                    if k == 'loss':
+                        self.log_scalar(v, k, float(userdata.message[3]), userdata.epoch_count)
+                    if k == 'error':
+                        self.log_scalar(v, k, float(userdata.message[4]), userdata.epoch_count)
+                    if k == 'valid_loss':
+                        self.log_scalar(v, k, float(userdata.message[5]), userdata.epoch_count)
+                    if k == 'valid_error':
+                        self.log_scalar(v, k, float(userdata.message[6]), userdata.epoch_count)
+                        
+                # Increment the epoch_count 
+                userdata.epoch_count += 1
+                
+            # Change at_scaler flag if we are ready to log
+            if 'Epoch' in userdata.message:
+                userdata.at_scaler = True
+
+            # Get next response
+            userdata.message = response.messages
+
+        return userdata
