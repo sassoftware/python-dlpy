@@ -24,7 +24,8 @@ from .utils import random_name
 
 
 def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='_label_',
-                  image_col='_image_', train_name=None, test_name=None, **kwargs):
+                  image_col='_image_', train_name=None, test_name=None, columns=None,
+                  **kwargs):
     '''
     Split image data into training and testing sets
 
@@ -41,12 +42,16 @@ def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='
     im_table : boolean, optional
         If True outputs are converted to an imageTable
         If False CASTables are returned with all columns
+    stratify_by : str, optional
+        Specifies the column name to be used while stratifying the input data.
     image_col : string
         Name of image column if returning ImageTable
     train_name : string
         Specifies the output table name for the training set
     test_name : string
         Specifies the output table name for the test set
+    columns : list of column names
+        Specifies the list of columns to be copied over to the resulting tables.
     **kwargs : keyword arguments, optional
         Additional keyword arguments to the `sample.stratified` or
         'sample.src' actions
@@ -109,8 +114,10 @@ def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='
 
     if im_table:
         train_im = ImageTable.from_table(train, label_col=stratify_by, image_col=image_col,
+                                         columns=columns,
                                          casout=dict(name=train.name))
         test_im = ImageTable.from_table(test, label_col=stratify_by, image_col=image_col,
+                                        columns=columns,
                                         casout=dict(name=test.name))
         return train_im, test_im
     else:

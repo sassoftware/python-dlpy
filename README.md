@@ -30,9 +30,11 @@ of [PyTorch](https://pytorch.org/) flavor.
 * New APIs for:
    * RNN based tasks: text classification, text generation, and sequence labeling
    * Object detection
+   * Image segmentation
    * Time series processing and modeling
 * Processing audio files and creating speech recognition models
-* Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, and Yolo
+* Additional pre-defined network architectures such as DenseNet, DarkNet, Inception, Yolo, 
+FasterRCNN, U-Net, MobileNet, and ShuffleNet
 * Enhanced data visualization and metadata handling
 
 ### Prerequisites
@@ -42,6 +44,35 @@ of [PyTorch](https://pytorch.org/) flavor.
 - A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
 - It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
 - Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
+
+#### SAS Viya and VDMML versions vs. DLPY versions
+DLPy versions are aligned with the SAS Viya and VDMML versions. 
+Below is the versions matrix.
+
+<table>
+<thead>
+<tr>
+<th align='left'>DLPy</th>
+<th align='left'>SAS Viya</th>
+<th align='left'>VDMML</th>
+</thead>
+<tbody>
+<tr>
+<td align='left'>1.1.x</td>
+<td align='left'>3.4</td>
+<td align='left'>8.4</td>
+</tr>
+<tr>
+<td align='left'>1.0.x</td>
+<td align='left'>3.4</td>
+<td align='left'>8.3</td>
+</tr>
+</tbody>
+</table>
+
+The table above can be read as follows: DLPy versions between 1.0 (inclusive)
+to 1.1 (exclusive) are designed to work with the SAS Viya 3.4 and VDMML 8.3.
+
 #### External Libraries ####
 The following versions of external libraries are supported:
 - ONNX: versions >= 1.5.0
@@ -132,13 +163,19 @@ Finally, add the output layer:
 - DLPy API documentation [sassoftware.github.io/python-dlpy](https://sassoftware.github.io/python-dlpy/).
 - [SAS SWAT for Python](http://github.com/sassoftware/python-swat/)
 - [SAS ESPPy](https://github.com/sassoftware/python-esppy)
-- Watch: Introduction to DLPy and examples (YouTube):
-  * [Introduction Deep Learning with Python (DLPy) and SAS Viya](https://www.youtube.com/watch?v=RJ0gbsB7d_8)
-  * [Image classification using CNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=125)
-  * [Object detection using TinyYOLOv2](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=390)
-  * [Import and export deep learning models with ONNX](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=627)
-  * [Text classification and text generation using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=943)
-  * [Time series forecasting using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=1185)
+- Watch: DLPy videos:
+  * DLPy v1.0 examples:
+     * [Image classification using CNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=125)
+     * [Object detection using TinyYOLOv2](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=390)
+     * [Import and export deep learning models with ONNX](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=627)
+     * [Text classification and text generation using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=943)
+     * [Time series forecasting using RNNs](https://www.youtube.com/watch?v=RJ0gbsB7d_8&start=1185)
+  * DLPy v1.1 examples:
+     * [Leverage Functional APIs to Build Complex Models](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=115s)
+     * [Image Segmentation with U-Net](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=399s)
+     * [Object Detection with Faster-RCNN](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=688s)
+     * [Image Classification with ShuffleNet and MobileNet](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=1158s)
+     * [Multi-class Deep learning](https://www.youtube.com/watch?v=guCDi2C-mNQ&t=1648s)
 - [SAS Deep Learning with Python made easy using DLPy](https://blogs.sas.com/content/subconsciousmusings/2019/03/13/sas-deep-learning-with-python-made-easy-using-dlpy/)
 
 ### Contributing

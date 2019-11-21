@@ -150,20 +150,27 @@ Layers
    :toctree: generated/
 
    InputLayer
-   Conv2d
-   Pooling
-   Dense
-   Recurrent
    BN
-   Res
+   ChannelShuffle
    Concat
-   Proj
-   OutputLayer
-   Keypoints
+   Conv2d
+   Conv2DTranspose
+   Dense
    Detection
-   Scale
+   EmbeddingLoss
+   FastRCNN
+   GlobalAveragePooling2D
+   GroupConv2d
+   Keypoints
+   Pooling
+   Proj
+   Recurrent
+   Res
    Reshape
-   
+   ROIPooling
+   Scale
+   Segmentation
+   OutputLayer
 
 Model
 -----
@@ -267,6 +274,7 @@ Solvers
    MomentumSolver
    VanillaSolver
 
+
    
 Optimizer
 ---------
@@ -276,7 +284,26 @@ Optimizer
 
    Optimizer
 
+Learning Rate Scheduler
+-----------------------
 
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autosummary::
+   :toctree: generated/
+
+   FCMPLR
+
+.. autosummary::
+   :toctree: generated/
+
+   FixedLR
+   StepLR
+   MultiStepLR
+   PolynomialLR
+   ReduceLROnPlateau
+   CyclicLR
+   
 
 Parameters
 ----------
@@ -398,6 +425,12 @@ Pre-Built Models for Computer Vision Tasks
 .. autosummary::
    :toctree: generated/
 
+Image Classification
+~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   
    LeNet5
    VGG11
    VGG13
@@ -419,12 +452,42 @@ Pre-Built Models for Computer Vision Tasks
    Darknet
    Darknet_Reference
    InceptionV3
+   MobileNetV1
+   MobileNetV2
+   ShuffleNetV1
+   
+Object Detection
+~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+   
    YoloV1
    YoloV2
    YoloV2_MultiSize
    Tiny_YoloV1
    Tiny_YoloV2
+   Faster_RCNN
+   
+Segmentation
+~~~~~~~~~~~~
 
+.. autosummary::
+   :toctree: generated/
+   
+   UNet
+   
+Image captioning
+----------------
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autosummary::
+   :toctree: generated/
+   
+   ImageCaptioning
+   create_captioning_table
+   display_predicted_image_captions
   
 Pre-Built Models for NLP Tasks
 ------------------------------
@@ -439,6 +502,49 @@ Pre-Built Models for NLP Tasks
    SequenceLabeling
    SpeechRecognition
 
+
+Speech
+------------
+
+.. currentmodule:: dlpy.speech
+
+Constructor
+~~~~~~~~~~~
+
+.. autosummary::
+   :toctree: generated/
+
+   Speech
+
+Utilities
+~~~~~~~~~
+.. autosummary::
+   :toctree: generated/
+
+   Speech.load_acoustic_model
+   Speech.load_language_model
+   Speech.transcribe
+   
+   
+Speech Utilities
+----------------
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autosummary::
+   :toctree: generated/
+
+   read_audio
+   check_framerate
+   check_sampwidth
+   convert_framerate
+   convert_sampwidth
+   calculate_segment_nframes
+   segment_audio
+   clean_audio
+   check_stereo
+   convert_stereo_to_mono
+   
 
 Splitting Utilities
 -------------------
