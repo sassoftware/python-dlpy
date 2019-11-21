@@ -87,9 +87,6 @@ class TestTransformers(unittest.TestCase):
                   class BertDMH() in bert_utils.py
         '''
 
-        from transformers import BertTokenizer
-        model_name = 'bert-base-uncased'
-
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
@@ -102,6 +99,9 @@ class TestTransformers(unittest.TestCase):
             
         if not os.path.isfile(os.path.join(self.data_dir_local,'imdb_master.csv')):
             unittest.TestCase.skipTest(self, "cannot locate imdb_master.csv in DLPY_DATA_DIR_LOCAL")
+
+        from transformers import BertTokenizer
+        model_name = 'bert-base-uncased'
 
         # instantiate BERT tokenizer
         tokenizer = BertTokenizer.from_pretrained(model_name,cache_dir=self.data_dir_local)
@@ -167,9 +167,6 @@ class TestTransformers(unittest.TestCase):
                   class BertDMH() in bert_utils.py
         '''
 
-        from transformers import BertTokenizer
-        model_name = 'bert-base-uncased'
-
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
@@ -182,6 +179,9 @@ class TestTransformers(unittest.TestCase):
             
         if not os.path.isfile(os.path.join(self.data_dir_local,'task1_training_edited.csv')):
             unittest.TestCase.skipTest(self, "cannot locate task1_training_edited.csv in DLPY_DATA_DIR_LOCAL")
+
+        from transformers import BertTokenizer
+        model_name = 'bert-base-uncased'
 
         # instantiate BERT tokenizer
         tokenizer = BertTokenizer.from_pretrained(model_name,cache_dir=self.data_dir_local)
@@ -252,9 +252,6 @@ class TestTransformers(unittest.TestCase):
                   class BertDMH() in bert_utils.py
         '''
 
-        from transformers import BertTokenizer
-        model_name = 'bert-base-uncased'
-
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
@@ -267,6 +264,9 @@ class TestTransformers(unittest.TestCase):
             
         if not os.path.isfile(os.path.join(self.data_dir_local,'qnli_train.tsv')):
             unittest.TestCase.skipTest(self, "cannot locate qnli_train.csv in DLPY_DATA_DIR_LOCAL")
+
+        from transformers import BertTokenizer
+        model_name = 'bert-base-uncased'
 
         # instantiate BERT tokenizer
         tokenizer = BertTokenizer.from_pretrained(model_name,cache_dir=self.data_dir_local)

@@ -1357,8 +1357,8 @@ class Recurrent(Layer):
     dropout : float, optional
         Specifies the dropout rate.
         Default: 0
-    init_bias : bias, optional
-        Specifies the value for all elements of the bias vector.
+    init_bias : float, optional
+        Specifies the initial bias for the layer.
         Default: None        
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
@@ -2593,7 +2593,7 @@ class EmbeddingLoss(Layer):
 
 class MultiHeadAttention(Layer):
     '''
-    Multi-head attention layer
+    Multi-head attention layer from "Attention is All You Need" (Vaswani et al., NIPS 2017)
 
     Parameters
     ----------
@@ -2657,11 +2657,9 @@ class MultiHeadAttention(Layer):
     @property
     def num_bias(self):
         if 'include_bias' in self.config:
-            if not self.config['include_bias']:
-                return 0
-            else:
-                return 3*int(self.config['n'])
-        return 3*int(self.config['n'])
+            return 3*int(self.config['n'])
+        else:
+            return 0
 
     @property
     def num_features(self):
