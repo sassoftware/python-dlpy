@@ -72,8 +72,8 @@ class Network(Layer):
         if (inputs is None or outputs is None) and (inputs is not None or outputs is not None):
             raise ValueError('If one of inputs and outputs option is enabled, both should be specified')
         self._init_model(conn, model_table, model_weights)
-        # works for Sequential() as well
-        if self.__class__.__name__ == 'Model':
+        # works for Sequential() as well as objects that inherit the Model class
+        if isinstance(self,dlpy.model.Model):
             # 1). Model(s, model_table, model_weights)
             # 2). Model(s, inp, outputs, model_table, model_weights)
             if all(i is not None for i in [inputs, outputs]):
@@ -387,6 +387,10 @@ class Network(Layer):
                 model.layers.append(extract_roipooling_layer(layer_table = layer_table))
             elif layer_type == 25:
                 model.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
+            elif layer_type == 28:
+                model.layers.append(extract_layernorm_layer(layer_table = layer_table))
+            elif layer_type == 29:
+                model.layers.append(extract_mhattention_layer(layer_table = layer_table))                
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -858,6 +862,10 @@ class Network(Layer):
                     self.layers.append(extract_roipooling_layer(layer_table = layer_table))
                 elif layer_type == 25:
                     self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
+                elif layer_type == 28:
+                    model.layers.append(extract_layernorm_layer(layer_table = layer_table))
+                elif layer_type == 29:
+                    model.layers.append(extract_mhattention_layer(layer_table = layer_table))                
 
             conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
                 model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -900,9 +908,9 @@ class Network(Layer):
                     self.set_weights_attr(self.model_name + '_weights_attr')
 
     def load_weights(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None,
-                     use_gpu=False):
+                     use_gpu=False, embedding_dim=None):
         '''
-        Load the weights form a data file specified by ‘path’
+        Load the weights from a data file specified by ‘path’
 
         Parameters
         ----------
@@ -911,15 +919,24 @@ class Network(Layer):
             contains the weight table.
         labels : bool
             Specifies whether to apply user-defined classification labels
+            Default: False
         data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
+            Default: None
         label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
+            Default: None
         label_length : int, optional
             Length of the classification labels (in characters).
+            Default: None
         use_gpu: boolean, optional
             GPU processing of model required (or not)
+            Default: False
+        embedding_dim : int, optional
+            Specifies text embedding dimension.  You must specify the data_spec parameter
+            or this parameter is ignored.
+            Default: None
 
         Notes
         -----
@@ -943,10 +960,10 @@ class Network(Layer):
                                          label_length=label_length)
         elif file_name.lower().endswith('kerasmodel.h5'):
             self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,
-                                         label_length=label_length, use_gpu=use_gpu)
+                                         label_length=label_length, use_gpu=use_gpu, embedding_dim=embedding_dim)
         elif file_name.lower().endswith('onnxmodel.h5'):
             self.load_weights_from_keras(path, labels=labels, data_spec=data_spec, label_file_name=label_file_name,            
-                                         label_length=label_length, use_gpu=use_gpu)
+                                         label_length=label_length, use_gpu=use_gpu, embedding_dim=embedding_dim)
         else:
             raise DLPyError('Weights file must be one of the follow types:\n'
                             'sashdat, caffemodel.h5 or kerasmodel.h5.\n'
@@ -979,7 +996,7 @@ class Network(Layer):
             self.load_weights_from_file(path=path, format_type='CAFFE', data_spec=data_spec)
 
     def load_weights_from_keras(self, path, labels=False, data_spec=None, label_file_name=None, label_length=None,
-                                use_gpu=False):
+                                use_gpu=False, embedding_dim=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -990,25 +1007,36 @@ class Network(Layer):
             contains the weight table.
         labels : bool
             Specifies whether to use ImageNet classification labels
+            Default: False
         data_spec : list of :class:`DataSpec`, optional
             data specification for input and output layer(s)
+            Default: None
         label_file_name : string, optional
             Fully qualified path to CSV file containing user-defined
             classification labels.  If not specified, ImageNet labels assumed.
+            Default: None
         label_length : int, optional
             Length of the classification labels (in characters).
+            Default: None
         use_gpu : boolean, optional
             Require GPU for processing model
+            Default: False
+        embedding_dim : int, optional
+            Specifies text embedding dimension.  You must specify the data_spec parameter
+            or this parameter is ignored.
+            Default: None
+            
 
         '''
         if labels:
             self.load_weights_from_file_with_labels(path=path, format_type='KERAS', data_spec=data_spec,
                                                     label_file_name=label_file_name, label_length=label_length,
-                                                    use_gpu=use_gpu)
+                                                    use_gpu=use_gpu, embedding_dim=embedding_dim)
         else:
-            self.load_weights_from_file(path=path, format_type='KERAS', data_spec=data_spec, use_gpu=use_gpu)
+            self.load_weights_from_file(path=path, format_type='KERAS', data_spec=data_spec, use_gpu=use_gpu,
+                                        embedding_dim=embedding_dim)
 
-    def load_weights_from_file(self, path, format_type='KERAS', data_spec=None, use_gpu=False):
+    def load_weights_from_file(self, path, format_type='KERAS', data_spec=None, use_gpu=False, embedding_dim=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -1020,9 +1048,15 @@ class Network(Layer):
         format_type : KERAS, CAFFE
             Specifies the source framework for the weights file
         data_spec : list of :class:`DataSpec`, optional
-            data specification for input and output layer(s)
+            Data specification for input and output layer(s)
+            Default: None
         use_gpu : boolean, optional
             Require GPU for processing model
+            Default: False
+        embedding_dim : int, optional
+            Specifies text embedding dimension.  You must specify the data_spec parameter
+            or this parameter is ignored.
+            Default: None
 
         '''     
         from dlpy.model_conversion.model_conversion_utils import query_action_parm
@@ -1036,24 +1070,57 @@ class Network(Layer):
             if data_spec:
 
                 has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
+                
+                has_embedding_dim = False
+                if embedding_dim is not None:
+                    has_embedding_dim = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'textEmbeddingDim')
+                    if not has_embedding_dim:
+                        raise DLPyError('A text embedding dimension was specified, but your Viya installation does not'
+                                        'support this parameter.')
 
                 if has_data_spec:
                     # run action with dataSpec option
-                    if has_gpu_model:
+                    if has_gpu_model and (not has_embedding_dim):
                         with sw.option_context(print_messages=False):
                             rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                                  model=self.model_table,
                                                  modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                                  dataSpecs=data_spec,
                                                  gpuModel=use_gpu,
-                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name)
+                    elif (not has_gpu_model) and (not has_embedding_dim):
+                        with sw.option_context(print_messages=False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name)
+                    elif has_gpu_model and has_embedding_dim:
+                        with sw.option_context(print_messages=False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 gpuModel=use_gpu,
+                                                 textEmbeddingDim=embedding_dim,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name)
                     else:
                         with sw.option_context(print_messages=False):
                             rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                                  model=self.model_table,
                                                  modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                                  dataSpecs=data_spec,
-                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name)
+                                                 textEmbeddingDim=embedding_dim,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name)
+                    
                 else:
                     if has_gpu_model:
                         with sw.option_context(print_messages=False):
@@ -1102,9 +1169,12 @@ class Network(Layer):
 
         self.set_weights(self.model_name + '_weights')
 
-    def load_weights_from_file_with_labels(self, path, format_type='KERAS', data_spec=None, label_file_name=None,
+    def load_weights_from_file_with_labels(self, path, format_type='KERAS', 
+                                           data_spec=None, 
+                                           label_file_name=None,
                                            label_length=None,
-                                           use_gpu=False):
+                                           use_gpu=False,
+                                           embedding_dim=None):
         '''
         Load the model weights from a HDF5 file
 
@@ -1124,6 +1194,10 @@ class Network(Layer):
             Length of the classification labels (in characters).
         use_gpu : boolean, optional
             Require GPU for processing model
+        embedding_dim : int, optional
+            Specifies text embedding dimension.  You must specify the data_spec parameter
+            or this parameter is ignored.
+            Default: None
 
         '''
         from dlpy.model_conversion.model_conversion_utils import query_action_parm
@@ -1145,16 +1219,47 @@ class Network(Layer):
 
                 has_data_spec = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'gpuModel')
 
+                has_embedding_dim = False
+                if embedding_dim is not None:
+                    has_embedding_dim = query_action_parm(self.conn, 'dlImportModelWeights', 'deepLearn', 'textEmbeddingDim')
+                    if not has_embedding_dim:
+                        raise DLPyError('A text embedding dimension was specified, but your Viya installation does not'
+                                        'support this parameter.')
+
                 if has_data_spec:
                     # run action with dataSpec option
-                    if has_gpu_model:
+                    if has_gpu_model and (not has_embedding_dim):
                         with sw.option_context(print_messages = False):
                             rt = self._retrieve_('deeplearn.dlimportmodelweights',
                                                  model=self.model_table,
                                                  modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                                  dataSpecs=data_spec,
                                                  gpuModel=use_gpu,
-                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name,
+                                                 labelTable=label_table)
+                    elif (not has_gpu_model) and (not has_embedding_dim):
+                        with sw.option_context(print_messages = False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name,
+                                                 labelTable=label_table)
+                    elif has_gpu_model and has_embedding_dim:
+                        with sw.option_context(print_messages = False):
+                            rt = self._retrieve_('deeplearn.dlimportmodelweights',
+                                                 model=self.model_table,
+                                                 modelWeights=dict(replace=True, name=self.model_name + '_weights'),
+                                                 dataSpecs=data_spec,
+                                                 gpuModel=use_gpu,
+                                                 textEmbeddingDim=embedding_dim,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name,
                                                  labelTable=label_table)
                     else:
                         with sw.option_context(print_messages = False):
@@ -1162,7 +1267,10 @@ class Network(Layer):
                                                  model=self.model_table,
                                                  modelWeights=dict(replace=True, name=self.model_name + '_weights'),
                                                  dataSpecs=data_spec,
-                                                 formatType=format_type, weightFilePath=file_name, caslib=cas_lib_name,
+                                                 textEmbeddingDim=embedding_dim,
+                                                 formatType=format_type, 
+                                                 weightFilePath=file_name, 
+                                                 caslib=cas_lib_name,
                                                  labelTable=label_table)
                 else:
                     if has_gpu_model:
@@ -2703,4 +2811,63 @@ def extract_fastrcnn_layer(layer_table):
     rpn_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
 
     layer = FastRCNN(**rpn_layer_config)
+    return layer
+
+def extract_layernorm_layer(layer_table):
+    '''
+    Extract layer configuration from a layer normalization layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['dropout', 'epsilon']
+    str_keys = ['act']
+
+    ln_layer_config = dict()
+    ln_layer_config.update(get_num_configs(num_keys, 'dllayernormopts', layer_table))
+    ln_layer_config.update(get_str_configs(str_keys, 'dllayernormopts', layer_table))
+    ln_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = LayerNormalization(**ln_layer_config)
+    return layer
+
+def extract_mhattention_layer(layer_table):
+    '''
+    Extract layer configuration from a multi-head attention layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['n', 'n_attn_heads', 'dropout', 'attn_dropout', 'init', 'std', 'mean', 
+                'truncation_factor', 'trunc_fact']
+    str_keys = ['act', 'init', 'include_bias', 'mask']
+
+    mha_layer_config = dict()
+    mha_layer_config.update(get_num_configs(num_keys, 'dlmhattentionopts', layer_table))
+    mha_layer_config.update(get_str_configs(str_keys, 'dlmhattentionopts', layer_table))
+    mha_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    if 'trunc_fact' in mha_layer_config:
+        mha_layer_config['truncation_factor'] = mha_layer_config['trunc_fact']
+        del mha_layer_config['trunc_fact']
+    
+    layer = MultiHeadAttention(**mha_layer_config)
     return layer

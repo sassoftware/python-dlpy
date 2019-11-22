@@ -376,7 +376,57 @@ def find_caslib(conn, path):
         if path.find(caslib_path) == 0:
             return caslib_name
     return None
+        
+def extract_caslib_and_relative_path(conn, path):
+    '''
+    Extracts caslib associated with the specified path in the current session.
 
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object
+
+    path : str
+        Specifies the name of the path.
+
+    Returns
+    -------
+    string
+        Specifies the name of the caslib that contains the path.
+    string
+        Specifies remaining path relative to the caslib.
+
+    '''
+
+    sep = get_server_path_sep(conn)
+
+    if path.endswith(sep):
+        path = path[:-1]
+
+    path_split = path.split(sep)
+    caslib = None
+    new_path = sep
+    if path.startswith(sep):
+        start = 1
+    else:
+        start = 0
+
+    end = len(path_split)
+    while caslib is None and start < end:
+
+        new_path += path_split[start]+sep
+        caslib = find_caslib(conn, new_path)
+        start += 1
+        
+    if caslib is None:
+        return None, None
+    else:
+        remaining_path = ''
+        for i in range(start, end):
+            remaining_path += path_split[i]
+            remaining_path += sep
+                
+        return caslib, remaining_path
 
 def get_imagenet_labels_table(conn, label_length=None):
     temp_name = random_name('new_label_table', 6)
@@ -471,31 +521,8 @@ def caslibify_context(conn, path, task='save'):
         of the path folder. If it is a save task, then a caslib needs to be created to the path folder.
     '''
     if task == 'save':
-
-        sep = get_server_path_sep(conn)
-
-        if path.endswith(sep):
-            path = path[:-1]
-
-        path_split = path.split(sep)
-        caslib = None
-        new_path = sep
-        if path.startswith(sep):
-            start = 1
-        else:
-            start = 0
-
-        end = len(path_split)
-        while caslib is None and start < end:
-
-            new_path += path_split[start]+sep
-            caslib = find_caslib(conn, new_path)
-            start += 1
-
-        remaining_path = ''
-        for i in range(start, end):
-            remaining_path += path_split[i]
-            remaining_path += sep
+            
+        caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
         if caslib is not None:
             access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
@@ -529,9 +556,9 @@ def caslibify_context(conn, path, task='save'):
             path_split = path.rsplit("/", 1)
         else:
             path_split = path.rsplit("\\", 1)
-
+            
         if len(path_split) == 2:
-            caslib = find_caslib(conn, path_split[0])
+            caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
                 caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
                                             caslib = caslib).CASLibInfo.loc[0, 'Path']
@@ -592,31 +619,8 @@ def caslibify(conn, path, task='save'):
         of the path folder. If it is a save task, then a caslib needs to be created to the path folder.
     '''
     if task == 'save':
-
-        sep = get_server_path_sep(conn)
-
-        if path.endswith(sep):
-            path = path[:-1]
-
-        path_split = path.split(sep)
-        caslib = None
-        new_path = sep
-        if path.startswith(sep):
-            start = 1
-        else:
-            start = 0
-
-        end = len(path_split)
-        while caslib is None and start < end:
-
-            new_path += path_split[start]+sep
-            caslib = find_caslib(conn, new_path)
-            start += 1
-
-        remaining_path = ''
-        for i in range(start, end):
-            remaining_path += path_split[i]
-            remaining_path += sep
+            
+        caslib, remaining_path = extract_caslib_and_relative_path(conn, path)
 
         if caslib is not None:
             access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
@@ -647,7 +651,7 @@ def caslibify(conn, path, task='save'):
             path_split = path.rsplit("\\", 1)
 
         if len(path_split) == 2:
-            caslib = find_caslib(conn, path_split[0])
+            caslib, remaining_path = extract_caslib_and_relative_path(conn, path_split[0])
             if caslib is not None:
                 caslib_path = conn.retrieve('caslibinfo', _messagelevel = 'error',
                                             caslib = caslib).CASLibInfo.loc[0, 'Path']
@@ -2801,7 +2805,17 @@ def file_exist_on_server(conn, file):
     sep = get_server_path_sep(conn)
     _, file_name = file.rsplit(sep, 1)
     with caslibify_context(conn, path=file, task='load') as (caslib, path):
-        fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
+        # handle situation of pure path and path plus file name
+        path_split = path.rsplit(sep,1)
+        if len(path_split) == 2:
+            fileinfo = conn.fileinfo(caslib=caslib,path=path_split[0],allFiles=True)
+        else:
+            fileinfo = conn.fileinfo(caslib=caslib, allFiles=True)
+            
+        # check for action errors
+        if fileinfo.severity > 0:
+            return False
+
         # if server doesn't find that, it will return 0
         exit_ = fileinfo.FileInfo.query('Name == "{}"'.format(file_name)).shape[0]
     if exit_:

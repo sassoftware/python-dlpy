@@ -45,6 +45,8 @@ PALETTES = dict(
         'scale': '#C8C8C8',
         'fcmp': '#C8C8C8',
         'reshape': '#C8C8C8',
+        'mhattention': '#79CDCD',
+        'layernorm': '#FFCC66',
         'unknown': '#FFFFFF',
     },
     default={
@@ -63,6 +65,8 @@ PALETTES = dict(
         'scale': '#5e4fa220',  # purple
         'fcmp': '#5e4fa220',  # purple
         'reshape': '#5e4fa220',  # purple
+        'mhattention': '#79cdcd40',  # dark slate gray
+        'layernorm': '#ffcc6640',  # light orange - complement to batchnorm color
         'unknown': '#9e014240',  # crimson
     }
 )
@@ -466,7 +470,9 @@ class InputLayer(Layer):
 
     @property
     def output_size(self):
-        if self.config['width'] is not None:
+        if hasattr(self, '_token_size'):
+            return self._token_size
+        elif self.config['width'] is not None:
             return self._output_size
         else:
             return 0
@@ -1351,6 +1357,9 @@ class Recurrent(Layer):
     dropout : float, optional
         Specifies the dropout rate.
         Default: 0
+    init_bias : float, optional
+        Specifies the initial bias for the layer.
+        Default: None        
     src_layers : iter-of-Layers, optional
         Specifies the layers directed to this layer.
 
@@ -1368,7 +1377,7 @@ class Recurrent(Layer):
 
     def __init__(self, n, name=None, act='AUTO', fcmp_act=None, init=None, std=None, mean=None, truncation_factor=None,
                  rnn_type='LSTM', output_type='ENCODING', max_output_length=None, reversed_=None, dropout=None,
-                 src_layers=None):
+                 init_bias=None, src_layers=None):
         parameters = locals()
         _clean_parameters(parameters)
         Layer.__init__(self, name, parameters, src_layers)
@@ -2582,6 +2591,196 @@ class EmbeddingLoss(Layer):
     def num_bias(self):
         return 0
 
+class MultiHeadAttention(Layer):
+    '''
+    Multi-head attention layer from "Attention is All You Need" (Vaswani et al., NIPS 2017)
+
+    Parameters
+    ----------
+    n : int
+        Specifies the number of neurons.
+    n_attn_heads : int
+        Specifies the number of attention heads.
+    name : string, optional
+        Specifies the name of the layer.
+    act : string, optional
+        Specifies the activation function.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, EXP, TANH, RECTIFIER, RELU, GELU
+        Default: AUTO
+    init : string, optional
+        Specifies the initialization scheme for the layer.
+        Valid Values: XAVIER, UNIFORM, NORMAL, CAUCHY, XAVIER1, XAVIER2, MSRA, MSRA1, MSRA2
+        Default: XAVIER
+    std : float, optional
+        Specifies the standard deviation value when the ``init`` parameter is set to NORMAL.
+    mean : float, optional
+        Specifies the mean value when the ``init`` parameter is set to NORMAL.
+    truncation_factor : float, optional
+        Specifies the truncation threshold (truncationFactor x std), when the
+        ``init`` parameter is set to NORMAL
+    dropout : float, optional
+        Specifies the dropout rate.
+        Default: 0
+    attn_dropout : float, optional
+        Specifies the attention dropout rate.
+        Default: 0
+    include_bias : bool, optional
+        Includes bias neurons.
+        Default: True
+    src_layers : iter-of-Layers, optional
+        Specifies the layers directed to this layer.
+
+    Returns
+    -------
+    :class:`MultiHeadAttention`
+
+    '''
+
+    type = 'mhattention'
+    type_label = 'MHA'
+    type_desc = 'Multi-head attention layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, n, n_attn_heads, name=None, act='AUTO', init=None, std=None, mean=None, truncation_factor=None,
+                 dropout=None, attn_dropout=None, include_bias=True, src_layers=None, **kwargs):
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        Layer.__init__(self, name, parameters, src_layers)
+        self._num_features = None
+        self.color_code = get_color(self.type)
+
+    @property
+    def output_size(self):
+        return int(self.config['n'])
+
+    @property
+    def num_bias(self):
+        if 'include_bias' in self.config:
+            return 3*int(self.config['n'])
+        else:
+            return 0
+
+    @property
+    def num_features(self):
+        if self.src_layers is None:
+            return 0
+        if isinstance(self.src_layers[0].output_size, int):
+            self._num_features = self.src_layers[0].output_size
+        else:
+            raise DLPyError('Source layers for multi-head attention layer must have only an integer output dimension')
+
+        return self._num_features
+
+    @property
+    def kernel_size(self):
+        return (int(self.config['n']), 1)
+
+    @property
+    def num_weights(self):
+        if isinstance(self.src_layers[0].output_size, int):
+            d_kv = self.src_layers[0].output_size/self.config['n_attn_heads']
+            return 3*(self.src_layers[0].output_size*d_kv)*self.config['n_attn_heads'] + d_kv*self.config['n_attn_heads']*self.config['n']
+        else:
+            raise DLPyError('Source layers for multi-head attention layer must have only an integer output dimension')
+
+class LayerNormalization(Layer):
+    '''
+    Layer normalization layer
+
+    Parameters
+    ----------
+    name : string, optional
+        Specifies the name of the layer.
+    act : string, optional
+        Specifies the activation function.
+        Valid Values: AUTO, IDENTITY, LOGISTIC, SIGMOID, EXP, TANH, RECTIFIER, RELU, GELU
+        Default: AUTO
+    epsilon : float, optional
+        Specifies the regularization constant.
+        Default: 1e-12
+    dropout : float, optional
+        Specifies the dropout rate.
+        Default: 0
+    src_layers : iter-of-Layers, optional
+        Specifies the layers directed to this layer.
+
+    Returns
+    -------
+    :class:`LayerNormalization`
+
+    '''
+
+    type = 'layernorm'
+    type_label = 'LayerNorm'
+    type_desc = 'Layer normalization layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, name=None, act='AUTO', epsilon=1e-12, dropout=None, src_layers=None, **kwargs):
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        if 'token_size' in parameters.keys():
+            self._token_size = parameters['token_size']
+            del parameters['token_size']
+        else:
+            self._token_size = None
+        Layer.__init__(self, name, parameters, src_layers)
+        self._num_features = None
+        self.color_code = get_color(self.type)
+
+    @property
+    def output_size(self):
+        if self._token_size is not None:
+            return int(self._token_size)
+        elif isinstance(self.src_layers[0].output_size, int):
+            return self.src_layers[0].output_size
+        elif isinstance(self.src_layers[0].output_size, tuple):
+            return self.src_layers[0].output_size[1]                    # list is HWD, only supporting RNN models for now
+        else:
+            raise DLPyError('Source layers for layer normalization layer must have an integer output dimension')
+
+    @property
+    def num_bias(self):
+        if self._token_size is not None:
+            return int(self._token_size)
+        elif isinstance(self.src_layers[0].output_size, int):
+            return self.src_layers[0].output_size
+        elif isinstance(self.src_layers[0].output_size, tuple):
+            return self.src_layers[0].output_size[1]                    # list is HWD, only supporting RNN models for now
+        else:
+            raise DLPyError('Source layers for layer normalization layer must have an integer output dimension')
+
+    @property
+    def num_features(self):
+        if self.src_layers is None:
+            return 0
+        if isinstance(self.src_layers[0].output_size, int):
+            self._num_features = self.src_layers[0].output_size
+        elif isinstance(self.src_layers[0].output_size, tuple):
+            self._num_features = self.src_layers[0].output_size[1]       # list is HWD, only supporting RNN models for now
+        else:
+            raise DLPyError('Source layers for layer_normalization layer must have an integer output dimension')
+
+        return self._num_features
+
+    @property
+    def kernel_size(self):
+        if self._token_size is None:
+            return (int(self._num_features), 1)
+        else:
+            return (int(self._token_size), 1)
+
+    @property
+    def num_weights(self):
+        if self._token_size is not None:
+            return int(self._token_size)
+        elif isinstance(self.src_layers[0].output_size, int):
+            return self.src_layers[0].output_size
+        elif isinstance(self.src_layers[0].output_size, tuple):
+            return self.src_layers[0].output_size[1]                    # list is HWD, only supporting RNN models for now
+        else:
+            raise DLPyError('Source layers for multi-head attention layer must have an integer output dimension')
 
 class FCMPLayer(Layer):
     '''
