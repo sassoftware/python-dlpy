@@ -905,7 +905,7 @@ class BERT_Model(Model):
         
         Returns
         -------
-        int - xaximum sequence length supported by BERT model
+        int - maximum sequence length supported by BERT model
             
         '''
         
