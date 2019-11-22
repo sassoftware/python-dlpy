@@ -82,4 +82,70 @@ class TestImageEmbeddingTable(unittest.TestCase):
         img_path = self.server_dir + 'DogBreed_small'
         my_images = ImageEmbeddingTable.load_files(self.s, path=img_path)
         print(my_images.columns)
-        #self.assertTrue(len(my_images) > 0)
+        print(my_images.head())
+        out_freq = my_images.freq(inputs='_dissimilar_')
+        out_freq = out_freq['Frequency']
+        print(out_freq)
+        label, label1, label_pair, dissimilar = my_images.label_freq
+        print(label)
+        print(label1)
+        print(label_pair)
+        print(dissimilar)
+        my_images.show()
+        self.assertTrue(len(my_images) > 0)
+        self.assertEqual(dissimilar['Frequency'][0], out_freq['Frequency'][0])
+
+    def test_load_files_1(self):
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=128)
+        print(my_images.columns)
+        print(my_images.head())
+        out_freq = my_images.freq(inputs='_dissimilar_')
+        out_freq = out_freq['Frequency']
+        print(out_freq)
+        label, label1, label_pair, dissimilar = my_images.label_freq
+        print(label)
+        print(label1)
+        print(label_pair)
+        print(dissimilar)
+        my_images.show(randomize=True, n_image_pairs=10)
+        self.assertTrue(len(my_images) > 0)
+        self.assertEqual(dissimilar['Frequency'][0], out_freq['Frequency'][0])
+
+    def test_load_files_triplet(self):
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, embedding_model_type='triplet')
+        print(my_images.columns)
+        print(my_images.head())
+        label, label1, label2, label_triplet = my_images.label_freq
+        print(label)
+        print(label1)
+        print(label2)
+        print(label_triplet)
+        my_images.show(randomize=True, n_image_pairs=2)
+        self.assertTrue(len(my_images) > 0)
+
+    def test_load_files_quartet(self):
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, embedding_model_type='quartet', n_samples=64)
+        print(my_images.columns)
+        print(my_images.head())
+        label, label1, label2, label3, label_quartet = my_images.label_freq
+        print(label)
+        print(label1)
+        print(label2)
+        print(label3)
+        print(label_quartet)
+        print(label_quartet['Frequency'][0])
+        my_images.show(randomize=True, n_image_pairs=2)
+        self.assertTrue(len(my_images) > 0)
+        self.assertTrue(label_quartet['Frequency'][0] > 0)
