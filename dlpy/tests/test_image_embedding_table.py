@@ -130,6 +130,7 @@ class TestImageEmbeddingTable(unittest.TestCase):
         print(label_triplet)
         my_images.show(randomize=True, n_image_pairs=2)
         self.assertTrue(len(my_images) > 0)
+        self.assertTrue(label_triplet['Frequency'][0] > 0)
 
     def test_load_files_quartet(self):
         if self.server_dir is None:

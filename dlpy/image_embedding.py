@@ -302,12 +302,13 @@ class ImageEmbeddingTable(ImageTable):
     def __load_images_with_the_file_list(conn, path, caslib, file_list):
 
         # change the message level
+        # upload_frame somehow does not honor _messagelevel
         current_msg_level = conn.getSessOpt(name='messagelevel')
         conn.setSessOpt(messageLevel='ERROR')
 
         # upload file_list
         file_list_casout = dict(name=random_name())
-        conn.upload_frame(file_list.to_frame(), casout=file_list_casout)
+        conn.upload_frame(file_list.to_frame(), casout=file_list_casout, _messagelevel='error')
 
         # save the file list
         conn.retrieve('table.save', _messagelevel='error',
@@ -336,7 +337,7 @@ class ImageEmbeddingTable(ImageTable):
                       pathIsList=True)
 
         # remove the csv file
-        conn.deleteSource(source=file_list_casout['name'] + '.csv', caslib=caslib)
+        conn.deleteSource(source=file_list_casout['name'] + '.csv', caslib=caslib, _messagelevel='error')
 
         # reset msg level
         conn.setSessOpt(messageLevel=current_msg_level['messageLevel'])
