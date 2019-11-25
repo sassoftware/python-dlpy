@@ -24,7 +24,8 @@ from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, \
     underscore_to_camelcase, caslibify_context, isnotebook, file_exist_on_server
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
-    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
+    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent, \
+    LayerNormalization, MultiHeadAttention
 import dlpy.model
 import collections
 import pandas as pd
@@ -863,9 +864,9 @@ class Network(Layer):
                 elif layer_type == 25:
                     self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
                 elif layer_type == 28:
-                    model.layers.append(extract_layernorm_layer(layer_table = layer_table))
+                    self.layers.append(extract_layernorm_layer(layer_table = layer_table))
                 elif layer_type == 29:
-                    model.layers.append(extract_mhattention_layer(layer_table = layer_table))                
+                    self.layers.append(extract_mhattention_layer(layer_table = layer_table))
 
             conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
                 model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -1647,7 +1648,9 @@ class Network(Layer):
         Parameters
         ----------
         path : string
-            Specifies the client-side path to store the model files.
+            Specifies the location to store the model files.
+            If the output_format is set to castable, then the location has to be on the server-side.
+            Otherwise, the location has to be on the client-side.
         output_format : string, optional
             Specifies the format of the deployed model
             Valid Values: astore, castable, or onnx
