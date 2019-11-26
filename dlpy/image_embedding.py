@@ -27,14 +27,17 @@ import os
 from swat.cas.table import CASTable
 
 from dlpy import ImageTable
-from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep, get_cas_host_type
+from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep, get_cas_host_type, DLPyError
 from warnings import warn
 
 
 class ImageEmbeddingTable(ImageTable):
     '''
 
-    Specialized CASTable for Image Embedding Data
+    Specialized CASTable for Image Embedding Data. For Siamese model, this table contains two image columns.
+    Each image pair can be either (P, P) or (P, N). P means positive and N means negative.
+    For triplet model, it contains three image columns, i.e., (A, P, N)
+    while for quartet model, it contains four image columns, i.e., (A, P, N, N1). A means anchor.
 
     Parameters
     ----------
@@ -52,6 +55,10 @@ class ImageEmbeddingTable(ImageTable):
     image_file_list = None
     image_file_list_with_labels = None
     embedding_model_type = None
+
+    def __init__(self, name, **table_params):
+        CASTable.__init__(self, name, **table_params)
+        self.patch_level = 0
 
     @classmethod
     def load_files(cls, conn, path, casout=None, columns=None, caslib=None,
@@ -77,7 +84,7 @@ class ImageEmbeddingTable(ImageTable):
             The name of the caslib containing the images.
         embedding_model_type : string, optional
             Specifies the embedding model type that the created table will be applied for training.
-            Three model types are supported: Siamese, Triplet, and Quartet.
+            Valid values: Siamese, Triplet, and Quartet.
             Default: Siamese
         n_samples : int
             Number of samples to generate.
@@ -100,6 +107,9 @@ class ImageEmbeddingTable(ImageTable):
         conn.loadactionset('image', _messagelevel='error')
         conn.loadactionset('sampling', _messagelevel='error')
         conn.loadactionset('deepLearn', _messagelevel='error')
+
+        if embedding_model_type.lower() not in ['siamese', 'triplet', 'quartet']:
+            raise DLPyError('Only Siamese, Triplet, and Quartet are valid.')
 
         if casout is None:
             casout = dict(name=random_name())
