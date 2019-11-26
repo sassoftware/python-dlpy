@@ -890,12 +890,11 @@ class TestApplications(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         file_dependency = self.data_dir + 'DenseNet121_ONNX.sashdat'
-        file_dependency = '/cas/DeepLearn/models/DenseNet121_ONNX/DenseNet121_ONNX.sashdat'
         if not file_exist_on_server(self.s, file_dependency):
             unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
 
         model = DenseNet121_ONNX(self.s,
-                                 model_file='/cas/DeepLearn/weshiz/onnx/image_classification/densenet121.sashdat',
+                                 model_file=file_dependency,
                                  width=224, height=224,
                                  n_classes=10, include_top=False)
         model.print_summary()
