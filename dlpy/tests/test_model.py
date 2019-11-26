@@ -1027,10 +1027,11 @@ class TestModel(unittest.TestCase):
 
         from dlpy.model import Model
 
-        path = '/cas/DeepLearn/weshiz/onnx/image_classification/mobilenetv2-1.0.onnx'
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
 
-        if not file_exist_on_server(self.s, self.data_dir + 'mobilenetv2-1.0.onnx'):
-            unittest.TestCase.skipTest(self, "File, {}, not found.".format(self.data_dir + 'mobilenetv2-1.0.onnx'))
+
+        path = os.path.join(self.data_dir_local, 'mobilenetv2-1.0.onnx')
 
         onnx_model = onnx.load_model(path)
         model1 = Model.from_onnx_model(self.s,
