@@ -97,21 +97,6 @@ class TestNetwork(tm.TestCase):
             output1 = OutputLayer(2)(conv1)
             Model(conn=self.s, inputs=[conv1], outputs=[output1])
 
-    def test_outputs(self):
-        with self.assertRaises(DLPyError):
-            input1 = Input(n_channels=1, width=28, height=28)
-            conv1 = Conv2d(2)(input1)
-            model1 = Model(conn=self.s, inputs=[input1], outputs=[conv1])
-            model1.compile()
-
-        with self.assertRaises(DLPyError):
-            input1 = Input(n_channels=1, width=28, height=28)
-            conv1 = Conv2d(2)(input1)
-            conv2 = BN()(input1)
-            output1 = OutputLayer(2)(conv1)
-            model1 = Model(conn=self.s, inputs=[input1], outputs=[conv2, output1])
-            model1.compile()
-
     def test_without_variable(self):
         input1 = Input(n_channels=1, width=28, height=28)
         conv1 = Conv2d(2)(Conv2d(2)(input1))

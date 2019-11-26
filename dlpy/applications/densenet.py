@@ -16,10 +16,15 @@
 #  limitations under the License.
 #
 
+import os
+
 from dlpy.sequential import Sequential
 from dlpy.layers import InputLayer, Conv2d, BN, Pooling, Concat, OutputLayer, GlobalAveragePooling2D
 from dlpy.blocks import DenseNetBlock
 from .application_utils import get_layer_options, input_layer_options
+from dlpy.model import Model
+from dlpy.utils import DLPyError
+from dlpy.network import extract_input_layer, extract_output_layer, extract_conv_layer
 
 
 def DenseNet(conn, model_table='DenseNet', n_classes=None, conv_channel=16, growth_rate=12, n_blocks=4,
@@ -240,5 +245,119 @@ def DenseNet121(conn, model_table='DENSENET121', n_classes=1000, conv_channel=64
 
     model.add(OutputLayer(act='softmax', n=n_classes))
 
+    return model
+
+
+def DenseNet121_ONNX(conn, model_file, n_classes=1000, width=224, height=224,
+                     offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                     random_flip=None, random_crop=None, random_mutation=None, include_top=False):
+    """
+    Generates a deep learning model with the DenseNet121_ONNX architecture.
+    The model architecture and pre-trained weights is generated from DenseNet121 ONNX trained on ImageNet dataset.
+    The model file and the weights file can be downloaded from https://support.sas.com/documentation/prod-p/vdmml/zip/.
+    To learn more information about the model and pre-processing.
+    Please go to the websites: https://github.com/onnx/models/tree/master/vision/classification/densenet-121.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_file : string
+        Specifies the absolute server-side path of the model table file.
+        The model table file can be downloaded from https://support.sas.com/documentation/prod-p/vdmml/zip/.
+    n_classes : int, optional
+        Specifies the number of classes.
+        Default: 1000
+    width : int, optional
+        Specifies the width of the input layer.
+        Default: 224
+    height : int, optional
+        Specifies the height of the input layer.
+        Default: 224
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        The channel order is BGR.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        The channel order is BGR.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
+    include_top : bool, optional
+        Specifies whether to include pre-trained weights of the top layers (i.e., the FC layers)
+        Default: False
+
+    """
+    parameters = locals()
+    input_parameters = get_layer_options(input_layer_options, parameters)
+
+    # load model and model weights
+    model = Model.from_sashdat(conn, path = model_file)
+    # check if a user points to a correct model.
+    if model.summary.shape[0] != 307:
+        raise DLPyError("The model file doesn't point to a valid DenseNet121_ONNX model. "
+                        "Please check the SASHDAT file.")
+    # extract input layer config
+    model_table_df = conn.CASTable(**model.model_table).to_frame()
+    input_layer_df = model_table_df[model_table_df['_DLLayerID_'] == 0]
+    input_layer = extract_input_layer(input_layer_df)
+    input_layer_config = input_layer.config
+    # update input layer config
+    input_layer_config.update(input_parameters)
+    # update the layer list
+    model.layers[0] = InputLayer(**input_layer_config, name=model.layers[0].name)
+
+    # warning if model weights doesn't exist
+    if not conn.tableexists(model.model_weights.name).exists:
+        weights_file_path = os.path.join(os.path.dirname(model_file), model.model_name + '_weights.sashdat')
+        print('WARNING: Model weights is not attached '
+              'since system cannot find a weights file located at {}'.format(weights_file_path))
+
+    if include_top:
+        if n_classes != 1000:
+            raise DLPyError("If include_top is enabled, n_classes has to be 1000.")
+    else:
+        # since the output layer is non fully connected layer,
+        # we need to modify the convolution right before the output. The number of filter is set to n_classes.
+        conv_layer_df = model_table_df[model_table_df['_DLLayerID_'] == 305]
+        conv_layer = extract_conv_layer(conv_layer_df)
+        conv_layer_config = conv_layer.config
+        # update input layer config
+        conv_layer_config.update({'n_filters': n_classes})
+        # update the layer list
+        model.layers[-2] = Conv2d(**conv_layer_config,
+                                  name=model.layers[-2].name, src_layers=model.layers[-3])
+
+        # overwrite n_classes in output layer
+        out_layer_df = model_table_df[model_table_df['_DLLayerID_'] == 306]
+        out_layer = extract_output_layer(out_layer_df)
+        out_layer_config = out_layer.config
+        # update input layer config
+        out_layer_config.update({'n': n_classes})
+        # update the layer list
+        model.layers[-1] = OutputLayer(**out_layer_config,
+                                       name = model.layers[-1].name, src_layers=model.layers[-2])
+
+        # remove top weights
+        model.model_weights.append_where('_LayerID_<305')
+        model._retrieve_('table.partition', table=model.model_weights,
+                         casout=dict(replace=True, name=model.model_weights.name))
+        model.set_weights(model.model_weights.name)
+    # recompile the whole network according to the new layer list
+    model.compile()
     return model
 

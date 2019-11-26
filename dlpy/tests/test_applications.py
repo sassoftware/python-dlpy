@@ -853,3 +853,64 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(len(model.layers) == 33 + 9 * 2)
         self.assertTrue(model.layers[12].output_size == (256, 256, 256))
         model.print_summary()
+
+    def test_mobilenetv2_onnx_1(self):
+        from dlpy.applications import MobileNetV2_ONNX
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'MobileNetV2_ONNX.sashdat'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
+
+        model = MobileNetV2_ONNX(self.s,
+                                 model_file=file_dependency,
+                                 width=224, height=224,
+                                 n_classes=10, include_top=False)
+        model.print_summary()
+
+    def test_mobilenetv2_onnx_2(self):
+        from dlpy.applications import MobileNetV2_ONNX
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'MobileNetV2_ONNX.sashdat'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
+
+        model = MobileNetV2_ONNX(self.s,
+                                 model_file=file_dependency,
+                                 width=224, height=224,
+                                 n_classes=1000, include_top=True)
+        model.print_summary()
+
+    def test_densenet121_onnx_1(self):
+        from dlpy.applications import DenseNet121_ONNX
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'DenseNet121_ONNX.sashdat'
+        file_dependency = '/cas/DeepLearn/models/DenseNet121_ONNX/DenseNet121_ONNX.sashdat'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
+
+        model = DenseNet121_ONNX(self.s,
+                                 model_file='/cas/DeepLearn/weshiz/onnx/image_classification/densenet121.sashdat',
+                                 width=224, height=224,
+                                 n_classes=10, include_top=False)
+        model.print_summary()
+
+    def test_densenet121_onnx_2(self):
+        from dlpy.applications import DenseNet121_ONNX
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        file_dependency = self.data_dir + 'DenseNet121_ONNX.sashdat'
+        if not file_exist_on_server(self.s, file_dependency):
+            unittest.TestCase.skipTest(self, "File, {}, not found.".format(file_dependency))
+
+        model = DenseNet121_ONNX(self.s,
+                                 model_file=file_dependency,
+                                 width=224, height=224,
+                                 n_classes=1000, include_top=True)
+        model.print_summary()
