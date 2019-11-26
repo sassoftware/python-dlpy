@@ -69,6 +69,9 @@ class TestAudioTable(unittest.TestCase):
         # the server path that points to DLPY_DATA_DIR_LOCAL
         if "DLPY_DATA_DIR_SERVER" in os.environ:
             cls.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
+            if cls.server_dir.endswith(cls.server_sep):
+                cls.server_dir = cls.server_dir[:-1]
+            cls.server_dir += cls.server_sep
 
     @classmethod
     def tearDownClass(cls):
@@ -180,6 +183,12 @@ class TestAudioTable(unittest.TestCase):
         if self.server_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
 
+        try:
+            import soundfile as sf
+            import sounddevice as sd
+        except (ModuleNotFoundError, ImportError):
+            unittest.TestCase.skipTest(self, "skipping, soundfile and sounddevice packages are not installed")
+
         local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
         server_audio_dir = self.server_dir + 'lang_id' + '/train'
 
@@ -209,6 +218,12 @@ class TestAudioTable(unittest.TestCase):
         if self.server_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
 
+        try:
+            import soundfile as sf
+            import sounddevice as sd
+        except (ModuleNotFoundError, ImportError):
+            unittest.TestCase.skipTest(self, "skipping, soundfile and sounddevice packages are not installed")
+
         local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
         server_audio_dir = self.server_dir + 'lang_id' + '/train'
 
@@ -231,6 +246,12 @@ class TestAudioTable(unittest.TestCase):
 
         if self.server_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        try:
+            import soundfile as sf
+            import sounddevice as sd
+        except (ModuleNotFoundError, ImportError):
+            unittest.TestCase.skipTest(self, "skipping, soundfile and sounddevice packages are not installed")
 
         local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
         server_audio_dir = self.server_dir + 'lang_id' + '/train'
