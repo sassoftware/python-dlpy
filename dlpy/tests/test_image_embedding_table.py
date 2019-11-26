@@ -64,6 +64,9 @@ class TestImageEmbeddingTable(unittest.TestCase):
         # the server path that points to DLPY_DATA_DIR_LOCAL
         if "DLPY_DATA_DIR_SERVER" in os.environ:
             cls.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
+            if cls.server_dir.endswith(cls.server_sep):
+                cls.server_dir = cls.server_dir[:-1]
+            cls.server_dir += cls.server_sep
 
     @classmethod
     def tearDownClass(cls):
