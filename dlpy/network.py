@@ -168,10 +168,6 @@ class Network(Layer):
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
 
-        if not all(x.can_be_last_layer for x in self.output_layers):
-            raise DLPyError('Output layers can only be {}' \
-                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
-
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
         self.num_params = 0
@@ -208,7 +204,7 @@ class Network(Layer):
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
             if rt.severity > 1:
-                raise DLPyError('there seems to be an error while adding the ' + layer.name + '.')
+                raise DLPyError('there seems to be an error while adding the ' + str(layer.name) + '.')
             if layer.num_weights is None:
                 num_weights = 0
             else:
@@ -2233,6 +2229,9 @@ def extract_residual_layer(layer_table):
 
     res_layer_config.update(get_str_configs(['act'], 'residualopts', layer_table))
     res_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    # manually correct table content as a valid option
+    if res_layer_config['act'] == 'Automatic':
+        res_layer_config['act'] = 'AUTO'
 
     layer = Res(**res_layer_config)
     return layer
