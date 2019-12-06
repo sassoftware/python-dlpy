@@ -27,7 +27,8 @@ import os
 from swat.cas.table import CASTable
 
 from dlpy import ImageTable
-from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep, get_cas_host_type, DLPyError
+from .utils import random_name, image_blocksize, caslibify_context, get_server_path_sep, get_cas_host_type, DLPyError, \
+    file_exist_on_server
 from warnings import warn
 
 
@@ -108,6 +109,9 @@ class ImageEmbeddingTable(ImageTable):
         conn.loadactionset('sampling', _messagelevel='error')
         conn.loadactionset('deepLearn', _messagelevel='error')
 
+        #if not file_exist_on_server(conn, path):
+        #    raise DLPyError('{} does not exist on the server.'.format(path))
+
         if embedding_model_type.lower() not in ['siamese', 'triplet', 'quartet']:
             raise DLPyError('Only Siamese, Triplet, and Quartet are valid.')
 
@@ -180,8 +184,8 @@ class ImageEmbeddingTable(ImageTable):
                 negative_file_list1 = pd.Series([])
                 for anchor_file in anchor_file_list:
                     # grab labels
-                    path = os.path.normpath(anchor_file)
-                    path_tokens = path.split(os.sep)
+                    temp_path = os.path.normpath(anchor_file)
+                    path_tokens = temp_path.split(os.sep)
                     anchor_label = path_tokens[label_level]
                     # generate positive examples
                     positive_file_list = positive_file_list.append(
@@ -318,7 +322,15 @@ class ImageEmbeddingTable(ImageTable):
 
         # upload file_list
         file_list_casout = dict(name=random_name())
-        conn.upload_frame(file_list.to_frame(), casout=file_list_casout, _messagelevel='error')
+
+        # use relative path with respect to caslib
+        file_list_relative_path = pd.Series()
+        i_tot = 0
+        for index, value in file_list.items():
+            pos = value.find(path)
+            file_list_relative_path = file_list_relative_path.set_value(i_tot, value[pos:])
+            i_tot = i_tot + 1
+        conn.upload_frame(file_list_relative_path.to_frame(), casout=file_list_casout, _messagelevel='error')
 
         # save the file list
         conn.retrieve('table.save', _messagelevel='error',
@@ -334,16 +346,16 @@ class ImageEmbeddingTable(ImageTable):
         caslib_info = conn.retrieve('caslibinfo', _messagelevel='error',
                       caslib=caslib)
 
-        # no need to use fs since caslib contains that
-        #fs = get_server_path_sep(conn)
-        #full_path = caslib_info['CASLibInfo']['Path']+fs+file_list_casout['name'] + '.csv'
+        # full_path = caslib_info['CASLibInfo']['Path'][0] + file_list_casout['name'] + '.csv'
+        # relative to caslib
+        csv_path = file_list_casout['name'] + '.csv'
 
-        full_path = caslib_info['CASLibInfo']['Path'][0] + file_list_casout['name'] + '.csv'
-
+        # use relative paths
         conn.retrieve('image.loadimages', _messagelevel='error',
                       casout=images_casout,
+                      caslib=caslib,
                       recurse=True,
-                      path=full_path,
+                      path=csv_path,
                       pathIsList=True)
 
         # remove the csv file

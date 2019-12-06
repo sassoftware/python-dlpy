@@ -27,11 +27,9 @@ import unittest
 import swat
 import swat.utils.testing as tm
 
-from dlpy.applications import ResNet18_Caffe
+from dlpy import Dense
+from dlpy.applications import ResNet18_Caffe, MobileNetV1
 from dlpy.embedding_model import EmbeddingModel
-from dlpy.images import ImageTable
-from dlpy.utils import DLPyError
-from dlpy.image_embedding import ImageEmbeddingTable
 
 
 class TestImageEmbeddingModel(unittest.TestCase):
@@ -80,17 +78,153 @@ class TestImageEmbeddingModel(unittest.TestCase):
         del cls.s
         swat.reset_option()
 
-    def test_embedding_model(self):
+    def test_embedding_model_siamese(self):
 
         if self.server_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
 
+        # test default
         resnet18_model = ResNet18_Caffe(self.s,
-                                width=224,
-                                height=224,
-                                random_flip='HV',
-                                random_mutation='random'
-                                )
+                                        width=224,
+                                        height=224,
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
         branch = resnet18_model.to_functional_model(stop_layers=resnet18_model.layers[-1])
         model = EmbeddingModel.build_embedding_model(branch)
-        model.print_summary()
+        res = model.print_summary()
+        # print(res)
+        self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 2)
+
+        # test options
+        embedding_layer = Dense(n=10)
+        model1 = EmbeddingModel.build_embedding_model(branch, model_table='test',
+                                                      embedding_model_type='siamese', margin=3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        # print(res1)
+        self.assertEqual(res1[res1['Layer'].str.contains(model1.embedding_layer_name_prefix)].shape[0], 2)
+
+        # test passing in a sequential model
+        model2 = EmbeddingModel.build_embedding_model(resnet18_model)
+        res2 = model2.print_summary()
+        self.assertEqual(res2[res2['Layer'].str.contains(model2.embedding_layer_name_prefix)].shape[0], 2)
+
+        model3 = EmbeddingModel.build_embedding_model(resnet18_model, model_table='test2',
+                                                      embedding_model_type='siamese', margin=3.0,
+                                                      embedding_layer=embedding_layer)
+        res3 = model3.print_summary()
+        self.assertEqual(res3[res3['Layer'].str.contains(model3.embedding_layer_name_prefix)].shape[0], 2)
+
+    def test_embedding_model_siamese_1(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test passing in a functional model
+        vgg16 = Model(self.s)
+        vgg16.load(path=self.data_dir + 'vgg16.sashdat')
+        model = EmbeddingModel.build_embedding_model(vgg16)
+        res = model.print_summary()
+        self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 2)
+
+    def test_embedding_model_triplet(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test triplet
+        resnet18_model = ResNet18_Caffe(self.s,
+                                        width=224,
+                                        height=224,
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
+        branch = resnet18_model.to_functional_model(stop_layers=resnet18_model.layers[-1])
+
+        model = EmbeddingModel.build_embedding_model(branch, model_table='test',
+                                                     embedding_model_type='triplet', margin=-3.0)
+        res = model.print_summary()
+        self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 3)
+
+        # test embedding layer
+        embedding_layer = Dense(n=10)
+        model1 = EmbeddingModel.build_embedding_model(branch, model_table='test',
+                                                      embedding_model_type='triplet', margin=-3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        # print(res1)
+        self.assertEqual(res1[res1['Layer'].str.contains(model1.embedding_layer_name_prefix)].shape[0], 3)
+
+        # test passing in a sequential model
+        model2 = EmbeddingModel.build_embedding_model(resnet18_model,
+                                                      embedding_model_type='triplet', margin=-3.0,
+                                                      embedding_layer=embedding_layer)
+        res2 = model2.print_summary()
+        self.assertEqual(res2[res2['Layer'].str.contains(model2.embedding_layer_name_prefix)].shape[0], 3)
+
+    def test_embedding_model_triplet_1(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test passing in a functional model
+        vgg16 = Model(self.s)
+        vgg16.load(path=self.data_dir + 'vgg16.sashdat')
+        embedding_layer = Dense(n=10)
+        model = EmbeddingModel.build_embedding_model(vgg16,
+                                                     embedding_model_type='triplet', margin=-3.0,
+                                                     embedding_layer=embedding_layer)
+        res = model.print_summary()
+        self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 3)
+
+    def test_embedding_model_quartet(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test triplet
+        resnet18_model = ResNet18_Caffe(self.s,
+                                        width=224,
+                                        height=224,
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
+        branch = resnet18_model.to_functional_model(stop_layers=resnet18_model.layers[-1])
+
+        model = EmbeddingModel.build_embedding_model(branch, model_table='test',
+                                                     embedding_model_type='quartet', margin=-3.0)
+        res = model.print_summary()
+        self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 4)
+
+        # test embedding layer
+        embedding_layer = Dense(n=10)
+        model1 = EmbeddingModel.build_embedding_model(branch, model_table='test',
+                                                      embedding_model_type='quartet', margin=-3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        # print(res1)
+        self.assertEqual(res1[res1['Layer'].str.contains(model1.embedding_layer_name_prefix)].shape[0], 4)
+
+        # test passing in a sequential model
+        model2 = EmbeddingModel.build_embedding_model(resnet18_model,
+                                                      embedding_model_type='quartet', margin=-3.0,
+                                                      embedding_layer=embedding_layer)
+        res2 = model2.print_summary()
+        self.assertEqual(res2[res2['Layer'].str.contains(model2.embedding_layer_name_prefix)].shape[0], 4)
+
+    def test_embedding_model_quartet_1(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test passing in a functional model
+        vgg16 = Model(self.s)
+        vgg16.load(path=self.data_dir + 'vgg16.sashdat')
+        embedding_layer = Dense(n=10)
+        model = EmbeddingModel.build_embedding_model(vgg16,
+                                                     embedding_model_type='quartet', margin=-3.0,
+                                                     embedding_layer=embedding_layer)
+        res = model.print_summary()
+        self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 4)
+

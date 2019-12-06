@@ -19,6 +19,8 @@
 ''' The Embedding Model class adds training, evaluation,feature analysis routines for learning embedding '''
 
 import os
+from copy import deepcopy
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -36,9 +38,9 @@ from dlpy.lr_scheduler import _LRScheduler, FixedLR, StepLR, FCMPLR
 
 
 class EmbeddingModel(Model):
-
     input_layer_name_prefix = 'InputLayer_'
     embedding_layer_name_prefix = 'EmbeddingLayer_'
+    embedding_loss_layer_name = 'EmbeddingLossLayer'
     number_of_branches = 0
 
     @classmethod
@@ -79,6 +81,25 @@ class EmbeddingModel(Model):
         if not isinstance(branch, Model):
             raise DLPyError('The branch option must contain a valid model')
 
+        # the branch must be built using functional APIs
+        # only functional model has the attr output_layers
+        if not hasattr(branch, 'output_layers'):
+            print("NOTE: Convert the branch model into a functional model.")
+            branch_tensor = branch.to_functional_model()
+        else:
+            branch_tensor = deepcopy(branch)
+
+        # always reset this local tensor to 0
+        branch_tensor.number_of_instances = 0
+
+        # the branch cannot contain other task layers
+        if len(branch_tensor.output_layers) != 1:
+            raise DLPyError('The branch model cannot contain more than one output layer')
+        elif branch_tensor.output_layers[0].type == 'output':
+            print("NOTE: Remove the output layers from the model.")
+            branch_tensor.layers.remove(branch_tensor.output_layers[0])
+            branch_tensor.output_layers[0] = branch_tensor.layers[-1]
+
         # check embedding_model_type
         if embedding_model_type.lower() not in ['siamese', 'triplet', 'quartet']:
             raise DLPyError('Only Siamese, Triplet, and Quartet are valid.')
@@ -100,23 +121,49 @@ class EmbeddingModel(Model):
         input_layers = []
         branch_layers = []
         for i_branch in range(cls.number_of_branches):
-            temp_input_layer = Input(**branch.layers[0].config, name=cls.input_layer_name_prefix + str(i_branch))
-            temp_branch = branch(temp_input_layer) # return a list of tensors
+            temp_input_layer = Input(**branch_tensor.layers[0].config, name=cls.input_layer_name_prefix + str(i_branch))
+            temp_branch = branch_tensor(temp_input_layer)  # return a list of tensors
             if embedding_layer:
-                temp_branch = embedding_layer(temp_branch, name=cls.embedding_layer_name_prefix + str(i_branch))
+                temp_embed_layer = deepcopy(embedding_layer)
+                temp_embed_layer.name = cls.embedding_layer_name_prefix + str(i_branch)
+                temp_branch = temp_embed_layer(temp_branch)
+                # change tensor to a list
+                temp_branch = [temp_branch]
+            else:
+                # change the last layer name to the embedding layer name
+                temp_branch[-1]._op.name = cls.embedding_layer_name_prefix + str(i_branch)
+
             # append these layers to the current branch
             input_layers.append(temp_input_layer)
             branch_layers = branch_layers + temp_branch
 
         # add the embedding loss layer
-        loss_layer = EmbeddingLoss(margin=margin)(branch_layers)
+        loss_layer = EmbeddingLoss(margin=margin, name=cls.embedding_loss_layer_name)(branch_layers)
 
         # create the model DAG using all the above model information
-        model = Model(branch.conn, model_table=model_table, inputs=input_layers, outputs=loss_layer)
+        model = EmbeddingModel(branch.conn, model_table=model_table, inputs=input_layers, outputs=loss_layer)
 
         # sharing weights
+        # get all layer names from one branch
+        num_l = int((len(model.layers) - 1) / cls.number_of_branches)
+        br1_name = [i.name for i in model.layers[:num_l - 1]]
+
+        # build the list that contain the shared layers
+        share_list = []
+        n_id = 0
+        n_to = n_id + cls.number_of_branches
+        for l in br1_name[1:]:
+            share_list.append({l: [l + '_' + str(i + 1) for i in range(n_id + 1, n_to)]})
+
+        # add embedding layers
+        share_list.append({cls.embedding_layer_name_prefix + str(0):
+                               [cls.embedding_layer_name_prefix + str(i)
+                                for i in range(1, cls.number_of_branches)]})
+
+        model.share_weights(share_list)
 
         model.compile()
+
         return model
 
     def fit_embedding_model(self):
