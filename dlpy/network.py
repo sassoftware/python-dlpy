@@ -24,7 +24,8 @@ from dlpy.layers import Layer
 from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, \
     underscore_to_camelcase, caslibify_context, isnotebook, file_exist_on_server
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
-    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent
+    Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent, \
+    LayerNormalization, MultiHeadAttention
 import dlpy.model
 import collections
 import pandas as pd
@@ -167,10 +168,6 @@ class Network(Layer):
         rt = self._retrieve_('deeplearn.buildmodel',
                              model=dict(name=self.model_name, replace=True), type=self.model_type)
 
-        if not all(x.can_be_last_layer for x in self.output_layers):
-            raise DLPyError('Output layers can only be {}' \
-                            .format([i.__name__ for i in Layer.__subclasses__() if i.can_be_last_layer]))
-
         if rt.severity > 1:
             raise DLPyError('cannot build model, there seems to be a problem.')
         self.num_params = 0
@@ -207,7 +204,7 @@ class Network(Layer):
             option = layer.to_model_params()
             rt = self._retrieve_('deeplearn.addlayer', model = self.model_name, **option)
             if rt.severity > 1:
-                raise DLPyError('there seems to be an error while adding the ' + layer.name + '.')
+                raise DLPyError('there seems to be an error while adding the ' + str(layer.name) + '.')
             if layer.num_weights is None:
                 num_weights = 0
             else:
@@ -863,9 +860,9 @@ class Network(Layer):
                 elif layer_type == 25:
                     self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
                 elif layer_type == 28:
-                    model.layers.append(extract_layernorm_layer(layer_table = layer_table))
+                    self.layers.append(extract_layernorm_layer(layer_table = layer_table))
                 elif layer_type == 29:
-                    model.layers.append(extract_mhattention_layer(layer_table = layer_table))                
+                    self.layers.append(extract_mhattention_layer(layer_table = layer_table))
 
             conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
                 model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -1647,7 +1644,9 @@ class Network(Layer):
         Parameters
         ----------
         path : string
-            Specifies the client-side path to store the model files.
+            Specifies the location to store the model files.
+            If the output_format is set to castable, then the location has to be on the server-side.
+            Otherwise, the location has to be on the client-side.
         output_format : string, optional
             Specifies the format of the deployed model
             Valid Values: astore, castable, or onnx
@@ -2230,6 +2229,9 @@ def extract_residual_layer(layer_table):
 
     res_layer_config.update(get_str_configs(['act'], 'residualopts', layer_table))
     res_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    # manually correct table content as a valid option
+    if res_layer_config['act'] == 'Automatic':
+        res_layer_config['act'] = 'AUTO'
 
     layer = Res(**res_layer_config)
     return layer
