@@ -210,7 +210,7 @@ class BERT_Model(Model):
         else:
             raise DLPyError(bert_variant_name + " is not a supported model.")
 
-        if 'type_vocab_size' in self._config.keys():
+        if 'type_vocab_size' in self._config:
             self._use_segment_embedding = True
         else:
             self._use_segment_embedding = False
@@ -689,9 +689,9 @@ class BERT_Model(Model):
     def _from_huggingface_model(self):
         
         # verify key parameters
-        if 'max_position_embeddings' not in self._config.keys():
+        if 'max_position_embeddings' not in self._config:
             raise DLPyError('Maximum position embedding is unspecified')
-        elif 'hidden_size' not in self._config.keys():
+        elif 'hidden_size' not in self._config:
             raise DLPyError('Hidden size is unspecified')
                 
         sas_layer_info = {}
@@ -814,7 +814,7 @@ class BERT_Model(Model):
                 write_block_information(self._base_model, pooling_layer_info, ['pooler','dense'], f_out)
                 
             # add parameters for task-specific final layer(s)
-            if 'task' in sas_layer_info.keys():
+            if 'task' in sas_layer_info:
                 if isinstance(sas_layer_info['task'], list):
                     task_layer_info = sas_layer_info['task']
                 else:
@@ -837,7 +837,7 @@ class BERT_Model(Model):
                             g_out.create_dataset(dset_name, data=task_parms[lname]['weights'])
 
                             # save bias in format amenable to SAS
-                            if 'bias' in task_parms[lname].keys():
+                            if 'bias' in task_parms[lname]:
                                 dset_name = generate_hdf5_dataset_name(lname, BertCommon['bias_index'])
                                 new_weight_names.append(dset_name)
                                 g_out.create_dataset(dset_name, data=task_parms[lname]['bias'])
@@ -1126,7 +1126,7 @@ class BERT_Model(Model):
             
         '''
 
-        if 'type_vocab_size' in self._config.keys():
+        if 'type_vocab_size' in self._config:
             return self._config['type_vocab_size']
         else:
             return 0
