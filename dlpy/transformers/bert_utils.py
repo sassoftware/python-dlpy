@@ -231,7 +231,7 @@ def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keyw
         # NOTE: bias name and dimensions not unique in attention layer so construct bias tensor name from
         # weight tensor name
         bias_str = pname[0].replace('weight','bias')
-        if bias_str in pymodel.state_dict().keys():
+        if bias_str in pymodel.state_dict():
             ptensor_bias = [pymodel.state_dict()[bias_str].numpy()]
         else:
             print('NOTE: No bias for layer ' + layer_name)
@@ -347,7 +347,7 @@ def create_data_spec(layers, classification_problem, max_seq_len):
     data_spec.append(DataSpec(type_='TEXT',
                               layer=layers['position_input'],
                               data=position))
-    if 'segment_input' in layers.keys():
+    if 'segment_input' in layers:
         data_spec.append(DataSpec(type_='TEXT',
                                   layer=layers['segment_input'],
                                   data=segment))
@@ -539,18 +539,18 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, segment_vocab_size=
             if not isinstance(ev_dict, dict):
                 raise DLPyError('Argument extra_var must be a list of dictionaries')
                 
-            if 'name' in ev_dict.keys():
+            if 'name' in ev_dict:
                 extra_var_names[ii] = ev_dict['name']
             else:
                 raise DLPyError('extra_var[' + str(ii) + '] missing "name" key.')
                 
-            if ('type' in ev_dict.keys()) and (ev_dict['type'].upper() in ['VARCHAR','NUMERIC']):
+            if ('type' in ev_dict) and (ev_dict['type'].upper() in ['VARCHAR','NUMERIC']):
                 extra_var_types[ii] = ev_dict['type'].upper()
             else:
                 raise DLPyError('extra_var[' + str(ii) + '] missing "type" key, or an invalid type was specified.')
             
-            if ('values' not in ev_dict.keys()) or (not (isinstance(ev_dict['values'], list) and (len(input_a) == len(ev_dict['values'])))):
-                raise DLPyError('extra_var[' + str(ii) + '] missing "values" key, the values are not a list object,'
+            if ('values' not in ev_dict) or (not (isinstance(ev_dict['values'], list) and (len(input_a) == len(ev_dict['values'])))):
+                raise DLPyError('extra_var[' + str(ii) + '] missing "values" key, the values are not a list object, '
                                 'or there is a mismatch in lengths of input A and values lists.')
                                 
     else:
@@ -561,12 +561,12 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, segment_vocab_size=
         raise DLPyError('train_fraction must be between 0 and 1')
         
     if segment_vocab_size is None:
-        raise DLPyError("You must specify a segment vocabulary size.  See the Bert model"
-                        "configuration object (e.g. BertConfig['type_vocab_size'] for the"
+        raise DLPyError("You must specify a segment vocabulary size.  See the Bert model "
+                        "configuration object (e.g. BertConfig['type_vocab_size'] for the "
                         "correct value.")
     else:
         if segment_vocab_size not in [0, 1, 2]:
-            raise DLPyError('Vocabulary size ' + str(segment_vocab_size) + ' is invalid.'
+            raise DLPyError('Vocabulary size ' + str(segment_vocab_size) + ' is invalid. '
                             'The value must be 0, 1, or 2.')
                     
     # initialize lists
