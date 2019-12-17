@@ -29,7 +29,8 @@ import swat
 import swat.utils.testing as tm
 from swat.cas.table import CASTable
 from swat.cas.results import CASResults
-from dlpy.model import Model, Optimizer, AdamSolver, Sequence, TensorBoard
+from dlpy.model import Model, Optimizer, AdamSolver, Sequence
+from dlpy.tensorboard import TensorBoard
 from dlpy.sequential import Sequential
 from dlpy.timeseries import TimeseriesTable
 from dlpy.layers import (InputLayer, Conv2d, Conv1d, Pooling, Dense, OutputLayer,
@@ -1042,7 +1043,7 @@ class TestModel(unittest.TestCase):
                                        offsets=255*[0.485, 0.456, 0.406],
                                        norm_stds=255*[0.229, 0.224, 0.225])
 
-    def test_tensorboard_fit(self):
+    def test_fit_tensorboard(self):
         try:
             import tensorflow as tf
             import numpy as np
@@ -1072,7 +1073,7 @@ class TestModel(unittest.TestCase):
         model0.add(OutputLayer(act='softmax', n=2))
 
         # Run without TB
-        r = model0.fit(data='eee', inputs='_image_', target='_label_', lr=0.0001)
+        r = model0.fit_tensorboard(data='eee', inputs='_image_', target='_label_', lr=0.0001)
         self.assertTrue(r.severity <= 1)
 
         # Run model1 with TB no valid - 5 epochs
@@ -1086,7 +1087,7 @@ class TestModel(unittest.TestCase):
         model1.add(OutputLayer(act='softmax', n=2))
 
         tensorboard = TensorBoard(model1, log_dir)
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.0001, tensorboard=tensorboard)
+        r = model1.fit_tensorboard(data='eee', inputs='_image_', target='_label_', lr=0.0001, tensorboard=tensorboard)
         
         epochs = model1.training_history.Epoch.values
         lr = model1.training_history.LearningRate.values
@@ -1108,7 +1109,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, lr[count], places=3)
+                    self.assertAlmostEqual(t, lr[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
 
@@ -1121,7 +1122,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, loss[count], places=3)
+                    self.assertAlmostEqual(t, loss[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
         
@@ -1134,12 +1135,12 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, error[count], places=3)
+                    self.assertAlmostEqual(t, error[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
 
         # Run model1 with TB no valid - 5 more epochs (10 total)
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.0001, tensorboard=tensorboard)
+        r = model1.fit_tensorboard(data='eee', inputs='_image_', target='_label_', lr=0.0001, tensorboard=tensorboard)
         epochs = model1.training_history.Epoch.values
         lr = model1.training_history.LearningRate.values
         loss = model1.training_history.Loss.values
@@ -1163,7 +1164,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, lr[count], places=3)
+                    self.assertAlmostEqual(t, lr[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
 
@@ -1178,7 +1179,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, loss[count], places=3)
+                    self.assertAlmostEqual(t, loss[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
         
@@ -1193,7 +1194,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, error[count], places=3)
+                    self.assertAlmostEqual(t, error[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
 
@@ -1210,7 +1211,7 @@ class TestModel(unittest.TestCase):
         model2.add(OutputLayer(act='softmax', n=2))
 
         tensorboard2 = TensorBoard(model2, log_dir, use_valid=True)
-        r = model2.fit(data=train, valid_table=test, inputs='_image_', target='_label_', 
+        r = model2.fit_tensorboard(data=train, valid_table=test, inputs='_image_', target='_label_', 
             lr=0.001, tensorboard=tensorboard2, max_epochs=10)
         
         epochs2 = model2.training_history.Epoch.values
@@ -1239,7 +1240,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, lr2[count], places=3)
+                    self.assertAlmostEqual(t, lr2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
 
@@ -1252,7 +1253,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, loss2[count], places=3)
+                    self.assertAlmostEqual(t, loss2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
         
@@ -1265,7 +1266,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, error2[count], places=3)
+                    self.assertAlmostEqual(t, error2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
 
@@ -1278,7 +1279,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, v_loss2[count], places=3)
+                    self.assertAlmostEqual(t, v_loss2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
         
@@ -1291,12 +1292,12 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, v_error2[count], places=3)
+                    self.assertAlmostEqual(t, v_error2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
 
         # Run model2 with TB valid - 10 more epochs (20 total)
-        r = model2.fit(data=train, valid_table=test, inputs='_image_', target='_label_', 
+        r = model2.fit_tensorboard(data=train, valid_table=test, inputs='_image_', target='_label_', 
             lr=0.001, tensorboard=tensorboard2, max_epochs=10)
         
         epochs2 = model2.training_history.Epoch.values
@@ -1325,7 +1326,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, lr2[count], places=3)
+                    self.assertAlmostEqual(t, lr2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
 
@@ -1339,7 +1340,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, loss2[count], places=3)
+                    self.assertAlmostEqual(t, loss2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
         
@@ -1353,7 +1354,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, error2[count], places=3)
+                    self.assertAlmostEqual(t, error2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
 
@@ -1367,7 +1368,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, v_loss2[count], places=3)
+                    self.assertAlmostEqual(t, v_loss2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
         
@@ -1381,7 +1382,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, v_error2[count], places=3)
+                    self.assertAlmostEqual(t, v_error2[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs2))
 
@@ -1402,7 +1403,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, lr[count], places=3)
+                    self.assertAlmostEqual(t, lr[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
 
@@ -1417,7 +1418,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, loss[count], places=3)
+                    self.assertAlmostEqual(t, loss[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
         
@@ -1432,7 +1433,7 @@ class TestModel(unittest.TestCase):
                 event = event_pb2.Event.FromString(serialized_example.numpy())
                 for value in event.summary.value:
                     t = tf.make_ndarray(value.tensor)
-                    self.assertAlmostEqual(t, error[count], places=3)
+                    self.assertAlmostEqual(t, error[count], places=2)
                     count += 1
         self.assertEquals(count, len(epochs))
 
@@ -1448,7 +1449,7 @@ class TestModel(unittest.TestCase):
 
         tensorboard3 = TensorBoard(model3, log_dir, use_valid=True)
 
-        self.assertRaises(DLPyError, lambda: model3.fit(data=train, valid_table=None, 
+        self.assertRaises(DLPyError, lambda: model3.fit_tensorboard(data=train, valid_table=None, 
             inputs='_image_', target='_label_', tensorboard=tensorboard3))
 
         # Clean up for next test

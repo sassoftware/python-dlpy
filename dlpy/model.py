@@ -106,7 +106,7 @@ class Model(Network):
             lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
             valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
             missing='mean', target_missing='mean', repeat_weight_table=False, force_equal_padding=None,
-            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None, tensorboard=None):
+            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None):
         """
         Fitting a deep learning model.
 
@@ -233,10 +233,6 @@ class Model(Network):
             training data samples.
             Valid Values: 'ascending', 'descending', 'hash'
             Default : 'ascending'
-        tensorboard: :class:`TensorBoard`, optional
-            Specifies the TensorBoard instance to log model training statistics.
-            Default : None
-            Default: 'ascending'
         train_from_scratch : bool, optional
             When set to True, it ignores the existing weights and trains the model from the scracth.
             
@@ -296,10 +292,6 @@ class Model(Network):
         if save_best_weights and self.best_weights is None:
             self.best_weights = random_name('model_best_weights', 6)
 
-        if tensorboard:
-            if tensorboard.use_valid and not valid_table:
-                raise DLPyError('Cannot log validation data without a valid_table')
-
         r = self.train(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
                        optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
                        sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
@@ -307,7 +299,7 @@ class Model(Network):
                        missing=missing, target_missing=target_missing, repeat_weight_table=repeat_weight_table,
                        force_equal_padding=force_equal_padding, init_weights=init_weights, target_order=target_order,
                        best_weights=self.best_weights, model=self.model_table, n_threads=n_threads,
-                       model_weights=dict(replace=True, **self.model_weights.to_table_params()), tensorboard=tensorboard)
+                       model_weights=dict(replace=True, **self.model_weights.to_table_params()))
 
         try:
             temp = r.OptIterHistory
@@ -592,6 +584,359 @@ class Model(Network):
             return r
 
     def train(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None, valid_freq=1,
+              model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
+              sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
+              optimizer=None, target_missing='mean', best_weights=None, repeat_weight_table=False,
+              force_equal_padding=None, data_specs=None, n_threads=None, target_order='ascending'):
+        """
+        Trains a deep learning model
+
+        table : string or CASTable
+            Specifies the input data.
+        attributes : string or list-of-strings, optional
+            Specifies temporary attributes, such as a format, to apply
+            to input variables.
+        inputs : string or list-of-strings, optional
+            Specifies the input variables to use in the analysis.
+        nominals : string or list-of-strings
+            Specifies the nominal input variables to use in the analysis.
+        texts : string or list-of-strings, optional
+            Specifies the character variables to treat as raw text.
+            These variables must be specified in the inputs parameter.
+        valid_table : string or CASTable, optional
+            Specifies the table with the validation data. The validation
+            table must have the same columns and data types as the
+            training table.
+        valid_freq : int, optional
+            Specifies the frequency for scoring the validation table.
+        model : string or CASTable, optional
+            Specifies the in-memory table that is the model.
+        init_weights : string or CASTable, optional
+            Specifies an in-memory table that contains the model weights.
+            These weights are used to initialize the model.
+        model_weights : string or CASTable, optional
+            Specifies an in-memory table that is used to store the
+            model weights.
+        target : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        target_sequence : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        sequence : string or list-of-strings, optional
+            Specifies the settings for sequence data.
+        text_parms : TextParms, optional
+            Specifies the parameters for the text inputs.
+        weight : string, optional
+            Specifies the variable/column name in the input table
+            containing the prior weights for the observation.
+        gpu : GPU, optional
+            When specified, the action uses graphical processing unit hardware.
+            The simplest way to use GPU processing is to specify "gpu=1".
+            In this case, the default values of other GPU parameters are used.
+            Setting gpu=1 enables all available GPU devices for use. Setting
+            gpu=0 disables GPU processing.
+        seed : double, optional
+            specifies the random number seed for the random number
+            generator in SGD. The default value, 0, and negative values
+            indicate to use random number streams based on the computer
+            clock. Specify a value that is greater than 0 for a reproducible
+            random number sequence.
+        record_seed : double, optional
+            specifies the random number seed for the random record
+            selection within a worker. The default value 0 disables random
+            record selection. Records are read as they are laid out in memory.
+            Negative values indicate to use random number streams based
+            on the computer clock.
+        missing : string, optional
+            Specifies the policy for replacing missing values with imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        optimizer : Optimizer, optional
+            Specifies the parameters for the optimizer.
+        target_missing : string, optional
+            Specifies the policy for replacing target missing values with
+            imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        best_weights : string or CASTable, optional
+            Specifies that the weights with the smallest loss error will be
+            saved to a CAS table.
+        repeat_weight_table : bool, optional
+            Replicates the entire weight table on each worker node when
+            saving weights.
+            Default: False
+        force_equal_padding : bool, optional
+            For convolutional or pooling layers, this setting forces left padding
+            to equal right padding, and top padding to equal bottom padding.
+            This setting might result in an output image that is larger than the
+            input image. Default: False
+        data_specs : DataSpec, optional
+            Specifies the parameters for the multiple input cases.
+        n_threads : int, optional
+            Specifies the number of threads to use. If nothing is set then all
+            of the cores available in the machine(s) will be used.
+        target_order : string, optional
+            Specifies the order of the labels. It can follow the natural order
+            of the labels or order them in the order of the process.
+            Valid Values: 'ascending', 'descending', 'hash'
+            Default: 'ascending'
+       
+        Returns
+        -------
+        :class:`CASResults`
+
+        """
+
+        b_w = None
+        if best_weights is not None:
+            b_w = dict(replace=True, name=best_weights)
+
+        parameters = DLPyDict(table=table, attributes=attributes, inputs=inputs, nominals=nominals, texts=texts,
+                              valid_table=valid_table, valid_freq=valid_freq, model=model, init_weights=init_weights,
+                              model_weights=model_weights, target=target, target_sequence=target_sequence,
+                              sequence=sequence, text_parms=text_parms, weight=weight, gpu=gpu, seed=seed,
+                              record_seed=record_seed, missing=missing, optimizer=optimizer,
+                              target_missing=target_missing, best_weights=b_w, repeat_weight_table=repeat_weight_table,
+                              force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads, target_order=target_order)
+
+        rt = self._retrieve_('deeplearn.dltrain', message_level='note', **parameters)
+
+        if rt.severity < 2:
+            self.model_ever_trained = True
+
+        return rt
+
+    def fit_tensorboard(self, data, inputs=None, target=None, data_specs=None, mini_batch_size=1, max_epochs=5, log_level=3,
+            lr=0.01, optimizer=None, nominals=None, texts=None, target_sequence=None, sequence=None, text_parms=None,
+            valid_table=None, valid_freq=1, gpu=None, attributes=None, weight=None, seed=0, record_seed=0,
+            missing='mean', target_missing='mean', repeat_weight_table=False, force_equal_padding=None,
+            save_best_weights=False, n_threads=None, target_order='ascending', train_from_scratch=None, tensorboard=None):
+        """
+        Fitting a deep learning model with logging in tensorboard.
+
+        Note that this function surfaces several parameters from other parameters. For example,
+        while learning rate is a parameter of Solver (that is a parameter of Optimizer), it is leveled up
+        so that our users can easily set learning rate without changing the default optimizer and solver.
+        If a non-default solver or optimizer is passed, then these leveled-up
+        parameters will be ignored - even they are set - and the ones coming from
+        the custom solver and custom optimizer  will be used. In addition to learning_rate (lr),
+        max_epochs and log_level are another examples of such parameters.
+
+        This API allows users to visualize training statistics in Tensorboard. Similar to fit() but
+        an additional parameter, tensorboard, is passed to this method. This allows the CASResponse messages
+        containing training values to be written to the tensorboard application.
+
+        Parameters
+        ----------
+
+        data : string
+            This is the input data. It might be a string that is the
+            name of a cas table. Alternatively, this might be a cas table.
+        inputs : string or list-of-strings, optional
+            Specifies the input variables to use in the analysis.
+        target : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        data_specs : :class:`DataSpec`, optional
+            Specifies the parameters for the multiple input cases.
+        mini_batch_size : int, optional
+            Specifies the number of observations per thread in a
+            mini-batch. You can use this parameter to control the number of
+            observations that the action uses on each worker for each thread
+            to compute the gradient prior to updating the weights. Larger
+            values use more memory. When synchronous SGD is used (the
+            default), the total mini-batch size is equal to
+            miniBatchSize * number of threads * number of workers. When
+            asynchronous SGD is used (by specifying the elasticSyncFreq
+            parameter), each worker trains its own local model. In this case,
+            the total mini-batch size for each worker is
+            miniBatchSize * number of threads.
+        max_epochs : int, optional
+            specifies the maximum number of epochs. For SGD with a
+            single-machine server or a session that uses one worker on a
+            distributed server, one epoch is reached when the action passes
+            through the data one time. For a session that uses more than one
+            worker, one epoch is reached when all the workers exchange the
+            weights with the controller one time. The syncFreq parameter
+            specifies the number of times each worker passes through the
+            data before exchanging weights with the controller. For L-BFGS
+            with full batch, each L-BFGS iteration might process more than
+            one epoch, and final number of epochs might exceed the maximum
+            number of epochs.
+        log_level : int, optional
+            Specifies how progress messages are sent to the client. The
+            default value, 0, indicates that no messages are sent. Specify 1
+            to receive start and end messages. Specify 2 to include the
+            iteration history.
+        lr : double, optional
+            Specifies the learning rate.
+        optimizer : :class:`Optimizer`, optional
+            Specifies the parameters for the optimizer.
+        nominals : string or list-of-strings, optional
+            Specifies the nominal input variables to use in the analysis.
+        texts : string or list-of-strings, optional
+            Specifies the character variables to treat as raw text.
+            These variables must be specified in the inputs parameter.
+        target_sequence : string or list-of-strings, optional
+            Specifies the target sequence variables to use in the analysis.
+        sequence : :class:`Sequence`, optional
+            Specifies the settings for sequence data.
+        text_parms : :class:`TextParms`, optional
+            Specifies the parameters for the text inputs.
+        valid_table : string or CASTable, optional
+            Specifies the table with the validation data. The validation
+            table must have the same columns and data types as the training table.
+        valid_freq : int, optional
+            Specifies the frequency for scoring the validation table.
+        gpu : :class:`Gpu`, optional
+            When specified, the action uses graphical processing unit hardware.
+            The simplest way to use GPU processing is to specify "gpu=1".
+            In this case, the default values of other GPU parameters are used.
+            Setting gpu=1 enables all available GPU devices for use. Setting
+            gpu=0 disables GPU processing.
+        attributes : string or list-of-strings, optional
+            Specifies temporary attributes, such as a format, to apply to
+            input variables.
+        weight : string, optional
+            Specifies the variable/column name in the input table containing the
+            prior weights for the observation.
+        seed : double, optional
+            specifies the random number seed for the random number generator
+            in SGD. The default value, 0, and negative values indicate to use
+            random number streams based on the computer clock. Specify a value
+            that is greater than 0 for a reproducible random number sequence.
+        record_seed : double, optional
+            specifies the random number seed for the random record selection
+            within a worker. The default value 0 disables random record selection.
+            Records are read as they are laid out in memory.
+            Negative values indicate to use random number streams based on the
+            computer clock.
+        missing : string, optional
+            Specifies the policy for replacing missing values with imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        target_missing : string, optional
+            Specifies the policy for replacing target missing values with
+            imputed values.
+            Valid Values: MAX, MIN, MEAN, NONE
+            Default: MEAN
+        repeat_weight_table : bool, optional
+            Replicates the entire weight table on each worker node when saving
+            weights.
+            Default: False
+        force_equal_padding : bool, optional
+            For convolution or pooling layers, this setting forces left padding
+            to equal right padding, and top padding to equal bottom padding.
+            This setting might result in an output image that is
+            larger than the input image.
+            Default: False
+        save_best_weights : bool, optional
+            When set to True, it keeps the weights that provide the smallest
+            loss error.
+        n_threads : int, optional
+            Specifies the number of threads to use. If nothing is set then
+            all of the cores available in the machine(s) will be used.
+        target_order : string, optional
+            Specifies the order of the labels. It can follow the natural order
+            of the labels or order them in the order they are recieved with
+            training data samples.
+            Valid Values: 'ascending', 'descending', 'hash'
+            Default : 'ascending'
+        train_from_scratch : bool, optional
+            When set to True, it ignores the existing weights and trains the model from the scracth.
+        tensorboard: :class:`TensorBoard`, optional
+            Specifies the TensorBoard instance to log model training statistics.
+            Default : None
+        Returns
+        --------
+        :class:`CASResults`
+
+        """
+        # set reference to the training and validation table
+        self.train_tbl = data
+        self.valid_tbl = valid_table
+
+        input_tbl_opts = input_table_check(data)
+        input_table = self.conn.CASTable(**input_tbl_opts)
+
+        if data_specs is None and inputs is None:
+            from dlpy.images import ImageTable
+            if isinstance(input_table, ImageTable):
+                inputs = input_table.running_image_column
+            elif '_image_' in input_table.columns.tolist():
+                print('NOTE: Inputs=_image_ is used')
+                inputs = '_image_'
+            else:
+                raise DLPyError('either dataspecs or inputs need to be non-None')
+
+        if optimizer is None:
+            optimizer = Optimizer(algorithm=VanillaSolver(learning_rate=lr),  mini_batch_size=mini_batch_size,
+                                  max_epochs=max_epochs, log_level=log_level)
+        else:
+            if not isinstance(optimizer, Optimizer):
+                raise DLPyError('optimizer should be an Optimizer object')
+
+        max_epochs = optimizer['maxepochs']
+
+        if target is None and '_label_' in input_table.columns.tolist():
+            target = '_label_'
+
+        # check whether the field is none or not
+        if self.model_weights is not None and self.model_weights.to_table_params()['name'].upper() in \
+                list(self._retrieve_('table.tableinfo').TableInfo.Name):
+            if train_from_scratch:
+                print('NOTE: Ignoring the existing weights and training from scratch.')
+                init_weights = None
+                self.n_epochs = 0
+            else:
+                print('NOTE: Training based on existing weights.')
+                init_weights = self.model_weights
+        else:
+            print('NOTE: Training from scratch.')
+            init_weights = None
+            self.n_epochs = 0
+
+        # when model_weights is none, reset it
+        if self.model_weights is None:
+            self.model_weights = self.conn.CASTable('{}_weights'.format(self.model_name))
+
+        if save_best_weights and self.best_weights is None:
+            self.best_weights = random_name('model_best_weights', 6)
+
+        if tensorboard:
+            if tensorboard.use_valid and not valid_table:
+                raise DLPyError('Cannot log validation data without a valid_table')
+
+        r = self._train_tensorboard(table=input_tbl_opts, inputs=inputs, target=target, data_specs=data_specs,
+                       optimizer=optimizer, nominals=nominals, texts=texts, target_sequence=target_sequence,
+                       sequence=sequence, text_parms=text_parms, valid_table=valid_table, valid_freq=valid_freq,
+                       gpu=gpu, attributes=attributes, weight=weight, seed=seed, record_seed=record_seed,
+                       missing=missing, target_missing=target_missing, repeat_weight_table=repeat_weight_table,
+                       force_equal_padding=force_equal_padding, init_weights=init_weights, target_order=target_order,
+                       best_weights=self.best_weights, model=self.model_table, n_threads=n_threads,
+                       model_weights=dict(replace=True, **self.model_weights.to_table_params()), tensorboard=tensorboard)
+
+        try:
+            temp = r.OptIterHistory
+            temp.Epoch += 1  # Epochs should start from 1
+            temp.Epoch = temp.Epoch.astype('int64')  # Epochs should be integers
+
+            if self.n_epochs == 0:
+                self.n_epochs = max_epochs
+                self.training_history = temp
+            else:
+                temp.Epoch += self.n_epochs
+                self.training_history = self.training_history.append(temp)
+                self.n_epochs += max_epochs
+
+            self.training_history.index = range(0, self.n_epochs)
+        except:
+            pass
+
+        if r.severity < 2:
+            self.target = target
+
+        return r
+
+    def _train_tensorboard(self, table, attributes=None, inputs=None, nominals=None, texts=None, valid_table=None, valid_freq=1,
               model=None, init_weights=None, model_weights=None, target=None, target_sequence=None,
               sequence=None, text_parms=None, weight=None, gpu=None, seed=0, record_seed=None, missing='mean',
               optimizer=None, target_missing='mean', best_weights=None, repeat_weight_table=False,
