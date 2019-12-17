@@ -75,9 +75,3 @@ Thumbs.db
 ## Documentation generated files
 doc/build
 doc/source/generated
-
-# Workspace
-workspace/
-
-#.gitignore
-.gitignore
