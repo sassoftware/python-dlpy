@@ -72,10 +72,10 @@ class BERT_Model(Model):
     seed: int, optional
         Specifies the seed used for random number generation.
         Default: 987654321
-    save_embedding: boolean, optional
+    save_embedding: Boolean, optional
         Specfies whether to save a text version of embedding table.
         Default: False
-    verbose: boolean, optional
+    verbose: Boolean, optional
         Specifies whether to print informative notes and messages.
         Default: False
     Returns
@@ -123,7 +123,7 @@ class BERT_Model(Model):
             print("NOTE: loading base model " + self._base_name + " ...")
             
         # instantiate specified HuggingFace model and tokenizer
-        if hf_base_name in ['bert']:
+        if hf_base_name == 'bert':
             num_layers = BertConfig.from_pretrained(self._base_name,
                                                     cache_dir=cache_dir).to_dict()['num_hidden_layers']
         elif hf_base_name == 'roberta':
@@ -140,7 +140,7 @@ class BERT_Model(Model):
                 raise DLPyError('You specified more hidden layers than are available in '
                                 'the base model.')
 
-        if hf_base_name in ['bert']:
+        if hf_base_name == 'bert':
             self._base_model = BertModel.from_pretrained(self._base_name,
                                                          cache_dir=cache_dir,
                                                          num_hidden_layers=num_hidden_layers)
@@ -189,10 +189,10 @@ class BERT_Model(Model):
                                   position_input=BertCommon['layer_names']['position_input'])
         
     def _set_bert_type_info(self, bert_variant_name):
-        if bert_variant_name in ['bert', 'camembert']:
+        if bert_variant_name == 'bert':
             self._use_pooling_layer = True
             self._position_embedding_offset = 0
-        elif 'roberta' in bert_variant_name:
+        elif bert_variant_name == 'roberta':
             self._use_pooling_layer = True
             self._position_embedding_offset = 2     # see comment in modeling_roberta.py, class RobertaEmbeddings
         elif 'distil' in bert_variant_name:
@@ -930,10 +930,10 @@ class BERT_Model(Model):
             simple classification/regression tasks, and > 1 for sequence
             labeling tasks.
             Default: 1            
-        freeze_base_model : boolean, optional
+        freeze_base_model : Boolean, optional
             Specifies whether to freeze the parameters of the base BERT model when performing fine-tuning training
             Default: False            
-        use_gpu : boolean, optional
+        use_gpu : Boolean, optional
             GPU processing of model required (or not)
             Default: False
         last_frozen_layer : string, optional

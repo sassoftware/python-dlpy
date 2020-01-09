@@ -182,9 +182,9 @@ def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keyw
         Specifyies the layer type (see BertCommon for layer types).
     layer_dim: list of int
         Specifies the dimensions of a tensor.
-    layer_keywords : string
+    layer_keywords : list of strings
         Specifies the keywords to search for in the model dictionary.
-    extra_keywords : dictionary, optional
+    extra_keywords : list of strings or None, optional
         Specifies the extra keywords for a multi-head attention layer.
         This is mandatory for multi-head attention and any other layer(s)
         where there could be ambiguity between two layers with the same
@@ -443,7 +443,7 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, segment_vocab_size=
         Specifies the text data for a single segment task.
     segment_vocab_size : int
         Specifies the segment vocabulary size.  The value should be
-        one of 0 (e.g. DistilBert), 1 (e.g. Roberta), or 2 (Bert).
+        one of 0 for DistilBERT, 1 for RoBERTa, or 2 for BERT.
         Default: None
     input_b : list of strings, optional
         Specifies the text data for a two segment task.
