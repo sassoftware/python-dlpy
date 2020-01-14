@@ -27,12 +27,14 @@ import sys
 import swat
 import swat.utils.testing as tm
 from dlpy.utils import input_table_check, get_cas_host_type, DLPyError, caslibify
-from dlpy.transformers.bert_utils import bert_prepare_data
-from dlpy.transformers.bert_model import BERT_Model
 import pandas as pd
 import unittest
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+
+
+#from dlpy.transformers.bert_utils import bert_prepare_data
+#from dlpy.transformers.bert_model import BERT_Model
 
 class TestTransformers(unittest.TestCase):
     '''
@@ -78,7 +80,6 @@ class TestTransformers(unittest.TestCase):
             
         # deepLearn action set must be loaded
         cls.s.loadactionset(actionSet='deeplearn', _messagelevel='error')
-            
 
     def test_transformers1(self):
         '''
@@ -86,6 +87,12 @@ class TestTransformers(unittest.TestCase):
         COVERAGE: bert_prepare_data() in bert_utils.py
                   class BertDMH() in bert_utils.py
         '''
+
+        try:
+            from dlpy.transformers.bert_utils import bert_prepare_data
+            from dlpy.transformers.bert_model import BERT_Model
+        except (ImportError, DLPyError) as e:
+            unittest.TestCase.skipTest(self, "Unable to import from transformers. Please install it and try again.")
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -167,6 +174,12 @@ class TestTransformers(unittest.TestCase):
         COVERAGE: bert_prepare_data() in bert_utils.py
                   class BertDMH() in bert_utils.py
         '''
+
+        try:
+            from dlpy.transformers.bert_utils import bert_prepare_data
+            from dlpy.transformers.bert_model import BERT_Model
+        except (ImportError, DLPyError) as e:
+            unittest.TestCase.skipTest(self, "Unable to import from transformers. Please install it and try again.")
 
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
@@ -254,6 +267,12 @@ class TestTransformers(unittest.TestCase):
                   class BertDMH() in bert_utils.py
         '''
 
+        try:
+            from dlpy.transformers.bert_utils import bert_prepare_data
+            from dlpy.transformers.bert_model import BERT_Model
+        except (ImportError, DLPyError) as e:
+            unittest.TestCase.skipTest(self, "Unable to import from transformers. Please install it and try again.")
+
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
@@ -334,6 +353,12 @@ class TestTransformers(unittest.TestCase):
                   find_pytorch_tensor() in bert_utils.py
                   
         '''
+
+        try:
+            from dlpy.transformers.bert_utils import bert_prepare_data
+            from dlpy.transformers.bert_model import BERT_Model
+        except (ImportError, DLPyError) as e:
+            unittest.TestCase.skipTest(self, "Unable to import from transformers. Please install it and try again.")
 
         model_name = 'bert-base-uncased'
         cache_dir = self.data_dir_local

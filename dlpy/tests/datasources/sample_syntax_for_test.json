@@ -113,5 +113,9 @@
   "ReduceLROnPlateau":{"uselocking": true, "learningrate": 0.1, "gamma": 0.1, "power":0.75, "stepsize": 10, "fcmplearningrate": "reduce_lr_on_plateau", "method": "vanilla"},
   "convo1d_1": {"name": "convo1d_1", "layer": {"nfilters": 10, "width": 3, "height": 1, "stridehorizontal": 2, "stridevertical": 1, "paddingwidth": 1, "paddingheight": 0, "act": "relu", "includebias": true, "type": "convo"}, "srclayers": ["input1"]},
   "convo1d_2": {"name": "convo1d_2", "layer": {"nfilters": 10, "width": 1, "height": 1, "stridehorizontal": 1, "stridevertical": 1, "paddingwidth": 1, "paddingheight": 0, "act": "relu", "includebias": true, "type": "convo"}, "srclayers": ["input1"]},
-  "convo1d_3": {"name": "convo1d_3", "layer": {"nfilters": 10, "width": 1, "height": 1, "stridehorizontal": 1, "stridevertical": 1, "paddingheight": 0, "act": "relu", "includebias": true, "type": "convo"}, "srclayers": ["input1"]}
+  "convo1d_3": {"name": "convo1d_3", "layer": {"nfilters": 10, "width": 1, "height": 1, "stridehorizontal": 1, "stridevertical": 1, "paddingheight": 0, "act": "relu", "includebias": true, "type": "convo"}, "srclayers": ["input1"]},
+  "split_1": {"name": "split1", "layer": {"ndestinationlayers": 5, "type": "split"}, "srclayers": ["input1"]},
+  "survival_1": {"name": "survival", "layer": {"type": "survival"}, "srclayers": ["input1"]},
+  "clustering_1": {"name": "cluster", "layer": {"alpha": 1.0, "nclusters": 10, "type": "cluster"}, "srclayers": ["input1"]},
+  "embeddingloss_1": {"name": "embedding", "layer": {"margin": 5, "type": "closs"}, "srclayers": ["input1"]}
 }

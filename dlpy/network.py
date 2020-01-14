@@ -21,11 +21,11 @@
 import os
 
 from dlpy.layers import Layer
-from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, caslibify, get_server_path_sep, \
+from dlpy.utils import DLPyError, input_table_check, random_name, check_caslib, get_server_path_sep, \
     underscore_to_camelcase, caslibify_context, isnotebook, file_exist_on_server
 from .layers import InputLayer, Conv2d, Pooling, BN, Res, Concat, Dense, OutputLayer, Keypoints, Detection, Scale,\
     Reshape, GroupConv2d, ChannelShuffle, RegionProposal, ROIPooling, FastRCNN, Conv2DTranspose, Recurrent, \
-    LayerNormalization, MultiHeadAttention
+    LayerNormalization, MultiHeadAttention, Survival, EmbeddingLoss, Segmentation, FCMPLayer, Clustering, Split
 import dlpy.model
 import collections
 import pandas as pd
@@ -33,6 +33,10 @@ import swat as sw
 from copy import deepcopy
 from swat.cas.table import CASTable
 from . import __dev__
+
+UNSUPPORTED_EXTRACT_LAYER = {20: "FULLCONNECTCAP", 21: "NORMCAP", 30: "ROIALIGN", 31: "NAS_LAYER",
+                             32: "MASKRCNN"
+                             }
 
 
 class Network(Layer):
@@ -372,22 +376,37 @@ class Network(Layer):
                 model.layers.append(extract_keypoints_layer(layer_table = layer_table))
             elif layer_type == 14:
                 model.layers.append(extract_reshape_layer(layer_table = layer_table))
+            elif layer_type == 15:
+                model.layers.append(extract_fcmp_layer(layer_table = layer_table))
             elif layer_type == 16:
                 model.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
             elif layer_type == 17:
                 model.layers.append(extract_groupconv_layer(layer_table = layer_table))
             elif layer_type == 18:
                 model.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+            elif layer_type == 19:
+                model.layers.append(extract_segmentation_layer(layer_table = layer_table))
+            elif layer_type == 22:
+                model.layers.append(extract_embeddingloss_layer(layer_table = layer_table))
             elif layer_type == 23:
                 model.layers.append(extract_rpn_layer(layer_table = layer_table))
             elif layer_type == 24:
                 model.layers.append(extract_roipooling_layer(layer_table = layer_table))
             elif layer_type == 25:
                 model.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
+            elif layer_type == 26:
+                model.layers.append(extract_cluster_layer(layer_table = layer_table))
+            elif layer_type == 27:
+                model.layers.append(extract_survival_layer(layer_table = layer_table))
             elif layer_type == 28:
                 model.layers.append(extract_layernorm_layer(layer_table = layer_table))
             elif layer_type == 29:
-                model.layers.append(extract_mhattention_layer(layer_table = layer_table))                
+                model.layers.append(extract_mhattention_layer(layer_table = layer_table))
+            elif layer_type == 33:
+                model.layers.append(extract_split_layer(layer_table = layer_table))
+            else:
+                raise DLPyError("Extracting Layer type, {}, is not"
+                                " supported yet.".format(UNSUPPORTED_EXTRACT_LAYER[layer_type]))
 
         conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
             model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -847,22 +866,37 @@ class Network(Layer):
                     self.layers.append(extract_keypoints_layer(layer_table = layer_table))
                 elif layer_type == 14:
                     self.layers.append(extract_reshape_layer(layer_table = layer_table))
+                elif layer_type == 15:
+                    self.layers.append(extract_fcmp_layer(layer_table = layer_table))
                 elif layer_type == 16:
                     self.layers.append(extract_conv2dtranspose_layer(layer_table = layer_table))
                 elif layer_type == 17:
                     self.layers.append(extract_groupconv_layer(layer_table = layer_table))
                 elif layer_type == 18:
                     self.layers.append(extract_channelshuffle_layer(layer_table = layer_table))
+                elif layer_type == 19:
+                    self.layers.append(extract_segmentation_layer(layer_table = layer_table))
+                elif layer_type == 22:
+                    self.layers.append(extract_embeddingloss_layer(layer_table = layer_table))
                 elif layer_type == 23:
                     self.layers.append(extract_rpn_layer(layer_table = layer_table))
                 elif layer_type == 24:
                     self.layers.append(extract_roipooling_layer(layer_table = layer_table))
                 elif layer_type == 25:
                     self.layers.append(extract_fastrcnn_layer(layer_table = layer_table))
+                elif layer_type == 26:
+                    self.layers.append(extract_cluster_layer(layer_table = layer_table))
+                elif layer_type == 27:
+                    self.layers.append(extract_survival_layer(layer_table = layer_table))
                 elif layer_type == 28:
                     self.layers.append(extract_layernorm_layer(layer_table = layer_table))
                 elif layer_type == 29:
                     self.layers.append(extract_mhattention_layer(layer_table = layer_table))
+                elif layer_type == 33:
+                    self.layers.append(extract_split_layer(layer_table = layer_table))
+                else:
+                    raise DLPyError("Extracting Layer type, {}, is not"
+                                    " supported yet.".format(UNSUPPORTED_EXTRACT_LAYER[layer_type]))
 
             conn_mat = model_table[['_DLNumVal_', '_DLLayerID_']][
                 model_table['_DLKey1_'].str.contains('srclayers')].sort_values('_DLLayerID_')
@@ -2696,6 +2730,129 @@ def extract_channelshuffle_layer(layer_table):
     return layer
 
 
+def extract_fcmp_layer(layer_table):
+    '''
+    Extract layer configuration from a FCMP layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    num_keys = ['width', 'height', 'depth', 'n_weights']
+
+    fcmp_layer_config = dict()
+    fcmp_layer_config.update(get_num_configs(num_keys, 'fcmpopts', layer_table))
+    # forward and backward function
+    fcmp_layer_config['forward_func'] = layer_table['_DLChrVal_'][
+        layer_table['_DLKey1_'] == 'fcmpopts.fcmp'].tolist()[0]
+    fcmp_layer_config['backward_func'] = layer_table['_DLChrVal_'][
+        layer_table['_DLKey1_'] == 'fcmpopts.fcmpder'].tolist()[0]
+
+    fcmp_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = FCMPLayer(**fcmp_layer_config)
+    return layer
+
+
+def extract_segmentation_layer(layer_table):
+    '''
+    Extract layer configuration from a Segmentation layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    str_keys = ['act', 'error']
+
+    segmentation_layer_config = dict()
+    segmentation_layer_config['target_scale'] = layer_table['_DLNumVal_'][
+        layer_table['_DLKey1_'] == 'segmentationopts.targetScale'].tolist()[0]
+
+    segmentation_layer_config.update(get_str_configs(str_keys, 'segmentationopts', layer_table))
+    # correct act if it is Automatic
+    if segmentation_layer_config['act'] == 'Automatic':
+        segmentation_layer_config['act'] = 'AUTO'
+    # correct error if it is Automatic
+    if segmentation_layer_config['error'] == 'Automatic':
+        segmentation_layer_config['error'] = 'AUTO'
+
+    segmentation_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = Segmentation(**segmentation_layer_config)
+    return layer
+
+
+def extract_embeddingloss_layer(layer_table):
+    '''
+    Extract layer configuration from a Embedding Loss layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+
+    embeddingloss_layer_config = dict()
+    embeddingloss_layer_config['margin'] = layer_table['_DLNumVal_'][
+        layer_table['_DLKey1_'] == 'clossopts.margin'].tolist()[0]
+
+    embeddingloss_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = EmbeddingLoss(**embeddingloss_layer_config)
+    return layer
+
+
+def extract_cluster_layer(layer_table):
+    '''
+    Extract layer configuration from a Clustering layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    cluster_layer_config = dict()
+    cluster_layer_config['n_clusters'] = layer_table['_DLNumVal_'][
+        layer_table['_DLKey1_'] == 'clusteropts.nClusters'].tolist()[0]
+    cluster_layer_config['alpha'] = layer_table['_DLNumVal_'][
+        layer_table['_DLKey1_'] == 'clusteropts.alpha'].tolist()[0]
+
+    cluster_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = Clustering(**cluster_layer_config)
+    return layer
+
+
 def extract_rpn_layer(layer_table):
     '''
     Extract layer configuration from a Region proposal layer table
@@ -2815,6 +2972,7 @@ def extract_fastrcnn_layer(layer_table):
     layer = FastRCNN(**rpn_layer_config)
     return layer
 
+
 def extract_layernorm_layer(layer_table):
     '''
     Extract layer configuration from a layer normalization layer table
@@ -2841,6 +2999,7 @@ def extract_layernorm_layer(layer_table):
 
     layer = LayerNormalization(**ln_layer_config)
     return layer
+
 
 def extract_mhattention_layer(layer_table):
     '''
@@ -2873,3 +3032,55 @@ def extract_mhattention_layer(layer_table):
     
     layer = MultiHeadAttention(**mha_layer_config)
     return layer
+
+
+def extract_survival_layer(layer_table):
+    '''
+    Extract layer configuration from a survival layer table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    survival_layer_config = dict()
+
+    survival_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+
+    layer = Survival(**survival_layer_config)
+    return layer
+
+
+def extract_split_layer(layer_table):
+    '''
+    Extract layer configuration from a Split table
+
+    Parameters
+    ----------
+    layer_table : table
+        Specifies the selection of table containing the information
+        for the layer.
+
+    Returns
+    -------
+    :class:`dict`
+        Options that can be passed to layer definition
+
+    '''
+    split_layer_config = dict()
+
+    split_layer_config['name'] = layer_table['_DLKey0_'].unique()[0]
+    # one workaround to get number of destination layers.
+    split_layer_config['n_destination_layers'] = layer_table[
+        layer_table['_DLKey1_'].str.startswith('srclayers', na=False)].shape[0]
+
+    layer = Split(**split_layer_config)
+    return layer
+
