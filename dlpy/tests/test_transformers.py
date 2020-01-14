@@ -140,6 +140,7 @@ class TestTransformers(unittest.TestCase):
                                                128, 
                                                input_a=list(inputs), 
                                                target=list(targets), 
+                                               segment_vocab_size=2,
                                                classification_problem=True)        
         
         # check for the existence of the training table
@@ -208,7 +209,8 @@ class TestTransformers(unittest.TestCase):
                                                       tokenizer, 
                                                       128, 
                                                       input_a=list(inputs), 
-                                                      target=list(targets), 
+                                                      target=list(targets),
+                                                      segment_vocab_size=2,
                                                       train_fraction=0.8,
                                                       classification_problem=False)        
                 
@@ -296,6 +298,7 @@ class TestTransformers(unittest.TestCase):
                                               128, 
                                               input_a=input_a,
                                               input_b=input_b,
+                                              segment_vocab_size=2,
                                               classification_problem=True)        
                 
         # check for the existence of the training table
