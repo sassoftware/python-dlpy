@@ -28,8 +28,12 @@ import swat
 import swat.utils.testing as tm
 
 from dlpy import Dense
-from dlpy.applications import ResNet18_Caffe, MobileNetV1
+from dlpy.applications import ResNet18_Caffe, MobileNetV1, Model
 from dlpy.embedding_model import EmbeddingModel
+from dlpy.image_embedding import ImageEmbeddingTable
+from dlpy.lr_scheduler import StepLR
+from dlpy.model import AdamSolver, Optimizer
+from dlpy.model import Gpu
 
 
 class TestImageEmbeddingModel(unittest.TestCase):
@@ -228,3 +232,69 @@ class TestImageEmbeddingModel(unittest.TestCase):
         res = model.print_summary()
         self.assertEqual(res[res['Layer'].str.contains(model.embedding_layer_name_prefix)].shape[0], 4)
 
+    # test fit with the data option
+    def test_siamese_fit(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test using one data table
+        resnet18_model = ResNet18_Caffe(self.s,
+                                        width=224,
+                                        height=224,
+                                        random_crop='RESIZETHENCROP',
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
+        embedding_layer = Dense(n=4)
+        model1 = EmbeddingModel.build_embedding_model(resnet18_model, model_table='test1',
+                                                      embedding_model_type='siamese', margin=3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        self.assertEqual(res1[res1['Layer'].str.contains(model1.embedding_layer_name_prefix)].shape[0], 2)
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=64, embedding_model_type='siamese')
+        solver = AdamSolver(lr_scheduler=StepLR(learning_rate=0.0001, step_size=20), clip_grad_max=100,
+                            clip_grad_min=-100)
+        optimizer = Optimizer(algorithm=solver, mini_batch_size=8, log_level=3, max_epochs=5, reg_l2=0.0001)
+        gpu = Gpu(devices=1)
+        train_res = model1.fit_embedding_model(data=my_images, optimizer=optimizer, n_threads=1, gpu=gpu, seed=1234,
+                                               record_seed=23435)
+        print(train_res)
+        score_res = model1.predict(data=my_images, gpu=gpu, random_crop='RESIZETHENCROP')
+        print(score_res)
+
+    # test fit with the path option
+    def test_siamese_fit_1(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test using one data table
+        resnet18_model = ResNet18_Caffe(self.s,
+                                        width=224,
+                                        height=224,
+                                        random_crop='RESIZETHENCROP',
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
+        embedding_layer = Dense(n=4)
+        model1 = EmbeddingModel.build_embedding_model(resnet18_model, model_table='test1',
+                                                      embedding_model_type='siamese', margin=3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        self.assertEqual(res1[res1['Layer'].str.contains(model1.embedding_layer_name_prefix)].shape[0], 2)
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=64, embedding_model_type='siamese')
+        solver = AdamSolver(lr_scheduler=StepLR(learning_rate=0.0001, step_size=20), clip_grad_max=100,
+                            clip_grad_min=-100)
+        optimizer = Optimizer(algorithm=solver, mini_batch_size=8, log_level=3, max_epochs=2, reg_l2=0.0001)
+        gpu = Gpu(devices=1)
+        train_res = model1.fit_embedding_model(optimizer=optimizer, n_threads=1, gpu=gpu,
+                                               path=img_path, n_samples=64, max_iter=2,
+                                               seed=1234, record_seed=23435)
+        print(train_res)
+        score_res = model1.predict(data=my_images, gpu=gpu, random_crop='RESIZETHENCROP')
+        print(score_res)

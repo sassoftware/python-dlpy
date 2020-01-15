@@ -64,7 +64,8 @@ class ImageEmbeddingTable(ImageTable):
     @classmethod
     def load_files(cls, conn, path, casout=None, columns=None, caslib=None,
                    embedding_model_type='Siamese', n_samples=512,
-                   label_level=-2):
+                   label_level=-2,
+                   resize_width=None, resize_height=None):
 
         '''
 
@@ -87,16 +88,22 @@ class ImageEmbeddingTable(ImageTable):
             Specifies the embedding model type that the created table will be applied for training.
             Valid values: Siamese, Triplet, and Quartet.
             Default: Siamese
-        n_samples : int
+        n_samples : int, optional
             Number of samples to generate.
             Default: 512
-        label_level :
+        label_level : int, optional
             Specifies which path level should be used to generate the class labels for each image.
             This class label determines whether a given image pair belongs to the same class.
             For instance, label_level = 1 means the first directory and label_level = -2 means the last directory.
             This internally use the SAS scan function
             (check https://www.sascrunch.com/scan-function.html for more details).
             Default: -2
+        resize_width : int, optional
+            Specifies the image width that needs be resized to. When resize_width is not given, it will be reset to
+            the specified resize_height.
+        resize_height : int, optional
+            Specifies the image height that needs be resized to. When resize_height is not given, it will be reset to
+            the specified resize_width.
 
         Returns
         -------
@@ -109,7 +116,18 @@ class ImageEmbeddingTable(ImageTable):
         conn.loadactionset('sampling', _messagelevel='error')
         conn.loadactionset('deepLearn', _messagelevel='error')
 
-        #if not file_exist_on_server(conn, path):
+        # check resize options
+        if resize_width is not None and resize_height is None:
+            resize_height = resize_width
+        if resize_width is None and resize_height is not None:
+            resize_width = resize_height
+
+        # ignore the unreasonable values for resize
+        if resize_width is not None and resize_width <= 0:
+            resize_width = None
+            resize_height = None
+
+        # if not file_exist_on_server(conn, path):
         #    raise DLPyError('{} does not exist on the server.'.format(path))
 
         if embedding_model_type.lower() not in ['siamese', 'triplet', 'quartet']:
@@ -144,9 +162,9 @@ class ImageEmbeddingTable(ImageTable):
                               path=path_created, caslib=caslib)
                 # download all the file information to a dataframe
                 n_obs = conn.retrieve('simple.numRows', _messagelevel='error',
-                              table=castable_with_file_list)
+                                      table=castable_with_file_list)
                 res_fetch = conn.retrieve('table.fetch', _messagelevel='error',
-                              fetchVars=['_path_'], to=n_obs['numrows'], table=castable_with_file_list)
+                                          fetchVars=['_path_'], to=n_obs['numrows'], table=castable_with_file_list)
                 # this stores the entire file path information
                 cls.image_file_list = res_fetch['Fetch']['_path_']
                 # generate the list using labels as keys
@@ -165,7 +183,8 @@ class ImageEmbeddingTable(ImageTable):
             # randomly select n_sample files
             # anchor file list
             anchor_file_list = cls.image_file_list.sample(n=n_samples, replace=True)
-            anchor_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, anchor_file_list)
+            anchor_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, anchor_file_list,
+                                                                        resize_width, resize_height)
 
             siamese_images_casout = None
             positive_images_casout = None
@@ -175,7 +194,8 @@ class ImageEmbeddingTable(ImageTable):
             # Siamese
             if embedding_model_type.lower() == 'siamese':
                 siamese_file_list = cls.image_file_list.sample(n=n_samples, replace=True)
-                siamese_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, siamese_file_list)
+                siamese_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, siamese_file_list,
+                                                                             resize_width, resize_height)
                 cls.__alter_image_columns(conn, siamese_images_casout, 1)
             # triplet
             elif embedding_model_type.lower() == 'triplet' or embedding_model_type.lower() == 'quartet':
@@ -202,13 +222,16 @@ class ImageEmbeddingTable(ImageTable):
                             cls.image_file_list_with_labels[negative_label].sample(n=1, replace=True))
 
                 # load files into a CAS table
-                positive_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, positive_file_list)
+                positive_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, positive_file_list,
+                                                                              resize_width, resize_height)
                 cls.__alter_image_columns(conn, positive_images_casout, 1)
-                negative_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, negative_file_list)
+                negative_images_casout = cls.__load_images_with_the_file_list(conn, path, caslib, negative_file_list,
+                                                                              resize_width, resize_height)
                 cls.__alter_image_columns(conn, negative_images_casout, 2)
                 if embedding_model_type.lower() == 'quartet':
                     negative_images_casout1 = cls.__load_images_with_the_file_list(conn, path, caslib,
-                                                                                  negative_file_list1)
+                                                                                   negative_file_list1,
+                                                                                   resize_width, resize_height)
                     cls.__alter_image_columns(conn, negative_images_casout1, 3)
 
             # call dlJoin to generate the final data table
@@ -305,7 +328,7 @@ class ImageEmbeddingTable(ImageTable):
         conn.retrieve('table.alterTable', _messagelevel='error',
                       caslib=caslib,
                       name=table['name'],
-                      columns=[dict(name='_image_', rename='_image_'+str(col_index)),
+                      columns=[dict(name='_image_', rename='_image_' + str(col_index)),
                                dict(name='_path_', rename='_path_' + str(col_index)),
                                dict(name='_type_', rename='_type_' + str(col_index)),
                                dict(name='_size_', rename='_size_' + str(col_index))
@@ -313,7 +336,7 @@ class ImageEmbeddingTable(ImageTable):
                       )
 
     @staticmethod
-    def __load_images_with_the_file_list(conn, path, caslib, file_list):
+    def __load_images_with_the_file_list(conn, path, caslib, file_list, resize_width, resize_height):
 
         # change the message level
         # upload_frame somehow does not honor _messagelevel
@@ -344,7 +367,7 @@ class ImageEmbeddingTable(ImageTable):
         # we need use the absolute path here since .csv stores the absolute file location
         images_casout = dict(name=random_name())
         caslib_info = conn.retrieve('caslibinfo', _messagelevel='error',
-                      caslib=caslib)
+                                    caslib=caslib)
 
         # full_path = caslib_info['CASLibInfo']['Path'][0] + file_list_casout['name'] + '.csv'
         # relative to caslib
@@ -360,6 +383,19 @@ class ImageEmbeddingTable(ImageTable):
 
         # remove the csv file
         conn.deleteSource(source=file_list_casout['name'] + '.csv', caslib=caslib, _messagelevel='error')
+
+        # resize when it is specified
+        if resize_width is not None:
+            conn.retrieve('image.processImages', _messagelevel='error',
+                          imagefunctions=[
+                              {'options': {
+                                  'functiontype': 'RESIZE',
+                                  'width': resize_width,
+                                  'height': resize_height
+                              }}
+                          ],
+                          casout=dict(name=images_casout['name'], replace=True),
+                          table=images_casout)
 
         # reset msg level
         conn.setSessOpt(messageLevel=current_msg_level['messageLevel'])
@@ -568,7 +604,7 @@ class ImageEmbeddingTable(ImageTable):
             nrow = 1
             ncol = n_image_pairs
         if figsize is None:
-            figsize = (4*n_scale, 16)
+            figsize = (4 * n_scale, 16)
         fig = plt.figure(figsize=figsize)
 
         for i in range(n_image_pairs):
@@ -579,7 +615,7 @@ class ImageEmbeddingTable(ImageTable):
                 label = temp_tbl['Images']['Label'][i]
             else:
                 label = 'N/A'
-            ax = fig.add_subplot(nrow, ncol*n_scale, n_scale*i + 1)
+            ax = fig.add_subplot(nrow, ncol * n_scale, n_scale * i + 1)
             id_content = temp_tbl['Images']['_id_'][i]
 
             if self.embedding_model_type.lower() == 'siamese':
@@ -602,7 +638,7 @@ class ImageEmbeddingTable(ImageTable):
                     label = temp_tbl['Images']['_label_1'][i]
                 else:
                     label = 'N/A'
-                ax = fig.add_subplot(nrow, ncol*n_scale, n_scale*i + 2)
+                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale * i + 2)
                 dissimilar = temp_tbl['Images']['_dissimilar_'][i]
                 id_content = temp_tbl['Images']['_id_'][i]
                 ax.set_title('Label: {}\nPair: {} Dissimilar: {}'.format(label, id_content, dissimilar))
@@ -618,7 +654,7 @@ class ImageEmbeddingTable(ImageTable):
                     label = temp_tbl['Images']['_label_1'][i]
                 else:
                     label = 'N/A'
-                ax = fig.add_subplot(nrow, ncol*n_scale, n_scale*i + 2)
+                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale * i + 2)
                 id_content = temp_tbl['Images']['_id_'][i]
                 ax.set_title('Positive: {}\nTriplet: {}'.format(label, id_content))
                 if len(image.size) == 2:
@@ -632,7 +668,7 @@ class ImageEmbeddingTable(ImageTable):
                     label = temp_tbl['Images']['_label_2'][i]
                 else:
                     label = 'N/A'
-                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale*i + 3)
+                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale * i + 3)
                 id_content = temp_tbl['Images']['_id_'][i]
                 ax.set_title('Negative: {}\nTriplet: {}'.format(label, id_content))
                 if len(image.size) == 2:
@@ -647,7 +683,7 @@ class ImageEmbeddingTable(ImageTable):
                     label = temp_tbl['Images']['_label_1'][i]
                 else:
                     label = 'N/A'
-                ax = fig.add_subplot(nrow, ncol*n_scale, n_scale*i + 2)
+                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale * i + 2)
                 id_content = temp_tbl['Images']['_id_'][i]
                 ax.set_title('Positive: {}\nQuartet: {}'.format(label, id_content))
                 if len(image.size) == 2:
@@ -661,7 +697,7 @@ class ImageEmbeddingTable(ImageTable):
                     label = temp_tbl['Images']['_label_2'][i]
                 else:
                     label = 'N/A'
-                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale*i + 3)
+                ax = fig.add_subplot(nrow, ncol * n_scale, n_scale * i + 3)
                 id_content = temp_tbl['Images']['_id_'][i]
                 ax.set_title('Negative: {}\nQuartet: {}'.format(label, id_content))
                 if len(image.size) == 2:
@@ -720,4 +756,3 @@ class ImageEmbeddingTable(ImageTable):
         self.params['where'] = None
 
         return temp_tbl
-
