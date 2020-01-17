@@ -2561,7 +2561,7 @@ class EmbeddingLoss(Layer):
     can_be_last_layer = True
     number_of_instances = 0
 
-    def __init__(self, name=None, distance="L2", margin=2, src_layers=None, **kwargs):
+    def __init__(self, name=None, margin=2, src_layers=None, **kwargs):
 
         if not __dev__ and len(kwargs) > 0:
             raise DLPyError('**kwargs can be used only in development mode.')
@@ -2590,6 +2590,7 @@ class EmbeddingLoss(Layer):
     @property
     def num_bias(self):
         return 0
+
 
 class MultiHeadAttention(Layer):
     '''
@@ -2683,6 +2684,7 @@ class MultiHeadAttention(Layer):
             return 3*(self.src_layers[0].output_size*d_kv)*self.config['n_attn_heads'] + d_kv*self.config['n_attn_heads']*self.config['n']
         else:
             raise DLPyError('Source layers for multi-head attention layer must have only an integer output dimension')
+
 
 class LayerNormalization(Layer):
     '''
@@ -2782,6 +2784,7 @@ class LayerNormalization(Layer):
         else:
             raise DLPyError('Source layers for multi-head attention layer must have an integer output dimension')
 
+
 class FCMPLayer(Layer):
     '''
     FCMP layer
@@ -2840,7 +2843,177 @@ class FCMPLayer(Layer):
 
     @property
     def output_size(self):
+        return (self.config['height'], self.config['width'], self.config['depth'])
+
+    @property
+    def num_bias(self):
+        return 0
+
+
+class Split(Layer):
+    '''
+    Split layer
+
+    Parameters
+    ----------
+    name : string, optional
+        Specifies the name of the layer.
+    src_layers : Layers, optional
+        Specifies the layer directed to this layer.
+
+    Returns
+    -------
+    :class:`Split`
+
+    '''
+    type = 'split'
+    type_label = 'Split'
+    type_desc = 'Split layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, n_destination_layers, name=None, src_layers=None, **kwargs):
+
+        if not __dev__ and len(kwargs) > 0:
+            raise DLPyError('**kwargs can be used only in development mode.')
+
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        # _clean_parameters(parameters)
+        self._output_size = None
+        Layer.__init__(self, name, parameters, src_layers)
+        self.color_code = get_color(self.type)
+        self.n_destination_layers = n_destination_layers
+        self.config['nDestinationLayers'] = n_destination_layers
+
+    @property
+    def kernel_size(self):
+        return None
+
+    @property
+    def num_weights(self):
+        return 0
+
+    @property
+    def output_size(self):
+        if self._output_size is None:
+            # Viya3.5 split layer can only take one source layer.
+            src_shape = self.src_layers[0].output_size
+            # multi-dimension
+            if isinstance(src_shape, Iterable):
+                self._output_size = list(src_shape)
+                self._output_size[-1] = int(src_shape[2]/self.n_destination_layers)
+                self._output_size = tuple(self._output_size)
+            else:  # source layer is a 1-D array
+                self._output_size = int(src_shape/self.n_destination_layers)
         return self._output_size
+
+    @property
+    def num_bias(self):
+        return 0
+
+
+class Survival(Layer):
+    '''
+    Survival layer
+
+    Parameters
+    ----------
+    name : string, optional
+        Specifies the name of the layer.
+    src_layers : Layers, optional
+        Specifies the layer directed to this layer.
+
+    Returns
+    -------
+    :class:`Survival`
+
+    '''
+    type = 'survival'
+    type_label = 'Survival'
+    type_desc = 'Survival layer'
+    can_be_last_layer = False
+    number_of_instances = 0
+
+    def __init__(self, name=None, src_layers=None, **kwargs):
+
+        if not __dev__ and len(kwargs) > 0:
+            raise DLPyError('**kwargs can be used only in development mode.')
+
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        # _clean_parameters(parameters)
+        self._output_size = None
+        Layer.__init__(self, name, parameters, src_layers)
+        self.color_code = get_color(self.type)
+
+    @property
+    def kernel_size(self):
+        return None
+
+    @property
+    def num_weights(self):
+        return 0
+
+    @property
+    def output_size(self):
+        # survival layer output and input can only be 1
+        return self.src_layers[0].output_size
+
+    @property
+    def num_bias(self):
+        return 0
+
+
+class Clustering(Layer):
+    '''
+    Clustering layer
+
+    Parameters
+    ----------
+    n_clusters: int
+        Specifies the number of clusters for the cluster layer.
+    alpha: double, optional
+        Specifies the degree of freedom of the t-distribution kernel for the cluster layer.
+    name : string, optional
+        Specifies the name of the layer.
+    src_layers : Layers, optional
+        Specifies the layer directed to this layer.
+
+    Returns
+    -------
+    :class:`Clustering`
+
+    '''
+    type = 'cluster'
+    type_label = 'Cluster'
+    type_desc = 'Clustering layer'
+    can_be_last_layer = True
+    number_of_instances = 0
+
+    def __init__(self, n_clusters, alpha=1.0, name=None, src_layers=None, **kwargs):
+
+        if not __dev__ and len(kwargs) > 0:
+            raise DLPyError('**kwargs can be used only in development mode.')
+
+        parameters = locals()
+        parameters = _unpack_config(parameters)
+        # _clean_parameters(parameters)
+        self._output_size = None
+        Layer.__init__(self, name, parameters, src_layers)
+        self.color_code = get_color(self.type)
+
+    @property
+    def kernel_size(self):
+        return None
+
+    @property
+    def num_weights(self):
+        return 0
+
+    @property
+    def output_size(self):
+        return self.src_layers[0].output_size
 
     @property
     def num_bias(self):
