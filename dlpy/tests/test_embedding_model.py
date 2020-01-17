@@ -265,6 +265,70 @@ class TestImageEmbeddingModel(unittest.TestCase):
         score_res = model1.predict(data=my_images, gpu=gpu, random_crop='RESIZETHENCROP')
         print(score_res)
 
+        # test deploy as astore
+        self.s.loadactionset('astore')
+        my_images_test = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=5,
+                                                        embedding_model_type='siamese',
+                                                        resize_width=224, resize_height=224)
+
+        # case 1: deploy the full model as astore
+        model1.deploy_embedding_model(output_format='astore', model_type='full',
+                                      path=self.local_dir)
+
+        full_astore = os.path.join(self.local_dir, model1.model_name + '.astore')
+        with open(full_astore, mode='rb') as file:
+            file_content = file.read()
+
+        store_ = swat.blob(file_content)
+        self.s.astore.upload(rstore=dict(name='test1_full', replace=True), store=store_)
+
+        # run with one gpu
+        res2 = self.s.score(rstore=dict(name='test1_full'),
+                            table=my_images_test,
+                            nthreads=1,
+                            # _debug=dict(ranks=0),
+                            copyvars=['_path_', '_path_xx'],
+                            options=[dict(name='usegpu', value='1'),
+                                     dict(name='NDEVICES', value='1'),
+                                     dict(name='DEVICE0', value='0')
+                                     ],
+                            out=dict(name='astore_score1_full_gpu', replace=True))
+        print(res2)
+
+        res = self.s.fetch(table='astore_score1_full_gpu')
+        print(res)
+
+        # remove the astore file
+        os.remove(full_astore)
+
+        # case 2: deploy the branch model as astore
+        model1.deploy_embedding_model(output_format='astore', model_type='branch',
+                                      path=self.local_dir)
+
+        br_astore = os.path.join(self.local_dir, model1.model_name + '_branch.astore')
+        with open(br_astore, mode='rb') as file:
+            file_content = file.read()
+
+        store_ = swat.blob(file_content)
+        self.s.astore.upload(rstore=dict(name='test1_br', replace=True), store=store_)
+
+        # run with one gpu
+        self.s.score(rstore=dict(name='test1_br'),
+                     table=my_images_test,
+                     nthreads=1,
+                     # _debug=dict(ranks=0),
+                     copyvars=['_path_'],
+                     options=[dict(name='usegpu', value='1'),
+                              dict(name='NDEVICES', value='1'),
+                              dict(name='DEVICE0', value='0')
+                              ],
+                     out=dict(name='astore_score1_br_gpu', replace=True))
+
+        res = self.s.fetch(table='astore_score1_br_gpu')
+        print(res)
+
+        os.remove(br_astore)
+
     # test fit with the path option
     def test_siamese_fit_1(self):
 
@@ -298,3 +362,195 @@ class TestImageEmbeddingModel(unittest.TestCase):
         print(train_res)
         score_res = model1.predict(data=my_images, gpu=gpu, random_crop='RESIZETHENCROP')
         print(score_res)
+
+    # test fit with the data option
+    def test_triplet_fit(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test using one data table
+        resnet18_model = ResNet18_Caffe(self.s,
+                                        width=224,
+                                        height=224,
+                                        random_crop='RESIZETHENCROP',
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
+        embedding_layer = Dense(n=4)
+        model1 = EmbeddingModel.build_embedding_model(resnet18_model, model_table='test1',
+                                                      embedding_model_type='triplet', margin=-3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        print(res1)
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=64, embedding_model_type='triplet')
+        solver = AdamSolver(lr_scheduler=StepLR(learning_rate=0.0001, step_size=20), clip_grad_max=100,
+                            clip_grad_min=-100)
+        optimizer = Optimizer(algorithm=solver, mini_batch_size=8, log_level=3, max_epochs=5, reg_l2=0.0001)
+        gpu = Gpu(devices=1)
+        train_res = model1.fit_embedding_model(data=my_images, optimizer=optimizer, n_threads=1, gpu=gpu, seed=1234,
+                                               record_seed=23435)
+        print(train_res)
+        score_res = model1.predict(data=my_images, gpu=gpu, random_crop='RESIZETHENCROP')
+        print(score_res)
+
+        # test deploy as astore
+        self.s.loadactionset('astore')
+        my_images_test = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=5,
+                                                        embedding_model_type='triplet',
+                                                        resize_width=224, resize_height=224)
+
+        # case 1: deploy the full model as astore
+        model1.deploy_embedding_model(output_format='astore', model_type='full',
+                                      path=self.local_dir)
+
+        full_astore = os.path.join(self.local_dir, model1.model_name + '.astore')
+        with open(full_astore, mode='rb') as file:
+            file_content = file.read()
+
+        store_ = swat.blob(file_content)
+        self.s.astore.upload(rstore=dict(name='test1_full', replace=True), store=store_)
+
+        # run with one gpu
+        self.s.score(rstore=dict(name='test1_full'),
+                     table=my_images_test,
+                     nthreads=1,
+                     # _debug=dict(ranks=0),
+                     copyvars=['_path_', '_path_1', '_path_2'],
+                     options=[dict(name='usegpu', value='1'),
+                              dict(name='NDEVICES', value='1'),
+                              dict(name='DEVICE0', value='0')
+                              ],
+                     out=dict(name='astore_score1_full_gpu', replace=True))
+
+        res = self.s.fetch(table='astore_score1_full_gpu')
+        print(res)
+
+        # remove the astore file
+        os.remove(full_astore)
+
+        # case 2: deploy the branch model as astore
+        model1.deploy_embedding_model(output_format='astore', model_type='branch',
+                                      path=self.local_dir)
+
+        br_astore = os.path.join(self.local_dir, model1.model_name + '_branch.astore')
+        with open(br_astore, mode='rb') as file:
+            file_content = file.read()
+
+        store_ = swat.blob(file_content)
+        self.s.astore.upload(rstore=dict(name='test1_br', replace=True), store=store_)
+
+        # run with one gpu
+        self.s.score(rstore=dict(name='test1_br'),
+                     table=my_images_test,
+                     nthreads=1,
+                     # _debug=dict(ranks=0),
+                     copyvars=['_path_'],
+                     options=[dict(name='usegpu', value='1'),
+                              dict(name='NDEVICES', value='1'),
+                              dict(name='DEVICE0', value='0')
+                              ],
+                     out=dict(name='astore_score1_br_gpu', replace=True))
+
+        res = self.s.fetch(table='astore_score1_br_gpu')
+        print(res)
+
+        os.remove(br_astore)
+
+    # test fit with the data option
+    def test_quartet_fit(self):
+
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        # test using one data table
+        resnet18_model = ResNet18_Caffe(self.s,
+                                        width=224,
+                                        height=224,
+                                        random_crop='RESIZETHENCROP',
+                                        random_flip='HV',
+                                        random_mutation='random'
+                                        )
+        embedding_layer = Dense(n=4)
+        model1 = EmbeddingModel.build_embedding_model(resnet18_model, model_table='test1',
+                                                      embedding_model_type='quartet', margin=-3.0,
+                                                      embedding_layer=embedding_layer)
+        res1 = model1.print_summary()
+        print(res1)
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=64, embedding_model_type='quartet')
+        solver = AdamSolver(lr_scheduler=StepLR(learning_rate=0.0001, step_size=20), clip_grad_max=100,
+                            clip_grad_min=-100)
+        optimizer = Optimizer(algorithm=solver, mini_batch_size=8, log_level=3, max_epochs=5, reg_l2=0.0001)
+        gpu = Gpu(devices=1)
+        train_res = model1.fit_embedding_model(data=my_images, optimizer=optimizer, n_threads=1, gpu=gpu, seed=1234,
+                                               record_seed=23435)
+        print(train_res)
+        score_res = model1.predict(data=my_images, gpu=gpu, random_crop='RESIZETHENCROP')
+        print(score_res)
+
+        # test deploy as astore
+        self.s.loadactionset('astore')
+        my_images_test = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=5,
+                                                        embedding_model_type='quartet',
+                                                        resize_width=224, resize_height=224)
+
+        # case 1: deploy the full model as astore
+        model1.deploy_embedding_model(output_format='astore', model_type='full',
+                                      path=self.local_dir)
+
+        full_astore = os.path.join(self.local_dir, model1.model_name + '.astore')
+        with open(full_astore, mode='rb') as file:
+            file_content = file.read()
+
+        store_ = swat.blob(file_content)
+        self.s.astore.upload(rstore=dict(name='test1_full', replace=True), store=store_)
+
+        # run with one gpu
+        self.s.score(rstore=dict(name='test1_full'),
+                     table=my_images_test,
+                     nthreads=1,
+                     # _debug=dict(ranks=0),
+                     copyvars=['_path_', '_path_1', '_path_2', '_path_3'],
+                     options=[dict(name='usegpu', value='1'),
+                              dict(name='NDEVICES', value='1'),
+                              dict(name='DEVICE0', value='0')
+                              ],
+                     out=dict(name='astore_score1_full_gpu', replace=True))
+
+        res = self.s.fetch(table='astore_score1_full_gpu')
+        print(res)
+
+        # remove the astore file
+        os.remove(full_astore)
+
+        # case 2: deploy the branch model as astore
+        model1.deploy_embedding_model(output_format='astore', model_type='branch',
+                                      path=self.local_dir)
+
+        br_astore = os.path.join(self.local_dir, model1.model_name + '_branch.astore')
+        with open(br_astore, mode='rb') as file:
+            file_content = file.read()
+
+        store_ = swat.blob(file_content)
+        self.s.astore.upload(rstore=dict(name='test1_br', replace=True), store=store_)
+
+        # run with one gpu
+        self.s.score(rstore=dict(name='test1_br'),
+                     table=my_images_test,
+                     nthreads=1,
+                     # _debug=dict(ranks=0),
+                     copyvars=['_path_'],
+                     options=[dict(name='usegpu', value='1'),
+                              dict(name='NDEVICES', value='1'),
+                              dict(name='DEVICE0', value='0')
+                              ],
+                     out=dict(name='astore_score1_br_gpu', replace=True))
+
+        res = self.s.fetch(table='astore_score1_br_gpu')
+        print(res)
+
+        os.remove(br_astore)

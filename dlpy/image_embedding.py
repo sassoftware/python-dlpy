@@ -351,7 +351,8 @@ class ImageEmbeddingTable(ImageTable):
         i_tot = 0
         for index, value in file_list.items():
             pos = value.find(path)
-            file_list_relative_path = file_list_relative_path.set_value(i_tot, value[pos:])
+            #file_list_relative_path = file_list_relative_path.set_value(i_tot, value[pos:])
+            file_list_relative_path.at[i_tot] = value[pos:]
             i_tot = i_tot + 1
         conn.upload_frame(file_list_relative_path.to_frame(), casout=file_list_casout, _messagelevel='error')
 

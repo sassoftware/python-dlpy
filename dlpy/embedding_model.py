@@ -289,7 +289,7 @@ class EmbeddingModel(Model):
 
         # check the data type
         if path is None:
-            if isinstance(data, ImageEmbeddingTable):
+            if not isinstance(data, ImageEmbeddingTable):
                 raise DLPyError('The data option must contain a valid embedding table')
             if data.embedding_model_type.lower() != self.embedding_model_type:
                 raise DLPyError('The data option must contain a valid embedding table for ' + self.embedding_model_type)
