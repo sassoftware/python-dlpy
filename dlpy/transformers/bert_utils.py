@@ -648,6 +648,7 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, segment_vocab_size=
         txt_encoding = tokenizer.encode_plus(txt_a,
                                              text_pair=txt_b,
                                              add_special_tokens=True,
+                                             return_special_tokens_mask=True,
                                              max_length=max_seq_len)
         tmp_tokenized_text = tokenizer.convert_ids_to_tokens(txt_encoding['input_ids'])
         
