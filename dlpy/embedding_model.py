@@ -18,27 +18,15 @@
 
 ''' The Embedding Model class adds training, evaluation,feature analysis routines for learning embedding '''
 
-import os
 from copy import deepcopy
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import collections
-import sys
-
 from dlpy import Model
-from dlpy.layers import Input, Dense, EmbeddingLoss, OutputLayer
+from dlpy.layers import Input, EmbeddingLoss, OutputLayer, Keypoints
 from .attribute_utils import create_extended_attributes
 from .image_embedding import ImageEmbeddingTable
 from .model import DataSpec
 from .network import WeightsTable
-from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
-from .utils import filter_by_image_id, filter_by_filename, isnotebook
-from dlpy.timeseries import TimeseriesTable
-from dlpy.timeseries import _get_first_obs, _get_last_obs, _combine_table, _prepare_next_input
-from dlpy.utils import DLPyError, Box, DLPyDict
-from dlpy.lr_scheduler import _LRScheduler, FixedLR, StepLR, FCMPLR
+from dlpy.utils import DLPyError
 
 
 class EmbeddingModel(Model):
@@ -103,10 +91,13 @@ class EmbeddingModel(Model):
         # the branch cannot contain other task layers
         if len(branch_tensor.output_layers) != 1:
             raise DLPyError('The branch model cannot contain more than one output layer')
-        elif branch_tensor.output_layers[0].type == 'output':
-            print("NOTE: Remove the output layers from the model.")
+        elif branch_tensor.output_layers[0].type == OutputLayer.type or \
+                branch_tensor.output_layers[0].type == Keypoints.type:
+            print("NOTE: Remove the task layers from the model.")
             branch_tensor.layers.remove(branch_tensor.output_layers[0])
             branch_tensor.output_layers[0] = branch_tensor.layers[-1]
+        elif branch_tensor.output_layers[0].can_be_last_layer:
+            raise DLPyError('The branch model cannot contain task layer except output or keypoints layer.')
 
         # check embedding_model_type
         if embedding_model_type.lower() not in ['siamese', 'triplet', 'quartet']:
