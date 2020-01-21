@@ -33,8 +33,18 @@ try:
     from transformers import BertTokenizer, BertModel, BertConfig
     from transformers import RobertaTokenizer, RobertaModel, RobertaConfig
     from transformers import DistilBertTokenizer, DistilBertModel, DistilBertConfig
+    
+    from distutils.version import StrictVersion
+    import pkg_resources
+    import warnings
+    if StrictVersion(pkg_resources.get_distribution("transformers").version) > '2.3.0':
+        warn_message = ("You are using a version of the transformers package ("
+                        + pkg_resources.get_distribution("transformers").version + 
+                        ") that has not been tested for compatibility.  Unexpected behavior "
+                        "may occur.")
+        warnings.warn(warn_message,UserWarning)
 except:
-    raise DLPyError("Unable to import from transformers."
+    raise DLPyError("Unable to import from transformers.  "
                     "Please install transformers and try again.")
 
 try:
