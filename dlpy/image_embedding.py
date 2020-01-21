@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import os
 
+from swat import get_option, set_option
 from swat.cas.table import CASTable
 
 from dlpy import ImageTable
@@ -163,8 +164,10 @@ class ImageEmbeddingTable(ImageTable):
                 # download all the file information to a dataframe
                 n_obs = conn.retrieve('simple.numRows', _messagelevel='error',
                                       table=castable_with_file_list)
-                res_fetch = conn.retrieve('table.fetch', _messagelevel='error',
+
+                res_fetch = conn.retrieve('table.fetch', _messagelevel='error', maxRows=n_obs['numrows']+100,
                                           fetchVars=['_path_'], to=n_obs['numrows'], table=castable_with_file_list)
+
                 # this stores the entire file path information
                 cls.image_file_list = res_fetch['Fetch']['_path_']
                 # generate the list using labels as keys
