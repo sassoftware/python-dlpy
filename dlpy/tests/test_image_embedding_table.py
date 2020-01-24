@@ -118,6 +118,27 @@ class TestImageEmbeddingTable(unittest.TestCase):
         self.assertTrue(len(my_images) > 0)
         self.assertEqual(dissimilar['Frequency'][0], out_freq['Frequency'][0])
 
+    def test_load_files_resize(self):
+        if self.server_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
+
+        img_path = self.server_dir + 'DogBreed_small'
+        my_images = ImageEmbeddingTable.load_files(self.s, path=img_path, n_samples=128,
+                                                   resize_width=224, resize_height=224)
+        print(my_images.columns)
+        print(my_images.head())
+        out_freq = my_images.freq(inputs='_dissimilar_')
+        out_freq = out_freq['Frequency']
+        print(out_freq)
+        label, label1, label_pair, dissimilar = my_images.label_freq
+        print(label)
+        print(label1)
+        print(label_pair)
+        print(dissimilar)
+        my_images.show(randomize=True, n_image_pairs=10)
+        self.assertTrue(len(my_images) > 0)
+        self.assertEqual(dissimilar['Frequency'][0], out_freq['Frequency'][0])
+
     def test_load_files_triplet(self):
         if self.server_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_SERVER is not set in the environment variables")
