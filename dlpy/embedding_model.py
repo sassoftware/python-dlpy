@@ -48,13 +48,11 @@ class EmbeddingModel(Model):
 
         Parameters
         ----------
-        conn : CAS
-            Specifies the CAS connection object.
+        branch : Model
+            Specifies the base model that is used as branches for embedding model.
         model_table : string or dict or CAS table, optional
             Specifies the CAS table to store the deep learning model.
             Default: None
-        branch : Model
-            Specifies the base model that is used as branches for embedding model.
         embedding_model_type : string, optional
             Specifies the embedding model type that the created table will be applied for training.
             Valid values: Siamese, Triplet, and Quartet.

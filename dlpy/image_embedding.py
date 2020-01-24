@@ -65,8 +65,7 @@ class ImageEmbeddingTable(ImageTable):
     @classmethod
     def load_files(cls, conn, path, casout=None, columns=None, caslib=None,
                    embedding_model_type='Siamese', n_samples=512,
-                   label_level=-2,
-                   resize_width=None, resize_height=None):
+                   label_level=-2, resize_width=None, resize_height=None):
 
         '''
 
@@ -125,6 +124,10 @@ class ImageEmbeddingTable(ImageTable):
 
         # ignore the unreasonable values for resize
         if resize_width is not None and resize_width <= 0:
+            resize_width = None
+            resize_height = None
+
+        if resize_height is not None and resize_height <= 0:
             resize_width = None
             resize_height = None
 
