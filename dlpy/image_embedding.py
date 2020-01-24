@@ -127,6 +127,10 @@ class ImageEmbeddingTable(ImageTable):
             resize_width = None
             resize_height = None
 
+        if resize_height is not None and resize_height <= 0:
+            resize_width = None
+            resize_height = None
+
         # if not file_exist_on_server(conn, path):
         #    raise DLPyError('{} does not exist on the server.'.format(path))
 
