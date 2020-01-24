@@ -44,8 +44,13 @@ try:
                         "may occur.")
         warnings.warn(warn_message,UserWarning)
 except:
+<<<<<<< HEAD
     raise DLPyError("Unable to import from transformers.  Please install "
                     "a supported version (2.3.0 or earlier) and try again.")
+=======
+    raise DLPyError("Unable to import from transformers.  "
+                    "Please install transformers and try again.")
+>>>>>>> 36c58deba11994d73779360472693cef81b16338
 
 try:
     import h5py
