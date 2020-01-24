@@ -65,8 +65,7 @@ class ImageEmbeddingTable(ImageTable):
     @classmethod
     def load_files(cls, conn, path, casout=None, columns=None, caslib=None,
                    embedding_model_type='Siamese', n_samples=512,
-                   label_level=-2,
-                   resize_width=None, resize_height=None):
+                   label_level=-2, resize_width=None, resize_height=None):
 
         '''
 
