@@ -1668,7 +1668,7 @@ class Model(Network):
                                   random_mutation=random_mutation, log_level=log_level)
         else:
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
-                                  layers=layers, copy_vars=copy_vars, casout=casout,
+                                  layer_image_type='WIDE', layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
                                   layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
                                   random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,

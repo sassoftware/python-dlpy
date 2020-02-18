@@ -28,25 +28,29 @@ from dlpy.model import Model, TextParms, Optimizer, AdamSolver
 from dlpy.layers import Res, Dense, OutputLayer, LayerNormalization, MultiHeadAttention, Recurrent, InputLayer
 from dlpy.transformers.bert_utils import BertDMH, generate_hdf5_dataset_name, find_pytorch_tensor, extract_pytorch_parms
 from dlpy.transformers.bert_utils import create_data_spec, write_block_information, BertCommon, generate_target_var_names
-
-#try:
-#    import torch
-#except ImportError:
-#    print("ERROR: unable to import torch library.  Please install the torch library and try again.")
     
 try:    
     from transformers import BertTokenizer, BertModel, BertConfig
-except ImportError:
-    try:
-        from pytorch_transformers import BertTokenizer, BertModel, BertConfig
-    except ImportError:
-        print("ERROR: unable to import from either the transformers or pytorch_transformers."
-              "Please install either transformers or pytorch_transformers and try again.")
+    from transformers import RobertaTokenizer, RobertaModel, RobertaConfig
+    from transformers import DistilBertTokenizer, DistilBertModel, DistilBertConfig
+    
+    from distutils.version import StrictVersion
+    import pkg_resources
+    import warnings
+    if StrictVersion(pkg_resources.get_distribution("transformers").version) > '2.3.0':
+        warn_message = ("You are using a version of the transformers package ("
+                        + pkg_resources.get_distribution("transformers").version + 
+                        ") that has not been tested for compatibility.  Unexpected behavior "
+                        "may occur.")
+        warnings.warn(warn_message,UserWarning)
+except:
+    raise DLPyError("Unable to import from transformers.  Please install "
+                    "a supported version (2.3.0 or earlier) and try again.")
 
 try:
     import h5py
-except ImportError:
-    print("ERROR: unable to import the h5py library.  Please install the h5py library and try again.")
+except:
+    raise DLPyError("Unable to import h5py.  Please install h5py and try again.")
 
 class BERT_Model(Model):
 
@@ -64,7 +68,7 @@ class BERT_Model(Model):
         file system.
     name: string
         Specifies the name of the HuggingFace BERT model to load (e.g. bert-based-uncased)
-        Default: bert_base_uncased
+        Default: bert-base-uncased
     name: n_classes
         Specifies the number of classes used for model fine-tuning.  Setting n_classes to
         1 sets up a regression problem.
@@ -78,7 +82,10 @@ class BERT_Model(Model):
     seed: int, optional
         Specifies the seed used for random number generation.
         Default: 987654321
-    verbose: boolean, optional
+    save_embedding: Boolean, optional
+        Specfies whether to save a text version of embedding table.
+        Default: False
+    verbose: Boolean, optional
         Specifies whether to print informative notes and messages.
         Default: False
     Returns
@@ -87,10 +94,11 @@ class BERT_Model(Model):
 
     '''
 
-    def __init__(self, conn, cache_dir, name='bert_base_uncased', n_classes=None,
-                 num_hidden_layers=None, max_seq_len=128, seed=987654321, verbose=False):
+    def __init__(self, conn, cache_dir, name='bert-base-uncased', n_classes=None,
+                 num_hidden_layers=None, max_seq_len=128, seed=987654321, 
+                 save_embedding=False, verbose=False):
 
-        self._base_name = name
+        self._base_name = name.lower()
         self._cache_dir = cache_dir
         self.model_type = 'RNN'
         self.seed = seed
@@ -107,53 +115,153 @@ class BERT_Model(Model):
             self._classification_problem = True
             self._n_class_levels = n_classes
             self.model_name = 'classification'
-
-        self.ds_layers = dict(token_input=BertCommon['layer_names']['token_input'],
-                              position_input=BertCommon['layer_names']['position_input'],
-                              segment_input=BertCommon['layer_names']['segment_input'])
        
+        # verify cache directory exists
         if not os.path.isdir(cache_dir):
             raise DLPyError('You specified an invalid cache directory ' + cache_dir)
         elif not os.access(cache_dir, os.W_OK):
             raise DLPyError('You do not have permission to write to directory ' + cache_dir)
         
+        # verify model type is supported
+        hf_base_name = self._base_name.split('-')[0]
+        if hf_base_name not in ['bert', 'roberta', 'distilbert', 'distilroberta']:
+            raise DLPyError('You specified an unsupported model variant.'
+                            'Only bert-*, roberta-*, and distil*-*'
+                            'models are supported.')
+                            
         if self._verbose:
-            print("NOTE: loading base BERT model " + name + " ...")
+            print("NOTE: loading base model " + self._base_name + " ...")
             
-        # load specified HuggingFace BERT model
+        # instantiate specified HuggingFace model and tokenizer
+        if hf_base_name == 'bert':
+            num_layers = BertConfig.from_pretrained(self._base_name,
+                                                    cache_dir=cache_dir).to_dict()['num_hidden_layers']
+        elif hf_base_name == 'roberta':
+            num_layers = RobertaConfig.from_pretrained(self._base_name,
+                                                       cache_dir=cache_dir).to_dict()['num_hidden_layers']
+        else:   # all distil* models
+            num_layers = DistilBertConfig.from_pretrained(self._base_name,
+                                                          cache_dir=cache_dir).to_dict()['n_layers']
+        
         if num_hidden_layers is None:
-            self._base_model = BertModel.from_pretrained(name,
-                                                         cache_dir=cache_dir)
-            self._config = BertConfig.from_pretrained(name,
-                                                      cache_dir=cache_dir).to_dict()
+            num_hidden_layers = num_layers
         else:
-            tmp_config = BertConfig.from_pretrained(name,
-                                                    cache_dir=cache_dir).to_dict()
-            if num_hidden_layers > tmp_config['num_hidden_layers']:
+            if num_hidden_layers > num_layers:
                 raise DLPyError('You specified more hidden layers than are available in '
-                                'the base BERT model.')
+                                'the base model.')
 
-            self._base_model = BertModel.from_pretrained(name,
+        if hf_base_name == 'bert':
+            self._base_model = BertModel.from_pretrained(self._base_name,
                                                          cache_dir=cache_dir,
                                                          num_hidden_layers=num_hidden_layers)
-            self._config = BertConfig.from_pretrained(name,
+            self._tokenizer = BertTokenizer.from_pretrained(self._base_name)
+            self._config = BertConfig.from_pretrained(self._base_name,
                                                       cache_dir=cache_dir,
                                                       num_hidden_layers=num_hidden_layers).to_dict()
-
-        if self._verbose:
-            print("NOTE: base BERT model loaded.")
-
-        # instantiate BERT _tokenizer
-        self._tokenizer = BertTokenizer.from_pretrained(name)
+        elif hf_base_name == 'roberta':
+            self._base_model = RobertaModel.from_pretrained(self._base_name,
+                                                            cache_dir=cache_dir,
+                                                            num_hidden_layers=num_hidden_layers)
+            self._tokenizer = RobertaTokenizer.from_pretrained(self._base_name)
+            self._config = RobertaConfig.from_pretrained(self._base_name,
+                                                         cache_dir=cache_dir,
+                                                         num_hidden_layers=num_hidden_layers).to_dict()
+        else:   # all distil* models
+            self._base_model = DistilBertModel.from_pretrained(self._base_name,
+                                                               cache_dir=cache_dir,
+                                                               n_layers=num_hidden_layers)
+            self._tokenizer = DistilBertTokenizer.from_pretrained(self._base_name)
+            self._config = DistilBertConfig.from_pretrained(self._base_name,
+                                                            cache_dir=cache_dir,
+                                                            n_layers=num_hidden_layers).to_dict()
+            
+        # set model-specific quantitites
+        self._set_bert_type_info(hf_base_name)
         
+        if self._verbose:
+            print("NOTE: base model " + self._base_name + " loaded.")
+       
         # load embedding table (token | position | segment)
-        self._load_embedding_table()
+        self._load_embedding_table(save_embedding)
             
         if self._config['max_position_embeddings'] < max_seq_len:
             raise DLPyError('The specified maximum sequence length exceeds the maximum position embedding.')
         else:
             self._max_seq_len = max_seq_len
+            
+        # set input layers
+        if self._use_segment_embedding:
+            self.ds_layers = dict(token_input=BertCommon['layer_names']['token_input'],
+                                  position_input=BertCommon['layer_names']['position_input'],
+                                  segment_input=BertCommon['layer_names']['segment_input'])
+        else:
+            self.ds_layers = dict(token_input=BertCommon['layer_names']['token_input'],
+                                  position_input=BertCommon['layer_names']['position_input'])
+        
+    def _set_bert_type_info(self, bert_variant_name):
+        if bert_variant_name == 'bert':
+            self._use_pooling_layer = True
+            self._position_embedding_offset = 0
+        elif bert_variant_name == 'roberta':
+            self._use_pooling_layer = True
+            self._position_embedding_offset = 2     # see comment in modeling_roberta.py, class RobertaEmbeddings
+        elif 'distil' in bert_variant_name:
+            # distilBERT needs to map some keys for consistency with base BERT model
+            self._config['num_hidden_layers'] = self._config['n_layers']
+            self._config['hidden_size'] = self._config['dim']
+            self._config['hidden_act'] = self._config['activation']
+            self._config['hidden_dropout_prob'] = self._config['dropout']
+            self._config['num_attention_heads'] = self._config['n_heads']
+            self._config['layer_norm_eps'] = 1e-12
+            self._config['intermediate_size'] = self._config['hidden_dim']
+            
+            self._use_pooling_layer = False
+            self._position_embedding_offset = 0
+        else:
+            raise DLPyError(bert_variant_name + " is not a supported model.")
+
+        if 'type_vocab_size' in self._config:
+            self._use_segment_embedding = True
+        else:
+            self._use_segment_embedding = False
+            
+        if self._config['num_hidden_layers'] > 0:
+        
+            # extract keywords for encoder block(s)
+            layer_keys = []
+            for param_tensor in self._base_model.state_dict():
+                tmp = param_tensor.split('.')
+                if all(c in tmp for c in ['0','weight']):
+                    layer_keys.append(tmp[0:2]+tmp[3:-1])
                     
+            # encoder block consists of:
+            # 1) multi-head attention layer (3 dense subspace layers and one output dense layer)
+            # 2) first residual layer (no parameters)
+            # 3) first layernorm layer
+            # 4) intermediate dense layer
+            # 5) output dense layer
+            # 6) second residual layer
+            # 7) second layernorm layer
+            #
+            # NOTE: if the above changes then the following code AND _add_bert_encoding_layer
+            #       must be changed
+            self._encoding_blk_keys = [None]*BertCommon['n_sublayers_per_encoder']
+            
+            # multi-head attention keys
+            self._encoding_blk_keys[0] = {'base':layer_keys[0][0:2], 'extra':[str_list[2:] for str_list in layer_keys[0:4]]}
+            
+            # first layernorm layer
+            self._encoding_blk_keys[2] = {'base':layer_keys[4][0:2], 'extra':layer_keys[4][2:]}
+            
+            # intermediate dense layer
+            self._encoding_blk_keys[3] = {'base':layer_keys[5][0:2], 'extra':layer_keys[5][2:]}
+
+            # output dense layer
+            self._encoding_blk_keys[4] = {'base':layer_keys[6][0:2], 'extra':layer_keys[6][2:]}
+
+            # second layernorm layer
+            self._encoding_blk_keys[6] = {'base':layer_keys[7][0:2], 'extra':layer_keys[7][2:]}
+                            
     def _write_embedding_table(self):
 
         # embedding table read/written to cache directory
@@ -170,7 +278,7 @@ class BERT_Model(Model):
         # write to file
         df.to_csv(embedding_file, sep=BertCommon['file_delimiter'], encoding='utf-8')
                 
-    def _load_embedding_table(self):
+    def _load_embedding_table(self, save_embedding):
 
         # set up embedding table variable names and types
         self._embedding_var_names = ['term'] + [None] * self._config['hidden_size']
@@ -183,7 +291,7 @@ class BERT_Model(Model):
         if os.path.isfile(embedding_file):
         
             if self._verbose:
-                print("NOTE: loading BERT embedding table ... ")
+                print("NOTE: loading embedding table ... ")
         
             # read embedding file to Pandas data frame
             df = pd.read_csv(embedding_file,
@@ -197,12 +305,12 @@ class BERT_Model(Model):
                 self._embedding_table[ii] = df[key].to_list()
 
             if self._verbose:
-                last_message = "NOTE: BERT embedding table loaded."
+                last_message = "NOTE: embedding table loaded."
         
         else:
                 
             if self._verbose:
-                print("NOTE: creating BERT embedding table ... ")
+                print("NOTE: creating embedding table ... ")
 
             self._embedding_table = []
 
@@ -222,54 +330,75 @@ class BERT_Model(Model):
                 
             position_embedding_table = self._base_model.state_dict()[param_tensor].numpy()
                         
-            # search model's state_dict for segment embedding table
-            for param_tensor in self._base_model.state_dict():
-                tensor_shape = self._base_model.state_dict()[param_tensor].shape
-                if tensor_shape == (self._config['type_vocab_size'],self._config['hidden_size']):
-                    break
+            # search model's state_dict for segment embedding table (does not occur in distilBERT* models)
+            if self._use_segment_embedding:
+                for param_tensor in self._base_model.state_dict():
+                    tensor_shape = self._base_model.state_dict()[param_tensor].shape
+                    if tensor_shape == (self._config['type_vocab_size'],self._config['hidden_size']):
+                        break
 
-            segment_embedding_table = self._base_model.state_dict()[param_tensor].numpy()
+                segment_embedding_table = self._base_model.state_dict()[param_tensor].numpy()
+            else:
+                segment_embedding_table = None
             
             # first column: embedding keys
-            num_rows = self._config['vocab_size'] + self._config['max_position_embeddings'] + self._config['type_vocab_size']
+            num_rows = self._config['vocab_size'] + self._config['max_position_embeddings'] - self._position_embedding_offset
+            if segment_embedding_table is not None:
+                num_rows += self._config['type_vocab_size']
+                                
+            # token embedding keys
             tmp_col = [None] * num_rows
             for r in range(0,self._config['vocab_size']):
                 token = self._tokenizer.convert_ids_to_tokens(r)
 
                 if token in BertCommon['reserved_names']:
-                    raise DLPyError('Match for reserved names: ' + token)
+                    raise DLPyError('Cannot creat embedding table, match for reserved name: ' + token)
                 elif token in BertCommon['special_chars']:
                     tmp_col[r] = '['+token+']'
                 else:
                     tmp_col[r] = token
                 
-            for r in range(0,self._config['max_position_embeddings']):
-                tmp_col[self._config['vocab_size']+r] = BertCommon['reserved_names']['position_prefix']+str(r)
-                
-            for r in range(self._config['type_vocab_size']):
-                tmp_col[self._config['vocab_size']+self._config['max_position_embeddings']+r] = BertCommon['reserved_names']['segment_prefix']+str(r)
+            # position embedding keys
+            table_offset = self._config['vocab_size']
+            for r in range(0,self._config['max_position_embeddings']-self._position_embedding_offset):
+                tmp_col[table_offset+r] = BertCommon['reserved_names']['position_prefix']+str(r)
+            
+            # segment embedding keys
+            if self._use_segment_embedding:
+                table_offset += (self._config['max_position_embeddings']-self._position_embedding_offset)
+                for r in range(self._config['type_vocab_size']):
+                    tmp_col[table_offset+r] = BertCommon['reserved_names']['segment_prefix']+str(r)
                 
             self._embedding_table.append(tmp_col)
                 
             # remaining columns: embedding vectors
             for c in range(0,self._config['hidden_size']):
+            
+                # token embedding vectors
                 tmp_col = [None] * num_rows
                 for r in range(0,self._config['vocab_size']):
                     tmp_col[r] = format(token_embedding_table[r][c], '.16f')
 
-                for r in range(0,self._config['max_position_embeddings']):
-                    tmp_col[self._config['vocab_size']+r] = format(position_embedding_table[r][c], '.16f')
+                # position embedding vectors
+                row_offset = self._position_embedding_offset
+                table_offset = self._config['vocab_size']
+                for r in range(0,self._config['max_position_embeddings']-row_offset):
+                    tmp_col[table_offset+r] = format(position_embedding_table[r+row_offset][c], '.16f')
 
-                for r in range(0,self._config['type_vocab_size']):
-                    tmp_col[self._config['vocab_size']+self._config['max_position_embeddings']+r] = format(segment_embedding_table[r][c], '.16f')
+                # segment embedding vectors
+                if self._use_segment_embedding:
+                    table_offset += (self._config['max_position_embeddings']-self._position_embedding_offset)
+                    for r in range(0,self._config['type_vocab_size']):
+                        tmp_col[table_offset+r] = format(segment_embedding_table[r][c], '.16f')
                                     
                 self._embedding_table.append(tmp_col)
                 
             if self._verbose:
-                last_message = "NOTE: BERT embedding table created and loaded."
+                last_message = "NOTE: embedding table created and loaded."
 
             # write to file
-            self._write_embedding_table()
+            if save_embedding:
+                self._write_embedding_table()
             
         # load embedding table to active CASLIB
         handler = BertDMH(self._embedding_table, self._embedding_var_names, self._embedding_var_types)
@@ -337,12 +466,13 @@ class BERT_Model(Model):
         new_layer_info['position_input']['ldef']._token_size = self._config['hidden_size']
                                          
         # segment input
-        new_layer_info['segment_input'] = dict(name = self.ds_layers['segment_input'],
-                                               type = BertCommon['layer_types']['noparms'], 
-                                               dim = None,
-                                               ldef = InputLayer(n_channels=1, width=width, height=1, name=self.ds_layers['segment_input']))
-        # add token_size member to InputLayer
-        new_layer_info['segment_input']['ldef']._token_size = self._config['hidden_size']
+        if self._use_segment_embedding:
+            new_layer_info['segment_input'] = dict(name = self.ds_layers['segment_input'],
+                                                   type = BertCommon['layer_types']['noparms'], 
+                                                   dim = None,
+                                                   ldef = InputLayer(n_channels=1, width=width, height=1, name=self.ds_layers['segment_input']))
+            # add token_size member to InputLayer
+            new_layer_info['segment_input']['ldef']._token_size = self._config['hidden_size']
         
         return new_layer_info
 
@@ -350,10 +480,13 @@ class BERT_Model(Model):
     # https://github.com/huggingface/pytorch-transformers/blob/master/pytorch_transformers/modeling_bert.py
     def _add_bert_embedding_layer(self, layer_name, layer_info):
         # find input layer(s)
-        input_layers = self._find_layer_def([self.ds_layers['token_input'],
-                                             self.ds_layers['position_input'],
-                                             self.ds_layers['segment_input']],
-                                             layer_info)
+        if self._use_segment_embedding:
+            layer_list = [self.ds_layers['token_input'], self.ds_layers['position_input'], self.ds_layers['segment_input']]
+        else:
+            layer_list = [self.ds_layers['token_input'], self.ds_layers['position_input']]
+        
+        input_layers = self._find_layer_def(layer_list,
+                                            layer_info)
                                              
         # need tensors for input layers
         for ii,ilayer in enumerate(input_layers):
@@ -400,7 +533,7 @@ class BERT_Model(Model):
         # define layer info
         new_layer_info = collections.OrderedDict()
               
-        # multi-head attention (BertSelfAttention and part of BertSelfOutput)
+        # sublayer #1: multi-head attention 
         # NOTE: dropout performed on the Q*K^T matrix AND the output of the final dense layer
         lname = layer_base+'_mha'
         new_layer_info['mh_attention'] = dict(name = lname, 
@@ -412,7 +545,7 @@ class BERT_Model(Model):
                                                                         act='auto', 
                                                                         dropout=hidden_dropout_prob)(input_layers))
 
-        # first residual (BertSelfOutput)
+        # sublayer #2: first residual 
         lname = layer_base+'_sum1'
         new_layer_info['sum1'] = dict(name = lname,
                                       type = BertCommon['layer_types']['noparms'], 
@@ -420,7 +553,7 @@ class BERT_Model(Model):
                                       ldef = Res(name=lname,
                                                  act='identity')(input_layers+[new_layer_info['mh_attention']['ldef']]))
 
-        # first layer normalization (BertSelfOutput)
+        # sublayer #3: first layer normalization 
         lname = layer_base+'_ln1'
         new_layer_info['layer_norm1'] = dict(name = lname,
                                              type = BertCommon['layer_types']['layernorm'], 
@@ -430,7 +563,7 @@ class BERT_Model(Model):
                                                                        token_size=self._config['hidden_size'],
                                                                        epsilon=lnorm_eps)(new_layer_info['sum1']['ldef']))
                                                                        
-        # intermediate fully-connected layer (BertIntermediate)
+        # sublayer #4: intermediate fully-connected layer 
         lname = layer_base+'_intm_dense'
         new_layer_info['intermediate_fc'] = dict(name = lname, 
                                                  type = BertCommon['layer_types']['dense'], 
@@ -439,7 +572,7 @@ class BERT_Model(Model):
                                                               act=hidden_act,
                                                               n=intermediate_size)(new_layer_info['layer_norm1']['ldef']))
 
-        # final fully-connected layer (BertOutput)
+        # sublayer #5: final fully-connected layer 
         lname = layer_base+'_final_dense'
         new_layer_info['final_fc'] = dict(name = lname, 
                                           type = BertCommon['layer_types']['dense'], 
@@ -449,7 +582,7 @@ class BERT_Model(Model):
                                                        n=hidden_size,
                                                        dropout=hidden_dropout_prob)(new_layer_info['intermediate_fc']['ldef']))
                                           
-        # second residual (BertOutput)
+        # sublayer #6: second residual 
         lname = layer_base+'_sum2'
         new_layer_info['sum2'] = dict(name = lname, 
                                       type = BertCommon['layer_types']['noparms'], 
@@ -458,7 +591,7 @@ class BERT_Model(Model):
                                                  act='identity')([new_layer_info['layer_norm1']['ldef'], 
                                                                   new_layer_info['final_fc']['ldef']]))
         
-        # second layer normalization (BertOutput)
+        # sublayer #7: second layer normalization 
         lname = layer_base+'_ln2'
         new_layer_info['layer_norm2'] = dict(name = lname, 
                                              type = BertCommon['layer_types']['layernorm'], 
@@ -467,7 +600,10 @@ class BERT_Model(Model):
                                                                        act='identity',
                                                                        token_size=self._config['hidden_size'],
                                                                        epsilon=lnorm_eps)(new_layer_info['sum2']['ldef']))
-                              
+
+        if len(new_layer_info.keys()) != BertCommon['n_sublayers_per_encoder']:
+            raise DLPyError("Number of sublayers for encoder block is incorrect.")
+            
         return new_layer_info
 
     # based on BertPooler() class from
@@ -563,9 +699,9 @@ class BERT_Model(Model):
     def _from_huggingface_model(self):
         
         # verify key parameters
-        if 'max_position_embeddings' not in self._config.keys():
+        if 'max_position_embeddings' not in self._config:
             raise DLPyError('Maximum position embedding is unspecified')
-        elif 'hidden_size' not in self._config.keys():
+        elif 'hidden_size' not in self._config:
             raise DLPyError('Hidden size is unspecified')
                 
         sas_layer_info = {}
@@ -589,7 +725,8 @@ class BERT_Model(Model):
             encoder_src_layer = sas_layer_info['encoder'][lnum][last_key]['name']
             
         # pooling layer
-        sas_layer_info['pooler'] = self._add_bert_pooling_layer('bert_pooling', encoder_src_layer, sas_layer_info)
+        if self._use_pooling_layer:
+            sas_layer_info['pooler'] = self._add_bert_pooling_layer('bert_pooling', encoder_src_layer, sas_layer_info)
         
         return sas_layer_info
     
@@ -628,20 +765,25 @@ class BERT_Model(Model):
             else:
                 embedding_layer_info = [sas_layer_info['embedding']]
                 
-            write_block_information(self._base_model, embedding_layer_info, 'embeddings', f_out)
+            write_block_information(self._base_model, embedding_layer_info, ['embeddings', 'layernorm'], f_out)
                     
             # add parameters for encoder(s)
             if not isinstance(sas_layer_info['encoder'], list):
                 raise DLPyError('Encoder layer information should be a list.')
             
             for ii in range(len(sas_layer_info['encoder'])):
-                for key in sas_layer_info['encoder'][ii].keys():
+                for jj,key in enumerate(sas_layer_info['encoder'][ii].keys()):
                     lname = sas_layer_info['encoder'][ii][key]['name']
                     ltype = sas_layer_info['encoder'][ii][key]['type']
                     ldim = sas_layer_info['encoder'][ii][key]['dim']
                     
                     if ltype != BertCommon['layer_types']['noparms']:
-                        matval, vecval = extract_pytorch_parms(self._base_model, lname, ltype, ldim, ['encoder', 'layer', str(ii)])
+                        matval, vecval = extract_pytorch_parms(self._base_model, 
+                                                               lname, 
+                                                               ltype, 
+                                                               ldim, 
+                                                               self._encoding_blk_keys[jj]['base'] + [str(ii)],
+                                                               self._encoding_blk_keys[jj]['extra'])
 
                         # there should be only one match for a given layer (aside from LAYERNORM layers)
                         if (len(matval) > 1) or ((vecval != None) and (len(vecval) > 1)):
@@ -673,15 +815,16 @@ class BERT_Model(Model):
                         g_out.attrs['weight_names'] = new_weight_names            
             
             # add parameters for pooler
-            if isinstance(sas_layer_info['pooler'], list):
-                pooling_layer_info = sas_layer_info['pooler']
-            else:
-                pooling_layer_info = [sas_layer_info['pooler']]
-                
-            write_block_information(self._base_model, pooling_layer_info, 'pooler', f_out)
+            if self._use_pooling_layer:
+                if isinstance(sas_layer_info['pooler'], list):
+                    pooling_layer_info = sas_layer_info['pooler']
+                else:
+                    pooling_layer_info = [sas_layer_info['pooler']]
+                    
+                write_block_information(self._base_model, pooling_layer_info, ['pooler','dense'], f_out)
                 
             # add parameters for task-specific final layer(s)
-            if 'task' in sas_layer_info.keys():
+            if 'task' in sas_layer_info:
                 if isinstance(sas_layer_info['task'], list):
                     task_layer_info = sas_layer_info['task']
                 else:
@@ -704,7 +847,7 @@ class BERT_Model(Model):
                             g_out.create_dataset(dset_name, data=task_parms[lname]['weights'])
 
                             # save bias in format amenable to SAS
-                            if vecval is not None:
+                            if 'bias' in task_parms[lname]:
                                 dset_name = generate_hdf5_dataset_name(lname, BertCommon['bias_index'])
                                 new_weight_names.append(dset_name)
                                 g_out.create_dataset(dset_name, data=task_parms[lname]['bias'])
@@ -712,7 +855,7 @@ class BERT_Model(Model):
                             # update weight names
                             g_out.attrs['weight_names'] = new_weight_names 
             else:
-                raise DLPyError('No task-specific head attached to base BERT model.')
+                raise DLPyError('No task-specific head attached to base model.')
                         
                         
         except ValueError as err_msg:
@@ -741,7 +884,17 @@ class BERT_Model(Model):
         sas_layer_info = self._from_huggingface_model()
         
         # add task-specific head
-        sas_layer_info['task'], task_parms = self._add_task_head(sas_layer_info['pooler']['pooling']['name'],
+        if self._use_pooling_layer:
+            task_src_layer = sas_layer_info['pooler']['pooling']['name']
+        else:
+            if self._config['num_hidden_layers'] > 0:
+                last_key = list(sas_layer_info['encoder'][self._config['num_hidden_layers']-1].keys())[-1]
+                task_src_layer = sas_layer_info['encoder'][self._config['num_hidden_layers']-1][last_key]['name']
+            else:
+                last_key = list(sas_layer_info['embedding'].keys())[-1]
+                task_src_layer = sas_layer_info['embedding'][last_key]['name']
+            
+        sas_layer_info['task'], task_parms = self._add_task_head(task_src_layer,
                                                                  sas_layer_info,
                                                                  num_target_var)
 
@@ -772,7 +925,8 @@ class BERT_Model(Model):
                      path,
                      num_target_var=1,
                      freeze_base_model=False,
-                     use_gpu=False):
+                     use_gpu=False,
+                     last_frozen_layer=None):
         '''
         Load the weights from a data file specified by ‘path’
 
@@ -786,12 +940,16 @@ class BERT_Model(Model):
             simple classification/regression tasks, and > 1 for sequence
             labeling tasks.
             Default: 1            
-        freeze_base_model: boolean, optional
+        freeze_base_model : Boolean, optional
             Specifies whether to freeze the parameters of the base BERT model when performing fine-tuning training
             Default: False            
-        use_gpu: boolean, optional
+        use_gpu : Boolean, optional
             GPU processing of model required (or not)
             Default: False
+        last_frozen_layer : string, optional
+            Specifies the last layer in the model that is untrainable (frozen).  All previous model layers
+            will be untrainable as well.  This parameter is ignored if freeze_base_model = False.
+            Default : None
 
         Notes
         -----
@@ -810,10 +968,17 @@ class BERT_Model(Model):
 
         # determine which layers to freeze
         self._freeze_layers = self._rnn_layer
+            
         if freeze_base_model:
             self._freeze_base = True
+            if last_frozen_layer is None:
+                self._freeze_layers = self._rnn_layer
+            else:
+                self._freeze_layers = last_frozen_layer
+            
         else:
             self._freeze_base = False
+            self._freeze_layers = self._rnn_layer
                                                                                            
         # configure text parameters
         self._set_text_parameters()
@@ -874,11 +1039,11 @@ class BERT_Model(Model):
             
         # determine what to train
         if self._freeze_base:
-            freeze_layers_to = self._rnn_layer
+            freeze_layers_to = self._freeze_layers
             freeze_layers = None
         else:
             freeze_layers_to = None
-            freeze_layers = [self._rnn_layer]
+            freeze_layers = [self._freeze_layers]
                 
         # set optimizer parameters similar to settings in original BERT paper
         self._optimizer = Optimizer(algorithm=AdamSolver(beta1=beta1, beta2=beta2, learning_rate=learning_rate,
@@ -959,3 +1124,19 @@ class BERT_Model(Model):
         '''
         
         return self._text_parameters
+
+    def get_segment_size(self):
+        '''
+        Determines the number of supported segments from the 
+        model configuration
+        
+        Returns
+        -------
+        int
+            
+        '''
+
+        if 'type_vocab_size' in self._config:
+            return self._config['type_vocab_size']
+        else:
+            return 0

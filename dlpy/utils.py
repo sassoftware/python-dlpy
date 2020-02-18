@@ -376,7 +376,8 @@ def find_caslib(conn, path):
         if path.find(caslib_path) == 0:
             return caslib_name
     return None
-        
+
+
 def extract_caslib_and_relative_path(conn, path):
     '''
     Extracts caslib associated with the specified path in the current session.
@@ -427,6 +428,7 @@ def extract_caslib_and_relative_path(conn, path):
             remaining_path += sep
                 
         return caslib, remaining_path
+
 
 def get_imagenet_labels_table(conn, label_length=None):
     temp_name = random_name('new_label_table', 6)
@@ -527,15 +529,16 @@ def caslibify_context(conn, path, task='save'):
         if caslib is not None:
             access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                           caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
-            if access_subdir:
-                yield caslib, remaining_path
-            else:
-                raise DLPyError('{} is the subpath of the caslib, {}. '
-                                'You don\'t have permission to access the subdirectory of the caslib. '
-                                'To make the directory accessible from CAS, you can recreate the caslib, {},'
-                                ' by calling addCaslib action, and set option subDirectories to True'.format(path,
-                                                                                                             caslib,
-                                                                                                             caslib))
+            if not access_subdir:
+                print('Warning: {} is the subpath of the caslib, {}. '
+                      'Your action might not be completed successfully as '
+                      'you don\'t have permission to access the subdirectory of the caslib. '
+                      'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                      ' by calling addCaslib action, and set option subDirectories to True'.format(path, caslib,caslib))
+
+            yield caslib, remaining_path
+
+
         else:
             new_caslib = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
@@ -565,15 +568,24 @@ def caslibify_context(conn, path, task='save'):
                 path_split[1] = path[len(caslib_path):]
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
-                if access_subdir:
-                    yield caslib, path_split[1]
-                else:
-                    raise DLPyError('{} is the subpath of the caslib, {}. '
-                                    'You don\'t have permission to access the subdirectory of the caslib. '
-                                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
-                                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
-                                                                                                                 caslib,
-                                                                                                                 caslib))
+                #if access_subdir:
+                #    yield caslib, path_split[1]
+                #else:
+                #    raise DLPyError('{} is the subpath of the caslib, {}. '
+                #                    'You don\'t have permission to access the subdirectory of the caslib. '
+                #                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                #                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                #                                                                                                 caslib,
+                #                                                                                                 caslib))
+                if not access_subdir:
+                    print('Warning: {} is the subpath of the caslib, {}. '
+                          'Your action might not be completed successfully as '
+                          'you don\'t have permission to access the subdirectory of the caslib. '
+                          'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                          ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                       caslib,caslib))
+
+                yield caslib, path_split[1]
             else:
                 new_caslib = random_name('Caslib', 6)
                 rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path_split[0],
@@ -625,15 +637,24 @@ def caslibify(conn, path, task='save'):
         if caslib is not None:
             access_subdir = conn.retrieve('caslibinfo', _messagelevel = 'error',
                                           caslib = caslib).CASLibInfo.loc[0, 'Subdirs']
-            if access_subdir:
-                return caslib, remaining_path, False
-            else:
-                raise DLPyError('{} is the subpath of the caslib, {}. '
-                                'You don\'t have permission to access the subdirectory of the caslib. '
-                                'To make the directory accessible from CAS, you can recreate the caslib, {},'
-                                ' by calling addCaslib action, and set option subDirectories to True'.format(path,
-                                                                                                             caslib,
-                                                                                                             caslib))
+            #if access_subdir:
+            #    return caslib, remaining_path, False
+            #else:
+            #    raise DLPyError('{} is the subpath of the caslib, {}. '
+            #                    'You don\'t have permission to access the subdirectory of the caslib. '
+            #                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
+            #                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+            #                                                                                                 caslib,
+            #                                                                                                 caslib))
+            if not access_subdir:
+                print('Warning: {} is the subpath of the caslib, {}. '
+                      'Your action might not be completed successfully as '
+                      'you don\'t have permission to access the subdirectory of the caslib. '
+                      'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                      ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                   caslib,caslib))
+
+            return caslib, remaining_path, False
         else:
             new_caslib = random_name('Caslib', 6)
             rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path,
@@ -658,15 +679,24 @@ def caslibify(conn, path, task='save'):
                 path_split[1] = path[len(caslib_path):]
                 access_subdir = conn.retrieve('caslibinfo', _messagelevel='error',
                                               caslib=caslib).CASLibInfo.loc[0, 'Subdirs']
-                if access_subdir:
-                    return caslib, path_split[1], False
-                else:
-                    raise DLPyError('{} is the subpath of the caslib, {}. '
-                                    'You don\'t have permission to access the subdirectory of the caslib.'
-                                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
-                                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
-                                                                                                                 caslib,
-                                                                                                                 caslib))
+                #if access_subdir:
+                #    return caslib, path_split[1], False
+                #else:
+                #    raise DLPyError('{} is the subpath of the caslib, {}. '
+                #                    'You don\'t have permission to access the subdirectory of the caslib.'
+                #                    'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                #                    ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                #                                                                                                 caslib,
+                #                                                                                                 caslib))
+                if not access_subdir:
+                    print('Warning: {} is the subpath of the caslib, {}. '
+                          'Your action might not be completed successfully as '
+                          'you don\'t have permission to access the subdirectory of the caslib. '
+                          'To make the directory accessible from CAS, you can recreate the caslib, {},'
+                          ' by calling addCaslib action, and set option subDirectories to True'.format(path,
+                                                                                                       caslib,caslib))
+
+                return caslib, path_split[1], False
             else:
                 new_caslib = random_name('Caslib', 6)
                 rt = conn.retrieve('addcaslib', _messagelevel='error', name=new_caslib, path=path_split[0],

@@ -31,7 +31,7 @@ BertCommon = {}
 BertCommon['file_delimiter'] = '\t'
 BertCommon['text_delimiter'] = ' '
 BertCommon['special_chars'] = ["\"",'\'']
-BertCommon['reserved_names'] = dict(position_prefix='position_', segment_prefix='segement_')
+BertCommon['reserved_names'] = dict(position_prefix='position_', segment_prefix='segment_')
 BertCommon['embedding_table_name'] = "bert_embedding"
 BertCommon['layer_types'] = dict(layernorm = 1, mhattention = 2, dense = 3, noparms = 4)
 BertCommon['variable_names'] = dict(token_var='_tokens_', position_var='_position_', segment_var='_segment_', 
@@ -40,6 +40,7 @@ BertCommon['layer_names'] = dict(token_input='token_input', position_input='posi
                                  task_layer='outlayer')
 BertCommon['weight_index'] = 0
 BertCommon['bias_index'] = 1
+BertCommon['n_sublayers_per_encoder'] = 7
 
 ''' Utilities used to build and manage BERT models '''
 
@@ -167,7 +168,7 @@ def find_pytorch_tensor(pymodel, keywords, param_dim):
     else:
         return parm_name, parm_tensor
 
-def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keywords):
+def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keywords, extra_keywords=None):
     '''
     Extract correct tensor(s) from a PyTorch model state dictionary
 
@@ -181,39 +182,56 @@ def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keyw
         Specifyies the layer type (see BertCommon for layer types).
     layer_dim: list of int
         Specifies the dimensions of a tensor.
-    layer_keywords : string
+    layer_keywords : list of strings
         Specifies the keywords to search for in the model dictionary.
+    extra_keywords : list of strings or None, optional
+        Specifies the extra keywords for a multi-head attention layer.
+        This is mandatory for multi-head attention and any other layer(s)
+        where there could be ambiguity between two layers with the same
+        type.
+        Default : None
 
     Returns
     -------
     weight, bias parameters
 
     '''
-
+    
     ptensor_wgt = None
     ptensor_bias = None
     
     if layer_type == BertCommon['layer_types']['noparms']:
         pass
     elif layer_type == BertCommon['layer_types']['layernorm']:
+        if extra_keywords is None:
+            key_list = layer_keywords+['weight']
+        else:
+            key_list = layer_keywords+extra_keywords+['weight']
+            
         # weights
-        pname, ptensor_wgt = find_pytorch_tensor(pymodel, layer_keywords+['LayerNorm','weight'], layer_dim)
+        pname, ptensor_wgt = find_pytorch_tensor(pymodel, key_list, layer_dim)
         if pname == None:
             raise DLPyError('Cannot find weights for layer ' + layer_name)
         # bias
-        pname, ptensor_bias = find_pytorch_tensor(pymodel, layer_keywords+['LayerNorm','bias'], layer_dim)
+        key_list[-1] = 'bias'
+        pname, ptensor_bias = find_pytorch_tensor(pymodel, key_list, layer_dim)
         if pname == None:
             print('NOTE: No bias for layer ' + layer_name)
     elif layer_type == BertCommon['layer_types']['dense']:
+        if extra_keywords is None:
+            key_list = layer_keywords+['weight']
+        else:
+            key_list = layer_keywords+extra_keywords+['weight']
+
         # weights
-        pname, ptensor_wgt = find_pytorch_tensor(pymodel, layer_keywords+['dense','weight'], layer_dim)
+        pname, ptensor_wgt = find_pytorch_tensor(pymodel, key_list, layer_dim)
         if pname == None:
             raise DLPyError('Cannot find weights for layer ' + layer_name)
         # bias
         # NOTE: bias name and dimensions not unique in attention layer so construct bias tensor name from
         # weight tensor name
         bias_str = pname[0].replace('weight','bias')
-        if bias_str in pymodel.state_dict().keys():
+        if bias_str in pymodel.state_dict():
             ptensor_bias = [pymodel.state_dict()[bias_str].numpy()]
         else:
             print('NOTE: No bias for layer ' + layer_name)
@@ -242,15 +260,15 @@ def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keyw
         # for these linear layers.  This means that the A matrices used by the SAS Deep Learning version of 
         # multi-head attention must be transposed before importing.
     
-        for ii, mha_key in enumerate(['query', 'key', 'value', 'output']):
-        
+        for ii, mha_keys in enumerate(extra_keywords):
+                
             # weights
-            pname, tmp_wgt = find_pytorch_tensor(pymodel, layer_keywords+['attention',mha_key,'weight'], layer_dim)
+            pname, tmp_wgt = find_pytorch_tensor(pymodel, layer_keywords+mha_keys+['weight'], layer_dim)
             if pname == None:
-                raise DLPyError('Cannot find ' + mha_key + ' weights for layer ' + layer_name)
+                raise DLPyError('Cannot find ' + str(mha_keys) + ' weights for layer ' + layer_name)
             else:
                 if len(tmp_wgt) > 1:
-                    raise DLPyError('Multiple matches for ' + mha_key + ' weights for layer ' + layer_name)
+                    raise DLPyError('Multiple matches for ' + str(mha_keys) + ' weights for layer ' + layer_name)
                 else:
                     if ii == 0:
                         tensor_wgt = np.transpose(tmp_wgt[0].copy())
@@ -258,9 +276,9 @@ def extract_pytorch_parms(pymodel, layer_name, layer_type, layer_dim, layer_keyw
                         tensor_wgt = np.concatenate((tensor_wgt, np.transpose(tmp_wgt[0])), axis=1)
                         
             # bias
-            pname, tmp_bias = find_pytorch_tensor(pymodel, layer_keywords+['attention',mha_key,'bias'], [layer_dim[0]])
+            pname, tmp_bias = find_pytorch_tensor(pymodel, layer_keywords+mha_keys+['bias'], [layer_dim[0]])
             if pname == None:
-                print('NOTE: No ' + mha_key + ' bias for layer ' + layer_name)
+                print('NOTE: No ' + str(mha_keys) + ' bias for layer ' + layer_name)
             else:
                 if 'tensor_bias' in locals():
                     tensor_bias = np.concatenate((tensor_bias, tmp_bias[0]))
@@ -329,9 +347,11 @@ def create_data_spec(layers, classification_problem, max_seq_len):
     data_spec.append(DataSpec(type_='TEXT',
                               layer=layers['position_input'],
                               data=position))
-    data_spec.append(DataSpec(type_='TEXT',
-                              layer=layers['segment_input'],
-                              data=segment))
+    if 'segment_input' in layers:
+        data_spec.append(DataSpec(type_='TEXT',
+                                  layer=layers['segment_input'],
+                                  data=segment))
+
     if classification_problem:
         data_spec.append(DataSpec(type_='NUMNOM',
                                   layer=layers['task_layer'],
@@ -404,22 +424,27 @@ def write_block_information(pymodel, layer_info, keywords, f_out):
                 # update weight names
                 g_out.attrs['weight_names'] = new_weight_names            
 
-def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, target=None, 
-                      obs_weight=None, extra_var=None, neutral_label=None, train_fraction=None, 
-                      classification_problem=True, seed=777777777, verbose=False):
+def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, segment_vocab_size=None, input_b=None, 
+                      target=None, obs_weight=None, extra_var=None, neutral_label=None, 
+                      train_fraction=None, classification_problem=True, seed=777777777,
+                      verbose=False):
     '''
-    Prepare data for a BERT model
+    Prepare data for a BERT model variant
 
     Parameters
     ----------
     conn : CAS Connection
-        Specifies the CAS connection    
+        Specifies the CAS connection
     tokenizer : :class:PreTrainedTokenizer object
-        Specifies the BERT tokenizer.
+        Specifies the tokenizer.
     max_seq_len: int
         Specifies the maximum sequence length (maximum number of tokens).
     input_a : list of strings
         Specifies the text data for a single segment task.
+    segment_vocab_size : int
+        Specifies the segment vocabulary size.  The value should be
+        one of 0 for DistilBERT, 1 for RoBERTa, or 2 for BERT.
+        Default: None
     input_b : list of strings, optional
         Specifies the text data for a two segment task.
         Default: None
@@ -437,7 +462,7 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             values: list, specifies the variable values
             type: string, must be either VARCHAR for characer values or NUMERIC for numeric values
         Default: None
-    neutral_label: int, optional
+    neutral_label: string, optional
         Specifies the "don't care" or neutral target label for multi-target classification tasks.
         This is not optional if target is a list of lists.
         Default: None
@@ -514,18 +539,18 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             if not isinstance(ev_dict, dict):
                 raise DLPyError('Argument extra_var must be a list of dictionaries')
                 
-            if 'name' in ev_dict.keys():
+            if 'name' in ev_dict:
                 extra_var_names[ii] = ev_dict['name']
             else:
                 raise DLPyError('extra_var[' + str(ii) + '] missing "name" key.')
                 
-            if ('type' in ev_dict.keys()) and (ev_dict['type'].upper() in ['VARCHAR','NUMERIC']):
+            if ('type' in ev_dict) and (ev_dict['type'].upper() in ['VARCHAR','NUMERIC']):
                 extra_var_types[ii] = ev_dict['type'].upper()
             else:
                 raise DLPyError('extra_var[' + str(ii) + '] missing "type" key, or an invalid type was specified.')
             
-            if ('values' not in ev_dict.keys()) or (not (isinstance(ev_dict['values'], list) and (len(input_a) == len(ev_dict['values'])))):
-                raise DLPyError('extra_var[' + str(ii) + '] missing "values" key, the values are not a list object,'
+            if ('values' not in ev_dict) or (not (isinstance(ev_dict['values'], list) and (len(input_a) == len(ev_dict['values'])))):
+                raise DLPyError('extra_var[' + str(ii) + '] missing "values" key, the values are not a list object, '
                                 'or there is a mismatch in lengths of input A and values lists.')
                                 
     else:
@@ -534,11 +559,21 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                     
     if (train_fraction is not None) and ((train_fraction < 0.0) or (train_fraction > 1.0)):
         raise DLPyError('train_fraction must be between 0 and 1')
+        
+    if segment_vocab_size is None:
+        raise DLPyError("You must specify a segment vocabulary size.  See the Bert model "
+                        "configuration object (e.g. BertConfig['type_vocab_size'] for the "
+                        "correct value.")
+    else:
+        if segment_vocab_size not in [0, 1, 2]:
+            raise DLPyError('Vocabulary size ' + str(segment_vocab_size) + ' is invalid. '
+                            'The value must be 0, 1, or 2.')
                     
     # initialize lists
     token_strings = [None] * len(input_a)
     position_strings = [None] * len(input_a)
-    segment_strings = [None] * len(input_a)
+    if segment_vocab_size > 0:
+        segment_strings = [None] * len(input_a)
     if target is not None:
         target_array = [None] * len(input_a)
         tgtlen_array = [None] * len(input_a)
@@ -561,14 +596,23 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
         # simple data cleaning, skip observations where input A is invalid
         if len(txt_a) == 0:
             continue
+        else:
+            txt_a_untok = txt_a
+            txt_a = tokenizer.tokenize(txt_a)
+            txt_a = txt_a[:min([max_seq_len,len(txt_a)])]   # NOTE: this suppresses an unnecessary logger warning
     
         # simple data cleaning, skip observations where input B is invalid
         if input_b is not None:
             txt_b = input_b[ii]
+            txt_b_untok = txt_b
             if len(txt_b) == 0:
                 continue
+            else:
+                txt_b = tokenizer.tokenize(txt_b)
+                txt_b = txt_b[:min([max_seq_len,len(txt_b)])]   # NOTE: this supresses an unnecessary logger warning
         else:
             txt_b = None
+            txt_b_untok = None
             
         # simple data cleaning, skip observations where target is invalid (i.e. not numeric data)
         if target is not None:
@@ -599,49 +643,27 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                 cur_extra_var[jj] = ev_dict['values'][ii]
         else:
             cur_extra_var = None
-                
-        # tokenize input A
-        tmp_tokens_a = tokenizer.tokenize(txt_a)
         
-        # combine input A with input B and add CLS/SEP tokens
-        if txt_b is None:
-            
-            # Input A ONLY
-            
-            # truncate if necessary
-            if len(tmp_tokens_a) > (max_seq_len-2):
-                tmp_tokenized_text = ["[CLS]"] + tmp_tokens_a[0:max_seq_len-2] + ["[SEP]"]
-                num_truncated += 1
-            else:
-                tmp_tokenized_text = ["[CLS]"] + tmp_tokens_a + ["[SEP]"]
-                
-            # set segment indices
+        # tokenize text
+        txt_encoding = tokenizer.encode_plus(txt_a,
+                                             text_pair=txt_b,
+                                             add_special_tokens=True,
+                                             return_special_tokens_mask=True,
+                                             max_length=max_seq_len)
+        tmp_tokenized_text = tokenizer.convert_ids_to_tokens(txt_encoding['input_ids'])
+        
+        # set segment ID
+        if segment_vocab_size == 2:
+            seg_idx = txt_encoding['token_type_ids']
+        elif segment_vocab_size == 1:
             seg_idx = [0]*len(tmp_tokenized_text)
-            
         else:
-            # Input A and Input B
+            seg_idx = None
             
-            # tokenize input B
-            tmp_tokens_b = tokenizer.tokenize(txt_b)
-            
-            # truncate if necessary
-            too_long = False
-            while (len(tmp_tokens_a)+len(tmp_tokens_b)) > (max_seq_len-3):
-                too_long = True
-                if len(tmp_tokens_a) > len(tmp_tokens_b):
-                    tmp_tokens_a = tmp_tokens_a[:-1]
-                else:
-                    tmp_tokens_b = tmp_tokens_b[:-1]
-                    
-            if too_long:
-                num_truncated += 1
-                    
-            # add special tokens
-            tmp_tokenized_text = ["[CLS]"] + tmp_tokens_a + ["[SEP]"] + tmp_tokens_b + ["[SEP]"]
-                    
-            # set segment indices
-            seg_idx = [0]*(len(tmp_tokens_a)+2) + [1]*(len(tmp_tokens_b)+1)
-            
+        # check for truncated sequence(s)
+        if 'num_truncated_tokens' in txt_encoding:
+            num_truncated += 1
+                                
         # tokenization error-checking
         num_tokens = len(tmp_tokenized_text)
         tokenized_text = [None] * num_tokens
@@ -661,51 +683,63 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             if neutral_label is None:
                 raise DLPyError("Neutral label must be specified for sequence labeling tasks.")
                                 
-            num_words = len(txt_a.split())
+            if txt_b_untok is None:
+                num_words = len(txt_a_untok.split(BertCommon['text_delimiter']))
+            else:
+                num_words = (len(txt_a_untok.split(BertCommon['text_delimiter'])) +
+                             len(txt_b_untok.split(BertCommon['text_delimiter'])))
+                
             num_tgts = len(cur_tgt)
             if num_words != num_tgts:
-                raise DLPyError("Mismatch in lengths of input/target for observation " + str(ii))
+                raise DLPyError("Mismatch in length of input/target for observation " + str(ii))
             
-            # add neutral targets for CLS/SEP tokens
-            if len(cur_tgt) > (max_seq_len-2):
-                cur_tgt = [neutral_label] + cur_tgt[0:max_seq_len-2] + [neutral_label]                    
-            else:
-                cur_tgt = [neutral_label] + cur_tgt + [neutral_label]                    
-                
-            # tokenization may have increased the number of targets - drop tokens containing ## and predict
-            # only first part of word for words that are split (see section 4.3 in original BERT paper)
-            if len(tokenized_text) != len(cur_tgt):
-                new_tokenized_txt = [None]*len(cur_tgt)
-                index = 0
-                for jj,token in enumerate(tokenized_text):
-                    if '##' in token:
-                        continue
-                    else:
-                        new_tokenized_txt[index] = token
-                        index += 1
-                        
-                tokenized_txt = new_tokenized_txt
+            # tokenization adds special tokens and may split words into multiple tokens.  Add
+            # neutral labels for special tokens and repeat target labels for words split by
+            # tokenization.
+            new_tgt = [neutral_label if mask == 1 else None for mask in txt_encoding['special_tokens_mask']]
+            txt_words = txt_a_untok.split(BertCommon['text_delimiter'])
+            if txt_b_untok is not None:
+                txt_words += txt_b_untok.split(BertCommon['text_delimiter'])
+            
+            idx = 0
+            for cur_word,cur_label in zip(txt_words,cur_tgt):
+                # skip over special token(s)
+                if txt_encoding['special_tokens_mask'][idx] == 1:
+                    idx += [jj for jj,val in enumerate(txt_encoding['special_tokens_mask'][idx:]) if val == 0][0]
+
+                word_tokens = tokenizer.tokenize(cur_word)
+                new_tgt[idx:idx+len(word_tokens)] = [cur_label]*len(word_tokens)
+                idx += len(word_tokens)
+            
+            cur_tgt = new_tgt.copy()                
         
-        # check for defective observation
-        if ('[CLS]' in tokenized_text) and ('[SEP]' in tokenized_text):            
+        # check for defective observation (i.e. must have at least beginning and ending
+        # "special" tokens for a valid observation (e.g. [CLS] tok1 tok2 ... [SEP] for
+        # a BERT model)
+        if sum(txt_encoding['special_tokens_mask']) >= 2:
             token_strings[obs_idx] = BertCommon['text_delimiter'].join(tokenized_text)                    
             
-            # position and segment
+            # position
             tokenized_position = [None] * num_tokens
-            tokenized_segment = [None] * num_tokens
             for jj in range(num_tokens):
                 tokenized_position[jj] = BertCommon['reserved_names']['position_prefix']+str(jj)
-                tokenized_segment[jj] = BertCommon['reserved_names']['segment_prefix']+str(seg_idx[jj])
 
             position_strings[obs_idx] = BertCommon['text_delimiter'].join(tokenized_position)
-            segment_strings[obs_idx] = BertCommon['text_delimiter'].join(tokenized_segment)
+            
+            # segment
+            if segment_vocab_size > 0:
+                tokenized_segment = [None] * num_tokens
+                for jj in range(num_tokens):
+                    tokenized_segment[jj] = BertCommon['reserved_names']['segment_prefix']+str(seg_idx[jj])
+                    
+                segment_strings[obs_idx] = BertCommon['text_delimiter'].join(tokenized_segment)
 
             # target
             if cur_tgt is not None:
                 if classification_problem:
                     if isinstance(cur_tgt, list):
                         # zero pad target list
-                        target_array[obs_idx] = [0]*max_seq_len
+                        target_array[obs_idx] = [str(0)]*max_seq_len
                         for jj, tgt in enumerate(cur_tgt):
                             target_array[obs_idx][jj] = str(int(tgt))
                             
@@ -742,7 +776,8 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
     if obs_idx < len(input_a):
         token_strings = token_strings[0:obs_idx]
         position_strings = position_strings[0:obs_idx]
-        segment_strings = segment_strings[0:obs_idx]
+        if segment_vocab_size > 0:
+            segment_strings = segment_strings[0:obs_idx]
         if target is not None:
             target_array = target_array[0:obs_idx]
             tgtlen_array = tgtlen_array[0:obs_idx]
@@ -760,8 +795,13 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
               'These observations have been truncated so that only the first ' + str(max_seq_len) + ' tokens are used.\n')
               
     # set up variable names/types
-    var_names = [ds_vars['token_var'],ds_vars['position_var'],ds_vars['segment_var']]
-    var_type = ['VARCHAR', 'VARCHAR', 'VARCHAR']
+    if segment_vocab_size > 0:
+        var_names = [ds_vars['token_var'],ds_vars['position_var'],ds_vars['segment_var']]
+        var_type = ['VARCHAR', 'VARCHAR', 'VARCHAR']
+    else:
+        var_names = [ds_vars['token_var'],ds_vars['position_var']]
+        var_type = ['VARCHAR', 'VARCHAR']
+    
     num_target_var = None
     if target is not None:
         if multiple_targets:
@@ -797,23 +837,29 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                 num_test += 1
                 
         # split data to train/test data sets
+        # token, position, segment
         train_token_strings = [None] * num_train
         train_position_strings = [None] * num_train
-        train_segment_strings = [None] * num_train
+        if segment_vocab_size > 0:
+            train_segment_strings = [None] * num_train
         #
         test_token_strings = [None] * num_test
         test_position_strings = [None] * num_test
-        test_segment_strings = [None] * num_test
+        if segment_vocab_size > 0:
+            test_segment_strings = [None] * num_test
+        # target
         if target is not None:
             train_target_array = [None] * num_train
             train_tgtlen_array = [None] * num_train
             #
             test_target_array = [None] * num_test
             test_tgtlen_array = [None] * num_test
+        # weight 
         if obs_weight is not None:
             train_weight_array = [None] * num_train
             #
             test_weight_array = [None] * num_test
+        # extra variable(s)
         if extra_var is not None:
             train_extra_var_array = [None] * num_train
             #
@@ -825,7 +871,8 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             if idx_prob[ii] < train_fraction:   # train data set
                 train_token_strings[train_idx] = token_strings[ii]
                 train_position_strings[train_idx] = position_strings[ii]
-                train_segment_strings[train_idx] = segment_strings[ii]
+                if segment_vocab_size > 0:
+                    train_segment_strings[train_idx] = segment_strings[ii]
                 
                 # NOTE: each element of train target array may be a value or a list
                 if target is not None:
@@ -843,7 +890,8 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
             else:                               # test data set
                 test_token_strings[test_idx] = token_strings[ii]
                 test_position_strings[test_idx] = position_strings[ii]
-                test_segment_strings[test_idx] = segment_strings[ii]
+                if segment_vocab_size > 0:
+                    test_segment_strings[test_idx] = segment_strings[ii]
                 
                 # NOTE: each element of test target array may be a value or a list
                 if target is not None:
@@ -861,8 +909,11 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                 
         # create CAS table for training data
         train_data_set = 'bert_train_data'
-        dlist = [train_token_strings, train_position_strings, train_segment_strings]
-        
+        if segment_vocab_size > 0:
+            dlist = [train_token_strings, train_position_strings, train_segment_strings]
+        else:
+            dlist = [train_token_strings, train_position_strings]
+            
         if target is not None:
             if isinstance(train_target_array[0],list):
                 for ii in range(len(train_target_array[0])):
@@ -893,7 +944,10 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
                            
         # create CAS table for test data
         test_data_set = 'bert_test_validation_data'
-        dlist = [test_token_strings, test_position_strings, test_segment_strings]
+        if segment_vocab_size > 0:
+            dlist = [test_token_strings, test_position_strings, test_segment_strings]
+        else:
+            dlist = [test_token_strings, test_position_strings]
         
         if target is not None:
             if isinstance(test_target_array[0],list):
@@ -930,7 +984,10 @@ def bert_prepare_data(conn, tokenizer, max_seq_len, input_a, input_b=None, targe
     else:
         # single data set
         unified_data_set = 'bert_data'
-        dlist = [token_strings, position_strings, segment_strings]
+        if segment_vocab_size > 0:
+            dlist = [token_strings, position_strings, segment_strings]
+        else:
+            dlist = [token_strings, position_strings]
         
         if target is not None:
             if isinstance(target_array[0],list):

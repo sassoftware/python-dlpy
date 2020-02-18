@@ -23,7 +23,7 @@ import os
 
 from dlpy.layers import InputLayer, Conv2d, Conv1d, Pooling, Dense, Recurrent, BN, Res, Proj, OutputLayer, \
                         Keypoints, Detection, Scale, Reshape, Conv2DTranspose, GroupConv2d, GlobalAveragePooling2D, \
-                        FastRCNN, ROIPooling, RegionProposal
+                        FastRCNN, ROIPooling, RegionProposal, Split, Survival, Clustering, EmbeddingLoss
 from dlpy.blocks import ResBlock, ResBlockBN, ResBlock_Caffe, DenseNetBlock, Bidirectional
 from dlpy.utils import DLPyError, get_mapping_dict
 from dlpy import __dev__
@@ -359,6 +359,37 @@ class TestLayers(unittest.TestCase):
         dict1 = Conv1d(name='convo1d_3', n_filters=10, act='relu',
                        src_layers=[InputLayer(name='input1')]).to_model_params()
         self.assertTrue(self.sample_syntax['convo1d_3'] == dict1)
+
+    def test_split_layer1(self):
+        layer = Split(name='split1', src_layers=[InputLayer(name='input1', n_channels=10,
+                                                            width=3, height=4)],
+                      n_destination_layers=5)
+        self.assertTrue(layer.output_size == (4, 3, 2))
+        self.assertTrue(self.sample_syntax['split_1'] == layer.to_model_params())
+
+    def test_split_layer2(self):
+        layer = Split(name='split1', src_layers=[Dense(name='input1', n =100)],
+                      n_destination_layers=5)
+        self.assertTrue(layer.output_size == 20)
+        self.assertTrue(self.sample_syntax['split_1'] == layer.to_model_params())
+
+    def test_survival_layer1(self):
+        layer = Survival(name='survival', src_layers=[InputLayer(name='input1', n_channels=10,
+                                                                 width=3, height=4)])
+        self.assertTrue(layer.output_size == (4, 3, 10))
+        self.assertTrue(self.sample_syntax['survival_1'] == layer.to_model_params())
+
+    def test_clustering_layer1(self):
+        layer = Clustering(n_clusters=10, name='cluster', src_layers=[InputLayer(name='input1', n_channels=10,
+                                                                                 width=3, height=4)])
+        self.assertTrue(layer.output_size == (4, 3, 10))
+        self.assertTrue(self.sample_syntax['clustering_1'] == layer.to_model_params())
+
+    def test_embeddingloss_layer1(self):
+        layer = EmbeddingLoss(name='embedding', margin=5, src_layers=[InputLayer(name='input1', n_channels=10,
+                                                                                 width=3, height=4)])
+        self.assertTrue(layer.output_size == (4, 3, 10))
+        self.assertTrue(self.sample_syntax['embeddingloss_1'] == layer.to_model_params())
 
     def test_mapping_dict(self):
         mapping = get_mapping_dict()

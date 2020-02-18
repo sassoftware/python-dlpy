@@ -29,6 +29,7 @@ import swat.utils.testing as tm
 from dlpy.model import Model
 from dlpy.layers import *
 from dlpy.utils import DLPyError
+from dlpy import Sequential
 
 
 class TestNetwork(tm.TestCase):
@@ -460,7 +461,7 @@ class TestNetwork(tm.TestCase):
         model1.add(OutputLayer(act='softmax', n=2))
 
         if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+            tm.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
 
@@ -518,6 +519,41 @@ class TestNetwork(tm.TestCase):
         # it should be fixed if I create f_rnn again.
         self.assertTrue(cnn_rnn.layers[-1].name == 'fixed_2')
 
+    def test_extract_segmentation1(self):
+        model = Sequential(self.s, model_table = 'Simple_CNN')
+        model.add(InputLayer(3, 48, 96, scale = 1.0 / 255, random_mutation = 'none'))
+        model.add(Dense(16))
+        model.add(Segmentation(act='AUTO', target_scale=10))
+        model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
+        model_extracted.compile()
+        self.assertTrue(model_extracted.layers[-1].config['act'] == 'AUTO')
+        self.assertTrue(model_extracted.layers[-1].config['target_scale'] == 10)
+
+    def test_extract_embeddingloss1(self):
+        model = Sequential(self.s, model_table = 'Simple_CNN')
+        model.add(InputLayer(3, 48, 96, scale = 1.0 / 255, random_mutation = 'none'))
+        model.add(Dense(16))
+        model.add(EmbeddingLoss(margin=10))
+        model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
+        model_extracted.compile()
+        self.assertTrue(model_extracted.layers[-1].config['margin'] == 10)
+
+    def test_extract_clustering1(self):
+        model = Sequential(self.s, model_table = 'Simple_CNN')
+        model.add(InputLayer(3, 48, 96, scale = 1.0 / 255, random_mutation = 'none'))
+        model.add(Dense(16))
+        model.add(Clustering(n_clusters=10))
+        model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
+        model_extracted.compile()
+        self.assertTrue(model_extracted.layers[-1].config['n_clusters'] == 10)
+
+    def test_extract_clustering1(self):
+        model = Sequential(self.s, model_table = 'Simple_CNN')
+        model.add(InputLayer(3, 48, 96, scale = 1.0 / 255, random_mutation = 'none'))
+        model.add(Split(16))
+        model.add(Clustering(n_clusters=10))
+        model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
+        model_extracted.compile()
 
     @classmethod
     def tearDownClass(cls):
