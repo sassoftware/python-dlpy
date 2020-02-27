@@ -2932,7 +2932,7 @@ class Survival(Layer):
     type = 'survival'
     type_label = 'Survival'
     type_desc = 'Survival layer'
-    can_be_last_layer = False
+    can_be_last_layer = True
     number_of_instances = 0
 
     def __init__(self, name=None, src_layers=None, **kwargs):
