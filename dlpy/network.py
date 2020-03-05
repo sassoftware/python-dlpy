@@ -553,6 +553,7 @@ class Network(Layer):
 
         # determine what features are supported by current Viya server/deep learning action set
         from .model_conversion.model_conversion_utils import check_rnn_import, check_normstd
+        conn.loadactionset('deeplearn', _messagelevel='error')
         rnn_support = check_rnn_import(conn)
         normstd_support = check_normstd(conn)
         if (std is not None) and (not normstd_support):
