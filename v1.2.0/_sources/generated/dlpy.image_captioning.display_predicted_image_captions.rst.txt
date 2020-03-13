@@ -1,0 +1,6 @@
+dlpy.image\_captioning.display\_predicted\_image\_captions
+==========================================================
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autofunction:: display_predicted_image_captions

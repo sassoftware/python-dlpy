@@ -1,0 +1,6 @@
+dlpy.metrics.roc\_auc\_score
+============================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: roc_auc_score

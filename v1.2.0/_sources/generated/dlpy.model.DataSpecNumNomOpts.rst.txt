@@ -1,0 +1,31 @@
+dlpy.model.DataSpecNumNomOpts
+=============================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: DataSpecNumNomOpts
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DataSpecNumNomOpts.__init__
+      ~DataSpecNumNomOpts.clear
+      ~DataSpecNumNomOpts.get
+      ~DataSpecNumNomOpts.items
+      ~DataSpecNumNomOpts.keys
+      ~DataSpecNumNomOpts.pop
+      ~DataSpecNumNomOpts.popitem
+      ~DataSpecNumNomOpts.setdefault
+      ~DataSpecNumNomOpts.update
+      ~DataSpecNumNomOpts.values
+   
+   
+
+   
+   
+   

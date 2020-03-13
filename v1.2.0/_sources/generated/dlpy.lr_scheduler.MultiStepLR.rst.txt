@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.MultiStepLR
+==============================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: MultiStepLR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiStepLR.__init__
+      ~MultiStepLR.clear
+      ~MultiStepLR.get
+      ~MultiStepLR.items
+      ~MultiStepLR.keys
+      ~MultiStepLR.pop
+      ~MultiStepLR.popitem
+      ~MultiStepLR.setdefault
+      ~MultiStepLR.update
+      ~MultiStepLR.values
+   
+   
+
+   
+   
+   

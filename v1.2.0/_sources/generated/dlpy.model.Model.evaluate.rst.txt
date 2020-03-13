@@ -1,0 +1,6 @@
+dlpy.model.Model.evaluate
+=========================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.evaluate

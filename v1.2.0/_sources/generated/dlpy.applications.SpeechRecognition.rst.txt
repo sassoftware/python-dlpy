@@ -1,0 +1,6 @@
+dlpy.applications.SpeechRecognition
+===================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: SpeechRecognition

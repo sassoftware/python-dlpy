@@ -1,0 +1,6 @@
+dlpy.metrics.accuracy\_score
+============================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: accuracy_score

@@ -1,0 +1,39 @@
+dlpy.speech.Speech
+==================
+
+.. currentmodule:: dlpy.speech
+
+.. autoclass:: Speech
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Speech.__init__
+      ~Speech.load_acoustic_model
+      ~Speech.load_language_model
+      ~Speech.transcribe
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Speech.acoustic_model
+      ~Speech.audio_table
+      ~Speech.data_caslib
+      ~Speech.data_caslib_path
+      ~Speech.data_path
+      ~Speech.data_path_after_caslib
+      ~Speech.language_model_caslib
+      ~Speech.language_model_name
+      ~Speech.local_path
+   
+   

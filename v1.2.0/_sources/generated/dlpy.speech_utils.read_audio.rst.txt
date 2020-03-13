@@ -1,0 +1,6 @@
+dlpy.speech\_utils.read\_audio
+==============================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: read_audio

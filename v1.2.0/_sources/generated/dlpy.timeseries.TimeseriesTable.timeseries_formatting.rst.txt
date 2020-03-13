@@ -1,0 +1,6 @@
+dlpy.timeseries.TimeseriesTable.timeseries\_formatting
+======================================================
+
+.. currentmodule:: dlpy.timeseries
+
+.. automethod:: TimeseriesTable.timeseries_formatting

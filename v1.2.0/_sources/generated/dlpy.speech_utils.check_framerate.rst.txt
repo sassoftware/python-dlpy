@@ -1,0 +1,6 @@
+dlpy.speech\_utils.check\_framerate
+===================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: check_framerate

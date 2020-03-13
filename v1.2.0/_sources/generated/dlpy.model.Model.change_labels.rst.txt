@@ -1,0 +1,6 @@
+dlpy.model.Model.change\_labels
+===============================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.change_labels

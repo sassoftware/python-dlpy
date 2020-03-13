@@ -1,0 +1,6 @@
+dlpy.metrics.explained\_variance\_score
+=======================================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: explained_variance_score

@@ -1,0 +1,6 @@
+dlpy.blocks.Bidirectional.compile
+=================================
+
+.. currentmodule:: dlpy.blocks
+
+.. automethod:: Bidirectional.compile

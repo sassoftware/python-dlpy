@@ -1,0 +1,31 @@
+dlpy.lr\_scheduler.FCMPLR
+=========================
+
+.. currentmodule:: dlpy.lr_scheduler
+
+.. autoclass:: FCMPLR
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FCMPLR.__init__
+      ~FCMPLR.clear
+      ~FCMPLR.get
+      ~FCMPLR.items
+      ~FCMPLR.keys
+      ~FCMPLR.pop
+      ~FCMPLR.popitem
+      ~FCMPLR.setdefault
+      ~FCMPLR.update
+      ~FCMPLR.values
+   
+   
+
+   
+   
+   

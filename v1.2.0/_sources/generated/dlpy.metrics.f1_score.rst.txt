@@ -1,0 +1,6 @@
+dlpy.metrics.f1\_score
+======================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: f1_score

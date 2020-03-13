@@ -1,0 +1,6 @@
+dlpy.metrics.plot\_roc
+======================
+
+.. currentmodule:: dlpy.metrics
+
+.. autofunction:: plot_roc

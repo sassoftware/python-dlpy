@@ -1,0 +1,6 @@
+dlpy.speech\_utils.convert\_sampwidth
+=====================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: convert_sampwidth

@@ -1,0 +1,33 @@
+dlpy.model.Solver
+=================
+
+.. currentmodule:: dlpy.model
+
+.. autoclass:: Solver
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Solver.__init__
+      ~Solver.add_parameter
+      ~Solver.clear
+      ~Solver.get
+      ~Solver.items
+      ~Solver.keys
+      ~Solver.pop
+      ~Solver.popitem
+      ~Solver.set_method
+      ~Solver.setdefault
+      ~Solver.update
+      ~Solver.values
+   
+   
+
+   
+   
+   
