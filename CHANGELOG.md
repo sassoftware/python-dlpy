@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.2.0 - 2020-03-13
+- Supporting features released with SAS Viya 3.5
+- APIs for Image embeddings
+- Survival analysis support
+- More example notebooks
+- Various bug fixes
+
 ## 1.1.2 - 2019-08-13
 - Updating and expanding the documentation
 - Various bug fixes

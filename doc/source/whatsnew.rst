@@ -9,6 +9,14 @@ What's New
 
 This document outlines features and improvements from each release.
 
+v1.2.0 (March 13, 2020)
+=======================
+- Supporting features released with SAS Viya 3.5
+- APIs for Image embeddings
+- Survival analysis support
+- More example notebooks
+- Various bug fixes
+
 v1.1.2 (August 13, 2019)
 ========================
 - Updating and expanding the documentation
