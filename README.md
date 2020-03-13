@@ -58,6 +58,11 @@ Below is the versions matrix.
 </thead>
 <tbody>
 <tr>
+<td align='left'>1.2.x</td>
+<td align='left'>3.5</td>
+<td align='left'>8.5</td>
+</tr>
+<tr>
 <td align='left'>1.1.x</td>
 <td align='left'>3.4</td>
 <td align='left'>8.4</td>
