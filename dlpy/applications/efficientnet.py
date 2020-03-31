@@ -66,16 +66,21 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
     height : int, optional
         Specifies the height of the input layer.
         Default: 224
-    width_coefficient: float,
+    width_coefficient: double, optional
         Specifies the scale coefficient for network width.
-    depth_coefficient: float,
+        Default: 1.0
+    depth_coefficient: double, optional
         Specifies the scale coefficient for network depth.
+        Default: 1.0
     dropout_rate: double, optional
         Specifies the dropout rate before final classifier layer.
-    drop_connect_rate: float,
+        Default: 0.2
+    drop_connect_rate: double,
         Specifies the dropout rate at skip connections.
-    depth_divisor: integer,
+        Default: 0.0
+    depth_divisor: integer, optional
         Specifies the unit of network width.
+        Default: 8
     activation_fn: string, optional
         Specifies the activation function
     blocks_args: list of dicts
@@ -136,7 +141,6 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
 
     def round_repeats(repeats, depth_coefficient):
         # round number of repeats based on depth multiplier
-
         return int(math.ceil(depth_coefficient * repeats))
 
     def _MBConvBlock(inputs, in_channels, out_channels, ksize, stride, expansion, se_ratio, stage_id, block_id,
@@ -150,17 +154,24 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
             Input tensor
         in_channels:
             Specifies the number of input tensor's channel
-        expansion:
-            expansion factor always applied to the input size.
+        out_channels:
+            Specifies the number of output tensor's channel
+        ksize:
+            Specifies the kernel size of the convolution
         stride:
             the strides of the convolution
-        alpha:
-            width multiplier.
-        filters:
-            the dimensionality of the output space.
+        expansion:
+            Specifies the expansion factor for the input layer.
+        se_ratio:
+            Specifies the ratio to squeeze the input filters for squeeze-and-excitation block.
+        stage_id:
+            stage id used for naming layers
         block_id:
             block id used for naming layers
-
+        noskip:
+            Specifies whether the skip connection is used. By default, the skip connection is used.
+        activation_fn:
+            Specifies activation function
         """
 
         # mobilenetv2 block is also known as inverted residual block, which consists of three convolutions:
