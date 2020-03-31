@@ -913,3 +913,34 @@ class TestApplications(unittest.TestCase):
                                  width=224, height=224,
                                  n_classes=1000, include_top=True)
         model.print_summary()
+
+    def test_efficientnet(self):
+        effnetb0 = EfficientNetB0(self.s, model_table='EfficientNetB0', n_classes=1000)
+        effnetb1 = EfficientNetB1(self.s, model_table='EfficientNetB1', n_classes=1000)
+        effnetb2 = EfficientNetB2(self.s, model_table='EfficientNetB2', n_classes=1000)
+        effnetb3 = EfficientNetB3(self.s, model_table='EfficientNetB3', n_classes=1000)
+        effnetb4 = EfficientNetB4(self.s, model_table='EfficientNetB4', n_classes=1000)
+        effnetb5 = EfficientNetB5(self.s, model_table='EfficientNetB5', n_classes=1000)
+        effnetb6 = EfficientNetB6(self.s, model_table='EfficientNetB6', n_classes=1000)
+        effnetb7 = EfficientNetB7(self.s, model_table='EfficientNetB7', n_classes=1000)
+
+        print(self.s.tableinfo())
+        # number of model parameters
+        self.assertTrue(effnetb0.num_params == 5288548)
+        self.assertTrue(effnetb1.num_params == 7794184)
+        self.assertTrue(effnetb2.num_params == 9109994)
+        self.assertTrue(effnetb3.num_params == 12233232)
+        self.assertTrue(effnetb4.num_params == 19341616)
+        self.assertTrue(effnetb5.num_params == 30389784)
+        self.assertTrue(effnetb6.num_params == 43040704)
+        self.assertTrue(effnetb7.num_params == 66347960)
+
+        # input shape of fficientnet models
+        self.assertTrue(effnetb0.input_layers[0].output_size==(224,224,3))
+        self.assertTrue(effnetb1.input_layers[0].output_size==(240,240,3))
+        self.assertTrue(effnetb2.input_layers[0].output_size==(260,260,3))
+        self.assertTrue(effnetb3.input_layers[0].output_size==(300,300,3))
+        self.assertTrue(effnetb4.input_layers[0].output_size==(380,380,3))
+        self.assertTrue(effnetb5.input_layers[0].output_size==(456,456,3))
+        self.assertTrue(effnetb6.input_layers[0].output_size==(528,528,3))
+        self.assertTrue(effnetb7.input_layers[0].output_size==(600,600,3))
