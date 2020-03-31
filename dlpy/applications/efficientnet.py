@@ -75,7 +75,7 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
     dropout_rate: double, optional
         Specifies the dropout rate before final classifier layer.
         Default: 0.2
-    drop_connect_rate: double,
+    drop_connect_rate: double, optional
         Specifies the dropout rate at skip connections.
         Default: 0.0
     depth_divisor: integer, optional
@@ -118,18 +118,18 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
 
     '''
 
-    def _make_divisible(v, divisor, min_value=None):
-        # make number of channel divisible
-        if min_value is None:
-            min_value = divisor
-        new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-        # make sure that round down does not go down by more than 10%.
-        if new_v < 0.9 * v:
-            new_v += divisor
-        return new_v
-
     def round_filters(filters, width_coefficient, depth_divisor):
-        # round number of filters based on width multiplier and depth_divisor
+        '''
+        round the number of the scaled width, which is for width scaling in efficientnet.
+        Parameters
+        ----------
+        filters: integer
+            Specifies the number of filters.
+        width_coefficient: double
+            Specifies the scale coefficient for network width.
+        depth_divisor: integer
+            Specifies the unit of network width.
+        '''
 
         filters *= width_coefficient
         new_filters = int(filters + depth_divisor / 2) // depth_divisor * depth_divisor
@@ -140,39 +140,48 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
         return int(new_filters)
 
     def round_repeats(repeats, depth_coefficient):
-        # round number of repeats based on depth multiplier
+        '''
+        round the number of the scaled depth, which is for depth scaling in effcientnet.
+        Parameters
+        ----------
+        repeats: integer
+            Specifies the number of repeats for a block.
+        depth_coefficient: double
+            Specifies the scale coefficient for a block.
+        '''
+
         return int(math.ceil(depth_coefficient * repeats))
 
     def _MBConvBlock(inputs, in_channels, out_channels, ksize, stride, expansion, se_ratio, stage_id, block_id,
                      noskip=False, activation_fn='relu'):
-        """
+        '''
         Inverted Residual Block
 
         Parameters
         ----------
-        inputs:
-            Input tensor
-        in_channels:
-            Specifies the number of input tensor's channel
-        out_channels:
+        inputs: input tensor
+            Speecify input tensor for block.
+        in_channels: integer
+            Specifies the number of input tensor's channel.
+        out_channels: integer
             Specifies the number of output tensor's channel
         ksize:
             Specifies the kernel size of the convolution
-        stride:
-            the strides of the convolution
-        expansion:
+        stride: integer
+            Specifies the stride of the convolution
+        expansion: double
             Specifies the expansion factor for the input layer.
-        se_ratio:
+        se_ratio: double
             Specifies the ratio to squeeze the input filters for squeeze-and-excitation block.
-        stage_id:
-            stage id used for naming layers
+        stage_id: integer
+            Specifies stage id for naming layers
         block_id:
-            block id used for naming layers
-        noskip:
+            Specifies block id for naming layers
+        noskip: bool
             Specifies whether the skip connection is used. By default, the skip connection is used.
         activation_fn:
             Specifies activation function
-        """
+        '''
 
         # mobilenetv2 block is also known as inverted residual block, which consists of three convolutions:
         # the first is 1*1 convolution for expansion
@@ -190,7 +199,7 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
                        name=prefix + 'expand')(x)
             x = BN(name=prefix + 'expand_BN', act='identity')(x)
 
-        # Depthwise convolution with kernel size : 3 or 5
+        # Depthwise convolution
         x = GroupConv2d(n_groups, n_groups, ksize, stride=stride, act='identity',
                         include_bias=False, name=prefix + 'depthwise')(x)
         x = BN(name=prefix + 'depthwise_BN', act=activation_fn)(x)
@@ -255,48 +264,200 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
 def EfficientNetB0(conn, model_table='EfficientNetB0',
                    n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB0 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=224, height=224, width_coefficient=1, depth_coefficient=1, dropout_rate=0.2,
                         **kwargs)
 
 def EfficientNetB1(conn, model_table='EfficientNetB1', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB1 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=240, height=240, width_coefficient=1.0, depth_coefficient=1.1, dropout_rate=0.2,
                         **kwargs)
 
 def EfficientNetB2(conn, model_table='EfficientNetB2', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB2 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=260, height=260, width_coefficient=1.1, depth_coefficient=1.2, dropout_rate=0.3,
                         **kwargs)
 
 def EfficientNetB3(conn, model_table='EfficientNetB3', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB3 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=300, height=300, width_coefficient=1.2, depth_coefficient=1.4, dropout_rate=0.3,
                         **kwargs)
 
 def EfficientNetB4(conn, model_table='EfficientNetB4', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB4 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=380, height=380, width_coefficient=1.4, depth_coefficient=1.8, dropout_rate=0.4,
                         **kwargs)
 
 def EfficientNetB5(conn, model_table='EfficientNetB5', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB5 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=456, height=456, width_coefficient=1.6, depth_coefficient=2.2, dropout_rate=0.4,
                         **kwargs)
 
 def EfficientNetB6(conn, model_table='EfficientNetB6', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB6 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=528, height=528, width_coefficient=1.8, depth_coefficient=2.6, dropout_rate=0.5,
                         **kwargs)
 
 def EfficientNetB7(conn, model_table='EfficientNetB7', n_classes=1000,
                    **kwargs):
+    '''
+    Generates the EfficientNetB7 architecture.
+
+    Parameters
+    ----------
+    conn : CAS
+        Specifies the CAS connection object.
+    model_table : string or dict or CAS table, optional
+        Specifies the CAS table to store the deep learning model.
+    n_classes : int, optional
+        Specifies the number of classes. If None is assigned, the model will
+        automatically detect the number of classes based on the training set.
+        Default: 1000
+
+    References
+    ----------
+    https://arxiv.org/pdf/1905.11946.pdf
+    '''
+
     return EfficientNet(conn, model_table, n_classes, n_channels=3,
                         width=600, height=600, width_coefficient=2.0, depth_coefficient=3.1, dropout_rate=0.5,
                     **kwargs)
