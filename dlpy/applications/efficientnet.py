@@ -262,33 +262,72 @@ def EfficientNet(conn, model_table='EfficientNet', n_classes=100, n_channels=3, 
 
 
 def EfficientNetB0(conn, model_table='EfficientNetB0',
-                   n_classes=1000,
-                   **kwargs):
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
-    Generates the EfficientNetB0 architecture.
+     Generates the EfficientNetB0 architecture.
 
-    Parameters
-    ----------
-    conn : CAS
-        Specifies the CAS connection object.
-    model_table : string or dict or CAS table, optional
-        Specifies the CAS table to store the deep learning model.
-    n_classes : int, optional
-        Specifies the number of classes. If None is assigned, the model will
-        automatically detect the number of classes based on the training set.
-        Default: 1000
+     Parameters
+     ----------
+     conn : CAS
+         Specifies the CAS connection object.
+     model_table : string or dict or CAS table, optional
+         Specifies the CAS table to store the deep learning model.
+     n_classes : int, optional
+         Specifies the number of classes. If None is assigned, the model will
+         automatically detect the number of classes based on the training set.
+         Default: 1000
+     drop_connect_rate: double, optional
+         Specifies the dropout rate at skip connections.
+         Default: 0.0
+     depth_divisor: integer, optional
+         Specifies the unit of network width.
+         Default: 8
+     activation_fn: string, optional
+         Specifies the activation function
+     blocks_args: list of dicts
+          Specifies parameters to construct blocks for the efficientnet model.
+     offsets : double or iter-of-doubles, optional
+         Specifies an offset for each channel in the input data. The final input
+         data is set after applying scaling and subtracting the specified offsets.
+         Default: (255*0.406, 255*0.456, 255*0.485)
+     norm_stds : double or iter-of-doubles, optional
+         Specifies a standard deviation for each channel in the input data.
+         The final input data is normalized with specified means and standard deviations.
+         Default: (255*0.225, 255*0.224, 255*0.229)
+     random_flip : string, optional
+         Specifies how to flip the data in the input layer when image data is
+         used. Approximately half of the input data is subject to flipping.
+         Valid Values: 'h', 'hv', 'v', 'none'
+     random_crop : string, optional
+         Specifies how to crop the data in the input layer when image data is
+         used. Images are cropped to the values that are specified in the width
+         and height parameters. Only the images with one or both dimensions
+         that are larger than those sizes are cropped.
+         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+     random_mutation : string, optional
+         Specifies how to apply data augmentations/mutations to the data in the input layer.
+         Valid Values: 'none', 'random'
 
-    References
-    ----------
-    https://arxiv.org/pdf/1905.11946.pdf
-    '''
+     References
+     ----------
+     https://arxiv.org/pdf/1905.11946.pdf
+     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=224, height=224, width_coefficient=1, depth_coefficient=1, dropout_rate=0.2,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB1(conn, model_table='EfficientNetB1', n_classes=1000,
-                   **kwargs):
+def EfficientNetB1(conn, model_table='EfficientNetB1',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB1 architecture.
 
@@ -302,18 +341,55 @@ def EfficientNetB1(conn, model_table='EfficientNetB1', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=240, height=240, width_coefficient=1.0, depth_coefficient=1.1, dropout_rate=0.2,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB2(conn, model_table='EfficientNetB2', n_classes=1000,
-                   **kwargs):
+def EfficientNetB2(conn, model_table='EfficientNetB2',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB2 architecture.
 
@@ -327,18 +403,55 @@ def EfficientNetB2(conn, model_table='EfficientNetB2', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=260, height=260, width_coefficient=1.1, depth_coefficient=1.2, dropout_rate=0.3,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB3(conn, model_table='EfficientNetB3', n_classes=1000,
-                   **kwargs):
+def EfficientNetB3(conn, model_table='EfficientNetB3',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB3 architecture.
 
@@ -352,18 +465,55 @@ def EfficientNetB3(conn, model_table='EfficientNetB3', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=300, height=300, width_coefficient=1.2, depth_coefficient=1.4, dropout_rate=0.3,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB4(conn, model_table='EfficientNetB4', n_classes=1000,
-                   **kwargs):
+def EfficientNetB4(conn, model_table='EfficientNetB4',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB4 architecture.
 
@@ -377,18 +527,55 @@ def EfficientNetB4(conn, model_table='EfficientNetB4', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=380, height=380, width_coefficient=1.4, depth_coefficient=1.8, dropout_rate=0.4,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB5(conn, model_table='EfficientNetB5', n_classes=1000,
-                   **kwargs):
+def EfficientNetB5(conn, model_table='EfficientNetB5',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB5 architecture.
 
@@ -402,18 +589,55 @@ def EfficientNetB5(conn, model_table='EfficientNetB5', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=456, height=456, width_coefficient=1.6, depth_coefficient=2.2, dropout_rate=0.4,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB6(conn, model_table='EfficientNetB6', n_classes=1000,
-                   **kwargs):
+def EfficientNetB6(conn, model_table='EfficientNetB6',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB6 architecture.
 
@@ -427,18 +651,55 @@ def EfficientNetB6(conn, model_table='EfficientNetB6', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=528, height=528, width_coefficient=1.8, depth_coefficient=2.6, dropout_rate=0.5,
-                        **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
-def EfficientNetB7(conn, model_table='EfficientNetB7', n_classes=1000,
-                   **kwargs):
+def EfficientNetB7(conn, model_table='EfficientNetB7',
+                   n_classes=1000, drop_connect_rate=0, depth_divisor=8,
+                   activation_fn='relu', blocks_args=_MBConv_BLOCKS_ARGS,
+                   offsets=(255*0.406, 255*0.456, 255*0.485), norm_stds=(255*0.225, 255*0.224, 255*0.229),
+                   random_flip=None, random_crop=None, random_mutation=None):
     '''
     Generates the EfficientNetB7 architecture.
 
@@ -452,13 +713,47 @@ def EfficientNetB7(conn, model_table='EfficientNetB7', n_classes=1000,
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
         Default: 1000
+    drop_connect_rate: double, optional
+        Specifies the dropout rate at skip connections.
+        Default: 0.0
+    depth_divisor: integer, optional
+        Specifies the unit of network width.
+        Default: 8
+    activation_fn: string, optional
+        Specifies the activation function
+    blocks_args: list of dicts
+         Specifies parameters to construct blocks for the efficientnet model.
+    offsets : double or iter-of-doubles, optional
+        Specifies an offset for each channel in the input data. The final input
+        data is set after applying scaling and subtracting the specified offsets.
+        Default: (255*0.406, 255*0.456, 255*0.485)
+    norm_stds : double or iter-of-doubles, optional
+        Specifies a standard deviation for each channel in the input data.
+        The final input data is normalized with specified means and standard deviations.
+        Default: (255*0.225, 255*0.224, 255*0.229)
+    random_flip : string, optional
+        Specifies how to flip the data in the input layer when image data is
+        used. Approximately half of the input data is subject to flipping.
+        Valid Values: 'h', 'hv', 'v', 'none'
+    random_crop : string, optional
+        Specifies how to crop the data in the input layer when image data is
+        used. Images are cropped to the values that are specified in the width
+        and height parameters. Only the images with one or both dimensions
+        that are larger than those sizes are cropped.
+        Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    random_mutation : string, optional
+        Specifies how to apply data augmentations/mutations to the data in the input layer.
+        Valid Values: 'none', 'random'
 
     References
     ----------
     https://arxiv.org/pdf/1905.11946.pdf
     '''
 
-    return EfficientNet(conn, model_table, n_classes, n_channels=3,
+    return EfficientNet(conn=conn, model_table=model_table, n_classes=n_classes, n_channels=3,
                         width=600, height=600, width_coefficient=2.0, depth_coefficient=3.1, dropout_rate=0.5,
-                    **kwargs)
+                        drop_connect_rate=drop_connect_rate, depth_divisor=depth_divisor,
+                        activation_fn=activation_fn, blocks_args=blocks_args,
+                        offsets=offsets, norm_stds=norm_stds,
+                        random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
 
