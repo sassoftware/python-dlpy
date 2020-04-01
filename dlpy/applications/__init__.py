@@ -27,3 +27,5 @@ from .shufflenet import ShuffleNetV1
 from .inception import InceptionV3
 from .rcnn import Faster_RCNN
 from .unet import UNet
+from .efficientnet import (EfficientNet, EfficientNetB0, EfficientNetB1, EfficientNetB2, EfficientNetB3,
+                           EfficientNetB4, EfficientNetB5, EfficientNetB6, EfficientNetB7)
