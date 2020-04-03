@@ -500,6 +500,7 @@ class TestNetwork(tm.TestCase):
         # check type
         self.assertTrue(cnn_rnn.model_type == 'RNN')
         self.assertTrue(cnn_rnn.layers[-1].name == 'fixed')
+        self.assertTrue(x[0].shape == (1, 1, 2048))
 
         f_rnn = model_rnn.to_functional_model()
         # connecting
