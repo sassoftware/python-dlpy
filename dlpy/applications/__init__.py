@@ -27,3 +27,4 @@ from .shufflenet import ShuffleNetV1
 from .inception import InceptionV3
 from .rcnn import Faster_RCNN
 from .unet import UNet
+from .enet import ENet

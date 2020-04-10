@@ -2368,7 +2368,7 @@ def display_segmentation_results(conn, table, n_images=4, image_column='_image_'
 
         if len(labels) > 0 and len(labels.Images) > 0:
             ax = fig.add_subplot(n_images, n_col, k)
-            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0])
             k += 1
             if len(predictions) > 0 and len(predictions.Images) > 0:
                 plt.title(predictions.Images[filename_column][i] +' ground truth')

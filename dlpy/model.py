@@ -780,7 +780,7 @@ class Model(Network):
     def evaluate(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
                  mini_batch_buf_size=None, top_probs=None, use_best_weights=False,
                  random_crop='none', random_flip='none',  random_mutation='none',
-                 model_task=None):
+				 model_task=None, display_class_score_info='all'):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -897,7 +897,8 @@ class Model(Network):
                              encode_name=en, text_parms=text_parms, layer_out=lo,
                              layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
                              top_probs=top_probs, buffer_size=buffer_size,
-                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation,
+                             display_class_score_info=display_class_score_info)
         else:
             if self.model_weights is None:
                 raise DLPyError('We need some weights to do scoring.')
@@ -907,7 +908,8 @@ class Model(Network):
                                  encode_name=en, text_parms=text_parms, layer_out=lo,
                                  layers=layers, gpu=gpu, mini_batch_buf_size=mini_batch_buf_size,
                                  buffer_size=buffer_size, top_probs=top_probs,
-                                 random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
+                                 random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation,
+                                 display_class_score_info=display_class_score_info)
 
         if res.severity > 1:
             raise DLPyError('something is wrong while scoring the input data with the model.')
@@ -1150,7 +1152,8 @@ class Model(Network):
     def predict(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=10,
                 mini_batch_buf_size=None, top_probs=None, use_best_weights=False, n_threads=None,
                 layer_image_type=None, log_level=0,
-                random_crop='none', random_flip='none',  random_mutation='none'):
+                random_crop='none', random_flip='none',  random_mutation='none',
+                display_class_score_info='none'):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -1241,6 +1244,10 @@ class Model(Network):
             Specifies how to mutate images.
             Default: NONE
             Valid Values: NONE, RANDOM
+        display_class_score_info: string, optional
+            When set to ALL, displays the ClassScoreInfo table in the results.
+            Default: NONE
+            Valid Values: NONE, ALL
 
         Returns
         -------
@@ -1272,7 +1279,8 @@ class Model(Network):
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
                              n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level,
-                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation,
+                             display_class_score_info=display_class_score_info)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res
         else:
@@ -1281,7 +1289,8 @@ class Model(Network):
                              text_parms=text_parms, layer_out=lo, layers=layers, gpu=gpu,
                              mini_batch_buf_size=mini_batch_buf_size, top_probs=top_probs, buffer_size=buffer_size,
                              n_threads=n_threads, layer_image_type=layer_image_type, log_level=log_level,
-                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation)
+                             random_flip=random_flip, random_crop=random_crop, random_mutation=random_mutation,
+                             display_class_score_info = display_class_score_info)
             self.valid_res_tbl = self.conn.CASTable(valid_res_tbl)
             return res    
         
@@ -1558,7 +1567,7 @@ class Model(Network):
               layer_image_type='jpg', layers=None, copy_vars=None, casout=None, gpu=None, buffer_size=10,
               mini_batch_buf_size=None, encode_name=False, random_flip='none', random_crop='none', top_probs=None,
               random_mutation='none', n_threads=None, has_output_term_ids=False, init_output_embeddings=None,
-              log_level=None):
+              log_level=None, display_class_score_info=None):
         """
         Inference of input data with the trained deep learning model
 
@@ -1652,6 +1661,11 @@ class Model(Network):
             Setting the value to 1 sends start and end messages.
             Setting the value to 2 adds the iteration history to the client messaging.
             default: 0
+        display_class_score_info: string, optional
+            When set to ALL, displays the ClassScoreInfo table in the results.
+            Default: NONE
+            Valid Values: NONE, ALL
+
 
         Returns
         -------
@@ -1665,14 +1679,16 @@ class Model(Network):
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
                                   layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
                                   random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,
-                                  random_mutation=random_mutation, log_level=log_level)
+                                  random_mutation=random_mutation, log_level=log_level,
+                                  display_class_score_info=display_class_score_info)
         else:
             parameters = DLPyDict(table=table, model=model, init_weights=init_weights, text_parms=text_parms,
                                   layer_image_type='WIDE', layers=layers, copy_vars=copy_vars, casout=casout,
                                   gpu=gpu, mini_batch_buf_size=mini_batch_buf_size, buffer_size=buffer_size,
                                   layer_out=layer_out, encode_name=encode_name, n_threads=n_threads,
                                   random_flip=random_flip, random_crop=random_crop, top_probs=top_probs,
-                                  random_mutation=random_mutation, log_level=log_level)
+                                  random_mutation=random_mutation, log_level=log_level,
+                                  display_class_score_info=display_class_score_info)
 
         return self._retrieve_('deeplearn.dlscore', message_level=self.score_message_level, **parameters)
 
