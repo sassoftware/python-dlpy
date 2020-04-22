@@ -329,12 +329,12 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(params[0]==3)
         self.assertTrue(params[1]==6)
 
-    def test___init__(self):
+    def test_box_xyxy(self):
         my_box = Box(x=2, y=3, w=4, h=5, class_type=None, confidence=1.0, 
                      image_name=None, format_type='xyxy')
         self.assertTrue(my_box.x_min==2)
-        self.assertTrue(my_box.x_max==3)
-        self.assertTrue(my_box.y_min==4)
+        self.assertTrue(my_box.y_min==3)
+        self.assertTrue(my_box.x_max==4)
         self.assertTrue(my_box.y_max==5)
 
     def test_plot_anchors(self):

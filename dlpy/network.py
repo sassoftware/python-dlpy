@@ -262,6 +262,11 @@ class Network(Layer):
             stop_layers = [stop_layers]
         index_l = [self.layers.index(x) for x in stop_layers]
         stop_layers = [copied_model.layers[i] for i in index_l]
+        # remove tensor attribute if exist except for InputLayer
+        for l in copied_model.layers:
+            if l.__class__.__name__ != 'InputLayer':
+                if hasattr(l, 'tensor'):
+                    delattr(l, 'tensor')
 
         for idx, layer in enumerate(copied_model.layers):
             layer_type = layer.__class__.__name__
@@ -278,7 +283,10 @@ class Network(Layer):
                     if outbound_layer in stop_layers:
                         # add src_layers's into output tensors
                         for src_layer in outbound_layer.src_layers:
-                            output_tensors.append(src_layer.tensor)
+                            # if src_layer doesn't have tensor attribute which means it dependency cannot be loaded.
+                            # so it is not a valid output_tensors.
+                            if hasattr(src_layer, 'tensor'):
+                                output_tensors.append(src_layer.tensor)
                         continue
                     # initialize tensor of the outbound_layer
                     # if any of tensor doesn't exit, stop calling the layer

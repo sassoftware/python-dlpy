@@ -447,8 +447,9 @@ class TestNetwork(tm.TestCase):
         from dlpy.applications import MobileNetV2
         backbone = MobileNetV2(self.s, width = 1248, height = 1248)
         backbone_pure = backbone.to_functional_model(stop_layers = backbone.layers[-14])
-        # expect to get two outputs since stop layer is in a branch
-        self.assertEqual(len(backbone_pure.output_layers), 2)
+        # expect to get one outputs(block_15_depthwise) since stop layer is in a branch
+        # output layer is not a valid output_layers since its dependencies cannot be traversed.
+        self.assertEqual(len(backbone_pure.output_layers), 1)
 
     def test_astore_deploy_wrong_path(self):
         from dlpy.sequential import Sequential
@@ -555,6 +556,18 @@ class TestNetwork(tm.TestCase):
         model.add(Clustering(n_clusters=10))
         model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
         model_extracted.compile()
+        
+    def test_multiple_stop_layers1(self):
+        from dlpy.applications import ResNet50_Caffe
+        resnet50 = ResNet50_Caffe(self.s, "res50")
+        stop_layers = [resnet50.layers[x] for x in [-2, 4, -8] ]
+        feature_extractor1 = resnet50.to_functional_model(stop_layers=stop_layers)
+        
+    def test_multiple_stop_layers2(self):
+        from dlpy.applications import MobileNetV1
+        resnet50 = MobileNetV1(self.s, "MobileNetV1")
+        stop_layers = [resnet50.layers[x] for x in [-2, 4, -8] ]
+        feature_extractor1 = resnet50.to_functional_model(stop_layers=stop_layers)
 
     @classmethod
     def tearDownClass(cls):
