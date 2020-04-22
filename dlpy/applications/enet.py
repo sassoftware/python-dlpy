@@ -22,33 +22,34 @@ from dlpy.layers import (Conv2d, Input, Pooling, BN, Conv2DTranspose, Concat, Re
 from .application_utils import get_layer_options, input_layer_options
 
 
-def initialBlock(inp):
+def initial_block(inp):
     '''
     Defines the initial block of ENet
 
     Parameters
     ----------
-    inp : Input layer
+    inp : class:`InputLayer`
+    Input layer
 
     Returns
     -------
     :class:`Concat`
     '''
     x = Conv2d(13, 3, stride=2, padding=1, act='identity', include_bias=False)(inp)
-    x = BN(act='relu')(x)
+    x_bn = BN(act='relu')(x)
     y = Pooling(2)(inp)
-    merge = Concat()([x, y])
+    merge = Concat()([x_bn, y])
 
     return merge
 
 
-def downsamplingBNeck(x, in_depth, out_depth, projection_ratio=4):
+def downsampling_bottleneck(x, in_depth, out_depth, projection_ratio=4):
     '''
     Defines the down-sampling bottleneck of ENet
 
     Parameters
     ----------
-    x :
+    x : class:`Layer'
         Previous layer to this block
     in_depth : int
         Depth of the layer fed into this block
@@ -78,18 +79,18 @@ def downsamplingBNeck(x, in_depth, out_depth, projection_ratio=4):
     conv4 = Conv2d(out_depth, 1, stride=1, act='identity', include_bias=False)(pool1)
     bn4 = BN(act='relu')(conv4)
 
-    res1 = Res()([bn3, bn4])
+    res = Res()([bn3, bn4])
 
-    return res1
+    return res
 
 
-def regularBNeck(x, in_depth, out_depth, projection_ratio=4):
+def regular_bottleneck(x, in_depth, out_depth, projection_ratio=4):
     '''
     Defines the regular bottleneck of ENet
 
     Parameters
     ----------
-    x :
+    x : class:`Layer'
        Previous layer to this block
     in_depth : int
        Depth of the layer fed into this block
@@ -115,18 +116,18 @@ def regularBNeck(x, in_depth, out_depth, projection_ratio=4):
     conv3 = Conv2d(out_depth, 1, stride=1, act='identity', include_bias=False)(bn2)
     bn3 = BN(act='relu')(conv3)
 
-    res1 = Res()([bn3, x])
+    res = Res()([bn3, x])
 
-    return res1
+    return res
 
 
-def upsamplingBNeck(x, in_depth, out_depth, projection_ratio=4):
+def upsampling_bottleneck(x, in_depth, out_depth, projection_ratio=4):
     '''
     Defines the up-sampling bottleneck of ENet
 
     Parameters
     ----------
-    x :
+    x : class:`Layer'
        Previous layer to this block
     in_depth : int
        Depth of the layer fed into this block
@@ -168,6 +169,7 @@ def ENet(conn, model_table='ENet', n_classes=2, n_channels=3, width=512, height=
         Specifies the connection of the CAS connection.
     model_table : string, optional
         Specifies the name of CAS table to store the model.
+        Default: ENet
     n_classes : int, optional
         Specifies the number of classes. If None is assigned, the model will
         automatically detect the number of classes based on the training set.
@@ -230,36 +232,34 @@ def ENet(conn, model_table='ENet', n_classes=2, n_channels=3, width=512, height=
     inp = Input(**input_parameters, name='InputLayer_1')
 
     # initial
-    x = initialBlock(inp)
+    x = initial_block(inp)
 
     # stage one
-    x = downsamplingBNeck(x, 16, 64)
+    x = downsampling_bottleneck(x, 16, 64)
     for i in range(4):
-        x = regularBNeck(x, 64, 64)
+        x = regular_bottleneck(x, 64, 64)
 
     # stage two
-    x = downsamplingBNeck(x, 64, 128)
+    x = downsampling_bottleneck(x, 64, 128)
     for i in range(2):
-        x = regularBNeck(x, 128, 128)
-        x = regularBNeck(x, 128, 128)
-    # x = regularBNeck(x, 128, 128)
+        x = regular_bottleneck(x, 128, 128)
+        x = regular_bottleneck(x, 128, 128)
 
     # stage three
     for i in range(2):
-        x = regularBNeck(x, 128, 128)
-        x = regularBNeck(x, 128, 128)
-    # x = regularBNeck(x, 128, 128)
+        x = regular_bottleneck(x, 128, 128)
+        x = regular_bottleneck(x, 128, 128)
 
     # stage four
-    x = upsamplingBNeck(x, 128, 64)
+    x = upsampling_bottleneck(x, 128, 64)
     for i in range(2):
-        x = regularBNeck(x, 64, 64)
+        x = regular_bottleneck(x, 64, 64)
 
     # stage five
-    x = upsamplingBNeck(x, 64, 16)
-    x = regularBNeck(x, 16, 16)
+    x = upsampling_bottleneck(x, 64, 16)
+    x = regular_bottleneck(x, 16, 16)
 
-    x = upsamplingBNeck(x, 16, 16)
+    x = upsampling_bottleneck(x, 16, 16)
     conv = Conv2d(n_classes, 3, act='relu')(x)
 
     seg = Segmentation(name='Segmentation_1', output_image_type=output_image_type,

@@ -2257,7 +2257,7 @@ def display_segmentation_images(conn, table, n_images=4, image_column='_image_',
     if len(labels) > 0 and len(labels.Images) > 0:
         for i in range(n_images):
             ax = fig.add_subplot(n_row, n_images, k)
-            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0])
             k += 1
 
 
