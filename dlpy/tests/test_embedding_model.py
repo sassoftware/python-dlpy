@@ -43,43 +43,41 @@ class TestImageEmbeddingModel(unittest.TestCase):
     server_sep = '/'
     data_dir = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if "DLPY_DATA_DIR_LOCAL" in os.environ:
-            cls.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
+            self.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
 
         # the server path that points to DLPY_DATA_DIR_LOCAL
         if "DLPY_DATA_DIR_SERVER" in os.environ:
-            cls.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
-            if cls.server_dir.endswith(cls.server_sep):
-                cls.server_dir = cls.server_dir[:-1]
-            cls.server_dir += cls.server_sep
+            self.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
+            if self.server_dir.endswith(self.server_sep):
+                self.server_dir = self.server_dir[:-1]
+            self.server_dir += self.server_sep
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
     def test_embedding_model_siamese(self):
@@ -554,3 +552,7 @@ class TestImageEmbeddingModel(unittest.TestCase):
         print(res)
 
         os.remove(br_astore)
+
+
+if __name__ == '__main__':
+    unittest.main()

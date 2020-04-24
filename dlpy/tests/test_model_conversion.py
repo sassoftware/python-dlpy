@@ -34,6 +34,7 @@ import unittest
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
+
 # helper function: define RNN model with two recurrent layers using Keras
 def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, output_dim):
 
@@ -47,8 +48,8 @@ def define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, out
         from keras.utils import multi_gpu_model
         from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
     except:
-
         print('Keras is not installed.')
+        return None
 
     if layer_type not in ['simplernn', 'lstm', 'gru', 'cudnnlstm', 'cudnngru']:
         return None
@@ -276,33 +277,31 @@ class TestModelConversion(unittest.TestCase):
     except:
         keras_installed = False
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith(cls.server_sep):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += cls.server_sep
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.endswith(self.server_sep):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += self.server_sep
             
         # deepLearn action set must be loaded
-        cls.s.loadactionset(actionSet='deeplearn', _messagelevel='error')
-            
+        self.s.loadactionset(actionSet='deeplearn', _messagelevel='error')
 
     def test_model_conversion1(self):
         '''
@@ -432,20 +431,23 @@ class TestModelConversion(unittest.TestCase):
         for layer_type in ['simplernn', 'lstm', 'gru']:
             for bidirectional in [True, False]:
                 model = define_keras_rnn_model(layer_type, bidirectional, rnn_size, feature_dim, output_dim)
-                
+                if model is None:
+                    unittest.TestCase.skipTest(self, "Possibly keras is not installed in your system.")
+
                 model_name = 'dlpy_model'
-                model1, use_gpu = Model.from_keras_model(conn=self.s, 
-                                                        keras_model=model,
-                                                        max_num_frames=max_seq_len,
-                                                        include_weights=True,
-                                                        output_model_table=model_name)                                
+                model1, use_gpu = Model.from_keras_model(conn=self.s,
+                                                         keras_model=model,
+                                                         max_num_frames=max_seq_len,
+                                                         include_weights=True,
+                                                         output_model_table=model_name)
         
                 model1.print_summary()
                 
                 # try to load weights, but skip any GPU-based models because worker/soloist may not have GPU
                 if os.path.isdir(self.data_dir) and (not use_gpu):
                     try:
-                        copyfile(os.path.join(os.getcwd(),'dlpy_model_weights.kerasmodel.h5'),os.path.join(self.data_dir,'dlpy_model_weights.kerasmodel.h5'))
+                        copyfile(os.path.join(os.getcwd(),'dlpy_model_weights.kerasmodel.h5'),
+                                 os.path.join(self.data_dir,'dlpy_model_weights.kerasmodel.h5'))
                         copy_success = True
                     except:
                         print('Unable to copy weights file, skipping test of attaching weights')
@@ -576,17 +578,19 @@ class TestModelConversion(unittest.TestCase):
         del model
         del model1
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
     
         # drop action set
-        cls.s.dropactionset(actionSet='deeplearn', _messagelevel='error')
+        self.s.dropactionset(actionSet='deeplearn', _messagelevel='error')
     
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
-    
+
+
+if __name__ == '__main__':
+    unittest.main()

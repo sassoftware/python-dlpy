@@ -41,42 +41,40 @@ class TestImageCaptioning(unittest.TestCase):
     data_dir = None
     data_dir_local = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.startswith('/'):
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.startswith('/'):
                 sep_ = '/'
             else:
                 sep_ = '\\'
-            if cls.data_dir_local.endswith(sep_):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += sep_
+            if self.data_dir_local.endswith(sep_):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += sep_
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
     # wrong dense layer
@@ -417,3 +415,7 @@ class TestImageCaptioning(unittest.TestCase):
         captions_file = "doesnt/exist.txt"
         self.assertRaises(FileNotFoundError,lambda:
                           get_max_capt_len(captions_file,delimiter='\t'))
+
+
+if __name__ == '__main__':
+    unittest.main()

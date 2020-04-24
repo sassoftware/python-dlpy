@@ -37,38 +37,36 @@ class TestLRScheduler(unittest.TestCase):
     data_dir = None
     data_dir_local = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         filename = os.path.join('datasources', 'sample_syntax_for_test.json')
         project_path = os.path.dirname(os.path.abspath(__file__))
         full_filename = os.path.join(project_path, filename)
         with open(full_filename) as f:
-            cls.sample_syntax = json.load(f)
+            self.sample_syntax = json.load(f)
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
     def test_compatiable_syntax(self):
@@ -136,3 +134,5 @@ class TestLRScheduler(unittest.TestCase):
         self.assertTrue(r.severity <= 1)
 
 
+if __name__ == '__main__':
+    unittest.main()

@@ -23,37 +23,36 @@
 #       the CASPROTOCOL environment variable.
 #
 
-import os
+
 import swat
 import swat.utils.testing as tm
 from dlpy.sequential import Sequential
 from dlpy.layers import *
 from dlpy.blocks import Bidirectional
 from dlpy.utils import DLPyError
+import unittest
 
 
-class TestSequential(tm.TestCase):
+class TestSequential(unittest.TestCase):
     # Create a class attribute to hold the cas host type
     server_type = None
     s = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
     def test_1(self):
@@ -161,3 +160,7 @@ class TestSequential(tm.TestCase):
         model.add(Recurrent(n=10))
         model.add(OutputLayer())
         model.print_summary()
+
+
+if __name__ == '__main__':
+    unittest.main()

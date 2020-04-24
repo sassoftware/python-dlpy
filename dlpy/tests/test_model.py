@@ -23,9 +23,9 @@
 #       the CASPROTOCOL environment variable.
 
 import os
-#import onnx
 import swat
 import swat.utils.testing as tm
+import dlpy
 from swat.cas.table import CASTable
 from dlpy.model import Model, Optimizer, AdamSolver, Sequence
 from dlpy.sequential import Sequential
@@ -47,29 +47,28 @@ class TestModel(unittest.TestCase):
     data_dir = None
     data_dir_local = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith(cls.server_sep):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += cls.server_sep
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.endswith(self.server_sep):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += self.server_sep
 
     def test_model1(self):
 
@@ -245,6 +244,9 @@ class TestModel(unittest.TestCase):
 
         r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
         self.assertTrue(r.severity == 0)
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -298,9 +300,15 @@ class TestModel(unittest.TestCase):
 
         r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
         self.assertTrue(r.severity == 0)
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
 
         r2 = model1.predict(data='eee')
         self.assertTrue(r2.severity == 0)
+        if r2.severity > 0:
+            for msg in r2.messages:
+                print(msg)
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -1040,12 +1048,57 @@ class TestModel(unittest.TestCase):
                                        offsets=255*[0.485, 0.456, 0.406],
                                        norm_stds=255*[0.229, 0.224, 0.225])
 
-    @classmethod
-    def tearDownClass(cls):
+    def test_model_crnn_bug(self):
+        model = Sequential(self.s, model_table='crnn')
+        model.add(InputLayer(3,256,16))
+        model.add(Reshape(height=16,width=256,depth=3))
+
+        model.add(Conv2d(64,3,3,stride=1,padding=1))                # size = 16x256x64
+        model.add(Pooling(2,2,2))                                   # size = 8x128x64
+
+        model.add(Conv2d(128,3,3,stride=1,padding=1))               # size = 8x128x128
+        model.add(Pooling(2,2,2))                                   # size = 4x64x128
+
+        model.add(Conv2d(256,3,3,stride=1,padding=1,act='IDENTITY')) # size = 4x64x256
+        model.add(BN(act='RELU'))                   # size = 4x64x256
+
+        model.add(Conv2d(256,3,3,stride=1,padding=1))              # size = 4x64x256
+
+
+        model.add(Pooling(1,2,stride_horizontal=1, stride_vertical=2))
+
+
+
+        #, padding=1))           #  size = 2x64x256
+        #model.add(Pooling(1,2,stride=2,stride_horizontal=1, stride_vertical=2,))           # size = 2x64x256
+
+        model.add(Conv2d(512,3,3,stride=1,padding=1, act='IDENTITY')) # size = 2x64x512
+        model.add(BN(act='RELU'))
+
+        model.add(Conv2d(512,3,3,stride=1,padding=1))              # size = 2x64x512
+        model.add(Pooling(1,2,stride_horizontal=1, stride_vertical=2)) #, padding=1))           # size = 1x64x512
+        #model.add(Pooling(1,2,stride=2,stride_horizontal=1, stride_vertical=2,))           # size = 1x64x512
+
+        model.add(Conv2d(512,3,3,stride=1,padding=1, act='IDENTITY')) # size = 1x64x512
+        model.add(BN(act='RELU'))
+
+        model.add(Reshape(order='DWH',width=64, height=512, depth=1))
+
+        model.add(Recurrent(512,output_type='SAMELENGTH'))
+
+        model.add(OutputLayer(error='CTC'))
+
+        model.print_summary()
+
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
+
+
+if __name__ == '__main__':
+    unittest.main()

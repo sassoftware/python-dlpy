@@ -30,38 +30,38 @@ from dlpy.model import Model
 from dlpy.layers import *
 from dlpy.utils import DLPyError
 from dlpy import Sequential
+import unittest
 
 
-class TestNetwork(tm.TestCase):
+class TestNetwork(unittest.TestCase):
     # Create a class attribute to hold the cas host type
     server_type = None
     s = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith(cls.server_sep):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += cls.server_sep
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.endswith(self.server_sep):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += self.server_sep
 
-    def test_option_type(self):
+    def test_network_option_type(self):
         input1 = Input(n_channels = 1, width = 28, height = 28)
         conv1 = Conv2d(2)(input1)
         conv2 = Conv2d(2)(input1)
@@ -555,13 +555,15 @@ class TestNetwork(tm.TestCase):
         model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
         model_extracted.compile()
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
+
+if __name__ == '__main__':
+    unittest.main()
