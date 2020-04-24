@@ -780,7 +780,7 @@ class Model(Network):
     def evaluate(self, data, text_parms=None, layer_out=None, layers=None, gpu=None, buffer_size=None,
                  mini_batch_buf_size=None, top_probs=None, use_best_weights=False,
                  random_crop='none', random_flip='none',  random_mutation='none',
-				 model_task=None, display_class_score_info='all'):
+                 model_task=None, display_class_score_info='all'):
         """
         Evaluate the deep learning model on a specified validation data set
 
@@ -858,6 +858,11 @@ class Model(Network):
         model_task : string, optional
             Specifies the model task type.
             Valid Values: CLASSIFICATION, REGRESSION
+
+        display_class_score_info: string, optional
+            When set to ALL, displays the ClassScoreInfo table in the results.
+            Default: ALL
+            Valid Values: NONE, ALL
 
         Returns
         -------
