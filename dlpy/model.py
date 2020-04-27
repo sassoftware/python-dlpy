@@ -699,6 +699,10 @@ class Model(Network):
                               force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
                               target_order=target_order)
 
+        # the recordSeed option must not be specified in order to disable it, contrary to the Viya documentation
+        if (record_seed == 0) or (record_seed == None):
+            parameters.__delitem__("record_seed")
+
         rt = self._retrieve_('deeplearn.dltrain', message_level='note', **parameters)
 
         if rt.severity < 2:
