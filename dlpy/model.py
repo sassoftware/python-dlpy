@@ -699,6 +699,10 @@ class Model(Network):
                               force_equal_padding=force_equal_padding, data_specs=data_specs, n_threads=n_threads,
                               target_order=target_order)
 
+        # the recordSeed option must not be specified in order to disable it, contrary to the Viya documentation
+        if record_seed == 0 or record_seed is None:
+            del parameters['record_seed']
+
         rt = self._retrieve_('deeplearn.dltrain', message_level='note', **parameters)
 
         if rt.severity < 2:
@@ -1711,6 +1715,10 @@ class Model(Network):
         import swat
         from ipykernel.comm import Comm
         comm = Comm(target_name='%(plot_id)s_comm' % dict(plot_id='foo'))
+        
+        # the recordSeed option must not be specified in order to disable it, contrary to the Viya documentation
+        if record_seed == 0 or record_seed is None:
+            del parameters['record_seed']
 
         with swat.option_context(print_messages=False):
             self._retrieve_('deeplearn.dltrain', message_level='note',
