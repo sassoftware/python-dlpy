@@ -197,7 +197,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         # propose anchors, NMS, select anchors to train RPN, produce ROIs
         rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
         roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              spatial_scale=last_layer_in_backbone[0].shape[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
     elif backbone.lower() == 'resnet34':
@@ -212,7 +212,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         # propose anchors, NMS, select anchors to train RPN, produce ROIs
         rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
         roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              spatial_scale=last_layer_in_backbone[0].shape[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
     elif backbone.lower() == 'resnet18':
@@ -227,7 +227,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         # propose anchors, NMS, select anchors to train RPN, produce ROIs
         rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
         roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              spatial_scale=last_layer_in_backbone[0].shape[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
     elif backbone.lower() == 'mobilenetv1':
@@ -242,7 +242,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         # propose anchors, NMS, select anchors to train RPN, produce ROIs
         rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
         roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              spatial_scale=last_layer_in_backbone[0].shape[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
 
     elif backbone.lower() == 'mobilenetv2':
@@ -257,7 +257,7 @@ def Faster_RCNN(conn, model_table='Faster_RCNN', n_channels=3, width=1000, heigh
         # propose anchors, NMS, select anchors to train RPN, produce ROIs
         rp1 = RegionProposal(**rpn_parameters, name='rois')(rpn_score)
         roipool1 = ROIPooling(output_height=roi_pooling_height, output_width=roi_pooling_width,
-                              spatial_scale=last_layer_in_backbone[0].shape.output_size[0]/height,
+                              spatial_scale=last_layer_in_backbone[0].shape[0]/height,
                               name='roi_pooling')([last_layer_in_backbone[0], rp1])
     else:
         raise DLPyError('We are not supporting this backbone yet.')

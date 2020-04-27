@@ -1106,7 +1106,9 @@ class Model(Network):
                     if iou_max >= iou_threshold:
                         if gt_image_index_list[det_bb.image_name][match_idx] == 0:
                             tp[idx] = 1
-                        gt_image_index_list[det_bb.image_name][match_idx] = 1
+                            gt_image_index_list[det_bb.image_name][match_idx] = 1
+                        else:
+                            fp[idx] = 1 # iou threshold is good but not the highest iou score.
                     else:
                         fp[idx] = 1
                 acc_tp = np.cumsum(tp)

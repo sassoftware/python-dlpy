@@ -22,6 +22,7 @@
 .ipynb_checkpoints
 .tags
 *.iml
+.vscode
 
 ## Compiled source
 *.a
