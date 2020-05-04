@@ -56,11 +56,14 @@ class TestApplications(unittest.TestCase):
                 self.data_dir = self.data_dir[:-1]
             self.data_dir += self.server_sep
 
-        filename = os.path.join('datasources', 'sample_syntax_for_test.json')
-        project_path = os.path.dirname(os.path.abspath(__file__))
-        full_filename = os.path.join(project_path, filename)
-        with open(full_filename) as f:
-            self.sample_syntax = json.load(f)
+        try:
+            filename = os.path.join('datasources', 'sample_syntax_for_test.json')
+            project_path = os.path.dirname(os.path.abspath(__file__))
+            full_filename = os.path.join(project_path, filename)
+            with open(full_filename) as f:
+                self.sample_syntax = json.load(f)
+        except:
+            self.sample_syntax = None
 
     def tearDown(self):
         # tear down tests
@@ -760,6 +763,8 @@ class TestApplications(unittest.TestCase):
 
     def test_fast_rcnn_2(self):
         from dlpy.applications import Faster_RCNN
+        if self.sample_syntax is None:
+            unittest.TestCase.skipTest(self, "sample_syntax file is not loaded")
         anchor_num_to_sample = 64
         anchor_ratio = [2312312, 2, 2]
         anchor_scale = [1.2, 2.3, 3.4, 5.6]
