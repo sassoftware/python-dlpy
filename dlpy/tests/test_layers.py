@@ -33,14 +33,13 @@ class TestLayers(unittest.TestCase):
 
     sample_syntax = ''
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         filename = os.path.join('datasources', 'sample_syntax_for_test.json')
         project_path = os.path.dirname(os.path.abspath(__file__))
         full_filename = os.path.join(project_path, filename)
 
         with open(full_filename) as f:
-            cls.sample_syntax = json.load(f)
+            self.sample_syntax = json.load(f)
 
     def test_input_layer1(self):
         dict1 = InputLayer(name='input1').to_model_params()
@@ -395,3 +394,6 @@ class TestLayers(unittest.TestCase):
         mapping = get_mapping_dict()
         print(mapping['learningrate'])
 
+
+if __name__ == '__main__':
+    unittest.main()

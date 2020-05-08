@@ -36,43 +36,46 @@ class TestUtils(unittest.TestCase):
     server_sep = '/'
     data_dir = None
     data_dir_local = None
+    code_cov_skip = 0
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.startswith('/'):
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.startswith('/'):
                 sep_ = '/'
             else:
                 sep_ = '\\'
-            if cls.data_dir_local.endswith(sep_):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += sep_
+            if self.data_dir_local.endswith(sep_):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += sep_
 
-    @classmethod
-    def tearDownClass(cls):
+        if 'CODE_COV_SKIP' in os.environ:
+            self.code_cov_skip = 1
+
+
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
     def test_camelcase_to_underscore(self):
@@ -329,12 +332,12 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(params[0]==3)
         self.assertTrue(params[1]==6)
 
-    def test___init__(self):
+    def test_box_xyxy(self):
         my_box = Box(x=2, y=3, w=4, h=5, class_type=None, confidence=1.0, 
                      image_name=None, format_type='xyxy')
         self.assertTrue(my_box.x_min==2)
-        self.assertTrue(my_box.x_max==3)
-        self.assertTrue(my_box.y_min==4)
+        self.assertTrue(my_box.y_min==3)
+        self.assertTrue(my_box.x_max==4)
         self.assertTrue(my_box.y_max==5)
 
     def test_plot_anchors(self):
@@ -347,17 +350,29 @@ class TestUtils(unittest.TestCase):
     def test_create_metadata_table_1(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if self.code_cov_skip == 1:
+            unittest.TestCase.skipTest(self, "Test is skipped in code coverage analysis")
+
         create_metadata_table(self.s, folder=self.data_dir)
 
     def test_create_metadata_table_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if self.code_cov_skip == 1:
+            unittest.TestCase.skipTest(self, "Test is skipped in code coverage analysis")
         create_metadata_table(self.s, folder=self.data_dir, extensions_to_filter=['.jpg'])
 
     def test_create_metadata_table_3(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if self.code_cov_skip == 1:
+            unittest.TestCase.skipTest(self, "Test is skipped in code coverage analysis")
+
         create_metadata_table(self.s, folder='/random/location')
+
         with self.assertRaises(DLPyError):
             create_metadata_table(self.s, folder='dlpy', caslib='random_caslib')
 
@@ -431,7 +446,6 @@ class TestUtils(unittest.TestCase):
             return
         self.s.dropcaslib(caslib = 'data')
         #raise DLPyError('caslibify_context() expected to throw a DLPyError')
-
 
     def test_user_defined_labels(self):
         if self.data_dir is None:
@@ -532,3 +546,5 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(file_exist_on_server(self.s, file=check_file))
 
 
+if __name__ == '__main__':
+    unittest.main()

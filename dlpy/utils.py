@@ -819,8 +819,8 @@ class Box(object):
             self.y_max = y + (h / 2)
         elif 'xyxy':
             self.x_min = x
-            self.x_max = y
-            self.y_min = w
+            self.y_min = y
+            self.x_max = w
             self.y_max = h
         self.class_type = class_type
         self.confidence = confidence
@@ -2738,7 +2738,7 @@ def create_metadata_table(conn, folder='', task='image_classification',
             folder = os.path.join(rel_path, folder)
         if task is 'image_classification':
             return create_image_classification_metadata_table(conn, folder,
-                                                               extensions_to_filter, output_name, rel_path)
+                                                              extensions_to_filter, output_name, rel_path)
     else:
         raise DLPyError('We do not support this task yet, supported tasks are as follows: '+str(tasks))
 

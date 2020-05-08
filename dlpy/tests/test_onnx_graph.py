@@ -47,7 +47,6 @@ class TestGraph(unittest.TestCase):
                                    pads=[3, 3, 3, 3],
                                    strides=[2, 2])
 
-
         conv0 = np.random.rand(64, 3, 7, 7).astype('float32')
         init0 = numpy_helper.from_array(conv0,
                                         name='conv0')
@@ -314,7 +313,6 @@ class TestGraph(unittest.TestCase):
             from onnx import helper, TensorProto
         except:
             unittest.TestCase.skipTest(self, 'onnx package not found')
-
 
         graph_ = self._generate_graph1()
         graph = OnnxGraph.from_onnx(graph_)

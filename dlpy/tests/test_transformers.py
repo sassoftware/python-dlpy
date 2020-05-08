@@ -33,8 +33,6 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-#from dlpy.transformers.bert_utils import bert_prepare_data
-#from dlpy.transformers.bert_model import BERT_Model
 
 class TestTransformers(unittest.TestCase):
     '''
@@ -54,32 +52,31 @@ class TestTransformers(unittest.TestCase):
     except:
         necessary_packages_installed = False
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith(cls.server_sep):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += cls.server_sep
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.endswith(self.server_sep):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += self.server_sep
             
         # deepLearn action set must be loaded
-        cls.s.loadactionset(actionSet='deeplearn', _messagelevel='error')
+        self.s.loadactionset(actionSet='deeplearn', _messagelevel='error')
 
     def test_transformers1(self):
         '''
@@ -448,17 +445,20 @@ class TestTransformers(unittest.TestCase):
         # clean up BERT model
         del bert
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
     
         # drop action set
-        cls.s.dropactionset(actionSet='deeplearn', _messagelevel='error')
+        self.s.dropactionset(actionSet='deeplearn', _messagelevel='error')
     
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
-    
+
+
+if __name__ == '__main__':
+    unittest.main()
+

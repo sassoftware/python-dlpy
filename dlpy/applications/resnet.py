@@ -772,7 +772,7 @@ def ResNet50_Caffe(conn, model_table='RESNET50_CAFFE', n_classes=1000, n_channel
             model = Model.from_table(model_cas, display_note=False)
             model.load_weights(path=pre_trained_weights_file)
             model._retrieve_('deeplearn.removelayer', model=model_table, name='fc1000')
-            model._retrieve_('deeplearn.addlayer', model=model_table, name='output',
+            model._retrieve_('deeplearn.addlayer', model=model_table, name='fc1000',
                              layer=dict(type='output', n=n_classes, act='softmax'),
                              srcLayers=['pool5'])
 

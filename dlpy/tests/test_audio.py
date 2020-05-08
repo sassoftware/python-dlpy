@@ -38,53 +38,51 @@ class TestAudioTable(unittest.TestCase):
     '''
 
     server_type = None
-    conn = None
+    s = None
     server_sep = '/'
     data_dir = None
     local_dir = None
     server_dir = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.conn = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.conn)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-        cls.server_sep = '\\'
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        self.server_sep = '\\'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if "DLPY_DATA_DIR_LOCAL" in os.environ:
-            cls.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
+            self.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
 
         # the server path that points to DLPY_DATA_DIR_LOCAL
         if "DLPY_DATA_DIR_SERVER" in os.environ:
-            cls.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
-            if cls.server_dir.endswith(cls.server_sep):
-                cls.server_dir = cls.server_dir[:-1]
-            cls.server_dir += cls.server_sep
+            self.server_dir = os.environ.get("DLPY_DATA_DIR_SERVER")
+            if self.server_dir.endswith(self.server_sep):
+                self.server_dir = self.server_dir[:-1]
+            self.server_dir += self.server_sep
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.conn.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.conn
+        del self.s
         swat.reset_option()
 
     def test_audio_1(self):
-        self.assertTrue(AudioTable.load_audio_files(self.conn, "/u/") is None)
+        self.assertTrue(AudioTable.load_audio_files(self.s, "/u/") is None)
 
     def test_audio_11(self):
         if self.data_dir is None:
@@ -92,30 +90,30 @@ class TestAudioTable(unittest.TestCase):
 
         print(self.data_dir+'listingFile.txt')
 
-        self.assertTrue(AudioTable.load_audio_files(self.conn, self.data_dir+'listingFile.txt',
-                                                    self.conn.CASTable('hebele')) is not None)
+        self.assertTrue(AudioTable.load_audio_files(self.s, self.data_dir+'listingFile.txt',
+                                                    self.s.CASTable('hebele')) is not None)
 
     def test_audio_12(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         with self.assertRaises(DLPyError):
-            AudioTable.load_audio_files(self.conn, self.data_dir.join('listingFile.txt'),
-                                        caslib=self.conn.caslibinfo().CASLibInfo['Name'][0])
+            AudioTable.load_audio_files(self.s, self.data_dir.join('listingFile.txt'),
+                                        caslib=self.s.caslibinfo().CASLibInfo['Name'][0])
 
     def test_audio_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        self.assertTrue(AudioTable.load_audio_files(self.conn, self.data_dir+'listingFile.txt') is not None)
+        self.assertTrue(AudioTable.load_audio_files(self.s, self.data_dir+'listingFile.txt') is not None)
 
     def test_audio_4(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        audio_table = AudioTable.load_audio_files(self.conn, self.data_dir+'listingFile.txt')
+        audio_table = AudioTable.load_audio_files(self.s, self.data_dir+'listingFile.txt')
         if audio_table is not None:
-            self.assertTrue(AudioTable.extract_audio_features(self.conn, audio_table) is not None)
+            self.assertTrue(AudioTable.extract_audio_features(self.s, audio_table) is not None)
         else:
             self.assertTrue(False)
 
@@ -123,32 +121,32 @@ class TestAudioTable(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        audio_table = AudioTable.load_audio_files(self.conn, self.data_dir+'listingFile.txt')
+        audio_table = AudioTable.load_audio_files(self.s, self.data_dir+'listingFile.txt')
         if audio_table is not None:
-            self.assertTrue(AudioTable.extract_audio_features(self.conn, audio_table,
-                                                              casout=self.conn.CASTable('name')) is not None)
+            self.assertTrue(AudioTable.extract_audio_features(self.s, audio_table,
+                                                              casout=self.s.CASTable('name')) is not None)
         else:
             self.assertTrue(False)
 
     def test_audio_5(self):
-        self.assertTrue(AudioTable.extract_audio_features(self.conn, 'string') is None)
+        self.assertTrue(AudioTable.extract_audio_features(self.s, 'string') is None)
 
     def test_audio_5(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        audio_table = AudioTable.load_audio_files(self.conn, self.data_dir+'listingFile.txt')
-        fe = self.conn.fetch(audio_table)
+        audio_table = AudioTable.load_audio_files(self.s, self.data_dir+'listingFile.txt')
+        fe = self.s.fetch(audio_table)
         self.assertTrue('recording' in fe.Fetch.ix[0]['_path_'])
 
     def test_audio_6(self):
         filename = os.path.join('datasources', 'metadata_for_audio.txt')
         project_path = os.path.dirname(os.path.abspath(__file__))
         full_filename = os.path.join(project_path, filename)
-        metadata_table = AudioTable.load_audio_metadata(self.conn,
+        metadata_table = AudioTable.load_audio_metadata(self.s,
                                                         full_filename,
                                                         audio_path=project_path)
-        fe = self.conn.fetch(metadata_table)
+        fe = self.s.fetch(metadata_table)
 
     def test_audio_7(self):
         filename = os.path.join('datasources', 'metadata_for_audio.txt')
@@ -158,7 +156,7 @@ class TestAudioTable(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        audio_table = AudioTable.create_audio_table(self.conn,
+        audio_table = AudioTable.create_audio_table(self.s,
                                                     self.data_dir+'listingFile.txt',
                                                     full_filename)
         self.assertTrue(audio_table is not None)
@@ -171,8 +169,8 @@ class TestAudioTable(unittest.TestCase):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        audio_table = AudioTable.create_audio_table(self.conn, self.data_dir+'listingFile.txt',
-                                                    full_filename, casout=self.conn.CASTable('name99'))
+        audio_table = AudioTable.create_audio_table(self.s, self.data_dir+'listingFile.txt',
+                                                    full_filename, casout=self.s.CASTable('name99'))
         self.assertTrue(audio_table is not None)
 
     def test_audio_local_audio_path(self):
@@ -192,7 +190,7 @@ class TestAudioTable(unittest.TestCase):
         local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
         server_audio_dir = self.server_dir + 'lang_id' + '/train'
 
-        audio_table = AudioTable.load_audio_files(self.conn,
+        audio_table = AudioTable.load_audio_files(self.s,
                                                   local_audio_path=local_audio_dir,
                                                   server_audio_path=server_audio_dir)
         numrows = audio_table.numrows()
@@ -227,7 +225,7 @@ class TestAudioTable(unittest.TestCase):
         local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
         server_audio_dir = self.server_dir + 'lang_id' + '/train'
 
-        image_table = AudioTable.load_audio_files(self.conn,
+        image_table = AudioTable.load_audio_files(self.s,
                                                   local_audio_path=local_audio_dir,
                                                   server_audio_path=server_audio_dir,
                                                   as_specgram=True)
@@ -256,7 +254,7 @@ class TestAudioTable(unittest.TestCase):
         local_audio_dir = os.path.join(self.local_dir, 'lang_id', 'train')
         server_audio_dir = self.server_dir + 'lang_id' + '/train'
 
-        image_table = AudioTable.load_audio_files(self.conn,
+        image_table = AudioTable.load_audio_files(self.s,
                                                   local_audio_path=local_audio_dir,
                                                   server_audio_path=server_audio_dir,
                                                   as_specgram=True, label_level=-2)
@@ -271,3 +269,7 @@ class TestAudioTable(unittest.TestCase):
         self.assertEqual(image_table.label_freq['Frequency'][0], 5)
 
         image_table.show(id='_path_', ncol=2, nimages=2)
+
+
+if __name__ == '__main__':
+    unittest.main()

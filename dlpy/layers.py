@@ -244,7 +244,7 @@ class Layer(object):
             self._inbound_nodes = [Node(src_layer, self) for src_layer in self.src_layers]
             self.tensor = [Tensor(output_layer) for output_layer in self.output_layers]
             for tensor, output_layer in zip(self.tensor, self.output_layers):
-                tensor.shape = output_layer
+                tensor.shape = output_layer.output_size
         else:
             self._inbound_nodes = Node(self.src_layers, self)
             self.tensor = Tensor(self)  # return Tensor object

@@ -334,3 +334,6 @@ class TestTransformer(unittest.TestCase):
         self.assertTrue(np.array_equal(s, s_))
         self.assertTrue(np.array_equal(b, b_))
 
+
+if __name__ == '__main__':
+    unittest.main()

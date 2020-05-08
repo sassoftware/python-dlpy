@@ -30,38 +30,38 @@ from dlpy.model import Model
 from dlpy.layers import *
 from dlpy.utils import DLPyError
 from dlpy import Sequential
+import unittest
 
 
-class TestNetwork(tm.TestCase):
+class TestNetwork(unittest.TestCase):
     # Create a class attribute to hold the cas host type
     server_type = None
     s = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.s = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.s)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
 
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = '/'
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = '/'
 
         if 'DLPY_DATA_DIR' in os.environ:
-            cls.data_dir = os.environ.get('DLPY_DATA_DIR')
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get('DLPY_DATA_DIR')
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if 'DLPY_DATA_DIR_LOCAL' in os.environ:
-            cls.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
-            if cls.data_dir_local.endswith(cls.server_sep):
-                cls.data_dir_local = cls.data_dir_local[:-1]
-            cls.data_dir_local += cls.server_sep
+            self.data_dir_local = os.environ.get('DLPY_DATA_DIR_LOCAL')
+            if self.data_dir_local.endswith(self.server_sep):
+                self.data_dir_local = self.data_dir_local[:-1]
+            self.data_dir_local += self.server_sep
 
-    def test_option_type(self):
+    def test_network_option_type(self):
         input1 = Input(n_channels = 1, width = 28, height = 28)
         conv1 = Conv2d(2)(input1)
         conv2 = Conv2d(2)(input1)
@@ -447,8 +447,9 @@ class TestNetwork(tm.TestCase):
         from dlpy.applications import MobileNetV2
         backbone = MobileNetV2(self.s, width = 1248, height = 1248)
         backbone_pure = backbone.to_functional_model(stop_layers = backbone.layers[-14])
-        # expect to get two outputs since stop layer is in a branch
-        self.assertEqual(len(backbone_pure.output_layers), 2)
+        # expect to get one outputs(block_15_depthwise) since stop layer is in a branch
+        # output layer is not a valid output_layers since its dependencies cannot be traversed.
+        self.assertEqual(len(backbone_pure.output_layers), 1)
 
     def test_astore_deploy_wrong_path(self):
         from dlpy.sequential import Sequential
@@ -500,6 +501,7 @@ class TestNetwork(tm.TestCase):
         # check type
         self.assertTrue(cnn_rnn.model_type == 'RNN')
         self.assertTrue(cnn_rnn.layers[-1].name == 'fixed')
+        self.assertTrue(x[0].shape == (1, 1, 2048))
 
         f_rnn = model_rnn.to_functional_model()
         # connecting
@@ -554,14 +556,28 @@ class TestNetwork(tm.TestCase):
         model.add(Clustering(n_clusters=10))
         model_extracted = Model.from_table(self.s.CASTable(model.model_table['name']))
         model_extracted.compile()
+        
+    def test_multiple_stop_layers1(self):
+        from dlpy.applications import ResNet50_Caffe
+        resnet50 = ResNet50_Caffe(self.s, "res50")
+        stop_layers = [resnet50.layers[x] for x in [-2, 4, -8] ]
+        feature_extractor1 = resnet50.to_functional_model(stop_layers=stop_layers)
+        
+    def test_multiple_stop_layers2(self):
+        from dlpy.applications import MobileNetV1
+        resnet50 = MobileNetV1(self.s, "MobileNetV1")
+        stop_layers = [resnet50.layers[x] for x in [-2, 4, -8] ]
+        feature_extractor1 = resnet50.to_functional_model(stop_layers=stop_layers)
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # tear down tests
         try:
-            cls.s.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.s
+        del self.s
         swat.reset_option()
 
+
+if __name__ == '__main__':
+    unittest.main()

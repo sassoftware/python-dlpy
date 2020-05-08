@@ -7,6 +7,7 @@ import os
 
 
 class TestSpeechUtils(unittest.TestCase):
+
     def setUp(self):
         self.data_dir_local = None
         if "DLPY_DATA_DIR_LOCAL" in os.environ:
@@ -430,8 +431,8 @@ class TestSpeechToTextInit(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        self.conn = swat.CAS()
-        self.server_type = tm.get_cas_host_type(self.conn)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
         self.server_sep = "\\"
         if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
             self.server_sep = "/"
@@ -451,8 +452,8 @@ class TestSpeechToTextInit(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = Speech(self.conn, self.data_dir, self.local_dir)
-        action_set_list = self.conn.actionSetInfo().setinfo["actionset"].tolist()
+        speech = Speech(self.s, self.data_dir, self.local_dir)
+        action_set_list = self.s.actionSetInfo().setinfo["actionset"].tolist()
         self.assertTrue("audio" in action_set_list)
         self.assertTrue("deepLearn" in action_set_list)
         self.assertTrue("langModel" in action_set_list)
@@ -466,7 +467,7 @@ class TestSpeechToTextInit(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
         with self.assertRaises(DLPyError):
-            Speech(self.conn, self.data_dir, os.path.join(self.local_dir, "nonexistent"))
+            Speech(self.s, self.data_dir, os.path.join(self.local_dir, "nonexistent"))
 
     def test_init_3(self):
         if self.data_dir is None:
@@ -474,12 +475,12 @@ class TestSpeechToTextInit(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = Speech(self.conn, self.data_dir, self.local_dir,
+        speech = Speech(self.s, self.data_dir, self.local_dir,
                         self.data_dir + "sample_acoustic_model.sashdat",
                         self.data_dir + "sample_language_model.csv")
         self.assertIsNotNone(speech.acoustic_model)
         self.assertIsNotNone(speech.language_model_caslib)
-        table_list = self.conn.tableInfo(caslib=speech.language_model_caslib).TableInfo["Name"].tolist()
+        table_list = self.s.tableInfo(caslib=speech.language_model_caslib).TableInfo["Name"].tolist()
         self.assertTrue(speech.language_model_name.upper() in table_list)
 
     def test_load_acoustic_model(self):
@@ -488,7 +489,7 @@ class TestSpeechToTextInit(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = Speech(self.conn, self.data_dir, self.local_dir)
+        speech = Speech(self.s, self.data_dir, self.local_dir)
         speech.load_acoustic_model(self.data_dir + "sample_acoustic_model.sashdat")
         self.assertIsNotNone(speech.acoustic_model)
         self.assertIsNotNone(speech.acoustic_model.model_name)
@@ -501,13 +502,13 @@ class TestSpeechToTextInit(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = Speech(self.conn, self.data_dir, self.local_dir)
+        speech = Speech(self.s, self.data_dir, self.local_dir)
         self.assertIsNone(speech.language_model_caslib)
 
         speech.load_language_model(self.data_dir + "sample_language_model.csv")
         self.assertIsNotNone(speech.language_model_caslib)
 
-        table_list = self.conn.tableInfo(caslib=speech.language_model_caslib).TableInfo["Name"].tolist()
+        table_list = self.s.tableInfo(caslib=speech.language_model_caslib).TableInfo["Name"].tolist()
         self.assertTrue(speech.language_model_name.upper() in table_list)
 
     def test_load_language_model_2(self):
@@ -516,7 +517,7 @@ class TestSpeechToTextInit(unittest.TestCase):
         if self.local_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables.")
 
-        speech = Speech(self.conn, self.data_dir, self.local_dir)
+        speech = Speech(self.s, self.data_dir, self.local_dir)
         self.assertIsNone(speech.language_model_caslib)
 
         with self.assertRaises(DLPyError):
@@ -525,10 +526,10 @@ class TestSpeechToTextInit(unittest.TestCase):
 
     def tearDown(self):
         try:
-            self.conn.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del self.conn
+        del self.s
         swat.reset_option()
 
 
@@ -542,31 +543,30 @@ class TestSpeechToText(unittest.TestCase):
 
     speech = None
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         swat.reset_option()
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        cls.conn = swat.CAS()
-        cls.server_type = tm.get_cas_host_type(cls.conn)
-        cls.server_sep = "\\"
-        if cls.server_type.startswith("lin") or cls.server_type.startswith("osx"):
-            cls.server_sep = "/"
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
+        self.server_sep = "\\"
+        if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
+            self.server_sep = "/"
 
         if "DLPY_DATA_DIR" in os.environ:
-            cls.data_dir = os.environ.get("DLPY_DATA_DIR")
-            if cls.data_dir.endswith(cls.server_sep):
-                cls.data_dir = cls.data_dir[:-1]
-            cls.data_dir += cls.server_sep
+            self.data_dir = os.environ.get("DLPY_DATA_DIR")
+            if self.data_dir.endswith(self.server_sep):
+                self.data_dir = self.data_dir[:-1]
+            self.data_dir += self.server_sep
 
         if "DLPY_DATA_DIR_LOCAL" in os.environ:
-            cls.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
+            self.local_dir = os.environ.get("DLPY_DATA_DIR_LOCAL")
 
-        if cls.data_dir is not None:
-            cls.speech = Speech(cls.conn, cls.data_dir, cls.local_dir,
-                                cls.data_dir + "sample_acoustic_model.sashdat",
-                                cls.data_dir + "sample_language_model.csv")
+        if self.data_dir is not None:
+            self.speech = Speech(self.s, self.data_dir, self.local_dir,
+                                 self.data_dir + "sample_acoustic_model.sashdat",
+                                 self.data_dir + "sample_language_model.csv")
 
     def test_transcribe_1(self):
         try:
@@ -631,11 +631,14 @@ class TestSpeechToText(unittest.TestCase):
         except DLPyError as err:
             self.assertTrue("Cannot load the audio files." in str(err))
 
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         try:
-            cls.conn.terminate()
+            self.s.terminate()
         except swat.SWATError:
             pass
-        del cls.conn
+        del self.s
         swat.reset_option()
+
+
+if __name__ == '__main__':
+    unittest.main()

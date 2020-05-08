@@ -22,12 +22,11 @@ from dlpy.data_clean import DataClean
 
 import swat
 import swat.utils.testing as tm
-
+import unittest
 
 class TestDataCleaning(tm.TestCase):
 
-    @classmethod      
-    def setUpClass(self):
+    def setUp(self):
         self.filename = os.path.join('datasources','metadata_for_audio.txt')
         self.project_path = os.path.dirname(os.path.abspath(__file__))
         self.full_filename = os.path.join(self.project_path, self.filename)        
@@ -36,21 +35,16 @@ class TestDataCleaning(tm.TestCase):
         self.tst_replacements = os.path.join(self.project_path, self.replacements_txt)         
 
         self.dc = DataClean()
-        self.conn = swat.CAS()
-  
-    @classmethod
-    def tearDownClass(self):
-        pass
+        self.s = swat.CAS()
 
-    def setUp(self):
-        print(' ')
-        print('=============================================================')          
-        print('Test: %s ' % self.id())        
-        print('Description: %s ' % self.shortDescription())
-        print('=============================================================')
-    
     def tearDown(self):
-        pass                
+        # tear down tests
+        try:
+            self.s.terminate()
+        except swat.SWATError:
+            pass
+        del self.s
+        swat.reset_option()
     
     def test_dc_valid_file(self):
         '''read in a valid text file from datasource'''
@@ -65,7 +59,7 @@ class TestDataCleaning(tm.TestCase):
         curr_dc=DataClean(replacements=self.tst_replacements)
         print ('-------------------------')
         for k,v in curr_dc.replacements.items():
-            print('%s=%s' % (k,v))
+            print('%s=%s' % (k, v))
             print('--------------------------------------------------------')
             print('testing for %s, to be replaced with %s' % (k,v))
             test_string = 'recording_7.wav %s Wow that is awesome' % k
@@ -323,7 +317,10 @@ class TestDataCleaning(tm.TestCase):
     def test_dc_datasource_data_to_castable(self):
         '''process everything and build a castable from results'''
         
-        curr_dc=DataClean(conn=self.conn,contents_as_path=self.full_filename)
-        response = curr_dc.process_contents(show_results=False)        
-        curr_dc.create_castable(response['results'],'cool_cas',replace=True,promote=True) 
-        
+        curr_dc=DataClean(conn=self.s,contents_as_path=self.full_filename)
+        response = curr_dc.process_contents(show_results=False)
+        curr_dc.create_castable(response['results'],'cool_cas',replace=True,promote=True)
+
+
+if __name__ == '__main__':
+    unittest.main()

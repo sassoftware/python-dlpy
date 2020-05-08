@@ -47,8 +47,8 @@ class TestTimeseriesTable(unittest.TestCase):
         swat.options.cas.print_messages = False
         swat.options.interactive_mode = False
 
-        self.conn = swat.CAS()
-        self.server_type = tm.get_cas_host_type(self.conn)
+        self.s = swat.CAS()
+        self.server_type = tm.get_cas_host_type(self.s)
         self.server_sep = '\\'
         if self.server_type.startswith("lin") or self.server_type.startswith("osx"):
             self.server_sep = '/'
@@ -71,16 +71,16 @@ class TestTimeseriesTable(unittest.TestCase):
         filename3 = self.data_dir+'timeseries_exp1.csv'
         filename4 = self.data_dir+'timeseries_exp2.txt'
 
-        self.table1 = TimeseriesTable.from_localfile(self.conn, filename1, importoptions=importoptions1)
-        self.table2 = TimeseriesTable.from_localfile(self.conn, filename2, importoptions=importoptions2)
-        self.table3 = TimeseriesTable.from_serverfile(self.conn, filename3, importoptions=importoptions1)
-        self.table4 = TimeseriesTable.from_serverfile(self.conn, filename4, importoptions=importoptions2)
+        self.table1 = TimeseriesTable.from_localfile(self.s, filename1, importoptions=importoptions1)
+        self.table2 = TimeseriesTable.from_localfile(self.s, filename2, importoptions=importoptions2)
+        self.table3 = TimeseriesTable.from_serverfile(self.s, filename3, importoptions=importoptions1)
+        self.table4 = TimeseriesTable.from_serverfile(self.s, filename4, importoptions=importoptions2)
         self.table5 = TimeseriesTable.from_table(self.table1, columns=['id1var', 'date', 'series'])
 
         pandas_df1 = pd.read_csv(filename1)
         pandas_df2 = pandas_df1.series
-        self.table6 = TimeseriesTable.from_pandas(self.conn, pandas_df1)
-        self.table7 = TimeseriesTable.from_pandas(self.conn, pandas_df2)
+        self.table6 = TimeseriesTable.from_pandas(self.s, pandas_df1)
+        self.table7 = TimeseriesTable.from_pandas(self.s, pandas_df2)
 
         self.assertNotEqual(self.table1.name, None)
         self.assertNotEqual(self.table2.name, None)
@@ -93,10 +93,10 @@ class TestTimeseriesTable(unittest.TestCase):
     def tearDown(self):
         # tear down tests
         try:
-            self.conn.endsession()
+            self.s.endsession()
         except swat.SWATError:
             pass
-        del self.conn
+        del self.s
         swat.reset_option()
 
     def test_table_loading2(self):
@@ -109,17 +109,17 @@ class TestTimeseriesTable(unittest.TestCase):
 
         filename4 = self.data_dir+'timeseries_exp2.txt'
 
-        table_tmp1 = TimeseriesTable.from_localfile(self.conn, filename1, importoptions=importoptions1,
+        table_tmp1 = TimeseriesTable.from_localfile(self.s, filename1, importoptions=importoptions1,
                                                     casout=dict(name='table_tmp1'))
-        table_tmp2 = TimeseriesTable.from_serverfile(self.conn, filename4, importoptions=importoptions2,
+        table_tmp2 = TimeseriesTable.from_serverfile(self.s, filename4, importoptions=importoptions2,
                                                      casout=dict(name='table_tmp2'))
         table_tmp3 = TimeseriesTable.from_table(self.table1, columns=['id1var', 'date', 'series'],
                                                 casout=dict(name='table_tmp3'))
 
         pandas_df1 = pd.read_csv(filename1)
         pandas_df2 = pandas_df1.series
-        table_tmp4 = TimeseriesTable.from_pandas(self.conn, pandas_df1, casout=dict(name='table_tmp4'))
-        table_tmp5 = TimeseriesTable.from_pandas(self.conn, pandas_df2, casout=dict(name='table_tmp5'))
+        table_tmp4 = TimeseriesTable.from_pandas(self.s, pandas_df1, casout=dict(name='table_tmp4'))
+        table_tmp5 = TimeseriesTable.from_pandas(self.s, pandas_df2, casout=dict(name='table_tmp5'))
 
         self.assertEqual(table_tmp1.name, 'table_tmp1')
         self.assertEqual(table_tmp2.name, 'table_tmp2')
@@ -127,7 +127,7 @@ class TestTimeseriesTable(unittest.TestCase):
         self.assertEqual(table_tmp4.name, 'table_tmp4')
         self.assertEqual(table_tmp5.name, 'table_tmp5')
 
-        tmp1_tbl = self.conn.CASTable('table_tmp1')
+        tmp1_tbl = self.s.CASTable('table_tmp1')
         localtmp1 = tmp1_tbl.to_frame()
         localtable1 = self.table1.to_frame()
         localtmp1 = localtmp1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
@@ -137,7 +137,7 @@ class TestTimeseriesTable(unittest.TestCase):
         localtable1 = localtable1.astype(coltypes)
         self.assertTrue(localtable1.equals(localtmp1))
 
-        tmp4_tbl = self.conn.CASTable('table_tmp4')
+        tmp4_tbl = self.s.CASTable('table_tmp4')
         localtmp4 = tmp4_tbl.to_frame()
         localtmp4 = localtmp4.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
         pandas_df1 = pandas_df1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
@@ -154,16 +154,16 @@ class TestTimeseriesTable(unittest.TestCase):
 
         filename3 = self.data_dir+'timeseries_exp1.csv'
 
-        table_tmp1 = TimeseriesTable.from_localfile(self.conn, filename1, casout=self.conn.CASTable('table_tmp1'))
-        table_tmp2 = TimeseriesTable.from_serverfile(self.conn, filename3,
-                                                     casout=self.conn.CASTable('table_tmp1', replace=True))
+        table_tmp1 = TimeseriesTable.from_localfile(self.s, filename1, casout=self.s.CASTable('table_tmp1'))
+        table_tmp2 = TimeseriesTable.from_serverfile(self.s, filename3,
+                                                     casout=self.s.CASTable('table_tmp1', replace=True))
         table_tmp3 = TimeseriesTable.from_table(self.table1, columns=['id1var', 'date', 'series'],
-                                                casout=self.conn.CASTable('table_tmp2'))
+                                                casout=self.s.CASTable('table_tmp2'))
 
         pandas_df1 = pd.read_csv(filename1)
         pandas_df2 = pandas_df1.series
-        table_tmp4 = TimeseriesTable.from_pandas(self.conn, pandas_df1, casout=self.conn.CASTable('table_tmp4'))
-        table_tmp5 = TimeseriesTable.from_pandas(self.conn, pandas_df2, casout=self.conn.CASTable('table_tmp5'))
+        table_tmp4 = TimeseriesTable.from_pandas(self.s, pandas_df1, casout=self.s.CASTable('table_tmp4'))
+        table_tmp5 = TimeseriesTable.from_pandas(self.s, pandas_df2, casout=self.s.CASTable('table_tmp5'))
 
         self.assertEqual(table_tmp1.name, 'table_tmp1')
         self.assertEqual(table_tmp2.name, 'table_tmp1')
@@ -171,7 +171,7 @@ class TestTimeseriesTable(unittest.TestCase):
         self.assertEqual(table_tmp4.name, 'table_tmp4')
         self.assertEqual(table_tmp5.name, 'table_tmp5')
 
-        tmp1_tbl = self.conn.CASTable('table_tmp1')
+        tmp1_tbl = self.s.CASTable('table_tmp1')
         localtmp1 = tmp1_tbl.to_frame()
         localtable1 = self.table1.to_frame()
         localtmp1 = localtmp1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
@@ -181,7 +181,7 @@ class TestTimeseriesTable(unittest.TestCase):
         localtable1 = localtable1.astype(coltypes)
         self.assertTrue(localtable1.equals(localtmp1))
 
-        tmp4_tbl = self.conn.CASTable('table_tmp4')
+        tmp4_tbl = self.s.CASTable('table_tmp4')
         localtmp4 = tmp4_tbl.to_frame()
         localtmp4 = localtmp4.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
         pandas_df1 = pandas_df1.sort_values(['id1var', 'id2var', 'datetime']).reset_index(drop=True)
@@ -1107,3 +1107,7 @@ class TestTimeseriesTable(unittest.TestCase):
             self.table1.timeseries_accumlation(acc_interval='day',
                                                groupby=['id1var', 'id2var'],
                                                user_defined_interval='obs10')
+
+
+if __name__ == '__main__':
+    unittest.main()
