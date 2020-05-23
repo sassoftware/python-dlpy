@@ -121,7 +121,8 @@ class TestGPU(unittest.TestCase):
 
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
-        r = model1.fit(data=data, inputs=inputs, target=target, gpu=1)
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=1)
         self.assertTrue(r.severity == 0)
 
         r2 = model1.predict(data=data, gpu=1)
@@ -140,7 +141,8 @@ class TestGPU(unittest.TestCase):
         
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
-        r = model1.fit(data=data, inputs=inputs, target=target, gpu=Gpu(devices=[0]))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(devices=[0]))
         self.assertTrue(r.severity == 0)
 
         r2 = model1.predict(data=data, gpu=Gpu(devices=[0]))
@@ -160,7 +162,8 @@ class TestGPU(unittest.TestCase):
         
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
-        r = model1.fit(data=data, inputs=inputs, target=target, gpu=Gpu(use_tensor_rt=True))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(use_tensor_rt=True))
         #'WARNING: TensorRT only supports inference and will be disabled.'
         self.assertTrue(r.severity == 1)
 
@@ -189,7 +192,8 @@ class TestGPU(unittest.TestCase):
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
         # Default lr=1e-2 causes FPE if precision='FP16'.
-        r = model1.fit(data=data, inputs=inputs, target=target, lr=1e-4, gpu=Gpu(precision='FP16'))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(precision='FP16'))
         self.assertTrue(r.severity == 0)
 
         r2 = model1.predict(data=data, gpu=Gpu(precision='FP16'))
@@ -209,7 +213,8 @@ class TestGPU(unittest.TestCase):
         
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
-        r = model1.fit(data=data, inputs=inputs, target=target, gpu=Gpu(use_exclusive=True))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(use_exclusive=True))
         self.assertTrue(r.severity == 0)
 
         r2 = model1.predict(data=data, gpu=Gpu(use_exclusive=True))
@@ -231,7 +236,8 @@ class TestGPU(unittest.TestCase):
         
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
-        r = model1.fit(data=data, inputs=inputs, target=target, gpu=Gpu(devices=[0], use_tensor_rt=True))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(devices=[0], use_tensor_rt=True))
         #'WARNING: TensorRT only supports inference and will be disabled.'
         self.assertTrue(r.severity == 1)
 
@@ -259,7 +265,8 @@ class TestGPU(unittest.TestCase):
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
         # Default lr=1e-2 causes FPE if precision='FP16'.
-        r = model1.fit(data=data, inputs=inputs, target=target, lr=1e-4, gpu=Gpu(use_tensor_rt=True, precision='FP16'))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(use_tensor_rt=True, precision='FP16'))
         #'WARNING: TensorRT only supports inference and will be disabled.'
         self.assertTrue(r.severity == 1)
 
@@ -323,7 +330,8 @@ class TestGPU(unittest.TestCase):
         
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
-        r = model1.fit(data=data, inputs=inputs, target=target, gpu=Gpu(use_tensor_rt=True, use_exclusive=True))
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
+                gpu=Gpu(use_tensor_rt=True, use_exclusive=True))
         #'WARNING: TensorRT only supports inference and will be disabled.'
         self.assertTrue(r.severity == 1)
 
@@ -355,7 +363,7 @@ class TestGPU(unittest.TestCase):
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
         # Default lr=1e-2 causes FPE if precision='FP16'.
-        r = model1.fit(data=data, inputs=inputs, target=target, lr=1e-4, 
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
                 gpu=Gpu(precision='FP16', use_exclusive=True))
         self.assertTrue(r.severity == 0)
 
@@ -387,7 +395,7 @@ class TestGPU(unittest.TestCase):
         caslib, tmp_caslib, data, inputs, target = self.LoadEEE()
 
         # Default lr=1e-2 causes FPE if precision='FP16'.
-        r = model1.fit(data=data, inputs=inputs, target=target, lr=1e-4, 
+        r = model1.fit(data=data, inputs=inputs, target=target, n_threads=16, mini_batch_size=8, lr=1e-4, 
                 gpu=Gpu(use_tensor_rt=True, precision='FP16', use_exclusive=True))
         #'WARNING: TensorRT only supports inference and will be disabled.'
         self.assertTrue(r.severity == 1)
@@ -481,7 +489,8 @@ class TestGPU(unittest.TestCase):
                               seed=1234, max_epochs=2)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, gpu=1,
-                            sequence=seq_spec, **traintbl.inputs_target)        
+                    n_threads=16, mini_batch_size=8, lr=1e-4, 
+                    sequence=seq_spec, **traintbl.inputs_target)        
         self.assertTrue(result.severity == 0)
         
         resulttbl1 = model1.forecast(horizon=1, gpu=1)
