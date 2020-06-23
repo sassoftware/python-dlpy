@@ -24,7 +24,7 @@ from .application_utils import get_layer_options, input_layer_options
 
 def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, height=256, scale=1.0/255,
          norm_stds=None, offsets=None, random_mutation=None, init=None, bn_after_convolutions=False,
-         random_flip=None, random_crop=None):
+         random_flip=None, random_crop=None, output_image_type=None, output_image_prob=False):
     '''
     Generates a deep learning model with the U-Net architecture.
 
@@ -76,6 +76,12 @@ def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, heigh
         and height parameters. Only the images with one or both dimensions
         that are larger than those sizes are cropped.
         Valid Values: 'none', 'unique', 'randomresized', 'resizethencrop'
+    output_image_type: string, optional
+        Specifies the output image type of this layer.
+        possible values: [ WIDE, PNG, BASE64 ]
+        default: WIDE
+    output_image_prob: bool, options
+        Does not include probabilities if doing classification (default).
 
     Returns
     -------

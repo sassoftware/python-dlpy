@@ -2257,7 +2257,7 @@ def display_segmentation_images(conn, table, n_images=4, image_column='_image_',
     if len(labels) > 0 and len(labels.Images) > 0:
         for i in range(n_images):
             ax = fig.add_subplot(n_row, n_images, k)
-            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0])
             k += 1
 
 
@@ -2368,7 +2368,7 @@ def display_segmentation_results(conn, table, n_images=4, image_column='_image_'
 
         if len(labels) > 0 and len(labels.Images) > 0:
             ax = fig.add_subplot(n_images, n_col, k)
-            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0], vmax=2)
+            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0])
             k += 1
             if len(predictions) > 0 and len(predictions.Images) > 0:
                 plt.title(predictions.Images[filename_column][i] +' ground truth')
@@ -2738,7 +2738,7 @@ def create_metadata_table(conn, folder='', task='image_classification',
             folder = os.path.join(rel_path, folder)
         if task is 'image_classification':
             return create_image_classification_metadata_table(conn, folder,
-                                                               extensions_to_filter, output_name, rel_path)
+                                                              extensions_to_filter, output_name, rel_path)
     else:
         raise DLPyError('We do not support this task yet, supported tasks are as follows: '+str(tasks))
 

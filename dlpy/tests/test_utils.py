@@ -36,6 +36,7 @@ class TestUtils(unittest.TestCase):
     server_sep = '/'
     data_dir = None
     data_dir_local = None
+    code_cov_skip = 0
 
     def setUp(self):
         swat.reset_option()
@@ -63,6 +64,10 @@ class TestUtils(unittest.TestCase):
             if self.data_dir_local.endswith(sep_):
                 self.data_dir_local = self.data_dir_local[:-1]
             self.data_dir_local += sep_
+
+        if 'CODE_COV_SKIP' in os.environ:
+            self.code_cov_skip = 1
+
 
     def tearDown(self):
         # tear down tests
@@ -345,17 +350,29 @@ class TestUtils(unittest.TestCase):
     def test_create_metadata_table_1(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if self.code_cov_skip == 1:
+            unittest.TestCase.skipTest(self, "Test is skipped in code coverage analysis")
+
         create_metadata_table(self.s, folder=self.data_dir)
 
     def test_create_metadata_table_2(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if self.code_cov_skip == 1:
+            unittest.TestCase.skipTest(self, "Test is skipped in code coverage analysis")
         create_metadata_table(self.s, folder=self.data_dir, extensions_to_filter=['.jpg'])
 
     def test_create_metadata_table_3(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        if self.code_cov_skip == 1:
+            unittest.TestCase.skipTest(self, "Test is skipped in code coverage analysis")
+
         create_metadata_table(self.s, folder='/random/location')
+
         with self.assertRaises(DLPyError):
             create_metadata_table(self.s, folder='dlpy', caslib='random_caslib')
 
@@ -429,7 +446,6 @@ class TestUtils(unittest.TestCase):
             return
         self.s.dropcaslib(caslib = 'data')
         #raise DLPyError('caslibify_context() expected to throw a DLPyError')
-
 
     def test_user_defined_labels(self):
         if self.data_dir is None:

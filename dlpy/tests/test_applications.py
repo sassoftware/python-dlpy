@@ -948,6 +948,17 @@ class TestApplications(unittest.TestCase):
         self.assertTrue(effnetb6.input_layers[0].output_size==(528,528,3))
         self.assertTrue(effnetb7.input_layers[0].output_size==(600,600,3))
 
+    def test_enet(self):
+        from dlpy.applications import ENet
+        model = ENet(self.s, width=512, height=512)
+        self.assertTrue(len(model.layers) == 150)
+        self.assertTrue(model.layers[29].output_size == (128, 128, 16))
+        model.print_summary()
+        model = ENet(self.s, width=256, height=256)
+        model.print_summary()
+        self.assertEqual(model.summary.iloc[148, -1], 18874368)
+
 
 if __name__ == '__main__':
     unittest.main()
+
