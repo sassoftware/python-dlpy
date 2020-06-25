@@ -31,4 +31,4 @@ The pixel-wise segmentation regression model in this SAS DLPy notebook consists 
 - [Display Output Table Image Columns](https://github.com/sassoftware/python-dlpy/tree/master/examples/image_denoising/Image_Denoising_Model.ipynb#DisplayOutputCols)
 - [Display Output Table Prediction Images](https://github.com/sassoftware/python-dlpy/tree/master/examples/image_denoising/Image_Denoising_Model.ipynb#DisplayOutputs)
 - [Display Scored Image Results](https://github.com/sassoftware/python-dlpy/tree/master/examples/image_denoising/Image_Denoising_Model.ipynb#DisplayFinal) 
-}
+
