@@ -187,7 +187,7 @@ def predicted_prob_barplot(ax, labels, values):
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, rotation=45)
     ax.set_xlabel('Probability')
-    ax.set_xticks([0, 0.25, 0.5, 0.75, 1, 1.1])
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
     ax.set_xticklabels(['0%', '25%', '50%', '75%', '100%'])
     ax.set_title('Predicted Probability')
     return ax
