@@ -173,6 +173,20 @@ class TestUtils(unittest.TestCase):
         # check if the output size is correct
         self.assertEqual(self.s.image.summarizeimages('output').Summary.values[0][6], 416)
         self.assertEqual(self.s.image.summarizeimages('output').Summary.values[0][7], 512)
+              
+    def test_create_object_detection_table_no_xml_verification(self):
+        # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+        
+        create_object_detection_table_no_xml2(self.s, data_path=self.data_dir + 'dlpy_obj_det_test', coord_type='yolo', 
+                                             output='output', annotation_path=self.data_dir + 'dlpy_obj_det_test',
+                                             image_size=(416, 416), check_bbox=True, min_bbox_width=35, min_bbox_height=35, 
+                                             min_bbox_x=0, min_bbox_y=0, max_bbox_x=None, max_bbox_y=None)
+        # CAS Table should only contain objects whose bounding boxes meet user criteria
+        # Based on this criteria and given the test data, only 3 images with a total of 5 objects should remain
+        a = self.s.CASTable('output')
+        self.assertEqual(len(a), 3)
 
     def test_get_anchors(self):
         if platform.system().startswith('Win'):

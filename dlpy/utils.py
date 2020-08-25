@@ -2384,7 +2384,8 @@ def display_segmentation_results(conn, table, n_images=4, image_column='_image_'
 
 
 def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None,
-                                         image_size=(416, 416)):
+                                         image_size=(416, 416), check_bbox=False, min_bbox_width=1, min_bbox_height=1, 
+                                         min_bbox_x=0, min_bbox_y=0, max_bbox_x=None, max_bbox_y=None):
     '''
     This is an alternative function to create object detection table. This function is especially good if you are
     using Ethem's annotation tool (this one creates txt files directly).
@@ -2416,6 +2417,38 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
         Specifies the size of images to resize.
         If a tuple is passed, the first integer is width and the second value is height.
         Default: (416, 416)
+    check_bbox : bool, optional
+        Specifies whether to check resulting bounding boxes according to image_size.
+        Helps in dropping objects whose bounding boxes would be too small after image resizing.
+        Default : False
+    min_bbox_width : integer, optional
+        Specifies the minimum width for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Default : 1
+    min_bbox_height : integer, optional
+        Specifies the minimum height for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Default : 1
+    min_bbox_x : integer, optional
+        Specifies the minimum x1 value for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Helps in dropping bounding boxes outside of the image.
+        Default : 0
+    min_bbox_y : integer, optional
+        Specifies the minimum y1 value for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Helps in dropping bounding boxes outside of the image.
+        Default : 0
+    max_bbox_x : integer, optional
+        Specifies the minimum x2 value for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Helps in dropping bounding boxes outside of the image.
+        Default : None or image_size[0]
+    max_bbox_y : integer, optional
+        Specifies the minimum y2 value for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Helps in dropping bounding boxes outside of the image.
+        Default : None or image_size[1]
 
     Returns
     -------
@@ -2475,7 +2508,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                                                                               'path is accessible from'
                                                                               'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
         det_img_table = random_name('DET_IMG')
-        image_size = _pair(image_size)  # ensure image_size is a pair
+        image_size= image_size if isinstance(image_size, tuple) else (image_size,image_size)  # ensure image_size is a pair
         with sw.option_context(print_messages=False):
             res = conn.image.loadImages(path=path_after_caslib,
                                         recurse=True,
@@ -2545,6 +2578,52 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
                 run;
                 '''.format(output, string_input_tbl_name)
     conn.runcode(code=fmt_code, _messagelevel='error')
+    
+    # Verify that bounding boxes meet user requirements. (Only YOLO coordinate_type currently supported)
+    if check_bbox == True:
+        if coord_type.lower() == 'yolo':
+            if max_bbox_x == None:
+                max_bbox_x = image_size[0]
+            if max_bbox_y == None:
+                max_bbox_y = image_size[1]
+            print('NOTE: Verifying that bounding boxes meet following criteria:')
+            print('NOTE: min_bbox_width={}'.format(min_bbox_width))
+            print('NOTE: min_bbox_height={}'.format(min_bbox_height))
+            print('NOTE: min_bbox_x={}'.format(min_bbox_x))
+            print('NOTE: min_bbox_y={}'.format(min_bbox_y))
+            print('NOTE: max_bbox_x={}'.format(max_bbox_x))
+            print('NOTE: max_bbox_y={}'.format(max_bbox_y))
+            # Create temporary CAS-table for calcultion of x1, x2, y1, y2, width and height
+            tmp_verification_castable = conn.CASTable(output)
+            num_objects = len(tmp_verification_castable)
+            tmp_verification_castable['x1'] = tmp_verification_castable['Var2']*image_size[0]-tmp_verification_castable['Var4']*image_size[0]/2
+            tmp_verification_castable['x2'] = tmp_verification_castable['Var2']*image_size[0]+tmp_verification_castable['Var4']*image_size[0]/2
+            tmp_verification_castable['y1'] = tmp_verification_castable['Var3']*image_size[1]-tmp_verification_castable['Var5']*image_size[1]/2
+            tmp_verification_castable['y2'] = tmp_verification_castable['Var3']*image_size[1]+tmp_verification_castable['Var5']*image_size[1]/2
+            tmp_verification_castable['width'] = tmp_verification_castable['x2'] - tmp_verification_castable['x1']
+            tmp_verification_castable['height'] = tmp_verification_castable['y2'] -tmp_verification_castable['y1']
+
+            # Delete rows that do not meet user requirements
+            drop_results = conn.table.deleterows(dict(name=tmp_verification_castable.params['name'],
+                                    computedvars=tmp_verification_castable.params['computedvars'],
+                                    computedvarsprogram=tmp_verification_castable.params['computedvarsprogram'],
+                                    where='width < {} OR height < {} OR x1 < {} OR y1 < {} OR x2 > {} OR y2 > {}'.format(min_bbox_width,
+                                                                                                                         min_bbox_height,
+                                                                                                                         min_bbox_x,
+                                                                                                                         min_bbox_y,
+                                                                                                                         max_bbox_x,
+                                                                                                                         max_bbox_y)))
+            num_objects_dropped = drop_results['rowsDeleted']
+            print('NOTE: Dropped {} objects from a total of {} objects based on selection criteria.'.format(num_objects_dropped, num_objects))
+            if num_objects_dropped == num_objects:
+                raise DLPyError('ERROR: All objects dropped. Stopping.')
+        else:
+            print('NOTE: coord_type must be "yolo" for verification of bounding boxes.')
+            print('NOTE: Skipping verification of bounding boxes.')
+    else:
+        print('NOTE: Skipping verification of bounding boxes.')
+    
+    
     #cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0][3]
     cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
@@ -2615,7 +2694,7 @@ def create_object_detection_table_no_xml(conn, data_path, coord_type, output, an
     img_tbl = conn.CASTable(det_img_table, computedvars=['idjoin'], computedvarsprogram=image_sas_code, vars=[{'name': '_image_'}])
 
     # join the image table and label table together
-    res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin',
+    res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin', joinType='inner',
                                 casout={'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
         raise DLPyError('ERROR: Fail to create the object detection table.')
