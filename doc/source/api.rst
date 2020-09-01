@@ -79,6 +79,7 @@ Constructors
    AudioTable
    AudioTable.create_audio_table
    AudioTable.create_audio_table_speechrecognition
+   AudioTable.from_audio_sashdat
    AudioTable.load_audio_files
   
 
@@ -88,6 +89,7 @@ Audio Processing
 .. autosummary::
    :toctree: generated/
 
+   AudioTable.create_audio_feature_table
    AudioTable.extract_audio_features
    AudioTable.load_audio_metadata
    AudioTable.load_audio_metadata_speechrecognition
@@ -152,24 +154,32 @@ Layers
    InputLayer
    BN
    ChannelShuffle
+   Clustering
    Concat
+   Conv1d
    Conv2d
    Conv2DTranspose
    Dense
    Detection
    EmbeddingLoss
    FastRCNN
+   FCMPLayer
    GlobalAveragePooling2D
    GroupConv2d
    Keypoints
+   LayerNormalization
+   MultiHeadAttention
    Pooling
    Proj
    Recurrent
+   RegionProposal
    Res
    Reshape
    ROIPooling
    Scale
    Segmentation
+   Split
+   Survival
    OutputLayer
 
 Model
@@ -218,6 +228,7 @@ Training
    :toctree: generated/
 
    Model.fit
+   Model.fit_and_visualize
    Model.tune
    Model.plot_training_history
 
@@ -451,6 +462,14 @@ Image Classification
    DenseNet121
    Darknet
    Darknet_Reference
+   EfficientNet
+   EfficientNetB1
+   EfficientNetB2
+   EfficientNetB3
+   EfficientNetB4
+   EfficientNetB5
+   EfficientNetB6
+   EfficientNetB7
    InceptionV3
    MobileNetV1
    MobileNetV2
@@ -475,9 +494,10 @@ Segmentation
 .. autosummary::
    :toctree: generated/
    
+   ENet
    UNet
    
-Image captioning
+Image Captioning
 ----------------
 
 .. currentmodule:: dlpy.image_captioning
@@ -487,8 +507,44 @@ Image captioning
    
    ImageCaptioning
    create_captioning_table
+   create_captions_table
+   create_embeddings_from_object_detection
    display_predicted_image_captions
+   get_image_features
+   reshape_caption_columns
   
+Image Embedding
+---------------
+
+.. autosummary::
+   :toctree: generated/
+   
+Image Embedding Table
+~~~~~~~~~~~~~~~~~~~~~
+
+.. currentmodule:: dlpy.image_embedding
+
+.. autosummary::
+   :toctree: generated/
+
+   ImageEmbeddingTable
+   ImageEmbeddingTable.load_files   
+   ImageEmbeddingTable.show
+   ImageEmbeddingTable.label_freq
+   
+Embedding Model
+~~~~~~~~~~~~~~~
+   
+.. currentmodule:: dlpy.embedding_model
+
+.. autosummary::
+   :toctree: generated/
+   
+   EmbeddingModel
+   EmbeddingModel.build_embedding_model
+   EmbeddingModel.fit_embedding_model
+   EmbeddingModel.deploy_embedding_model
+
 Pre-Built Models for NLP Tasks
 ------------------------------
 
@@ -544,6 +600,13 @@ Speech Utilities
    clean_audio
    check_stereo
    convert_stereo_to_mono
+   play_one_audio_file
+   display_spectrogram_for_one_audio_file
+   display_raw_data_for_one_audio_file
+   convert_one_audio_file
+   convert_audio_files
+   convert_one_audio_file_to_specgram
+   convert_audio_files_to_specgrams
    
 
 Splitting Utilities

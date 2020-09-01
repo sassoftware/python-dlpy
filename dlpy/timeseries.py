@@ -39,7 +39,7 @@ def plot_timeseries(tbl, timeid, timeseries, figure=None,
                     title=None, figsize=None,
                     fontsize_spec=None, **kwargs):
     '''
-    Create an timeseries line plot from a CASTable or pandas DataFrame
+    Create a timeseries line plot from a CASTable or pandas DataFrame
 
     Parameters
     ----------
