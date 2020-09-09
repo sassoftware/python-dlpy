@@ -448,6 +448,7 @@ class ImageEmbeddingTable(ImageTable):
     def label_freq(self):
         '''
         Summarize the distribution of different image pairs in the ImageEmbeddingTable
+        
         Returns
         -------
         ( frequency for the first image label column,

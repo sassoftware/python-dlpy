@@ -325,7 +325,7 @@ def create_captioning_table(conn, image_table, features_model, captions_file,
                             num_captions=5, dense_layer='fc7', captions_delimiter='\t',
                             caption_col_name='Var', embeddings_delimiter='\t', n_threads=None, gpu=None):
     '''
-    Builds CASTable wtih all necessary info to train an image captioning model
+    Builds CASTable with all necessary info to train an image captioning model
 
     Parameters
     ----------
