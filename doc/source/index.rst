@@ -55,6 +55,7 @@ DLPy enables users to fetch the data from the back end (SAS Viya session) to the
    whatsnew
    install
    getting-started
+   building_models
    api
    license
 
