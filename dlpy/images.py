@@ -221,8 +221,9 @@ class ImageTable(CASTable):
             Specifies the extra columns in the image table.
         caslib : string, optional
             The name of the caslib containing the images.
-        **kwargs : keyword arguments, optional
-            Additional keyword arguments to the `image.loadimages` action
+        kwargs : keyword arguments, optional
+            Additional keyword arguments to the `image.loadimages` action. For details, see
+            `the loadimages action <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactml&docsetTarget=cas-image-loadimages.htm>`_
 
         Returns
         -------
@@ -321,6 +322,9 @@ class ImageTable(CASTable):
         ----------
         path : string
             Specifies the directory on the server to save the images
+        kwargs : keyword arguments, optional
+            Specifies additional arguments for the save action. For more details, see
+            `table.save <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=caspg&docsetTarget=cas-table-save.htm>`_
 
         '''
 

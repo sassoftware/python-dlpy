@@ -52,9 +52,10 @@ def two_way_split(tbl, test_rate=20, stratify=True, im_table=True, stratify_by='
         Specifies the output table name for the test set
     columns : list of column names
         Specifies the list of columns to be copied over to the resulting tables.
-    **kwargs : keyword arguments, optional
-        Additional keyword arguments to the `sample.stratified` or
-        'sample.src' actions
+    kwargs : keyword arguments, optional
+        Additional keyword arguments to the sample.stratified or
+        sample.src actions. For details see `sample.stratifed <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactstat&docsetTarget=cas-sampling-stratified.htm>`_ and
+        `sample.srs <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactstat&docsetTarget=cas-sampling-srs.htm>`_
 
     Returns
     -------
@@ -157,10 +158,10 @@ def three_way_split(tbl, valid_rate=20, test_rate=20, stratify=True, im_table=Tr
         Specifies the output table name for the validation set
     test_name : string
         Specifies the output table name for the test set
-    **kwargs : keyword arguments, optional
-        Additional keyword arguments to the `sample.stratified` or
-        'sample.srs' actions
-
+    kwargs : keyword arguments, optional
+        Additional keyword arguments to the sample.stratified or
+        sample.src actions. For details see `sample.stratifed <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactstat&docsetTarget=cas-sampling-stratified.htm>`_ and
+        `sample.srs <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactstat&docsetTarget=cas-sampling-srs.htm>`_
     Returns
     -------
     ( train CASTable, valid CASTable, test CASTable )

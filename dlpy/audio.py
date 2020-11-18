@@ -327,7 +327,8 @@ class AudioTable(CASTable):
             Specifies whether shuffle the generated CAS table randomly.
             Default: True
         kwargs : keyword-arguments, optional
-            Additional parameter for feature extraction.
+            Additional parameter for feature extraction. For details, see the documentation for
+            `audio.computeFeatures <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactml&docsetTarget=cas-audio-computefeatures.htm>`_.
 
         Returns
         -------

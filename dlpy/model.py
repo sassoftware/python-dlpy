@@ -727,7 +727,8 @@ class Model(Network):
             response of the deep learning model.
             Default : '_label_'
         **kwargs : keyword arguments, optional
-            Specifies the optional arguments for the dltune action.
+            Specifies the optional arguments for the dltune action. For more details, see
+            `deepLearn.dlTune <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dltune.htm>`_
 
         Returns
         ----------
@@ -2009,7 +2010,8 @@ class Model(Network):
         image_id : list or int, optional
             Filters data using '_id_' column
         **kwargs : keyword arguments, optional
-            Specifies the optional arguments for the dlScore action.
+            Specifies the optional arguments for the dlScore action. For more details, see
+            `deepLearn.dlScore <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlscore.htm>`_
 
         """
         from .images import ImageTable
@@ -2071,7 +2073,8 @@ class Model(Network):
         target : string, optional
             Specifies the name of the column including the response variable
         **kwargs : keyword arguments, optional
-            Specifies the optional arguments for the dlScore action.
+            Specifies the optional arguments for the dlScore action. For more details, see
+            `deepLearn.dlScore <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlscore.htm>`_
 
         Returns
         -------
@@ -2137,7 +2140,8 @@ class Model(Network):
             Maximum number of images to display. Heatmap takes a significant amount
             of time to run so a max of 5 is default.
         **kwargs : keyword arguments, optional
-            Specifies the optional arguments for the dlScore action.
+            Specifies the optional arguments for the dlScore action. For more details, see
+            `deepLearn.dlScore <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlscore.htm>`_
 
         Notes
         -----
