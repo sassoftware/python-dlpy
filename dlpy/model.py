@@ -2072,7 +2072,7 @@ class Model(Network):
             Specifies the name of the layer that is extracted
         target : string, optional
             Specifies the name of the column including the response variable
-         **kwargs : keyword arguments, optional
+        **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action. For more details, see
             `deepLearn.dlScore <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlscore.htm>`_
 
@@ -2141,7 +2141,7 @@ class Model(Network):
             of time to run so a max of 5 is default.
         **kwargs : keyword arguments, optional
             Specifies the optional arguments for the dlScore action. For more details, see
-            `deepLearn.dlScore <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlscore.htm>`
+            `deepLearn.dlScore <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlscore.htm>`_
 
         Notes
         -----
