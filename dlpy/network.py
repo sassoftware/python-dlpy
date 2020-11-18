@@ -1503,6 +1503,9 @@ class Network(Layer):
         layers : string list, optional
              Specifies the names of the layers to include in the output astore scoring results. This can be used to
              extract the features for given layers.
+        kwargs : keyword arguments, optional
+            Specifies additional keyword arguments for the dlExportModel action. For details, see
+            `deepLearn.dlExportModel <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casdlpg&docsetTarget=cas-deeplearn-dlexportmodel.htm>`_
         """
         self.conn.loadactionset('astore', _messagelevel='error')
 
