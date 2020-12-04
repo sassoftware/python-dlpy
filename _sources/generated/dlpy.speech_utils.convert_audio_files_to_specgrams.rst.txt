@@ -1,0 +1,6 @@
+﻿dlpy.speech\_utils.convert\_audio\_files\_to\_specgrams
+=======================================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: convert_audio_files_to_specgrams

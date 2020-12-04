@@ -1,0 +1,6 @@
+﻿dlpy.image\_captioning.reshape\_caption\_columns
+================================================
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autofunction:: reshape_caption_columns

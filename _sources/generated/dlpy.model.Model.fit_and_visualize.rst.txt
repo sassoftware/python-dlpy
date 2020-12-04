@@ -1,0 +1,6 @@
+﻿dlpy.model.Model.fit\_and\_visualize
+====================================
+
+.. currentmodule:: dlpy.model
+
+.. automethod:: Model.fit_and_visualize

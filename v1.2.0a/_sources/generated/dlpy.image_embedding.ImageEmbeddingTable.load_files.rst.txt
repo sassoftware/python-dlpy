@@ -1,0 +1,6 @@
+﻿dlpy.image\_embedding.ImageEmbeddingTable.load\_files
+=====================================================
+
+.. currentmodule:: dlpy.image_embedding
+
+.. automethod:: ImageEmbeddingTable.load_files

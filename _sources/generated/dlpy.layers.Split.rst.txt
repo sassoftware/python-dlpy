@@ -1,0 +1,43 @@
+﻿dlpy.layers.Split
+=================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Split
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Split.__init__
+      ~Split.count_instances
+      ~Split.format_name
+      ~Split.get_number_of_instances
+      ~Split.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Split.can_be_last_layer
+      ~Split.kernel_size
+      ~Split.layer_id
+      ~Split.num_bias
+      ~Split.num_weights
+      ~Split.number_of_instances
+      ~Split.output_size
+      ~Split.rnn_summary
+      ~Split.summary
+      ~Split.type
+      ~Split.type_desc
+      ~Split.type_label
+   
+   

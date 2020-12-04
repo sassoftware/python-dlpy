@@ -1,0 +1,6 @@
+﻿dlpy.image\_captioning.create\_captions\_table
+==============================================
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autofunction:: create_captions_table

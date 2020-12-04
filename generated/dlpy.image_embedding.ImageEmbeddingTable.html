@@ -1,0 +1,808 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.image_embedding.ImageEmbeddingTable &mdash; DLPy 1.2.1-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dlpy.image_embedding.ImageEmbeddingTable.load_files" href="dlpy.image_embedding.ImageEmbeddingTable.load_files.html" />
+    <link rel="prev" title="dlpy.image_captioning.reshape_caption_columns" href="dlpy.image_captioning.reshape_caption_columns.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.1-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../building_models.html">Building Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#learning-rate-scheduler">Learning Rate Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-captioning">Image Captioning</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#image-embedding">Image Embedding</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#image-embedding-table">Image Embedding Table</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">dlpy.image_embedding.ImageEmbeddingTable</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.image_embedding.ImageEmbeddingTable.load_files.html">dlpy.image_embedding.ImageEmbeddingTable.load_files</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.image_embedding.ImageEmbeddingTable.show.html">dlpy.image_embedding.ImageEmbeddingTable.show</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.image_embedding.ImageEmbeddingTable.label_freq.html">dlpy.image_embedding.ImageEmbeddingTable.label_freq</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#embedding-model">Embedding Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech">Speech</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech-utilities">Speech Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DLPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>dlpy.image_embedding.ImageEmbeddingTable</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/dlpy.image_embedding.ImageEmbeddingTable.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-image-embedding-imageembeddingtable">
+<h1>dlpy.image_embedding.ImageEmbeddingTable<a class="headerlink" href="#dlpy-image-embedding-imageembeddingtable" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="dlpy.image_embedding.ImageEmbeddingTable">
+<em class="property">class </em><code class="sig-prename descclassname">dlpy.image_embedding.</code><code class="sig-name descname">ImageEmbeddingTable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">table_params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.image_embedding.ImageEmbeddingTable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specialized CASTable for Image Embedding Data. For Siamese model, this table contains two image columns.
+Each image pair can be either (P, P) or (P, N). P means positive and N means negative.
+For triplet model, it contains three image columns, i.e., (A, P, N)
+while for quartet model, it contains four image columns, i.e., (A, P, N, N1). A means anchor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">string</span></dt><dd><p>The name of the CAS table</p>
+</dd>
+<dt><strong>**table_params</strong><span class="classifier">keyword arguments, optional</span></dt><dd><p>Parameters to the <code class="xref py py-class docutils literal notranslate"><span class="pre">CASTable</span></code> constructor</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#dlpy.image_embedding.ImageEmbeddingTable" title="dlpy.image_embedding.ImageEmbeddingTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">ImageEmbeddingTable</span></code></a></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="dlpy.image_embedding.ImageEmbeddingTable.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">table_params</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.image_embedding.ImageEmbeddingTable.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dlpy.image_embedding.ImageEmbeddingTable.__init__" title="dlpy.image_embedding.ImageEmbeddingTable.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, **table_params)</p></td>
+<td><p>Initialize self.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">abs</span></code>()</p></td>
+<td><p>Return a new CASTable with absolute values of numerics</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">all</span></code>([axis, bool_only, skipna, level])</p></td>
+<td><p>Return whether all elements in the column are True</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">any</span></code>([axis, bool_only, skipna, level])</p></td>
+<td><p>Return whether any elements in the column are True</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append</span></code>(other[, ignore_index, …])</p></td>
+<td><p>Append rows of <cite>other</cite> to <cite>self</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_columns</span></code>(*items, **kwargs)</p></td>
+<td><p>Append variable names to action inputs parameter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_computed_columns</span></code>(names, code[, inplace])</p></td>
+<td><p>Append computed columns as specified</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_computedvars</span></code>(*items, **kwargs)</p></td>
+<td><p>Append variable names to tbl.computedvars parameter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_computedvarsprogram</span></code>(*items, **kwargs)</p></td>
+<td><p>Append code to tbl.computedvarsprogram parameter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_groupby</span></code>(*items, **kwargs)</p></td>
+<td><p>Append variable names to tbl.groupby parameter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_orderby</span></code>(*items, **kwargs)</p></td>
+<td><p>Append orderby parameters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">append_where</span></code>(*items, **kwargs)</p></td>
+<td><p>Append code to where parameter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_matrix</span></code>([columns, n])</p></td>
+<td><p>Convert the CASTable to its Numpy-array representation</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_patches</span></code>([x, y, width, height, step_size, …])</p></td>
+<td><p>Generate patches from the images in the ImageTable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_random_patches</span></code>([random_ratio, x, y, …])</p></td>
+<td><p>Generate random patches from the images in the ImageTable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">boxplot</span></code>([column, by])</p></td>
+<td><p>Make a boxplot from the table data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clip</span></code>([lower, upper, axis])</p></td>
+<td><p>Clip values at thresholds</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clip_lower</span></code>(threshold[, axis])</p></td>
+<td><p>Clip values at lower threshold</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clip_upper</span></code>(threshold[, axis])</p></td>
+<td><p>Clip values at upper threshold</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>([deep, exclude])</p></td>
+<td><p>Make a copy of the <cite>CASTable</cite> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy_table</span></code>([casout])</p></td>
+<td><p>Create a copy of the ImageTable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">corr</span></code>([method, min_periods])</p></td>
+<td><p>Compute pairwise correlation of columns</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count</span></code>([axis, level, numeric_only])</p></td>
+<td><p>Return total number of non-missing values in each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">crop</span></code>([x, y, width, height, inplace])</p></td>
+<td><p>Crop the images in the ImageTable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">css</span></code>([casout])</p></td>
+<td><p>Return the corrected sum of squares of the values of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cv</span></code>([casout])</p></td>
+<td><p>Return the coefficient of variation of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datastep</span></code>(code[, casout])</p></td>
+<td><p>Execute Data step code against the CAS table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">del_action_params</span></code>(*names)</p></td>
+<td><p>Delete parameters for specified action names</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">del_param</span></code>(*keys)</p></td>
+<td><p>Delete parameters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">del_params</span></code>(*keys)</p></td>
+<td><p>Delete parameters</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe</span></code>([percentiles, include, exclude, stats])</p></td>
+<td><p>Get descriptive statistics</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(labels[, axis, level, inplace, errors])</p></td>
+<td><p>Return a new <code class="xref py py-class docutils literal notranslate"><span class="pre">CASTable</span></code> object with the specified columns removed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dropna</span></code>([axis, how, thresh, subset, inplace])</p></td>
+<td><p>Drop rows that contain missing values</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">eval</span></code>(expr[, inplace, kwargs])</p></td>
+<td><p>Evaluate a CAS table expression</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">exists</span></code>()</p></td>
+<td><p>Return True if table exists in the server</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fillna</span></code>([value, method, axis, inplace, …])</p></td>
+<td><p>Fill missing values using the specified method</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_csv</span></code>(connection, path[, casout])</p></td>
+<td><p>Create a CASTable from a CSV file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_dict</span></code>(connection, data[, casout])</p></td>
+<td><p>Create a CASTable from a dictionary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_items</span></code>(connection, items[, casout])</p></td>
+<td><p>Create a CASTable from a (key, value) pairs</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_records</span></code>(connection, data[, casout])</p></td>
+<td><p>Create a CASTable from records</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_table</span></code>(tbl[, image_col, label_col, …])</p></td>
+<td><p>Create an ImageTable from a CASTable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get</span></code>(key[, default])</p></td>
+<td><p>Get item from object for given key (ex: DataFrame column)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_action_names</span></code>()</p></td>
+<td><p>Return a list of available CAS actions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_action_params</span></code>(name, *default)</p></td>
+<td><p>Return parameters for specified action name</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_actionset_names</span></code>()</p></td>
+<td><p>Return a list of available actionsets</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_connection</span></code>()</p></td>
+<td><p>Get the registered connection object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_dtype_counts</span></code>()</p></td>
+<td><p>Retrieve the frequency of CAS table column data types</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_fetch_params</span></code>()</p></td>
+<td><p>Return options to be used during the table.fetch action</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ftype_counts</span></code>()</p></td>
+<td><p>Retrieve the frequency of CAS table column data types</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_groupby_vars</span></code>()</p></td>
+<td><p>Return a list of By group variable names</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_inputs_param</span></code>()</p></td>
+<td><p>Return the column names for the inputs= action parameter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_param</span></code>(key, *default)</p></td>
+<td><p>Return the value of a parameter</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>(*keys)</p></td>
+<td><p>Return the values of one or more parameters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_value</span></code>(index, col, **kwargs)</p></td>
+<td><p>Retrieve a single scalar value</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">groupby</span></code>(by[, axis, level, as_index, sort, …])</p></td>
+<td><p>Specify grouping variables for the table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_groupby_vars</span></code>()</p></td>
+<td><p>Does the table have By group variables configured?</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_param</span></code>(*keys)</p></td>
+<td><p>Return a boolean indicating whether or not the parameters exist</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_params</span></code>(*keys)</p></td>
+<td><p>Return a boolean indicating whether or not the parameters exist</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">head</span></code>([n, columns, bygroup_as_index, casout])</p></td>
+<td><p>Retrieve first <cite>n</cite> rows</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hist</span></code>([column, by])</p></td>
+<td><p>Make a histogram from the table data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span></code>([verbose, buf, max_cols, memory_usage, …])</p></td>
+<td><p>Print summary of <code class="xref py py-class docutils literal notranslate"><span class="pre">CASTable</span></code> information</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">invoke</span></code>(_name_, **kwargs)</p></td>
+<td><p>Invoke an action on the registered connection</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iteritems</span></code>()</p></td>
+<td><p>Iterate over column names and <code class="xref py py-class docutils literal notranslate"><span class="pre">CASColumn</span></code> objects</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iterrows</span></code>([chunksize])</p></td>
+<td><p>Iterate over the rows of a CAS table as (index, <a class="reference external" href="https://pandas.pydata.org/pandas-docs/version/0.19.2/generated/pandas.Series.html#pandas.Series" title="(in pandas v0.19.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a>) pairs</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">itertuples</span></code>([index, chunksize])</p></td>
+<td><p>Iterate over rows as tuples</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kurt</span></code>([axis, skipna, level, numeric_only, casout])</p></td>
+<td><p>Return the kurtosis of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kurtosis</span></code>([axis, skipna, level, …])</p></td>
+<td><p>Return the kurtosis of the values of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="dlpy.image_embedding.ImageEmbeddingTable.load_files.html#dlpy.image_embedding.ImageEmbeddingTable.load_files" title="dlpy.image_embedding.ImageEmbeddingTable.load_files"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_files</span></code></a>(conn, path[, casout, columns, …])</p></td>
+<td><p>Create ImageEmbeddingTable from files in <cite>path</cite></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">lookup</span></code>(row_labels, col_labels)</p></td>
+<td><p>Retrieve values indicated by row_labels, col_labels positions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">max</span></code>([axis, skipna, level, numeric_only, casout])</p></td>
+<td><p>Return the maximum value of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code>([axis, skipna, level, numeric_only, casout])</p></td>
+<td><p>Return the mean value of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">median</span></code>([axis, skipna, level, numeric_only, …])</p></td>
+<td><p>Return the median value of each numeric column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(right[, how, on, left_on, right_on, …])</p></td>
+<td><p>Merge CASTable objects using a database-style join on a column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min</span></code>([axis, skipna, level, numeric_only, casout])</p></td>
+<td><p>Return the minimum value of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">mode</span></code>([axis, numeric_only, max_tie, skipna])</p></td>
+<td><p>Return the mode of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">next</span></code>()</p></td>
+<td><p>Return next item in the iteration</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nlargest</span></code>(n, columns[, keep, casout])</p></td>
+<td><p>Return the <cite>n</cite> largest values ordered by <cite>columns</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nmiss</span></code>([axis, level, numeric_only, casout])</p></td>
+<td><p>Return total number of missing values in each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nsmallest</span></code>(n, columns[, keep, casout])</p></td>
+<td><p>Return the <cite>n</cite> smallest values ordered by <cite>columns</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">nth</span></code>(n[, dropna, bygroup_as_index, casout])</p></td>
+<td><p>Return the nth row</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pop</span></code>(colname)</p></td>
+<td><p>Remove a column from the CASTable and return it</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">probt</span></code>([casout])</p></td>
+<td><p>Return the p-value of the T-statistics of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">quantile</span></code>([q, axis, numeric_only, …])</p></td>
+<td><p>Return values at the given quantile</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">query</span></code>(expr[, inplace, engine])</p></td>
+<td><p>Query the table with a boolean expression</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">random_mutations</span></code>([color_jitter, …])</p></td>
+<td><p>Generate random mutations from the images in the ImageTable</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">replace</span></code>([to_replace, value, inplace, limit, …])</p></td>
+<td><p>Replace values in the data set</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reset_index</span></code>([level, drop, inplace, …])</p></td>
+<td><p>Reset the CASTable index</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">resize</span></code>([width, height, inplace, columns])</p></td>
+<td><p>Resize the images in the ImageTable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">retrieve</span></code>(_name_, **kwargs)</p></td>
+<td><p>Invoke an action on the registered connection and retrieve results</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code>([n, frac, replace, weights, …])</p></td>
+<td><p>Returns a random sample of the CAS table rows</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_dtypes</span></code>([include, exclude, inplace])</p></td>
+<td><p>Return a subset <code class="xref py py-class docutils literal notranslate"><span class="pre">CASTable</span></code> including/excluding columns based on data type</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_action_params</span></code>(name, **kwargs)</p></td>
+<td><p>Set parameters for specified action name</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_connection</span></code>(connection)</p></td>
+<td><p>Set the connection to use for action calls</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_param</span></code>(*args, **kwargs)</p></td>
+<td><p>Set paramaters according to key/value pairs</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(*args, **kwargs)</p></td>
+<td><p>Set paramaters according to key/value pairs</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="dlpy.image_embedding.ImageEmbeddingTable.show.html#dlpy.image_embedding.ImageEmbeddingTable.show" title="dlpy.image_embedding.ImageEmbeddingTable.show"><code class="xref py py-obj docutils literal notranslate"><span class="pre">show</span></code></a>([n_image_pairs, randomize, figsize, where])</p></td>
+<td><p>Display a grid of images for ImageEmbeddingTable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">skew</span></code>([axis, skipna, level, numeric_only, casout])</p></td>
+<td><p>Return the skewness of the values of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">skewness</span></code>([axis, skipna, level, …])</p></td>
+<td><p>Return the skewness of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">slice</span></code>([start, stop, columns, …])</p></td>
+<td><p>Retrieve the specified rows</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort</span></code>(by[, axis, ascending, inplace, kind, …])</p></td>
+<td><p>Specify sort parameters for data in a CAS table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_values</span></code>(by[, axis, ascending, inplace, …])</p></td>
+<td><p>Specify sort parameters for data in a CAS table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">std</span></code>([axis, skipna, level, ddof, …])</p></td>
+<td><p>Return the standard deviation of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stderr</span></code>([casout])</p></td>
+<td><p>Return the standard error of the values of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sum</span></code>([axis, skipna, level, numeric_only, casout])</p></td>
+<td><p>Return the sum of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tail</span></code>([n, columns, bygroup_as_index, casout])</p></td>
+<td><p>Retrieve last <cite>n</cite> rows</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_clipboard</span></code>(*args, **kwargs)</p></td>
+<td><p>Write the CAS table data to the clipboard</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_csv</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table data to comma separated values (CSV)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_datastep_params</span></code>()</p></td>
+<td><p>Create a data step table specification</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dense</span></code>(*args, **kwargs)</p></td>
+<td><p>Return dense representation of CAS table data</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_dict</span></code>(*args, **kwargs)</p></td>
+<td><p>Convert CAS table data to a Python dictionary</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_excel</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table data to an Excel spreadsheet</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_files</span></code>(path)</p></td>
+<td><p>Save the images in the original format under the specified directory</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_frame</span></code>([sample_pct, sample_seed, sample, …])</p></td>
+<td><p>Retrieve entire table as a <code class="xref py py-class docutils literal notranslate"><span class="pre">SASDataFrame</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_gbq</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table data to a Google BigQuery table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_hdf</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table data to HDF</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_html</span></code>(*args, **kwargs)</p></td>
+<td><p>Render the CAS table data to an HTML table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_input_datastep_params</span></code>()</p></td>
+<td><p>Create an input data step table specification</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_json</span></code>(*args, **kwargs)</p></td>
+<td><p>Convert the CAS table data to a JSON string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_latex</span></code>(*args, **kwargs)</p></td>
+<td><p>Render the CAS table data to a LaTeX tabular environment</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_msgpack</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table data to msgpack object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_outtable</span></code>()</p></td>
+<td><p>Create a copy of the CASTable object with only output table paramaters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_outtable_params</span></code>()</p></td>
+<td><p>Create a copy of the CASTable parameters using only the output table parameters</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_params</span></code>()</p></td>
+<td><p>Return parameters of CASTable object</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_pickle</span></code>(*args, **kwargs)</p></td>
+<td><p>Pickle (serialize) the CAS table data</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_records</span></code>(*args, **kwargs)</p></td>
+<td><p>Convert CAS table data to record array</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sashdat</span></code>([path, name])</p></td>
+<td><p>Save the ImageTable to a sashdat file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sparse</span></code>(*args, **kwargs)</p></td>
+<td><p>Convert CAS table data to SparseDataFrame</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_sql</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table records to SQL database</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_stata</span></code>(*args, **kwargs)</p></td>
+<td><p>Write CAS table data to Stata file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_string</span></code>(*args, **kwargs)</p></td>
+<td><p>Render the CAS table to a console-friendly tabular output</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_table</span></code>()</p></td>
+<td><p>Create a copy of the CASTable object with only input table paramaters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_table_name</span></code>()</p></td>
+<td><p>Return the name of the table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_table_params</span></code>()</p></td>
+<td><p>Create a copy of the table parameters containing only input table parameters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_view</span></code>(*args, **kwargs)</p></td>
+<td><p>Create a view using the current CASTable parameters</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_xarray</span></code>(*args, **kwargs)</p></td>
+<td><p>Return an <code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.xarray()</span></code> from the CAS table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tvalue</span></code>([casout])</p></td>
+<td><p>Return the T-statistics for hypothesis testing of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uss</span></code>([casout])</p></td>
+<td><p>Return the uncorrected sum of squares of the values of each column</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">var</span></code>([axis, skipna, level, ddof, …])</p></td>
+<td><p>Return the variance of the values of each column</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_params</span></code>(**kwargs)</p></td>
+<td><p>Create copy of table with <cite>kwargs</cite> inserted as parameters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">xs</span></code>(key[, axis, level, copy, drop_level])</p></td>
+<td><p>Return a cross-section from the CASTable</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">all_params</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">at</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">axes</span></code></p></td>
+<td><p>List of the row axis labels and column axis labels</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">channel_means</span></code></p></td>
+<td><p>A list of the means of the image intensities in each color channel.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">columns</span></code></p></td>
+<td><p>The visible columns in the table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">created_date</span></code></p></td>
+<td><p>Return the created date of the table in the server</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dtypes</span></code></p></td>
+<td><p>Series of the data types in the table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding_model_type</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ftypes</span></code></p></td>
+<td><p>Series of the ftypes (indication of sparse/dense and dtype) in the table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">getdoc</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iat</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">iloc</span></code></p></td>
+<td><p>Integer location based indexing for selection by position</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_file_list</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_file_list_with_labels</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">image_summary</span></code></p></td>
+<td><p>Summarize the images in the ImageTable Returns ——- <code class="xref py py-class docutils literal notranslate"><span class="pre">pd.Series</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">index</span></code></p></td>
+<td><p>The table index</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ix</span></code></p></td>
+<td><p>Label-based indexer with integer position fallback</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="dlpy.image_embedding.ImageEmbeddingTable.label_freq.html#dlpy.image_embedding.ImageEmbeddingTable.label_freq" title="dlpy.image_embedding.ImageEmbeddingTable.label_freq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">label_freq</span></code></a></p></td>
+<td><p>Summarize the distribution of different image pairs in the ImageEmbeddingTable</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_accessed_date</span></code></p></td>
+<td><p>Return the last access date of the table in the server</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">last_modified_date</span></code></p></td>
+<td><p>Return the last modified date of the table in the server</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">loc</span></code></p></td>
+<td><p>Label-based indexer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ndim</span></code></p></td>
+<td><p>Number of axes dimensions</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">outtable_params</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">param_names</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot</span></code></p></td>
+<td><p>Make plots of the data in the CAS table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">running_image_column</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">shape</span></code></p></td>
+<td><p>Return a tuple representing the dimensionality of the table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">size</span></code></p></td>
+<td><p>Number of elements in the table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">table_params</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uid</span></code></p></td>
+<td><p>A unique ID for each image.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code></p></td>
+<td><p>Numpy representation of the table</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.image_embedding.ImageEmbeddingTable.load_files.html" class="btn btn-neutral float-right" title="dlpy.image_embedding.ImageEmbeddingTable.load_files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.image_captioning.reshape_caption_columns.html" class="btn btn-neutral float-left" title="dlpy.image_captioning.reshape_caption_columns" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

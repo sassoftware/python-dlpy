@@ -1,0 +1,390 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.model.Model.fit_and_visualize &mdash; DLPy 1.2.1-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dlpy.model.Model.tune" href="dlpy.model.Model.tune.html" />
+    <link rel="prev" title="dlpy.model.Model.fit" href="dlpy.model.Model.fit.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.1-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../building_models.html">Building Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#model">Model</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id4">Constructors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#model-setup">Model Setup</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#training">Training</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.fit.html">dlpy.model.Model.fit</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">dlpy.model.Model.fit_and_visualize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.tune.html">dlpy.model.Model.tune</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.model.Model.plot_training_history.html">dlpy.model.Model.plot_training_history</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#inference-evaluation-and-analysis">Inference, Evaluation, and Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#id11">Saving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api.html#architecture-information">Architecture Information</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#learning-rate-scheduler">Learning Rate Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-captioning">Image Captioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-embedding">Image Embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech">Speech</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech-utilities">Speech Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DLPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>dlpy.model.Model.fit_and_visualize</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/dlpy.model.Model.fit_and_visualize.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-model-model-fit-and-visualize">
+<h1>dlpy.model.Model.fit_and_visualize<a class="headerlink" href="#dlpy-model-model-fit-and-visualize" title="Permalink to this headline">¶</a></h1>
+<dl class="py method">
+<dt id="dlpy.model.Model.fit_and_visualize">
+<code class="sig-prename descclassname">Model.</code><code class="sig-name descname">fit_and_visualize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_specs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mini_batch_size</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">max_epochs</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">lr</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">optimizer</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nominals</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">texts</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target_sequence</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sequence</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">text_parms</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">valid_table</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">valid_freq</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">gpu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">attributes</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">record_seed</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">missing</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="n">target_missing</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="n">repeat_weight_table</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">force_equal_padding</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_best_weights</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_threads</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">target_order</span><span class="o">=</span><span class="default_value">'ascending'</span></em>, <em class="sig-param"><span class="n">visualize_freq</span><span class="o">=</span><span class="default_value">100</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.model.Model.fit_and_visualize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fitting a deep learning model while visulizing the fit and loss at each iteration.
+This is exactly the same as the “fit()” function and if called, the training history, fiterror and loss,
+in the iteration level is visualized with a line chart. This setting overrides the log-level and sets it
+to 3 as it is the only level with iteration training history. It drops a point to the
+graph for every visualize_freq (default=100).</p>
+<p>NOTE THAT this function is experimental only as I did a lot of work-arounds to make it work
+in Jupyter notebooks.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>data</strong><span class="classifier">string</span></dt><dd><p>This is the input data. It might be a string that is the
+name of a cas table. Alternatively, this might be a cas table.</p>
+</dd>
+<dt><strong>inputs</strong><span class="classifier">string or list-of-strings, optional</span></dt><dd><p>Specifies the input variables to use in the analysis.</p>
+</dd>
+<dt><strong>target</strong><span class="classifier">string or list-of-strings, optional</span></dt><dd><p>Specifies the target sequence variables to use in the analysis.</p>
+</dd>
+<dt><strong>data_specs</strong><span class="classifier"><a class="reference internal" href="dlpy.model.DataSpec.html#dlpy.model.DataSpec" title="dlpy.model.DataSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSpec</span></code></a>, optional</span></dt><dd><p>Specifies the parameters for the multiple input cases.</p>
+</dd>
+<dt><strong>mini_batch_size</strong><span class="classifier">int, optional</span></dt><dd><p>Specifies the number of observations per thread in a
+mini-batch. You can use this parameter to control the number of
+observations that the action uses on each worker for each thread
+to compute the gradient prior to updating the weights. Larger
+values use more memory. When synchronous SGD is used (the
+default), the total mini-batch size is equal to
+miniBatchSize * number of threads * number of workers. When
+asynchronous SGD is used (by specifying the elasticSyncFreq
+parameter), each worker trains its own local model. In this case,
+the total mini-batch size for each worker is
+miniBatchSize * number of threads.</p>
+</dd>
+<dt><strong>max_epochs</strong><span class="classifier">int, optional</span></dt><dd><p>specifies the maximum number of epochs. For SGD with a
+single-machine server or a session that uses one worker on a
+distributed server, one epoch is reached when the action passes
+through the data one time. For a session that uses more than one
+worker, one epoch is reached when all the workers exchange the
+weights with the controller one time. The syncFreq parameter
+specifies the number of times each worker passes through the
+data before exchanging weights with the controller. For L-BFGS
+with full batch, each L-BFGS iteration might process more than
+one epoch, and final number of epochs might exceed the maximum
+number of epochs.</p>
+</dd>
+<dt><strong>log_level</strong><span class="classifier">int, optional</span></dt><dd><p>Specifies how progress messages are sent to the client. The
+default value, 0, indicates that no messages are sent. Specify 1
+to receive start and end messages. Specify 2 to include the
+iteration history.</p>
+</dd>
+<dt><strong>lr</strong><span class="classifier">double, optional</span></dt><dd><p>Specifies the learning rate.</p>
+</dd>
+<dt><strong>optimizer</strong><span class="classifier"><a class="reference internal" href="dlpy.model.Optimizer.html#dlpy.model.Optimizer" title="dlpy.model.Optimizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></a>, optional</span></dt><dd><p>Specifies the parameters for the optimizer.</p>
+</dd>
+<dt><strong>nominals</strong><span class="classifier">string or list-of-strings, optional</span></dt><dd><p>Specifies the nominal input variables to use in the analysis.</p>
+</dd>
+<dt><strong>texts</strong><span class="classifier">string or list-of-strings, optional</span></dt><dd><p>Specifies the character variables to treat as raw text.
+These variables must be specified in the inputs parameter.</p>
+</dd>
+<dt><strong>target_sequence</strong><span class="classifier">string or list-of-strings, optional</span></dt><dd><p>Specifies the target sequence variables to use in the analysis.</p>
+</dd>
+<dt><strong>sequence</strong><span class="classifier"><a class="reference internal" href="dlpy.model.Sequence.html#dlpy.model.Sequence" title="dlpy.model.Sequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>, optional</span></dt><dd><p>Specifies the settings for sequence data.</p>
+</dd>
+<dt><strong>text_parms</strong><span class="classifier"><a class="reference internal" href="dlpy.model.TextParms.html#dlpy.model.TextParms" title="dlpy.model.TextParms"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextParms</span></code></a>, optional</span></dt><dd><p>Specifies the parameters for the text inputs.</p>
+</dd>
+<dt><strong>valid_table</strong><span class="classifier">string or CASTable, optional</span></dt><dd><p>Specifies the table with the validation data. The validation
+table must have the same columns and data types as the training table.</p>
+</dd>
+<dt><strong>valid_freq</strong><span class="classifier">int, optional</span></dt><dd><p>Specifies the frequency for scoring the validation table.</p>
+</dd>
+<dt><strong>gpu</strong><span class="classifier"><a class="reference internal" href="dlpy.model.Gpu.html#dlpy.model.Gpu" title="dlpy.model.Gpu"><code class="xref py py-class docutils literal notranslate"><span class="pre">Gpu</span></code></a>, optional</span></dt><dd><p>When specified, the action uses graphical processing unit hardware.
+The simplest way to use GPU processing is to specify “gpu=1”.
+In this case, the default values of other GPU parameters are used.
+Setting gpu=1 enables all available GPU devices for use. Setting
+gpu=0 disables GPU processing.</p>
+</dd>
+<dt><strong>attributes</strong><span class="classifier">string or list-of-strings, optional</span></dt><dd><p>Specifies temporary attributes, such as a format, to apply to
+input variables.</p>
+</dd>
+<dt><strong>weight</strong><span class="classifier">string, optional</span></dt><dd><p>Specifies the variable/column name in the input table containing the
+prior weights for the observation.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">double, optional</span></dt><dd><p>specifies the random number seed for the random number generator
+in SGD. The default value, 0, and negative values indicate to use
+random number streams based on the computer clock. Specify a value
+that is greater than 0 for a reproducible random number sequence.</p>
+</dd>
+<dt><strong>record_seed</strong><span class="classifier">double, optional</span></dt><dd><p>specifies the random number seed for the random record selection
+within a worker. The default value 0 disables random record selection.
+Records are read as they are laid out in memory.
+Negative values indicate to use random number streams based on the
+computer clock.</p>
+</dd>
+<dt><strong>missing</strong><span class="classifier">string, optional</span></dt><dd><p>Specifies the policy for replacing missing values with imputed values.
+Valid Values: MAX, MIN, MEAN, NONE
+Default: MEAN</p>
+</dd>
+<dt><strong>target_missing</strong><span class="classifier">string, optional</span></dt><dd><p>Specifies the policy for replacing target missing values with
+imputed values.
+Valid Values: MAX, MIN, MEAN, NONE
+Default: MEAN</p>
+</dd>
+<dt><strong>repeat_weight_table</strong><span class="classifier">bool, optional</span></dt><dd><p>Replicates the entire weight table on each worker node when saving
+weights.
+Default: False</p>
+</dd>
+<dt><strong>force_equal_padding</strong><span class="classifier">bool, optional</span></dt><dd><p>For convolution or pooling layers, this setting forces left padding
+to equal right padding, and top padding to equal bottom padding.
+This setting might result in an output image that is
+larger than the input image.
+Default: False</p>
+</dd>
+<dt><strong>save_best_weights</strong><span class="classifier">bool, optional</span></dt><dd><p>When set to True, it keeps the weights that provide the smallest
+loss error.</p>
+</dd>
+<dt><strong>n_threads</strong><span class="classifier">int, optional</span></dt><dd><p>Specifies the number of threads to use. If nothing is set then
+all of the cores available in the machine(s) will be used.</p>
+</dd>
+<dt><strong>target_order</strong><span class="classifier">string, optional</span></dt><dd><p>Specifies the order of the labels. It can follow the natural order
+of the labels or order them in the order they are recieved with
+training data samples.
+Valid Values: ‘ascending’, ‘descending’, ‘hash’
+Default: ‘ascending’</p>
+</dd>
+<dt><strong>visualize_freq: int, optional</strong></dt><dd><p>Specifies the frequency of the points in the visualization history. Note that the chart will
+get crowded, and possibly get slower, with more points.
+Default: 100</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><code class="xref py py-class docutils literal notranslate"><span class="pre">CASResults</span></code></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.model.Model.tune.html" class="btn btn-neutral float-right" title="dlpy.model.Model.tune" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.model.Model.fit.html" class="btn btn-neutral float-left" title="dlpy.model.Model.fit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

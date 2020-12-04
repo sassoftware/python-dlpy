@@ -1,0 +1,109 @@
+﻿dlpy.embedding\_model.EmbeddingModel
+====================================
+
+.. currentmodule:: dlpy.embedding_model
+
+.. autoclass:: EmbeddingModel
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EmbeddingModel.__init__
+      ~EmbeddingModel.build_embedding_model
+      ~EmbeddingModel.change_labels
+      ~EmbeddingModel.compile
+      ~EmbeddingModel.count_instances
+      ~EmbeddingModel.count_params
+      ~EmbeddingModel.create_layer_id_name_mapping
+      ~EmbeddingModel.deploy
+      ~EmbeddingModel.deploy_embedding_model
+      ~EmbeddingModel.evaluate
+      ~EmbeddingModel.evaluate_object_detection
+      ~EmbeddingModel.fit
+      ~EmbeddingModel.fit_and_visualize
+      ~EmbeddingModel.fit_embedding_model
+      ~EmbeddingModel.forecast
+      ~EmbeddingModel.format_name
+      ~EmbeddingModel.from_caffe_model
+      ~EmbeddingModel.from_keras_model
+      ~EmbeddingModel.from_onnx_model
+      ~EmbeddingModel.from_sashdat
+      ~EmbeddingModel.from_table
+      ~EmbeddingModel.get_feature_maps
+      ~EmbeddingModel.get_features
+      ~EmbeddingModel.get_model_info
+      ~EmbeddingModel.get_number_of_instances
+      ~EmbeddingModel.heat_map_analysis
+      ~EmbeddingModel.load
+      ~EmbeddingModel.load_weights
+      ~EmbeddingModel.load_weights_attr
+      ~EmbeddingModel.load_weights_from_caffe
+      ~EmbeddingModel.load_weights_from_file
+      ~EmbeddingModel.load_weights_from_file_with_labels
+      ~EmbeddingModel.load_weights_from_keras
+      ~EmbeddingModel.load_weights_from_table
+      ~EmbeddingModel.plot_evaluate_res
+      ~EmbeddingModel.plot_heat_map
+      ~EmbeddingModel.plot_network
+      ~EmbeddingModel.plot_training_history
+      ~EmbeddingModel.predict
+      ~EmbeddingModel.print_summary
+      ~EmbeddingModel.save_to_astore
+      ~EmbeddingModel.save_to_onnx
+      ~EmbeddingModel.save_to_table
+      ~EmbeddingModel.save_to_table_with_caslibify
+      ~EmbeddingModel.save_weights_csv
+      ~EmbeddingModel.score
+      ~EmbeddingModel.set_weights
+      ~EmbeddingModel.set_weights_attr
+      ~EmbeddingModel.share_weights
+      ~EmbeddingModel.to_functional_model
+      ~EmbeddingModel.to_model_params
+      ~EmbeddingModel.train
+      ~EmbeddingModel.tune
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~EmbeddingModel.branch_input_tensor
+      ~EmbeddingModel.branch_output_tensor
+      ~EmbeddingModel.can_be_last_layer
+      ~EmbeddingModel.data_specs
+      ~EmbeddingModel.embedding_layer_name_prefix
+      ~EmbeddingModel.embedding_loss_layer_name
+      ~EmbeddingModel.embedding_model_type
+      ~EmbeddingModel.feature_maps
+      ~EmbeddingModel.input_layer_name_prefix
+      ~EmbeddingModel.layer_id
+      ~EmbeddingModel.model_ever_trained
+      ~EmbeddingModel.model_explain_table
+      ~EmbeddingModel.n_epochs
+      ~EmbeddingModel.name
+      ~EmbeddingModel.number_of_branches
+      ~EmbeddingModel.number_of_instances
+      ~EmbeddingModel.rnn_summary
+      ~EmbeddingModel.score_message_level
+      ~EmbeddingModel.src_layers
+      ~EmbeddingModel.summary
+      ~EmbeddingModel.train_tbl
+      ~EmbeddingModel.training_history
+      ~EmbeddingModel.type
+      ~EmbeddingModel.type_desc
+      ~EmbeddingModel.type_label
+      ~EmbeddingModel.valid_conf_mat
+      ~EmbeddingModel.valid_res
+      ~EmbeddingModel.valid_res_tbl
+      ~EmbeddingModel.valid_score
+      ~EmbeddingModel.valid_tbl
+   
+   

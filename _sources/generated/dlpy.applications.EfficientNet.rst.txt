@@ -1,0 +1,6 @@
+﻿dlpy.applications.EfficientNet
+==============================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: EfficientNet
