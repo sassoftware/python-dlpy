@@ -1,0 +1,43 @@
+﻿dlpy.layers.FCMPLayer
+=====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: FCMPLayer
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FCMPLayer.__init__
+      ~FCMPLayer.count_instances
+      ~FCMPLayer.format_name
+      ~FCMPLayer.get_number_of_instances
+      ~FCMPLayer.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FCMPLayer.can_be_last_layer
+      ~FCMPLayer.kernel_size
+      ~FCMPLayer.layer_id
+      ~FCMPLayer.num_bias
+      ~FCMPLayer.num_weights
+      ~FCMPLayer.number_of_instances
+      ~FCMPLayer.output_size
+      ~FCMPLayer.rnn_summary
+      ~FCMPLayer.summary
+      ~FCMPLayer.type
+      ~FCMPLayer.type_desc
+      ~FCMPLayer.type_label
+   
+   

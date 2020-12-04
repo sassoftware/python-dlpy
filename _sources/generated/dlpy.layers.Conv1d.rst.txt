@@ -1,0 +1,43 @@
+﻿dlpy.layers.Conv1d
+==================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Conv1d
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Conv1d.__init__
+      ~Conv1d.count_instances
+      ~Conv1d.format_name
+      ~Conv1d.get_number_of_instances
+      ~Conv1d.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Conv1d.can_be_last_layer
+      ~Conv1d.kernel_size
+      ~Conv1d.layer_id
+      ~Conv1d.num_bias
+      ~Conv1d.num_weights
+      ~Conv1d.number_of_instances
+      ~Conv1d.output_size
+      ~Conv1d.rnn_summary
+      ~Conv1d.summary
+      ~Conv1d.type
+      ~Conv1d.type_desc
+      ~Conv1d.type_label
+   
+   

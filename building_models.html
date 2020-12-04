@@ -1,0 +1,366 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Building Models &mdash; DLPy 1.2.1-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api.html" />
+    <link rel="prev" title="Getting Started" href="getting-started.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.1-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functional-api">Functional API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-pre-built-models">Using Pre-built Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loading-pre-trained-weights">Loading Pre-trained Weights</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">DLPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Building Models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/building_models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="building-models">
+<span id="build-models"></span><h1>Building Models<a class="headerlink" href="#building-models" title="Permalink to this headline">¶</a></h1>
+<p>DLPy offers you several options to build neural networks, including building them from
+scratch or using architectures already defined in the DLPy API. Similarly, you can train
+your models from scratch or you can load pre-trained weights. Regardless of your approach,
+it helps to know the difference between the Sequential Model and the Functional API. This
+document serves as an introduction to these topics, but for more detail see the examples
+on <a class="reference external" href="https://github.com/sassoftware/python-dlpy/tree/master/examples/functional_model">GitHub</a>.</p>
+<p><strong>Note:</strong> All examples on this page assume that you have a CAS server started and have
+created a CAS session in swat named sess.</p>
+<div class="section" id="sequential-model">
+<h2>Sequential Model<a class="headerlink" href="#sequential-model" title="Permalink to this headline">¶</a></h2>
+<p>A <a class="reference internal" href="generated/dlpy.sequential.Sequential.html#dlpy.sequential.Sequential" title="dlpy.sequential.Sequential"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></a> model is a modular way to build a custom neural network. A
+Sequential model acts like a stack of layers or blocks (e.g. a ResNet block).</p>
+<p>The following example illustrates how you can use the Sequential Model in order to
+create a LeNet architecture.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">dlpy</span> <span class="kn">import</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">InputLayer</span><span class="p">,</span> <span class="n">Conv2d</span><span class="p">,</span> <span class="n">Pooling</span><span class="p">,</span> <span class="n">Dense</span><span class="p">,</span> <span class="n">OutputLayer</span>
+
+<span class="gp">In [2]: </span><span class="n">sequential_model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">(</span><span class="n">conn</span><span class="o">=</span><span class="n">sess</span><span class="p">,</span> <span class="n">model_table</span><span class="o">=</span><span class="s2">&quot;Simple_CNN&quot;</span><span class="p">)</span>
+
+<span class="gp">In [3]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">InputLayer</span><span class="p">(</span><span class="n">n_channels</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">28</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">28</span><span class="p">))</span>
+<span class="go">NOTE: Input layer added.</span>
+
+<span class="gp">In [4]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">n_filters</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">NOTE: Convolution layer added.</span>
+
+<span class="gp">In [5]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Pooling</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">))</span>
+<span class="go">NOTE: Pooling layer added.</span>
+
+<span class="gp">In [6]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">n_filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">NOTE: Convolution layer added.</span>
+
+<span class="gp">In [7]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Pooling</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="s1">&#39;max&#39;</span><span class="p">))</span>
+<span class="go">NOTE: Pooling layer added.</span>
+
+<span class="gp">In [8]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">120</span><span class="p">))</span>
+<span class="go">NOTE: Fully-connected layer added.</span>
+
+<span class="gp">In [9]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">84</span><span class="p">))</span>
+<span class="go">NOTE: Fully-connected layer added.</span>
+
+<span class="gp">In [10]: </span><span class="n">sequential_model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">OutputLayer</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
+<span class="go">NOTE: Output layer added.</span>
+<span class="go">NOTE: Model compiled successfully.</span>
+</pre></div>
+</div>
+<p>The Sequential model is best used when your network
+architecture can be easily specified as a stack of modular elements. Although
+the Sequential model can be used to specify architectures with multi-input and multi-output layers,
+(see the src_layers parameter of the <a class="reference internal" href="generated/dlpy.layers.Layer.html#dlpy.layers.Layer" title="dlpy.layers.Layer"><code class="xref py py-class docutils literal notranslate"><span class="pre">dlpy.layers.Layer</span></code></a> class for details),
+architectures with complex connections are often better suited for the Functional API.</p>
+<p>An additional option is to generate a Functional
+model from an existing Sequential model. This can be useful to quickly create
+variations of the same basic architecture. To generate a Functional model from a
+Sequential model, use <code class="xref py py-func docutils literal notranslate"><span class="pre">Sequential.to_functional_model()</span></code>. Then customize
+the Functional model with the Functional API as detailed in <a class="reference internal" href="#functional-api">Functional API</a>.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [11]: </span><span class="n">functional_model</span> <span class="o">=</span> <span class="n">sequential_model</span><span class="o">.</span><span class="n">to_functional_model</span><span class="p">()</span>
+
+<span class="gp">In [12]: </span><span class="n">functional_model</span><span class="o">.</span><span class="n">plot_network</span><span class="p">()</span>
+<span class="gh">Out[12]: </span><span class="go">&lt;graphviz.dot.Digraph at 0x1def4f314c8&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="functional-api">
+<h2>Functional API<a class="headerlink" href="#functional-api" title="Permalink to this headline">¶</a></h2>
+<p>The Functional API is a more flexible way of building models. Using the Functional API,
+you can easily specify architectures with multi-input and multi-output layers. To use the
+Functional API, define the architecture like you would call functions. That is,
+pass each input tensor as an argument to a layer to produce an output tensor. Once
+you complete the model, pass the inputs and outputs to the <a class="reference internal" href="generated/dlpy.model.Model.html#dlpy.model.Model" title="dlpy.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> class
+and compile it.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="kn">from</span> <span class="nn">dlpy.layers</span> <span class="kn">import</span> <span class="n">Input</span><span class="p">,</span> <span class="n">Conv2d</span><span class="p">,</span> <span class="n">Concat</span><span class="p">,</span> <span class="n">OutputLayer</span>
+
+<span class="gp">In [14]: </span><span class="kn">from</span> <span class="nn">dlpy</span> <span class="kn">import</span> <span class="n">Model</span>
+
+<span class="gp">In [15]: </span><span class="n">input1</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">28</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">28</span><span class="p">)</span>
+
+<span class="gp">In [16]: </span><span class="n">input2</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">28</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">28</span><span class="p">)</span>
+
+<span class="gp">In [17]: </span><span class="n">conv1</span> <span class="o">=</span> <span class="n">Conv2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv1&#39;</span><span class="p">)(</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv0&#39;</span><span class="p">)(</span><span class="n">input1</span><span class="p">))</span>
+
+<span class="gp">In [18]: </span><span class="n">conv2</span> <span class="o">=</span> <span class="n">Conv2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv2&#39;</span><span class="p">)(</span><span class="n">input1</span><span class="p">)</span>
+
+<span class="gp">In [19]: </span><span class="n">conv3</span> <span class="o">=</span> <span class="n">Conv2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;conv3&#39;</span><span class="p">)(</span><span class="n">input2</span><span class="p">)</span>
+
+<span class="gp">In [20]: </span><span class="n">output2</span> <span class="o">=</span> <span class="n">OutputLayer</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)(</span><span class="n">conv3</span><span class="p">)</span>
+
+<span class="gp">In [21]: </span><span class="n">concat1</span> <span class="o">=</span> <span class="n">Concat</span><span class="p">()([</span><span class="n">conv1</span><span class="p">,</span> <span class="n">conv2</span><span class="p">,</span> <span class="n">conv3</span><span class="p">])</span>
+
+<span class="gp">In [22]: </span><span class="n">output1</span> <span class="o">=</span> <span class="n">OutputLayer</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)(</span><span class="n">concat1</span><span class="p">)</span>
+
+<span class="gp">In [23]: </span><span class="n">model1</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">conn</span> <span class="o">=</span> <span class="n">sess</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">input1</span><span class="p">,</span> <span class="n">input2</span><span class="p">],</span> <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">output1</span><span class="p">,</span> <span class="n">output2</span><span class="p">])</span>
+
+<span class="gp">In [24]: </span><span class="n">model1</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="go">NOTE: Model compiled successfully.</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-pre-built-models">
+<h2>Using Pre-built Models<a class="headerlink" href="#using-pre-built-models" title="Permalink to this headline">¶</a></h2>
+<p>DLPy supplies many industry standard models for a variety of computer vision and natural
+language processing tasks. These models are generally built with a single function call and
+can be customized using Sequential model building methods (including
+<code class="xref py py-func docutils literal notranslate"><span class="pre">Sequential.to_functional_model()</span></code>). This flexibility enables you to quickly
+customize existing models.</p>
+<p>For a full list of the pre-build models, see
+<a class="reference external" href="./api.html#pre-built-models-for-computer-vision-tasks">Pre-built Models for Computer Vision Tasks</a>
+and <a class="reference external" href="./api.html#pre-built-models-for-nlp-tasks">Pre-built Models for Natural Language Processing Tasks</a>.</p>
+<p>The following example shows how you can start with a stock ResNet18 model, remove the
+default output layer, and add two custom output layers using the Functional API.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="kn">from</span> <span class="nn">dlpy.applications</span> <span class="kn">import</span> <span class="n">ResNet18_SAS</span>
+
+<span class="gp">In [26]: </span><span class="n">resnet</span> <span class="o">=</span> <span class="n">ResNet18_SAS</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">n_classes</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">224</span><span class="p">,</span> <span class="n">n_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">NOTE: Input layer added.</span>
+<span class="go">NOTE: Convolution layer added.</span>
+<span class="go">NOTE: Batch normalization layer added.</span>
+<span class="go">NOTE: Pooling layer added.</span>
+<span class="go">NOTE: Pooling layer added.</span>
+<span class="go">NOTE: Output layer added.</span>
+<span class="go">NOTE: Model compiled successfully.</span>
+
+<span class="gp">In [27]: </span><span class="n">resnet_base</span> <span class="o">=</span> <span class="n">resnet</span><span class="o">.</span><span class="n">to_functional_model</span><span class="p">(</span><span class="n">stop_layers</span><span class="o">=</span><span class="n">resnet</span><span class="o">.</span><span class="n">layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+<span class="gp">In [28]: </span><span class="n">input_1</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">n_channels</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">28</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">28</span><span class="p">)</span>
+
+<span class="gp">In [29]: </span><span class="n">resnet_base_tensor</span> <span class="o">=</span> <span class="n">resnet_base</span><span class="p">(</span><span class="n">input_1</span><span class="p">)</span>
+
+<span class="gp">In [30]: </span><span class="n">output_0</span> <span class="o">=</span> <span class="n">OutputLayer</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">)(</span><span class="n">resnet_base_tensor</span><span class="p">)</span>
+
+<span class="gp">In [31]: </span><span class="n">output_1</span> <span class="o">=</span> <span class="n">OutputLayer</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">100</span><span class="p">)(</span><span class="n">resnet_base_tensor</span><span class="p">)</span>
+
+<span class="gp">In [32]: </span><span class="n">modified_resnet</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">input_1</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">output_0</span><span class="p">,</span><span class="n">output_1</span><span class="p">])</span>
+
+<span class="gp">In [33]: </span><span class="n">modified_resnet</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+<span class="go">NOTE: Model compiled successfully.</span>
+
+<span class="gp">In [34]: </span><span class="n">modified_resnet</span><span class="o">.</span><span class="n">plot_network</span><span class="p">()</span>
+<span class="gh">Out[34]: </span><span class="go">&lt;graphviz.dot.Digraph at 0x1defe8ee748&gt;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loading-pre-trained-weights">
+<h2>Loading Pre-trained Weights<a class="headerlink" href="#loading-pre-trained-weights" title="Permalink to this headline">¶</a></h2>
+<p>Regardless of whether you build a model from scratch or use a pre-built model, you can
+load pre-trained weights as long as the weights were trained from a model with an identical
+architecture. The most common way to load weights is to use <a class="reference internal" href="generated/dlpy.model.Model.load_weights.html#dlpy.model.Model.load_weights" title="dlpy.model.Model.load_weights"><code class="xref py py-func docutils literal notranslate"><span class="pre">Model.load_weights()</span></code></a>.</p>
+<p>Select pre-trained weights can be downloaded from
+<a class="reference external" href="https://support.sas.com/documentation/prod-p/vdmml/zip/">Deep Learning Models and Tools</a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="getting-started.html" class="btn btn-neutral float-left" title="Getting Started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

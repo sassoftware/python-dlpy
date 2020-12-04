@@ -1,0 +1,6 @@
+﻿dlpy.image\_embedding.ImageEmbeddingTable.label\_freq
+=====================================================
+
+.. currentmodule:: dlpy.image_embedding
+
+.. autoproperty:: ImageEmbeddingTable.label_freq

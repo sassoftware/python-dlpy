@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.speech_utils.convert_one_audio_file &mdash; DLPy 1.2.1-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dlpy.speech_utils.convert_audio_files" href="dlpy.speech_utils.convert_audio_files.html" />
+    <link rel="prev" title="dlpy.speech_utils.display_raw_data_for_one_audio_file" href="dlpy.speech_utils.display_raw_data_for_one_audio_file.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.1-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../building_models.html">Building Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#learning-rate-scheduler">Learning Rate Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-captioning">Image Captioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-embedding">Image Embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech">Speech</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#speech-utilities">Speech Utilities</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.read_audio.html">dlpy.speech_utils.read_audio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.check_framerate.html">dlpy.speech_utils.check_framerate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.check_sampwidth.html">dlpy.speech_utils.check_sampwidth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.convert_framerate.html">dlpy.speech_utils.convert_framerate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.convert_sampwidth.html">dlpy.speech_utils.convert_sampwidth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.calculate_segment_nframes.html">dlpy.speech_utils.calculate_segment_nframes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.segment_audio.html">dlpy.speech_utils.segment_audio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.clean_audio.html">dlpy.speech_utils.clean_audio</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.check_stereo.html">dlpy.speech_utils.check_stereo</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.convert_stereo_to_mono.html">dlpy.speech_utils.convert_stereo_to_mono</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.play_one_audio_file.html">dlpy.speech_utils.play_one_audio_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.display_spectrogram_for_one_audio_file.html">dlpy.speech_utils.display_spectrogram_for_one_audio_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.display_raw_data_for_one_audio_file.html">dlpy.speech_utils.display_raw_data_for_one_audio_file</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.speech_utils.convert_one_audio_file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.convert_audio_files.html">dlpy.speech_utils.convert_audio_files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.convert_one_audio_file_to_specgram.html">dlpy.speech_utils.convert_one_audio_file_to_specgram</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.speech_utils.convert_audio_files_to_specgrams.html">dlpy.speech_utils.convert_audio_files_to_specgrams</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DLPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>dlpy.speech_utils.convert_one_audio_file</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/dlpy.speech_utils.convert_one_audio_file.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-speech-utils-convert-one-audio-file">
+<h1>dlpy.speech_utils.convert_one_audio_file<a class="headerlink" href="#dlpy-speech-utils-convert-one-audio-file" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="dlpy.speech_utils.convert_one_audio_file">
+<code class="sig-prename descclassname">dlpy.speech_utils.</code><code class="sig-name descname">convert_one_audio_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">local_audio_file</span></em>, <em class="sig-param"><span class="n">converted_local_audio_file</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.speech_utils.convert_one_audio_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a local audio file into a wav format that only contains 1 channel with 16 bits and 16K HZ.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>local_audio_file</strong><span class="classifier">string</span></dt><dd><p>Local location to the audio file to be converted.</p>
+</dd>
+<dt><strong>converted_local_audio_file</strong><span class="classifier">string</span></dt><dd><p>Local location to store the converted audio file</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>DLPyError</dt><dd><p>If anything goes wrong, it complains and prints the appropriate message.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.speech_utils.convert_audio_files.html" class="btn btn-neutral float-right" title="dlpy.speech_utils.convert_audio_files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.speech_utils.display_raw_data_for_one_audio_file.html" class="btn btn-neutral float-left" title="dlpy.speech_utils.display_raw_data_for_one_audio_file" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+﻿dlpy.speech\_utils.convert\_one\_audio\_file
+============================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: convert_one_audio_file

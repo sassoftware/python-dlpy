@@ -1,0 +1,44 @@
+﻿dlpy.layers.MultiHeadAttention
+==============================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: MultiHeadAttention
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MultiHeadAttention.__init__
+      ~MultiHeadAttention.count_instances
+      ~MultiHeadAttention.format_name
+      ~MultiHeadAttention.get_number_of_instances
+      ~MultiHeadAttention.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MultiHeadAttention.can_be_last_layer
+      ~MultiHeadAttention.kernel_size
+      ~MultiHeadAttention.layer_id
+      ~MultiHeadAttention.num_bias
+      ~MultiHeadAttention.num_features
+      ~MultiHeadAttention.num_weights
+      ~MultiHeadAttention.number_of_instances
+      ~MultiHeadAttention.output_size
+      ~MultiHeadAttention.rnn_summary
+      ~MultiHeadAttention.summary
+      ~MultiHeadAttention.type
+      ~MultiHeadAttention.type_desc
+      ~MultiHeadAttention.type_label
+   
+   

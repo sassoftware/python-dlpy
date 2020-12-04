@@ -1,0 +1,6 @@
+﻿dlpy.speech\_utils.display\_spectrogram\_for\_one\_audio\_file
+==============================================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: display_spectrogram_for_one_audio_file

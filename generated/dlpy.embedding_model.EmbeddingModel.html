@@ -1,0 +1,525 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.embedding_model.EmbeddingModel &mdash; DLPy 1.2.1-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dlpy.embedding_model.EmbeddingModel.build_embedding_model" href="dlpy.embedding_model.EmbeddingModel.build_embedding_model.html" />
+    <link rel="prev" title="dlpy.image_embedding.ImageEmbeddingTable.label_freq" href="dlpy.image_embedding.ImageEmbeddingTable.label_freq.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.1-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../building_models.html">Building Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#layers">Layers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#learning-rate-scheduler">Learning Rate Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-captioning">Image Captioning</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#image-embedding">Image Embedding</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../api.html#image-embedding-table">Image Embedding Table</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../api.html#embedding-model">Embedding Model</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">dlpy.embedding_model.EmbeddingModel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.embedding_model.EmbeddingModel.build_embedding_model.html">dlpy.embedding_model.EmbeddingModel.build_embedding_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.embedding_model.EmbeddingModel.fit_embedding_model.html">dlpy.embedding_model.EmbeddingModel.fit_embedding_model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dlpy.embedding_model.EmbeddingModel.deploy_embedding_model.html">dlpy.embedding_model.EmbeddingModel.deploy_embedding_model</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech">Speech</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech-utilities">Speech Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DLPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>dlpy.embedding_model.EmbeddingModel</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/dlpy.embedding_model.EmbeddingModel.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-embedding-model-embeddingmodel">
+<h1>dlpy.embedding_model.EmbeddingModel<a class="headerlink" href="#dlpy-embedding-model-embeddingmodel" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="dlpy.embedding_model.EmbeddingModel">
+<em class="property">class </em><code class="sig-prename descclassname">dlpy.embedding_model.</code><code class="sig-name descname">EmbeddingModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conn</span></em>, <em class="sig-param"><span class="n">inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">outputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_table</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_weights</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.embedding_model.EmbeddingModel" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="dlpy.embedding_model.EmbeddingModel.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conn</span></em>, <em class="sig-param"><span class="n">inputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">outputs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_table</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">model_weights</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.embedding_model.EmbeddingModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dlpy.embedding_model.EmbeddingModel.__init__" title="dlpy.embedding_model.EmbeddingModel.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(conn[, inputs, outputs, …])</p></td>
+<td><p>Initialize self.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="dlpy.embedding_model.EmbeddingModel.build_embedding_model.html#dlpy.embedding_model.EmbeddingModel.build_embedding_model" title="dlpy.embedding_model.EmbeddingModel.build_embedding_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_embedding_model</span></code></a>(branch[, model_table, …])</p></td>
+<td><p>Build an embedding model based on a given model branch and model type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_labels</span></code>(label_file, id_column, …)</p></td>
+<td><p>Overrides the labels already in the model</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">compile</span></code>()</p></td>
+<td><p>parse the network nodes and process CAS Action</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_instances</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_params</span></code>()</p></td>
+<td><p>Count the total number of parameters in the model</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_layer_id_name_mapping</span></code>()</p></td>
+<td><p>Create a dictionary which maps layer id to layer name. One use case is the model creates weights table given a pre-trained weights and a pre-trained model. Example:     mapper = model.create_layer_id_name_mapping()     pretrained_weights_table = WeightsTable(conn, weights_tbl_name=’my_pretrained_weights_table’,                                         model_tbl_name=’my_pretrained_model_table’)     pretrained_weights_table.remap_layer_ids(mapper, casout=’new_weights).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">deploy</span></code>(path[, output_format, model_weights, …])</p></td>
+<td><p>Deploy the deep learning model to a data file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="dlpy.embedding_model.EmbeddingModel.deploy_embedding_model.html#dlpy.embedding_model.EmbeddingModel.deploy_embedding_model" title="dlpy.embedding_model.EmbeddingModel.deploy_embedding_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">deploy_embedding_model</span></code></a>(path[, …])</p></td>
+<td><p>Deploy the deep learning model to a data file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate</span></code>(data[, text_parms, layer_out, …])</p></td>
+<td><p>Evaluate the deep learning model on a specified validation data set</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_object_detection</span></code>(ground_truth, …)</p></td>
+<td><p>Evaluate the deep learning model on a specified validation data set.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code>(data[, inputs, target, data_specs, …])</p></td>
+<td><p>Fitting a deep learning model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_and_visualize</span></code>(data[, inputs, target, …])</p></td>
+<td><p>Fitting a deep learning model while visulizing the fit and loss at each iteration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="dlpy.embedding_model.EmbeddingModel.fit_embedding_model.html#dlpy.embedding_model.EmbeddingModel.fit_embedding_model" title="dlpy.embedding_model.EmbeddingModel.fit_embedding_model"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_embedding_model</span></code></a>(optimizer[, data, path, …])</p></td>
+<td><p>Fitting a deep learning model for embedding learning.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">forecast</span></code>([test_table, horizon, train_table, …])</p></td>
+<td><p>Make forecasts based on deep learning models trained on <cite>TimeseriesTable</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_name</span></code>([block_num, local_count])</p></td>
+<td><p>Format the name of the layer</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_caffe_model</span></code>(conn, input_network_file[, …])</p></td>
+<td><p>Generate a model object from a Caffe model proto file (e.g. <a href="#id1"><span class="problematic" id="id2">*</span></a>.prototxt), and convert the weights (e.g. <a href="#id3"><span class="problematic" id="id4">*</span></a>.caffemodel) to a SAS capable file (e.g. <a href="#id5"><span class="problematic" id="id6">*</span></a>.caffemodel.h5).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_keras_model</span></code>(conn, keras_model[, …])</p></td>
+<td><p>Generate a model object from a Keras model object</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_onnx_model</span></code>(conn, onnx_model[, …])</p></td>
+<td><p>Generate a Model object from ONNX model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_sashdat</span></code>(conn, path[, output_model_table])</p></td>
+<td><p>Generate a model object using the model information in the sashdat file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_table</span></code>(input_model_table[, …])</p></td>
+<td><p>Create a Model object from CAS table that defines a deep learning model</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_feature_maps</span></code>(data[, label, idx, image_id])</p></td>
+<td><p>Extract the feature maps for a single image</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_features</span></code>(data, dense_layer[, target])</p></td>
+<td><p>Extract linear features for a data table from the layer specified by dense_layer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_model_info</span></code>()</p></td>
+<td><p>Return the information about the model table</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_number_of_instances</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">heat_map_analysis</span></code>([data, mask_width, …])</p></td>
+<td><p>Conduct a heat map analysis on table of images</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code>(path[, display_note])</p></td>
+<td><p>Load the deep learning model architecture from existing table</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights</span></code>(path[, labels, data_spec, …])</p></td>
+<td><p>Load the weights from a data file specified by ‘path’</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights_attr</span></code>(path)</p></td>
+<td><p>Load the weights attribute form a sashdat file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights_from_caffe</span></code>(path[, labels, …])</p></td>
+<td><p>Load the model weights from a HDF5 file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights_from_file</span></code>(path[, format_type, …])</p></td>
+<td><p>Load the model weights from a HDF5 file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights_from_file_with_labels</span></code>(path[, …])</p></td>
+<td><p>Load the model weights from a HDF5 file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights_from_keras</span></code>(path[, labels, …])</p></td>
+<td><p>Load the model weights from a HDF5 file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_weights_from_table</span></code>(path)</p></td>
+<td><p>Load the weights from a file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_evaluate_res</span></code>([cas_table, img_type, …])</p></td>
+<td><p>Plot the bar chart of the classification predictions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_heat_map</span></code>([idx, alpha])</p></td>
+<td><p>Display the heat maps analysis results</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_network</span></code>()</p></td>
+<td><p>Display a graph that summarizes the model architecture.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">plot_training_history</span></code>([items, fig_size, …])</p></td>
+<td><p>Display the training iteration history.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code>(data[, text_parms, layer_out, …])</p></td>
+<td><p>Evaluate the deep learning model on a specified validation data set</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_summary</span></code>()</p></td>
+<td><p>Display a table that summarizes the model architecture</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_astore</span></code>([path, layers])</p></td>
+<td><p>Save the model to an astore object, and write it into a file.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_onnx</span></code>(path[, model_weights])</p></td>
+<td><p>Save to ONNX model</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_table</span></code>(path)</p></td>
+<td><p>Save the model as SAS dataset</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_to_table_with_caslibify</span></code>(path)</p></td>
+<td><p>Save the model as SAS dataset</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_weights_csv</span></code>(path)</p></td>
+<td><p>Save model weights table as csv</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code>(table[, model, init_weights, …])</p></td>
+<td><p>Inference of input data with the trained deep learning model</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_weights</span></code>(weight_tbl)</p></td>
+<td><p>Assign weights to the Model object</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_weights_attr</span></code>(attr_tbl[, clear])</p></td>
+<td><p>Attach the weights attribute to the model weights</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">share_weights</span></code>(layers)</p></td>
+<td><p>Share weights between layers</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_functional_model</span></code>([stop_layers])</p></td>
+<td><p>Convert a Sequential into a functional model and return the functional model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_model_params</span></code>()</p></td>
+<td><p>Convert the model configuration to CAS action parameters</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train</span></code>(table[, attributes, inputs, nominals, …])</p></td>
+<td><p>Trains a deep learning model</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tune</span></code>(data[, inputs, target])</p></td>
+<td><p>Tunes hyper parameters for the deep learning model.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">branch_input_tensor</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">branch_output_tensor</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_be_last_layer</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_specs</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding_layer_name_prefix</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding_loss_layer_name</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">embedding_model_type</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">feature_maps</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">input_layer_name_prefix</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">layer_id</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_ever_trained</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_explain_table</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_epochs</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_of_branches</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_of_instances</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rnn_summary</span></code></p></td>
+<td><p>Return a DataFrame containing the layer information for rnn models</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">score_message_level</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">src_layers</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></p></td>
+<td><p>Return a DataFrame containing the layer information</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">train_tbl</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">training_history</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type_desc</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type_label</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_conf_mat</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_res</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_res_tbl</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_score</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">valid_tbl</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.embedding_model.EmbeddingModel.build_embedding_model.html" class="btn btn-neutral float-right" title="dlpy.embedding_model.EmbeddingModel.build_embedding_model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.image_embedding.ImageEmbeddingTable.label_freq.html" class="btn btn-neutral float-left" title="dlpy.image_embedding.ImageEmbeddingTable.label_freq" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,43 @@
+﻿dlpy.layers.Survival
+====================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Survival
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Survival.__init__
+      ~Survival.count_instances
+      ~Survival.format_name
+      ~Survival.get_number_of_instances
+      ~Survival.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Survival.can_be_last_layer
+      ~Survival.kernel_size
+      ~Survival.layer_id
+      ~Survival.num_bias
+      ~Survival.num_weights
+      ~Survival.number_of_instances
+      ~Survival.output_size
+      ~Survival.rnn_summary
+      ~Survival.summary
+      ~Survival.type
+      ~Survival.type_desc
+      ~Survival.type_label
+   
+   

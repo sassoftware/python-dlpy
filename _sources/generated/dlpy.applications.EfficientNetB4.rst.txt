@@ -1,0 +1,6 @@
+﻿dlpy.applications.EfficientNetB4
+================================
+
+.. currentmodule:: dlpy.applications
+
+.. autofunction:: EfficientNetB4

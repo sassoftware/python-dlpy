@@ -1,0 +1,6 @@
+﻿dlpy.audio.AudioTable.create\_audio\_feature\_table
+===================================================
+
+.. currentmodule:: dlpy.audio
+
+.. automethod:: AudioTable.create_audio_feature_table

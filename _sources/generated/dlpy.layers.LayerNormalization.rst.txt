@@ -1,0 +1,44 @@
+﻿dlpy.layers.LayerNormalization
+==============================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: LayerNormalization
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~LayerNormalization.__init__
+      ~LayerNormalization.count_instances
+      ~LayerNormalization.format_name
+      ~LayerNormalization.get_number_of_instances
+      ~LayerNormalization.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~LayerNormalization.can_be_last_layer
+      ~LayerNormalization.kernel_size
+      ~LayerNormalization.layer_id
+      ~LayerNormalization.num_bias
+      ~LayerNormalization.num_features
+      ~LayerNormalization.num_weights
+      ~LayerNormalization.number_of_instances
+      ~LayerNormalization.output_size
+      ~LayerNormalization.rnn_summary
+      ~LayerNormalization.summary
+      ~LayerNormalization.type
+      ~LayerNormalization.type_desc
+      ~LayerNormalization.type_label
+   
+   

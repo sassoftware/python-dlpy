@@ -1,0 +1,6 @@
+﻿dlpy.image\_embedding.ImageEmbeddingTable.show
+==============================================
+
+.. currentmodule:: dlpy.image_embedding
+
+.. automethod:: ImageEmbeddingTable.show

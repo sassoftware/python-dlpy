@@ -1,0 +1,6 @@
+﻿dlpy.audio.AudioTable.from\_audio\_sashdat
+==========================================
+
+.. currentmodule:: dlpy.audio
+
+.. automethod:: AudioTable.from_audio_sashdat

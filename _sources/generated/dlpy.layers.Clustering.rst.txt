@@ -1,0 +1,43 @@
+﻿dlpy.layers.Clustering
+======================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: Clustering
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Clustering.__init__
+      ~Clustering.count_instances
+      ~Clustering.format_name
+      ~Clustering.get_number_of_instances
+      ~Clustering.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Clustering.can_be_last_layer
+      ~Clustering.kernel_size
+      ~Clustering.layer_id
+      ~Clustering.num_bias
+      ~Clustering.num_weights
+      ~Clustering.number_of_instances
+      ~Clustering.output_size
+      ~Clustering.rnn_summary
+      ~Clustering.summary
+      ~Clustering.type
+      ~Clustering.type_desc
+      ~Clustering.type_label
+   
+   

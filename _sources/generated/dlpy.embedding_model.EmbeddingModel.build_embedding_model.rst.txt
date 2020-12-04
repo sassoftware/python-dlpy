@@ -1,0 +1,6 @@
+﻿dlpy.embedding\_model.EmbeddingModel.build\_embedding\_model
+============================================================
+
+.. currentmodule:: dlpy.embedding_model
+
+.. automethod:: EmbeddingModel.build_embedding_model

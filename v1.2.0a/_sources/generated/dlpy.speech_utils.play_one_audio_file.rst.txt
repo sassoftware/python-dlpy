@@ -1,0 +1,6 @@
+﻿dlpy.speech\_utils.play\_one\_audio\_file
+=========================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: play_one_audio_file

@@ -1,0 +1,43 @@
+﻿dlpy.layers.RegionProposal
+==========================
+
+.. currentmodule:: dlpy.layers
+
+.. autoclass:: RegionProposal
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~RegionProposal.__init__
+      ~RegionProposal.count_instances
+      ~RegionProposal.format_name
+      ~RegionProposal.get_number_of_instances
+      ~RegionProposal.to_model_params
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~RegionProposal.can_be_last_layer
+      ~RegionProposal.kernel_size
+      ~RegionProposal.layer_id
+      ~RegionProposal.num_bias
+      ~RegionProposal.num_weights
+      ~RegionProposal.number_of_instances
+      ~RegionProposal.output_size
+      ~RegionProposal.rnn_summary
+      ~RegionProposal.summary
+      ~RegionProposal.type
+      ~RegionProposal.type_desc
+      ~RegionProposal.type_label
+   
+   

@@ -1,0 +1,6 @@
+﻿dlpy.image\_captioning.create\_embeddings\_from\_object\_detection
+==================================================================
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autofunction:: create_embeddings_from_object_detection

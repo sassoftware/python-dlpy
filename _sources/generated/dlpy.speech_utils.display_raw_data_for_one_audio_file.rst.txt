@@ -1,0 +1,6 @@
+﻿dlpy.speech\_utils.display\_raw\_data\_for\_one\_audio\_file
+============================================================
+
+.. currentmodule:: dlpy.speech_utils
+
+.. autofunction:: display_raw_data_for_one_audio_file

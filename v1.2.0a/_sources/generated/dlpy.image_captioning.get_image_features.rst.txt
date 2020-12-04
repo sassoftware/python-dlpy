@@ -1,0 +1,6 @@
+﻿dlpy.image\_captioning.get\_image\_features
+===========================================
+
+.. currentmodule:: dlpy.image_captioning
+
+.. autofunction:: get_image_features

@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>dlpy.layers.Split &mdash; DLPy 1.2.1-dev documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="dlpy.layers.Survival" href="dlpy.layers.Survival.html" />
+    <link rel="prev" title="dlpy.layers.Segmentation" href="dlpy.layers.Segmentation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> DLPy
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.2.1-dev
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../whatsnew.html">What’s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../building_models.html">Building Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../api.html#imagetable">ImageTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#audiotable">AudioTable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#timeseries">Timeseries</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../api.html#layers">Layers</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Layer.html">dlpy.layers.Layer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.InputLayer.html">dlpy.layers.InputLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.BN.html">dlpy.layers.BN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.ChannelShuffle.html">dlpy.layers.ChannelShuffle</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Concat.html">dlpy.layers.Concat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Conv1d.html">dlpy.layers.Conv1d</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Conv2d.html">dlpy.layers.Conv2d</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Conv2DTranspose.html">dlpy.layers.Conv2DTranspose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Dense.html">dlpy.layers.Dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Detection.html">dlpy.layers.Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.EmbeddingLoss.html">dlpy.layers.EmbeddingLoss</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.FastRCNN.html">dlpy.layers.FastRCNN</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.FCMPLayer.html">dlpy.layers.FCMPLayer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.GlobalAveragePooling2D.html">dlpy.layers.GlobalAveragePooling2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.GroupConv2d.html">dlpy.layers.GroupConv2d</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Keypoints.html">dlpy.layers.Keypoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.LayerNormalization.html">dlpy.layers.LayerNormalization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.MultiHeadAttention.html">dlpy.layers.MultiHeadAttention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Pooling.html">dlpy.layers.Pooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Proj.html">dlpy.layers.Proj</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Recurrent.html">dlpy.layers.Recurrent</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.RegionProposal.html">dlpy.layers.RegionProposal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Res.html">dlpy.layers.Res</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Reshape.html">dlpy.layers.Reshape</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.ROIPooling.html">dlpy.layers.ROIPooling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Scale.html">dlpy.layers.Scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Segmentation.html">dlpy.layers.Segmentation</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">dlpy.layers.Split</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.Survival.html">dlpy.layers.Survival</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dlpy.layers.OutputLayer.html">dlpy.layers.OutputLayer</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#solvers">Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#optimizer">Optimizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#learning-rate-scheduler">Learning Rate Scheduler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#metrics">Metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#feature-maps">Feature Maps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#sequential-model">Sequential Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#residual-networks">Residual Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-computer-vision-tasks">Pre-Built Models for Computer Vision Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-captioning">Image Captioning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#image-embedding">Image Embedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#pre-built-models-for-nlp-tasks">Pre-Built Models for NLP Tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech">Speech</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#speech-utilities">Speech Utilities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api.html#splitting-utilities">Splitting Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">DLPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../api.html">API Reference</a> &raquo;</li>
+        
+      <li>dlpy.layers.Split</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated/dlpy.layers.Split.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="dlpy-layers-split">
+<h1>dlpy.layers.Split<a class="headerlink" href="#dlpy-layers-split" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="dlpy.layers.Split">
+<em class="property">class </em><code class="sig-prename descclassname">dlpy.layers.</code><code class="sig-name descname">Split</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_destination_layers</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.layers.Split" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">string, optional</span></dt><dd><p>Specifies the name of the layer.</p>
+</dd>
+<dt><strong>src_layers</strong><span class="classifier">Layers, optional</span></dt><dd><p>Specifies the layer directed to this layer.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#dlpy.layers.Split" title="dlpy.layers.Split"><code class="xref py py-class docutils literal notranslate"><span class="pre">Split</span></code></a></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="dlpy.layers.Split.__init__">
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_destination_layers</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_layers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#dlpy.layers.Split.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#dlpy.layers.Split.__init__" title="dlpy.layers.Split.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(n_destination_layers[, name, …])</p></td>
+<td><p>Initialize self.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">count_instances</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_name</span></code>([block_num, local_count])</p></td>
+<td><p>Format the name of the layer</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_number_of_instances</span></code>()</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_model_params</span></code>()</p></td>
+<td><p>Convert the model configuration to CAS action parameters</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">can_be_last_layer</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">kernel_size</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">layer_id</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_bias</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">num_weights</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">number_of_instances</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">output_size</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rnn_summary</span></code></p></td>
+<td><p>Return a DataFrame containing the layer information for rnn models</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></p></td>
+<td><p>Return a DataFrame containing the layer information</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type_desc</span></code></p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">type_label</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dlpy.layers.Survival.html" class="btn btn-neutral float-right" title="dlpy.layers.Survival" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="dlpy.layers.Segmentation.html" class="btn btn-neutral float-left" title="dlpy.layers.Segmentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018 SAS Institute Inc. All Rights Reserved.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
