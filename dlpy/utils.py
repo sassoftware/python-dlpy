@@ -1702,8 +1702,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
             for idx, filename in enumerate(label_files):
                 tbl_name = '{}_{}'.format(label_tbl_name, idx)
                 if path_after_caslib != '':
-                    filename = path_after_caslib + sep + filename
-                conn.retrieve('loadtable', caslib = caslib, path = filename,
+                    caslib_filename = path_after_caslib + filename
+                else:
+                    caslib_filename = filename
+                    
+                conn.retrieve('loadtable', caslib = caslib, path = caslib_filename,
                               casout = dict(name = tbl_name, replace = True),
                               importOptions = dict(fileType = 'csv', getNames = False,
                                                    varChars = True, delimiter = ','))
