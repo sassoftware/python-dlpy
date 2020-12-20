@@ -890,7 +890,7 @@ class ImageTable(CASTable):
                                  sharpen=sharpen,
                                  vertical_flip=vertical_flip,
                                  inplace=True,
-                                 randomratio=random_ratio)
+                                 random_ratio=random_ratio)
             return out
 
     @property
@@ -944,3 +944,4 @@ class ImageTable(CASTable):
         uid = self[['_label_', file_name]].to_frame()
         # uid = uid.rename(columns={file_name: '_uid_'})
         return uid
+
