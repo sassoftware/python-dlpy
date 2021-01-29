@@ -92,6 +92,13 @@ class AudioTable(CASTable):
         None
             If no audio files are found
 
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_table = AudioTable.load_audio_files(s, "/path/to/audio/file.txt")
+
         '''
 
         # check the options
@@ -337,6 +344,15 @@ class AudioTable(CASTable):
         None
             If no table exists
 
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_table = AudioTable.load_audio_files(s, "/path/to/audio/file.txt")
+        >>> feature_table = aud_table.extract_audio_features(s, aud_table)
+        >>> feature_table.summary()
+
         '''
 
         return cls.__extract_audio_features(conn, table, frame_shift, frame_length, n_bins, n_ceps,
@@ -361,6 +377,13 @@ class AudioTable(CASTable):
         -------
         :class:`CASTable`
 
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_tbl = AudioTable.load_audio_metadata_speechrecognition(s, path="/path/to/metadata/file.txt", audio_path="/path/to/audio/file.txt")
+        >>> aud_tbl.set_connection(s)
         '''
 
         if conn is None:
@@ -370,7 +393,7 @@ class AudioTable(CASTable):
             raise DLPyError('cannot get a connection object to the current session.')
 
         output_name = random_name('AudioTable_Metadata', 6)
-        
+
         dc = DataClean(conn=conn, contents_as_path=path)
         dc_response = dc.process_contents(audio_path = audio_path)
         tbl = dc.create_castable(dc_response['results'], output_name, replace=True, promote=False,
@@ -412,6 +435,13 @@ class AudioTable(CASTable):
         DLPyError
             If anything goes wrong, it complains and prints the appropriate message.
 
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_table = AudioTable.load_audio_metadata(s, path="/path/to/metadata/file.txt", audio_path="/path/to/audio/file.txt")
+        >>> aud_table.set_connection(s)
         '''
 
         if conn is None:
@@ -463,6 +493,14 @@ class AudioTable(CASTable):
             If anything goes wrong at any point in the process of creating this AudioTable, it complains and
             prints the appropriate message.
 
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_table = AudioTable.create_audio_table(s, "/path/to/audio/file.txt", "/metadata/for/audio/file.txt")
+        >>> aud_table.set_connection(s)
+
         '''
 
         if task == 'speech2text':
@@ -508,6 +546,14 @@ class AudioTable(CASTable):
         DLPyError
             If anything goes wrong at any point in the process of creating this AudioTable, it complains and
             prints the appropriate message.
+
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_table = AudioTable.create_audio_table_speechrecognition(s, "/path/to/metadata/file.txt", "/path/to/audio/file.txt")
+        >>> aud_table.set_connection(s)
 
         '''
         au = cls.load_audio_files(conn, data_path)
@@ -602,6 +648,15 @@ class AudioTable(CASTable):
             If table exists
         None
             If no table exists
+
+        Examples
+        --------
+        >>> import swat
+        >>> from dlpy.audio import AudioTable
+        >>> s=swat.CAS("cloud.example.com", 5570)
+        >>> aud_table = AudioTable.load_audio_files(s, "/path/to/audio/file.txt")
+        >>> feature_table = aud_table.create_audio_feature_table()
+        >>> feature_table.head()
 
         '''
 
