@@ -53,6 +53,17 @@ class ImageTable(CASTable):
     -------
     :class:`ImageTable`
 
+    Examples
+    --------
+    >>> from swat import CAS
+    >>> from dlpy.images import ImageTable
+    >>> s=CAS("cloud.example.com", 5570)
+    >>> s.loadactionset("images")
+    >>> img_table = dlpy.ImageTable("img_table", replace=True)
+    >>> img_table.set_connection(s)
+    >>> s.images.loadImages(casout=img_table, path="path/to/images")
+
+    For details about the loadImages action, see `images.loadImages <https://go.documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactml&docsetTarget=casactml_image_toc.htm&locale=en>`_
     '''
 
     running_image_column = '_image_'
@@ -102,6 +113,18 @@ class ImageTable(CASTable):
         -------
         :class:`ImageTable`
 
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> s.loadactionset("images")
+        >>> s.images.loadImages(casout="images",path="path/to/images")
+        >>> cas_table = s.CASTable("images")
+        >>> img_table=ImageTable.from_table(cas_table)
+        >>> img_table.show()
+
+        For details about the loadImages action, see `images.loadImages <https://go.documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=casactml&docsetTarget=casactml_image_toc.htm&locale=en>`_
         '''
 
         out = cls(**tbl.params)
@@ -230,6 +253,14 @@ class ImageTable(CASTable):
 
         :class:`ImageTable`
 
+        Examples
+        --------
+        from swat import CAS
+        from dlpy.images import ImageTable
+        s=CAS("cloud.example.com", 5570)
+        img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        img_tbl.show()
+
         '''
 
         conn.loadactionset('image', _messagelevel='error')
@@ -299,6 +330,15 @@ class ImageTable(CASTable):
         path : string
             Specifies the directory on the server to save the images
 
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> img_tbl.show()
+        >>> img_table.to_files("/target/directory")
+
         '''
 
         caslib = random_name('Caslib', 6)
@@ -326,6 +366,15 @@ class ImageTable(CASTable):
             Specifies additional arguments for the save action. For more details, see
             `table.save <https://documentation.sas.com/?cdcId=pgmsascdc&cdcVersion=default&docsetId=caspg&docsetTarget=cas-table-save.htm>`_
 
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> img_tbl.show()
+        >>> img_table.to_sashdat("/target/directory")
+
         '''
 
         caslib = random_name('Caslib', 6)
@@ -352,6 +401,14 @@ class ImageTable(CASTable):
         Returns
         -------
         :class:`ImageTable`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> copy_tbl=img_tbl.copy_table()
 
         '''
 
@@ -391,6 +448,14 @@ class ImageTable(CASTable):
             my_images.show(nimages=2, where='_id_ eq 57')
         id : string, optional
             Specifies the identifier column in the image table to be shown.
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> img_tbl.show(nimages=5)
 
         '''
 
@@ -480,6 +545,14 @@ class ImageTable(CASTable):
         None
             If `inplace=True`
 
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> cropped = img_tbl.crop(x=250, y=250, height=100, width=200, inplace=False)
+
         '''
 
         if (width is None) and (height is None):
@@ -533,6 +606,14 @@ class ImageTable(CASTable):
             If `inplace=False`
         None
             If `inplace=True`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> resized = img_tbl.resize(width=200, height=100, inplace=False)
 
         '''
 
@@ -610,6 +691,22 @@ class ImageTable(CASTable):
             If `inplace=False`
         None
             If `inplace=True`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> patches =img_tbl.as_patches(
+        ...     x=0,
+        ...     y=0,
+        ...     width=100,
+        ...     height=100,
+        ...     step_size=100,
+        ...     inplace=False
+        ... )
+        >>> patches.show()
 
         '''
 
@@ -710,6 +807,23 @@ class ImageTable(CASTable):
             If `inplace=True`
         None
             If `inplace=False`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> patches =img_table.as_random_patches(
+        ...     random_ratio=0.5,
+        ...     x=0,
+        ...     y=0,
+        ...     width=100,
+        ...     height=100,
+        ...     step_size=100,
+        ...     inplace=False
+        ... )
+        >>> patches.show()
 
         '''
 
@@ -827,6 +941,30 @@ class ImageTable(CASTable):
             If `inplace=True`
         None
             If `inplace=False`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.images import ImageTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> img_tbl=ImageTable.load_files(s, "/path/to/images", caslib="CASUSER(user)")
+        >>> mutations = img_table.random_mutations(
+        ...     color_jitter=True,
+        ...     color_shift=True,
+        ...     darken=False,
+        ...     horizontal_flip=True,
+        ...     invert_pixels=False,
+        ...     lighten=False,
+        ...     pyramid_down=False,
+        ...     pyramid_up=False,
+        ...     rotate_left=False,
+        ...     rotate_right=False,
+        ...     sharpen=False,
+        ...     vertical_flip=True,
+        ...     inplace=False,
+        ...     random_ratio=None
+        ... )
+        >>> mutations.show()
 
         '''
 

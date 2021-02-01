@@ -229,7 +229,7 @@ class TimeseriesTable(CASTable):
     It creates an instance of :class:`TimeseriesTable` by loading from
     files on the server side, or files on the client side, or in
     memory :class:`CASTable`, :class:`pandas.DataFrame` or
-    :class:`pandas.Series. It then performs inplace timeseries formatting,
+    :class:`pandas.Series`. It then performs inplace timeseries formatting,
     timeseries accumulation, timeseries subsequence generation, and
     timeseries partitioning to prepare the timeseries into a format that
     can be followed by subsequent deep learning models.
@@ -302,6 +302,18 @@ class TimeseriesTable(CASTable):
         -------
         :class:`TimeseriesTable`
 
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> tbl = s.loadTable(path="path/to/table", casout="table")
+        >>> time_tbl = TimeseriesTable.from_table(
+        ... tbl,
+        ... columns=['id1var', 'date', 'series'],
+        ... casout=dict(name='time_tbl', replace=True)
+        ... )
+
         '''
         input_tbl_params = tbl.to_outtable_params()
         input_tbl_name = input_tbl_params['name']
@@ -371,6 +383,18 @@ class TimeseriesTable(CASTable):
         -------
         :class:`TimeseriesTable`
 
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> from pandas import DataFrame
+        >>> s = CAS("cloud.example.com", 5570)
+        >>> df = DataFrame()
+        >>> df['id1var'] = [1, 2, 3, 4]
+        >>> df['date'] = ['2015-01-01','2015-01-02', '2015-01-03', '2015-01-04']
+        >>> df['series'] = [0.1234, 0.2345, 0.3456, 0.4567]
+        >>> time_tbl = TimeseriesTable.from_pandas(s, df, casout=dict(name="time_tbl", replace=True))
+
         '''
         if isinstance(pandas_df, pd.Series):
             pandas_df = pandas_df.reset_index()
@@ -426,6 +450,13 @@ class TimeseriesTable(CASTable):
         Returns
         -------
         :class:`TimeseriesTable`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> time_tbl = TimeseriesTable.from_localfile(s, "path/to/file.csv", casout=dict(name='time_tbl', replace=True))
 
         '''
         if casout is None:
@@ -485,6 +516,13 @@ class TimeseriesTable(CASTable):
         Returns
         -------
         :class:`TimeseriesTable`
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> time_tbl = TimeseriesTable.from_serverfile(s, "path/to/file.csv", casout=dict(name='time_tbl', replace=True))
 
         '''
         if casout is None:
@@ -589,6 +627,17 @@ class TimeseriesTable(CASTable):
             Empty list means to include no extra columns other than timeid and timeseries.
             if None, all columns are included.
             Default: None
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> time_tbl = TimeseriesTable.from_localfile(s, "path/to/file.csv", casout=dict(name='time_tbl', replace=True))
+        >>> time_tbl.timeseries_formatting(timeid='datetime',
+        ...                              timeseries='series',
+        ...                              timeid_informat='ANYDTDTM19.',
+        ...                              timeid_format='DATETIME19.')
 
         '''
         self.timeid = timeid
@@ -731,6 +780,20 @@ class TimeseriesTable(CASTable):
             Use the user-defined interval to overwrite acc_interval
             See more details here:
             https://go.documentation.sas.com/?docsetId=casforecast&docsetTarget=casforecast_tsmodel_syntax04.htm&docsetVersion=8.4
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> time_tbl = TimeseriesTable.from_localfile(s, "path/to/file.csv", casout=dict(name='time_tbl', replace=True))
+        >>> time_tbl.timeseries_formatting(timeid='datetime',
+        ...                              timeseries='series',
+        ...                              timeid_informat='ANYDTDTM19.',
+        ...                              timeid_format='DATETIME19.')
+        >>> time_tbl.timeseries_accumlation(acc_interval='day',
+        ...                               timeseries = 'series',
+        ...                               groupby=['id1var', 'id2var'])
 
         '''
         if (timeid is None) and (self.timeid is None):
@@ -906,6 +969,24 @@ class TimeseriesTable(CASTable):
         missing_handling : string, optional
             How to handle missing value in the subsequences. 
             default: drop
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> s=CAS("cloud.example.com", 5570)
+        >>> time_tbl = TimeseriesTable.from_localfile(s, "path/to/file.csv", casout=dict(name='time_tbl', replace=True))
+        >>> time_tbl.timeseries_formatting(timeid='datetime',
+        ...                              timeseries='series',
+        ...                              timeid_informat='ANYDTDTM19.',
+        ...                              timeid_format='DATETIME19.')
+        >>> time_tbl.timeseries_accumlation(acc_interval='day',
+        ...                               timeseries = 'series',
+        ...                               groupby=['id1var', 'id2var'])
+        >>> time_tbl.prepare_subsequences(seq_len=3,
+        ...                             target='series',
+        ...                             predictor_timeseries=['series', 'covar'],
+        ...                             missing_handling='drop')
 
         '''
         tbl_colinfo = self.columninfo().ColumnInfo
@@ -1121,6 +1202,20 @@ class TimeseriesTable(CASTable):
         Returns
         -------
         ( training TimeseriesTable, validation TimeseriesTable, testing TimeseriesTable )
+
+        Examples
+        --------
+        >>> from swat import CAS
+        >>> from dlpy.timeseries import TimeseriesTable
+        >>> import datetime
+        >>> time_tbl = TimeseriesTable.from_localfile(
+        ...     s,
+        ...     r"U:\data\tmp\timeseries_exp1.csv",
+        ...     casout=dict(name='table1', replace=True))
+        >>> valid_start = datetime.datetime(2015, 1, 7, 0 , 0, 0)
+        >>> test_start = datetime.date(2015, 1, 9)
+        >>> traintbl, validtbl, testtbl = time_tbl.timeseries_partition(validation_start=valid_start,
+        ... testing_start=test_start)
 
         '''
         self.partition_var_name = partition_var_name
