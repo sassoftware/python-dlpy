@@ -1756,13 +1756,22 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                                 annotatedtable = 'output{}'.format(var_name[1]),
                                 casout = dict(name = output, replace = True), _messagelevel = 'error')
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the object detection table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     for var in var_name[2:]:
         res = conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
                                     casout = dict(name = output, replace = True))
         if res.severity > 0:
-            raise DLPyError('ERROR: Fail to create the object detection table.')
+            for msg in res.messages:
+                if msg.startswith('WARNING'):
+                    print(msg)
+                elif msg.startswith('ERROR'):
+                    raise DLPyError('ERROR: Failed to create the object detection table.')
+                    
     # get number of objects in each image
     code = '''
             data {0};
@@ -1782,7 +1791,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     res = conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
                                                     for i in range(max_instance)])
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the object detection table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     # parse and create dljoin id column
     label_col_info = conn.columninfo(output).ColumnInfo
@@ -1799,7 +1812,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the object detection table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     with sw.option_context(print_messages=False):
         for name in input_tbl_name:
@@ -1846,7 +1863,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     res = conn.deepLearn.dljoin(table = mask_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the instance segmentation table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     # with sw.option_context(print_messages=False):
     #     conn.table.droptable(mask_img_table)
