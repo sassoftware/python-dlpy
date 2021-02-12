@@ -137,7 +137,7 @@ class TestAudioTable(unittest.TestCase):
 
         audio_table = AudioTable.load_audio_files(self.s, self.data_dir+'listingFile.txt')
         fe = self.s.fetch(audio_table)
-        self.assertTrue('recording' in fe.Fetch.ix[0]['_path_'])
+        self.assertTrue('recording' in fe.Fetch.iloc[0]['_path_'])
 
     def test_audio_6(self):
         filename = os.path.join('datasources', 'metadata_for_audio.txt')
