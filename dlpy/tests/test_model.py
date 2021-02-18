@@ -94,7 +94,8 @@ class TestModel(unittest.TestCase):
         if r.severity > 0:
             for msg in r.messages:
                 print(msg)
-        self.assertTrue(r.severity <= 1)
+        # self.assertTrue(r.severity <= 1)
+        self.assertLessEqual(r.severity,1,msg="\n".join([msg for msg in r.messages]))        
         
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -118,11 +119,13 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_')
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
         r2 = model1.predict(data='eee')
-        self.assertTrue(r2.severity == 0)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -146,17 +149,21 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_')
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=3)
-        self.assertTrue(r1.severity == 0)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        # self.assertTrue(r1.severity == 0)
+        self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=2)
-        self.assertTrue(r2.severity == 0)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         r3 = model1.predict(data='eee')
-        self.assertTrue(r3.severity == 0)
+        # self.assertTrue(r3.severity == 0)
+        self.assertEqual(r3.severity,0,msg="\n".join([msg for msg in r3.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -180,11 +187,13 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_')
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
         r2 = model1.evaluate(data='eee')
-        self.assertTrue(r2.severity == 0)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -208,17 +217,21 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_')
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=3)
-        self.assertTrue(r1.severity == 0)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        # self.assertTrue(r1.severity == 0)
+        self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=2)
-        self.assertTrue(r2.severity == 0)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         r3 = model1.evaluate(data='eee')
-        self.assertTrue(r3.severity == 0)
+        # self.assertTrue(r3.severity == 0)
+        self.assertEqual(r3.severity,0,msg="\n".join([msg for msg in r3.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -242,8 +255,9 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
         if r.severity > 0:
             for msg in r.messages:
                 print(msg)
@@ -270,11 +284,13 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
         r2 = model1.predict(data='eee', use_best_weights=True)
-        self.assertTrue(r2.severity == 0)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -298,14 +314,16 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
         if r.severity > 0:
             for msg in r.messages:
                 print(msg)
 
         r2 = model1.predict(data='eee')
-        self.assertTrue(r2.severity == 0)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
         if r2.severity > 0:
             for msg in r2.messages:
                 print(msg)
@@ -332,11 +350,13 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
         r2 = model1.evaluate(data='eee', use_best_weights=True)
-        self.assertTrue(r2.severity == 0)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -360,11 +380,13 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
         r2 = model1.evaluate(data='eee')
-        self.assertTrue(r2.severity == 0)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         model1.save_to_table(self.data_dir)
 
@@ -390,17 +412,21 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=3)
-        self.assertTrue(r1.severity == 0)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        # self.assertTrue(r1.severity == 0)
+        self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=2)
-        self.assertTrue(r2.severity == 0)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         r3 = model1.evaluate(data='eee', use_best_weights=True)
-        self.assertTrue(r3.severity == 0)
+        # self.assertTrue(r3.severity == 0)
+        self.assertEqual(r3.severity,0,msg="\n".join([msg for msg in r3.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -424,17 +450,21 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', save_best_weights=True)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=3)
-        self.assertTrue(r1.severity == 0)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        # self.assertTrue(r1.severity == 0)
+        self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=2, save_best_weights=True)
-        self.assertTrue(r2.severity == 0)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2, save_best_weights=True)
+        # self.assertTrue(r2.severity == 0)
+        self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
         r3 = model1.predict(data='eee', use_best_weights=True)
-        self.assertTrue(r3.severity == 0)
+        # self.assertTrue(r3.severity == 0)
+        self.assertEqual(r3.severity,0,msg="\n".join([msg for msg in r3.messages]))
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level = 'error', caslib = caslib)
@@ -536,8 +566,9 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
-        self.assertTrue(r.severity == 0)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=1)
+        # self.assertTrue(r.severity == 0)
+        self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
         model1.save_weights_csv(self.data_dir)
 
@@ -621,13 +652,14 @@ class TestModel(unittest.TestCase):
         model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
         model1.add(OutputLayer(act='IDENTITY'))
         
-        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.01), mini_batch_size=32, 
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.001), mini_batch_size=32, 
                               seed=1234, max_epochs=10)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, 
                             sequence=seq_spec, **traintbl.inputs_target)
         
-        self.assertTrue(result.severity == 0)
+        # self.assertTrue(result.severity == 0)
+        self.assertEqual(result.severity,0,msg="\n".join([msg for msg in result.messages]))
         
         resulttbl1 = model1.forecast(horizon=1)
         self.assertTrue(isinstance(resulttbl1, CASTable))
@@ -698,13 +730,14 @@ class TestModel(unittest.TestCase):
         model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
         model1.add(OutputLayer(act='IDENTITY'))
         
-        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.01), mini_batch_size=32, 
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.001), mini_batch_size=32, 
                               seed=1234, max_epochs=10)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, 
                             sequence=seq_spec, **traintbl.inputs_target)
         
-        self.assertTrue(result.severity == 0)
+        # self.assertTrue(result.severity == 0)
+        self.assertEqual(result.severity,0,msg="\n".join([msg for msg in result.messages]))
         
         resulttbl1 = model1.forecast(testtbl, horizon=1)
         self.assertTrue(isinstance(resulttbl1, CASTable))
@@ -794,13 +827,14 @@ class TestModel(unittest.TestCase):
         model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
         model1.add(OutputLayer(act='IDENTITY'))
         
-        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.01), mini_batch_size=32, 
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.001), mini_batch_size=32, 
                               seed=1234, max_epochs=10)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, optimizer=optimizer, 
                             sequence=seq_spec, **traintbl.inputs_target)
         
-        self.assertTrue(result.severity == 0)
+        # self.assertTrue(result.severity == 0)
+        self.assertEqual(result.severity,0,msg="\n".join([msg for msg in result.messages]))
         
         resulttbl1 = model1.forecast(validtbl, horizon=1)
         self.assertTrue(isinstance(resulttbl1, CASTable))
@@ -973,7 +1007,7 @@ class TestModel(unittest.TestCase):
                                offsets=my_im_r.channel_means, pre_trained_weights=True,
                                pre_trained_weights_file=pre_train_weight_file,
                                include_top=False)
-        model.fit(data=my_im_r, mini_batch_size=1, max_epochs=1)
+        model.fit(data=my_im_r, mini_batch_size=1, lr=0.001, max_epochs=1)
         model.heat_map_analysis(data=my_im_r, mask_width=None, mask_height=None, step_size=None,
                                  max_display=1)
 

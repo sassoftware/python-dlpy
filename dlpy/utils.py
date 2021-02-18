@@ -359,8 +359,12 @@ def find_caslib(conn, path):
         Specifies the name of the caslib that contains the path.
 
     '''
-    caslib_paths = conn.caslibinfo().CASLibInfo.Path.tolist()
-    caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
+    caslib_paths = conn.caslibinfo(srcType="PATH").CASLibInfo.Path.tolist() + \
+                   conn.caslibinfo(srcType="DNFS").CASLibInfo.Path.tolist() + \
+                   conn.caslibinfo(srcType="HDFS").CASLibInfo.Path.tolist()
+    caslibs = conn.caslibinfo(srcType="PATH").CASLibInfo.Name.tolist() + \
+              conn.caslibinfo(srcType="DNFS").CASLibInfo.Name.tolist() + \
+              conn.caslibinfo(srcType="HDFS").CASLibInfo.Name.tolist()
 
     server_type = get_cas_host_type(conn).lower()
 
@@ -2877,6 +2881,55 @@ def file_exist_on_server(conn, file):
     else:
         return False
 
+def query_layer_parm(conn, layer_type, parm_name):
+    '''
+    Check whether layer supports given parameter
+
+    Parameters
+    ----------
+    conn : CAS
+        The CAS connection object
+    layer_type : string
+        The layer type.
+    parm_name : string
+        The layer parameter name.
+
+    Returns
+    -------
+    boolean
+        Indicates whether layer supports parameter
+        
+    '''
+    
+    # check whether action set is loaded
+    parm_valid = False
+    r = conn.retrieve('queryactionset', _messagelevel='error', actionset='deepLearn')
+    key = list(r.keys())[0]
+    
+    # load action set if needed
+    if not r[key]:
+        conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'deepLearn')
+
+    # retrieve layer options
+    r = conn.retrieve('builtins.reflect', action='addlayer',
+                       actionset='deepLearn')
+                           
+    # check for parameter
+    for action in r[0]['actions']:
+        if 'addlayer' == action['name'].lower():
+            for parm in action['params']:
+                if 'layer' == parm['name'].lower():
+                    for ltype in parm['alternatives']:
+                        if layer_type.lower() in ltype['name'].lower():
+                            for opt in ltype['parmList']:
+                                if opt['name'].lower() == parm_name.lower():
+                                    parm_valid = True
+                                    break
+                            break
+                    break
+            break
+                    
+    return parm_valid
 
 class DLPyDict(collections.MutableMapping):
     """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
