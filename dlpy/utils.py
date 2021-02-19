@@ -359,8 +359,12 @@ def find_caslib(conn, path):
         Specifies the name of the caslib that contains the path.
 
     '''
-    caslib_paths = conn.caslibinfo().CASLibInfo.Path.tolist()
-    caslibs = conn.caslibinfo().CASLibInfo.Name.tolist()
+    caslib_paths = conn.caslibinfo(srcType="PATH").CASLibInfo.Path.tolist() + \
+                   conn.caslibinfo(srcType="DNFS").CASLibInfo.Path.tolist() + \
+                   conn.caslibinfo(srcType="HDFS").CASLibInfo.Path.tolist()
+    caslibs = conn.caslibinfo(srcType="PATH").CASLibInfo.Name.tolist() + \
+              conn.caslibinfo(srcType="DNFS").CASLibInfo.Name.tolist() + \
+              conn.caslibinfo(srcType="HDFS").CASLibInfo.Name.tolist()
 
     server_type = get_cas_host_type(conn).lower()
 
@@ -1702,8 +1706,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
             for idx, filename in enumerate(label_files):
                 tbl_name = '{}_{}'.format(label_tbl_name, idx)
                 if path_after_caslib != '':
-                    filename = path_after_caslib + sep + filename
-                conn.retrieve('loadtable', caslib = caslib, path = filename,
+                    caslib_filename = path_after_caslib + filename
+                else:
+                    caslib_filename = filename
+                    
+                conn.retrieve('loadtable', caslib = caslib, path = caslib_filename,
                               casout = dict(name = tbl_name, replace = True),
                               importOptions = dict(fileType = 'csv', getNames = False,
                                                    varChars = True, delimiter = ','))
@@ -1753,13 +1760,22 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                                 annotatedtable = 'output{}'.format(var_name[1]),
                                 casout = dict(name = output, replace = True), _messagelevel = 'error')
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the object detection table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     for var in var_name[2:]:
         res = conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
                                     casout = dict(name = output, replace = True))
         if res.severity > 0:
-            raise DLPyError('ERROR: Fail to create the object detection table.')
+            for msg in res.messages:
+                if msg.startswith('WARNING'):
+                    print(msg)
+                elif msg.startswith('ERROR'):
+                    raise DLPyError('ERROR: Failed to create the object detection table.')
+                    
     # get number of objects in each image
     code = '''
             data {0};
@@ -1779,7 +1795,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     res = conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
                                                     for i in range(max_instance)])
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the object detection table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     # parse and create dljoin id column
     label_col_info = conn.columninfo(output).ColumnInfo
@@ -1796,7 +1816,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the object detection table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     with sw.option_context(print_messages=False):
         for name in input_tbl_name:
@@ -1843,7 +1867,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     res = conn.deepLearn.dljoin(table = mask_tbl, annotation = output, id = 'idjoin',
                                 casout = {'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
-        raise DLPyError('ERROR: Fail to create the instance segmentation table.')
+        for msg in res.messages:
+            if msg.startswith('WARNING'):
+                print(msg)
+            elif msg.startswith('ERROR'):
+                raise DLPyError('ERROR: Failed to create the object detection table.')
 
     # with sw.option_context(print_messages=False):
     #     conn.table.droptable(mask_img_table)
@@ -2853,6 +2881,55 @@ def file_exist_on_server(conn, file):
     else:
         return False
 
+def query_layer_parm(conn, layer_type, parm_name):
+    '''
+    Check whether layer supports given parameter
+
+    Parameters
+    ----------
+    conn : CAS
+        The CAS connection object
+    layer_type : string
+        The layer type.
+    parm_name : string
+        The layer parameter name.
+
+    Returns
+    -------
+    boolean
+        Indicates whether layer supports parameter
+        
+    '''
+    
+    # check whether action set is loaded
+    parm_valid = False
+    r = conn.retrieve('queryactionset', _messagelevel='error', actionset='deepLearn')
+    key = list(r.keys())[0]
+    
+    # load action set if needed
+    if not r[key]:
+        conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'deepLearn')
+
+    # retrieve layer options
+    r = conn.retrieve('builtins.reflect', action='addlayer',
+                       actionset='deepLearn')
+                           
+    # check for parameter
+    for action in r[0]['actions']:
+        if 'addlayer' == action['name'].lower():
+            for parm in action['params']:
+                if 'layer' == parm['name'].lower():
+                    for ltype in parm['alternatives']:
+                        if layer_type.lower() in ltype['name'].lower():
+                            for opt in ltype['parmList']:
+                                if opt['name'].lower() == parm_name.lower():
+                                    parm_valid = True
+                                    break
+                            break
+                    break
+            break
+                    
+    return parm_valid
 
 class DLPyDict(collections.MutableMapping):
     """ Dictionary that applies an arbitrary key-altering function before accessing the keys """

@@ -20,6 +20,7 @@ from dlpy.model import Model
 from dlpy.sequential import Sequential
 from dlpy.layers import (Conv2d, Input, Pooling, BN, Conv2DTranspose, Concat, Res, Segmentation)
 from .application_utils import get_layer_options, input_layer_options
+from dlpy.utils import query_layer_parm
 
 
 def initial_block(inp):
@@ -262,8 +263,11 @@ def ENet(conn, model_table='ENet', n_classes=2, n_channels=3, width=512, height=
     x = upsampling_bottleneck(x, 16, 16)
     conv = Conv2d(n_classes, 3, act='relu')(x)
 
-    seg = Segmentation(name='Segmentation_1', output_image_type=output_image_type,
-                       output_image_prob=output_image_prob)(conv)
+    if query_layer_parm(conn,'segmentation','outputImageType') and query_layer_parm(conn,'segmentation','outputImageProb'):
+        seg = Segmentation(name='Segmentation_1', output_image_type=output_image_type,
+                           output_image_prob=output_image_prob)(conv)
+    else:
+        seg = Segmentation(name='Segmentation_1')(conv)
 
     model = Model(conn, inputs=inp, outputs=seg)
     model.compile()

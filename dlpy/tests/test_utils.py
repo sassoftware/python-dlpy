@@ -21,9 +21,18 @@ import unittest
 import swat
 import swat.utils.testing as tm
 import csv
+import os
 from dlpy.utils import *
 from dlpy.images import ImageTable
 
+def cleanup_txt_files(conn, data_dir):
+    sep = get_server_path_sep(conn)
+    target_dir = sep.join([data_dir,'dlpy_obj_det_test'])
+    if os.path.isdir(target_dir):
+        txt_files = [fname for fname in os.listdir(target_dir) if fname.lower().endswith('.txt')]
+        for name in txt_files:
+            if os.path.isfile(sep.join([target_dir,name])):
+                os.remove(sep.join([target_dir,name]))                                          
 
 class TestUtils(unittest.TestCase):
     '''
@@ -106,9 +115,16 @@ class TestUtils(unittest.TestCase):
 
             create_object_detection_table(self.s, coord_type='yolo', output='output',
                                           data_path=self.data_dir+'dlpy_obj_det_test')
+                                          
+            # cleanup generated files
+            cleanup_txt_files(self.s, self.data_dir)
 
             create_object_detection_table(self.s, data_path=self.data_dir+'dlpy_obj_det_test',
                                           coord_type='coco', output='output')
+                                          
+            # cleanup generated files
+            cleanup_txt_files(self.s, self.data_dir)
+                                          
         # there are 11 images where all contains 3 instance.
         # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
         a = self.s.CASTable('output')
@@ -122,6 +138,10 @@ class TestUtils(unittest.TestCase):
         create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
                                       coord_type = 'yolo',
                                       output = 'output')
+                                      
+        # cleanup generated files
+        cleanup_txt_files(self.s, self.data_dir)
+                                      
         # there are 11 images where all contains 3 instance.
         # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
         a = self.s.CASTable('output')
@@ -136,6 +156,10 @@ class TestUtils(unittest.TestCase):
                                                                            data_path=self.data_dir+'dlpy_obj_det_test',
                                                                            coord_type='invalid_val',
                                                                            output='output'))
+                                                                           
+        # cleanup generated files
+        cleanup_txt_files(self.s, self.data_dir)
+
 
     def test_create_object_detection_table_4(self):
         # make sure that txt files are already in self.data_dir + 'dlpy_obj_det_test', otherwise the test will fail.
@@ -145,6 +169,9 @@ class TestUtils(unittest.TestCase):
         create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
                                       coord_type='yolo',
                                       output='output')
+
+        # cleanup generated files
+        cleanup_txt_files(self.s, self.data_dir)
 
         a = self.s.CASTable('output')
         from dlpy.utils import get_info_for_object_detection
@@ -166,6 +193,10 @@ class TestUtils(unittest.TestCase):
         create_object_detection_table(self.s, data_path = self.data_dir + 'dlpy_obj_det_test',
                                       coord_type = 'yolo',
                                       output = 'output', image_size = (416, 512))
+                                      
+        # cleanup generated files
+        cleanup_txt_files(self.s, self.data_dir)
+                                      
         # there are 11 images where all contains 3 instance.
         # If annotation files are parsed correctly, _nObjects_ column is 3 for all records.
         a = self.s.CASTable('output')
@@ -190,6 +221,9 @@ class TestUtils(unittest.TestCase):
 
             create_object_detection_table(self.s, coord_type='yolo', output='output',
                                           data_path=self.data_dir+'dlpy_obj_det_test')
+                                          
+            # remove generated txt files
+            cleanup_txt_files(self.s, self.data_dir)
 
         get_anchors(self.s, coord_type='yolo', data='output')
 
@@ -446,6 +480,40 @@ class TestUtils(unittest.TestCase):
             return
         self.s.dropcaslib(caslib = 'data')
         #raise DLPyError('caslibify_context() expected to throw a DLPyError')
+
+    def test_find_caslib(self):
+        # add database CASLIB (path of / caused problems prior to fix of find_caslib function)
+        r = self.s.addcaslib(name = 'data', path='/', dataSource = dict(srcType = "MYSQL"), activeOnAdd=False)
+        self.assertEqual(r.severity, 0, msg="Unable to create MYSQL CASLIB")
+        
+        # no CASLIB should point to DATA_DIR or a root director of DATA_DIR
+        lname = find_caslib(self.s, self.data_dir)
+        self.assertIsNone(lname, msg="Found %s CASLIB pointing to DATA_DIR" % lname)
+        
+        # drop CASLIB
+        self.s.dropcaslib(caslib='data')
+
+        # add PATH CASLIB pointing to DATA_DIR
+        r = self.s.addcaslib(name = 'data', path=self.data_dir, dataSource = dict(srcType = "PATH"), activeOnAdd=False)
+        self.assertEqual(r.severity, 0, msg="Unable to create PATH CASLIB")
+        
+        # there should be a CASLIB pointing to DATA_DIR now
+        lname = find_caslib(self.s, self.data_dir)
+        self.assertIsNotNone(lname, msg="Found no CASLIB pointing to DATA_DIR")
+        
+        # drop CASLIB
+        self.s.dropcaslib(caslib='data')
+
+        # add DNFS CASLIB pointing to DATA_DIR
+        r = self.s.addcaslib(name = 'data', path=self.data_dir, dataSource = dict(srcType = "DNFS"), activeOnAdd=False)
+        self.assertEqual(r.severity, 0, msg="Unable to create DNFS CASLIB")
+        
+        # there should be a CASLIB pointing to DATA_DIR now
+        lname = find_caslib(self.s, self.data_dir)
+        self.assertIsNotNone(lname, msg="Found no CASLIB pointing to DATA_DIR")
+        
+        # drop CASLIB
+        self.s.dropcaslib(caslib='data')
 
     def test_user_defined_labels(self):
         if self.data_dir is None:

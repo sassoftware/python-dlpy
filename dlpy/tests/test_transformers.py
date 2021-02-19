@@ -114,6 +114,8 @@ class TestTransformers(unittest.TestCase):
         reviews = pd.read_csv(os.path.join(self.data_dir_local,'imdb_master.csv'),
                               header=0,
                               names=['type', 'review','label','file'],
+                              skiprows=25000,
+                              nrows=1000,
                               encoding='latin_1')
 
         input_label = 'review'       # input data is review text
@@ -125,11 +127,6 @@ class TestTransformers(unittest.TestCase):
         inputs = reviews[t_idx1 & t_idx2][input_label].to_list()
         targets = reviews[t_idx1 & t_idx2][target_label].to_list()
         
-        # limit the number of observations to 1000
-        if len(inputs) > 1000:
-            inputs = inputs[:1000]
-            targets = targets[:1000]
-
         # create numeric target labels
         for ii,val in enumerate(targets):
             inputs[ii] = inputs[ii].replace("<br />","")
@@ -200,6 +197,7 @@ class TestTransformers(unittest.TestCase):
         # read regression data set
         reviews = pd.read_csv(os.path.join(self.data_dir_local,'task1_training_edited.csv'),
                               header=None,
+                              nrows=1000,
                               names=['id','original','edit','grades','meanGrade'])
 
         inputs = reviews['original'].tolist()[1:]
@@ -207,12 +205,6 @@ class TestTransformers(unittest.TestCase):
         targets = reviews['meanGrade'].tolist()[1:]
         for ii,val in enumerate(targets):
             targets[ii] = round(val)
-        
-        # limit the number of observations to 1000
-        if len(inputs) > 1000:
-            inputs = inputs[:1000]
-            targets = targets[:1000]
-
         
         # prepare data
         num_tgt_var, train, valid = bert_prepare_data(self.s, 
@@ -290,11 +282,12 @@ class TestTransformers(unittest.TestCase):
         tokenizer = BertTokenizer.from_pretrained(model_name,cache_dir=self.data_dir_local)
         
         # read QNLI dataset
-        train_data = pd.read_csv('/dept/cas/DeepLearn/docair/glue/qnli/train.tsv',
+        train_data = pd.read_csv(os.path.join(self.data_dir_local,'qnli_train.tsv'),
                               header=0,
                               sep='\t',
                               error_bad_lines=False,
                               warn_bad_lines=False,
+                              nrows=1000,
                               names=['index', 'question','sentence','label'])
 
         input_a_label = 'question'
@@ -302,12 +295,7 @@ class TestTransformers(unittest.TestCase):
 
         input_a = train_data[input_a_label].to_list()
         input_b = train_data[input_b_label].to_list()
-                        
-        # limit the number of observations to 1000
-        if len(input_a) > 1000:
-            input_a = input_a[:1000]
-            input_b = input_b[:1000]
-        
+                                
         # prepare data
         num_tgt_var, test = bert_prepare_data(self.s, 
                                               tokenizer, 
@@ -352,7 +340,7 @@ class TestTransformers(unittest.TestCase):
         '''
 
         try:
-            from dlpy.transformers.bert_utils import bert_prepare_data
+            from dlpy.transformers.bert_utils import bert_prepare_data, BertCommon
             from dlpy.transformers.bert_model import BERT_Model
         except (ImportError, DLPyError) as e:
             unittest.TestCase.skipTest(self, "Unable to import from transformers. Please install it and try again.")
@@ -379,9 +367,17 @@ class TestTransformers(unittest.TestCase):
         if (not self.necessary_packages_installed) or (not h5py_installed):
             unittest.TestCase.skipTest(self, "missing transformers or h5py package")
             
+        # try to load embedding table so test runs in reasonable amount of time
+        embed_lib, extra_path, newlib = caslibify(self.s, self.data_dir, task='save')
+        res = self.s.retrieve('table.loadtable', _messagelevel='error', 
+                              caslib=embed_lib, path='bert_embeddings.sashdat', 
+                              casout=dict(name=BertCommon['embedding_table_name'], replace=True))
+        if res.severity > 1:
+            unittest.TestCase.skipTest(self, "unable to load embeddings table")
+                        
         # test case parameters
         n_classes = 2
-        num_encoder_layers = 2
+        num_encoder_layers = 1
         num_tgt_var = 1
         
         # instantiate BERT model
@@ -402,14 +398,14 @@ class TestTransformers(unittest.TestCase):
         res = self.s.retrieve('table.tableexists', _messagelevel='error',
                               name=bert.model_name)
         self.assertTrue(res['exists'] != 0,"Model table not created.")
-        
+
         # attempt to create CASLIB to cache directory
         try:
             caslib, extra_path, newlib = caslibify(self.s, cache_dir, task='save')
             do_load_weights = True
         except DLPyError:
             do_load_weights = False
-            
+                    
         # attach model weights - skip if server unable to "see" cache directory
         if do_load_weights:
             bert.load_weights(os.path.join(cache_dir,model_name+'.kerasmodel.h5'), 

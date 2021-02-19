@@ -557,6 +557,67 @@ class TestModel(unittest.TestCase):
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
 
+    def test_model17(self):
+        # test GlobalAveragePooling
+        try:
+            import onnx
+        except:
+            unittest.TestCase.skipTest(self, "onnx not found in the libraries")
+            
+        from dlpy.applications import ResNet18_SAS
+
+        model1 = ResNet18_SAS(self.s, model_table='ResNet18')
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir+'images.sashdat', task='load')
+
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', max_epochs=1)
+        self.assertTrue(r.severity == 0)
+
+        import tempfile
+        tmp_dir_to_dump = tempfile.gettempdir()
+        model1.deploy(tmp_dir_to_dump, output_format='onnx')
+
+        import os
+        os.remove(os.path.join(tmp_dir_to_dump, "ResNet18.onnx"))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mobilenetv2(self):
+        # test loading of existing ONNX model
+        try:
+            import onnx
+            from dlpy.model_conversion.onnx_transforms import (Transformer, OpTypePattern,
+                                                               ConstToInitializer,
+                                                               InitReshape, InitUnsqueeze,
+                                                               FuseMulAddBN)
+            from dlpy.model_conversion.onnx_graph import OnnxGraph
+            from onnx import helper, numpy_helper
+        except:
+            unittest.TestCase.skipTest(self, 'onnx package not found')
+
+        from dlpy.model import Model
+
+        if self.data_dir_local is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
+
+
+        path = os.path.join(self.data_dir_local, 'mobilenetv2-1.0.onnx')
+
+        onnx_model = onnx.load_model(path)
+        model1 = Model.from_onnx_model(self.s,
+                                       onnx_model,
+                                       output_model_table='mobilenetv2',
+                                       offsets=255*[0.485, 0.456, 0.406],
+                                       norm_stds=255*[0.229, 0.224, 0.225])
+
     def tearDown(self):
         # tear down tests
         try:

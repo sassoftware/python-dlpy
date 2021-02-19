@@ -304,12 +304,18 @@ def sas_to_onnx(layers, model_table, model_weights):
                 print('WARNING: Unsupported pool type '
                       + str(pool) + '. Using MaxPool.')
 
-            pool_op = helper.make_node(op_type=onnx_pool,
-                                       inputs=pooling_input,
-                                       outputs=pooling_output,
-                                       pads=padding,
-                                       kernel_shape=[H, W],
-                                       strides=[S_h, S_w])
+            # GlobalAveragePool
+            if onnx_pool == 'AveragePool' and (H == 0 or W == 0):
+                pool_op = helper.make_node(op_type='GlobalAveragePool',
+                           inputs=pooling_input,
+                           outputs=pooling_output)
+            else:
+                pool_op = helper.make_node(op_type=onnx_pool,
+                                           inputs=pooling_input,
+                                           outputs=pooling_output,
+                                           pads=padding,
+                                           kernel_shape=[H, W],
+                                           strides=[S_h, S_w])
             nodes.append(pool_op)
 
             # dropout op
