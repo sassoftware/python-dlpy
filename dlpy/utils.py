@@ -1659,7 +1659,7 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                                     recurse=False,
                                     labelLevels=-1,
                                     caslib=caslib,
-                                    casout={'name': det_img_table, 'replace':True})
+                                    casout={'name': det_img_table, 'replace': True})
         if res.severity > 0:
             for msg in res.messages:
                 if not msg.startswith('WARNING'):
@@ -2011,20 +2011,47 @@ def display_object_detections(conn, table, coord_type, max_objects=10,
     num_plot = num_plot if num_plot < img_num else img_num
     input_table = input_table.sample(num_plot)
     det_label_image_table = random_name('detLabelImageTable')
+    input_image_processed = random_name('inputImageProcessed')
 
     num_max_obj = input_table['_nObjects_'].max()
     max_objects = max_objects if num_max_obj > max_objects else num_max_obj
 
+    # apply hist equalization if gray-scale images
+    raw_images = conn.image.fetchImages(imageTable=input_table,
+                                        to=1,
+                                        fetchImagesVars=['_image_'])
+    if len(np.array(raw_images['Images']['Image'][0]).shape) == 2:
+        var_list = input_table.columninfo().ColumnInfo.Column.tolist()
+        i = var_list.index('_image_')
+        del var_list[i]
+        with sw.option_context(print_messages=False):
+            res = conn.image.processImages(casout={'name': input_image_processed, 'replace': True},
+                                           imagefunctions=[
+                                               {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                            'method': 'GLOBAL'}}
+                                           ],
+                                           table=input_table,
+                                           copyVars=var_list)
+            if res.severity > 0:
+                for msg in res.messages:
+                    print(msg)
+
+            input_table_processed = conn.CASTable(input_image_processed)
+
+    else:
+        input_table_processed = input_table
+
     with sw.option_context(print_messages=False):
-        res = conn.image.extractdetectedobjects(casout = {'name': det_label_image_table, 'replace': True},
+
+        res = conn.image.extractdetectedobjects(casout={'name': det_label_image_table, 'replace': True},
                                                 coordtype=coord_type,
                                                 maxobjects=max_objects,
-                                                table=input_table)
+                                                table={'name': input_table_processed})
         if res.severity > 0:
             for msg in res.messages:
                 print(msg)
 
-    outtable = conn.CASTable( det_label_image_table)
+    outtable = conn.CASTable(det_label_image_table)
     num_detection = len(outtable)
     # print('{} out of {} images have bounding boxes to display'.format(num_detection, img_num))
     if num_detection == 0:
@@ -2218,9 +2245,202 @@ def int_to_double(conn, tbl_colinfo, input_tbl_name,
     conn.retrieve('dataStep.runCode', _messagelevel='error', code=fmt_code)
 
 
+def prepare_segmentation_tables_for_display(conn, table, image_column, segmentation_table, segmentation_column,
+                                            filename_column, need_filename_column=False):
+    '''
+
+    This function is designed to prepare segmentation images of a castable for display.
+
+    conn : CAS
+        CAS connection object
+    table : string or CASTable
+        Specifies the input table that has an image column.
+    image_column : string
+        Specifies the column name that holds the image data in the input table.
+    segmentation_table : string or CASTable
+        Specifies the table that has the segmentation labels or predictions.
+    segmentation_column : string
+        Specifies the name of the column that holds the segmentation labels or predictions in the segmentation table.
+    filename_column : string
+        Specifies the name of the column that holds the filenames of the images. This is used as a unique id to join
+        tables.
+    need_filename_column : bool
+        Specifies whether the returned table needs to contain the filename column.
+
+    '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
+    if not isinstance(table, CASTable):
+        tbl = conn.CASTable(table)
+    else:
+        tbl = table
+
+    segmentation_image_processed = random_name('segmentationImageProcessed')
+    joint_table = random_name('jointTable')
+
+    if table == segmentation_table:
+        # change column name temporarily to copy image column
+        conn.altertable(tbl, columns=[dict(name=image_column, rename='raw_images')])
+        if need_filename_column:
+            res = conn.image.processImages(casout={'name': segmentation_image_processed, 'replace': True},
+                                           imagefunctions=[
+                                               {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                            'method': 'GLOBAL'}}
+                                           ],
+                                           image=segmentation_column,
+                                           copyVars=['raw_images', filename_column],
+                                           table=tbl)
+        else:
+            res = conn.image.processImages(casout={'name': segmentation_image_processed, 'replace': True},
+                                           imagefunctions=[
+                                               {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                            'method': 'GLOBAL'}}
+                                           ],
+                                           image=segmentation_column,
+                                           copyVars=['raw_images'],
+                                           table=tbl)
+
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+        # change the names back
+        conn.altertable(tbl, columns=[dict(name='raw_images', rename=image_column)])
+        conn.altertable(segmentation_image_processed, columns=[dict(name='raw_images', rename=image_column)])
+        if need_filename_column:
+            conn.altertable(segmentation_image_processed, keep=[image_column, segmentation_column, filename_column])
+        else:
+            conn.altertable(segmentation_image_processed, keep=[image_column, segmentation_column])
+        jt_tbl = conn.CASTable(segmentation_image_processed)
+
+    else:
+        if not isinstance(segmentation_table, CASTable):
+            seg_tbl = conn.CASTable(segmentation_table)
+        else:
+            seg_tbl = segmentation_table
+
+        res = conn.image.processImages(casout={'name': segmentation_image_processed, 'replace': True},
+                                       imagefunctions=[
+                                           {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                        'method': 'GLOBAL'}}
+                                       ],
+                                       image=segmentation_column,
+                                       copyVars=filename_column,
+                                       table=seg_tbl)
+
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+
+        conn.altertable(segmentation_image_processed, keep=[segmentation_column, filename_column])
+
+        # join table and label table using filename
+        res = conn.deepLearn.dljoin(table=tbl, annotatedtable={'name': segmentation_image_processed},
+                                    id=filename_column,
+                                    casout=dict(name=joint_table, replace=True))
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+
+        conn.altertable(joint_table, keep=[image_column, segmentation_column, filename_column])
+        jt_tbl = conn.CASTable(joint_table)
+
+    return jt_tbl
+
+
 def display_segmentation_images(conn, table, n_images=4, image_column='_image_',
                                 segmentation_labels_table=None, label_column='labels',
-                                fig_size=(50, 20)):
+                                filename_column=None, fig_size=(50, 20)):
+    '''
+
+    This function is designed to display images of a castable. It also displays the segmentation labels
+    if it is set. Note that the ground truth (i.e., label) information in the segmentation task is also images.
+
+    conn : CAS
+        CAS connection object
+    table : string or CASTable
+        Specifies the input table that has an image column.
+    n_images : int
+        Specifies the number of images to be displayed.
+    image_column : string
+        Specifies the column name that holds the image data in the input table.
+    segmentation_labels_table : string or CASTable
+        Specifies the table that has the segmentation labels (or label images).
+    label_column : string
+        Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
+    filename_column : string
+        Specifies the name of the column that holds the filenames of the images. This is used as a unique id to make
+        sure orders of images from two tables match.
+    fig_size : a list of two ints
+        Specifies the figure size.
+
+    '''
+
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
+    if not isinstance(table, CASTable):
+        tbl = conn.CASTable(table)
+    else:
+        tbl = table
+
+    n_row = 1
+    labels = None
+    if segmentation_labels_table is not None:
+        if table != segmentation_labels_table and filename_column is None:
+            raise DLPyError('ERROR: filename_column must be specified if segmentation_labels_table is different from '
+                            'table.')
+
+        jt_tbl = prepare_segmentation_tables_for_display(conn, table, image_column, segmentation_labels_table,
+                                                         label_column, filename_column)
+
+        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
+                               table=jt_tbl,
+                               to=n_images,
+                               image=label_column)
+        if len(labels) == 0 or len(labels.Images) == 0:
+            print('WARNING: Something went wrong while extracting label images')
+        else:
+            n_row += 1
+
+    if labels and len(labels) > 0 and len(labels.Images) > 0:
+        images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                               table=jt_tbl,
+                               to=n_images,
+                               image=image_column)
+
+    else:
+        images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                               table=tbl,
+                               to=n_images,
+                               image=image_column)
+
+    if len(images.Images) < 1:
+        raise DLPyError('input table does not have any images')
+
+    k = 1
+    fig = plt.figure(figsize=fig_size)
+
+    for i in range(n_images):
+        ax = fig.add_subplot(n_row, n_images, k)
+        plt.imshow(images['Images']['Image'][i])
+        k += 1
+        plt.xticks([]), plt.yticks([])
+
+    if labels and len(labels) > 0 and len(labels.Images) > 0:
+        for i in range(n_images):
+            ax = fig.add_subplot(n_row, n_images, k)
+            label_image = np.array(labels['Images']['Image'][i])
+            if len(label_image.shape) == 2:
+                plt.imshow(label_image, cmap=plt.get_cmap('gray'))
+            else:
+                plt.imshow(label_image[:, :, 0], cmap=plt.get_cmap('gray'))
+            k += 1
+            plt.xticks([]), plt.yticks([])
+
+
+def display_segmentation_results(conn, table, n_images=4, image_column='_image_',
+                                 segmentation_labels_table=None, label_column='labels',
+                                 segmentation_prediction_table=None, prediction_column=None,
+                                 filename_column=None,
+                                 fig_size=(15, 40)):
     '''
 
     This function is designed to display images of a castable. It also displays the segmentation labels
@@ -2241,88 +2461,34 @@ def display_segmentation_images(conn, table, n_images=4, image_column='_image_',
         Specifies the table that has the segmentation labels (or label images).
     label_column : string
         Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
-    fig_size : a list of two ints
-        Specifies the figure size.
-
-    '''
-
-    conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
-    if not isinstance(table, CASTable):
-        tbl = conn.CASTable(table)
-    else:
-        tbl = table
-
-    images = conn.retrieve('image.fetchImages', _messagelevel='error',
-                           table=tbl,
-                           to=n_images,
-                           image=image_column)
-
-    if len(images.Images) < 1:
-        raise DLPyError('input table does not have any images')
-
-    labels = None
-    if segmentation_labels_table is not None:
-        if not isinstance(segmentation_labels_table, CASTable):
-            seg_gt_tbl = conn.CASTable(segmentation_labels_table)
-        else:
-            seg_gt_tbl = segmentation_labels_table
-
-        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
-                               table=seg_gt_tbl,
-                               to=n_images,
-                               image=label_column)
-        if len(labels) == 0 or len(labels.Images) == 0:
-            print('WARNING: Something went wrong while extracting label images')
-
-    k = 1
-    n_row = 2
-    fig = plt.figure(figsize=fig_size)
-
-    for i in range(n_images):
-        ax = fig.add_subplot(n_row, n_images, k)
-        plt.imshow(images['Images']['Image'][i])
-        k += 1
-    if len(labels) > 0 and len(labels.Images) > 0:
-        for i in range(n_images):
-            ax = fig.add_subplot(n_row, n_images, k)
-            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0])
-            k += 1
-
-
-def display_segmentation_results(conn, table, n_images=4, image_column='_image_',
-                                 segmentation_labels_table=None, label_column='labels',
-                                 segmentation_prediction_table=None, prediction_column=None,
-                                 filename_column=None,
-                                 fig_size=(15, 40)):
-    '''
-
-    This function is designed to display images of a castable. It also displays the segmentation labels
-    if it is set. Note that the ground truth (i.e., label) information in the segmentation task is also images.
-    On top of displaying images and labels, this function is also flexible enough to display the predictions.
-
-    conn : CAS
-        CAS connection object
-    table : string or CASTable
-        Specifies the input table that has an image column.
-    n_images : int
-        Specifies the number of images to be displayed.
-    image_column : string
-        Specifies the column name that holds the image data in the input table.
-    segmentation_labels_table : string or CASTable
-        Specifies the table that has the segmentation labels (or label images).
-    label_column : string
-        Specifies the name of the column that holds the segmentation labels in the segmentation labels table.
     segmentation_prediction_table : string or CASTable
         Specifies the table that has the segmentation predictions.
     prediction_column : string
         Specifies the name of the column that holds the segmentation predictions in the segmentation prediction table.
     filename_column : string
-        Specifies the name of the column that holds the filenames of the images. If this column set, the column names
-        will be displayed on top of each image.
+        Specifies the name of the column that holds the filenames of the images. This is used as a unique id to make
+        sure orders of images from three tables match.
     fig_size : a list of two ints
         Specifies the figure size.
 
     '''
+
+    if segmentation_prediction_table is None:
+        display_segmentation_images(conn, table, n_images=n_images, image_column=image_column,
+                                    segmentation_labels_table=segmentation_labels_table, label_column=label_column,
+                                    filename_column=filename_column)
+        return
+
+    if segmentation_labels_table is None:
+        if prediction_column is None:
+            raise DLPyError('Please set the prediction_column parameter')
+        display_segmentation_images(conn, table, n_images=n_images, image_column=image_column,
+                                    segmentation_labels_table=segmentation_prediction_table,
+                                    label_column=prediction_column, filename_column=filename_column)
+        return
+
+    if prediction_column is None:
+        raise DLPyError('Please set the prediction_column parameter')
 
     conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
     if not isinstance(table, CASTable):
@@ -2330,58 +2496,112 @@ def display_segmentation_results(conn, table, n_images=4, image_column='_image_'
     else:
         tbl = table
 
-    images = conn.retrieve('image.fetchImages', _messagelevel='error',
-                           table=tbl,
-                           to=n_images,
-                           image=image_column)
-
-    if len(images.Images) < 1:
-        raise DLPyError('input table does not have any images')
-
     n_col = 1
     labels = None
-    if segmentation_labels_table is not None:
-        if not isinstance(segmentation_labels_table, CASTable):
-            seg_gt_tbl = conn.CASTable(segmentation_labels_table)
-        else:
-            seg_gt_tbl = segmentation_labels_table
-
-        labels = conn.retrieve('image.fetchImages', _messagelevel='none',
-                               table=seg_gt_tbl,
-                               to=n_images,
-                               image=label_column)
-        if len(labels) == 0 or len(labels.Images) == 0:
-            print('WARNING: Something went wrong while extracting label images')
-        else:
-            n_col += 1
-
     predictions = None
-    if segmentation_prediction_table is not None:
+    if table == segmentation_labels_table and table == segmentation_prediction_table:
+        label_image_processed = random_name('labelImageProcessed')
+        all_image_processed = random_name('allImageProcessed')
 
-        if prediction_column is None:
-            raise DLPyError('Please set the prediction_column parameter')
+        # change column name temporarily to copy image column
+        conn.altertable(tbl, columns=[dict(name=image_column, rename='raw_images')])
+        # process label images
+        res = conn.image.processImages(casout={'name': label_image_processed, 'replace': True},
+                                       imagefunctions=[
+                                           {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                        'method': 'GLOBAL'}}
+                                       ],
+                                       image=label_column,
+                                       copyVars=['raw_images', prediction_column],
+                                       table=tbl)
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+        # process prediction images
+        res = conn.image.processImages(casout={'name': all_image_processed, 'replace': True},
+                                       imagefunctions=[
+                                           {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                        'method': 'GLOBAL'}}
+                                       ],
+                                       image=prediction_column,
+                                       copyVars=['raw_images', label_column],
+                                       table=label_image_processed)
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+
+        # change the names back
+        conn.altertable(tbl, columns=[dict(name='raw_images', rename=image_column)])
+        conn.altertable(all_image_processed, columns=[dict(name='raw_images', rename=image_column)])
+
+        jt_tbl_all = conn.CASTable(all_image_processed)
+
+    else:
+        if filename_column is None:
+            raise DLPyError('ERROR: filename_column must be specified if segmentation_labels_table or '
+                            'segmentation_prediction_table is different from table.')
+        # first prepare the table that contains input and label images
+        jt_tbl = prepare_segmentation_tables_for_display(conn, table, image_column, segmentation_labels_table,
+                                                         label_column, filename_column, True)
 
         if not isinstance(segmentation_prediction_table, CASTable):
             seg_prediction_tbl = conn.CASTable(segmentation_prediction_table)
         else:
             seg_prediction_tbl = segmentation_prediction_table
 
-        if filename_column is not None:
-            predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
-                                        table=seg_prediction_tbl,
-                                        to=n_images,
-                                        fetchImagesVars=filename_column,
-                                        image=prediction_column)
-        else:
-            predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
-                                        table=seg_prediction_tbl,
-                                        to=n_images,
-                                        image=prediction_column)
+        prediction_image_processed = random_name('prediciontImageProcessed')
+        joint_table_all = random_name('jointTableAll')
 
-        if len(predictions) == 0 or len(predictions.Images) == 0:
-            print('WARNING: Something went wrong while extracting output (predicted) images')
-        else:
-            n_col += 1
+        res = conn.image.processImages(casout={'name': prediction_image_processed, 'replace': True},
+                                       imagefunctions=[
+                                           {'options': {'functiontype': 'HIST_EQUALIZATION',
+                                                        'method': 'GLOBAL'}}
+                                       ],
+                                       image=prediction_column,
+                                       copyVars=filename_column,
+                                       table=seg_prediction_tbl)
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+
+        conn.altertable(prediction_image_processed, keep=[prediction_column, filename_column])
+
+        # join table and label table using filename
+        res = conn.deepLearn.dljoin(table=jt_tbl, annotatedtable=prediction_image_processed,
+                                    id=filename_column,
+                                    casout=dict(name=joint_table_all, replace=True))
+        if res.severity > 0:
+            for msg in res.messages:
+                print(msg)
+
+        jt_tbl_all = conn.CASTable(joint_table_all)
+
+    images = conn.retrieve('image.fetchImages', _messagelevel='error',
+                           table=jt_tbl_all,
+                           to=n_images,
+                           image=image_column)
+
+    if len(images.Images) < 1:
+        raise DLPyError('input table does not have any images')
+
+    labels = conn.retrieve('image.fetchImages', _messagelevel='none',
+                           table=jt_tbl_all,
+                           to=n_images,
+                           image=label_column)
+    if len(labels) == 0 or len(labels.Images) == 0:
+        print('WARNING: Something went wrong while extracting label images')
+    else:
+        n_col += 1
+
+    predictions = conn.retrieve('image.fetchImages', _messagelevel='none',
+                                table=jt_tbl_all,
+                                to=n_images,
+                                image=prediction_column)
+    print(len(predictions.Images))
+    if len(predictions) == 0 or len(predictions.Images) == 0:
+        print('WARNING: Something went wrong while extracting output (predicted) images')
+    else:
+        n_col += 1
 
     k = 1
     fig = plt.figure(figsize=fig_size)
@@ -2390,25 +2610,27 @@ def display_segmentation_results(conn, table, n_images=4, image_column='_image_'
         ax = fig.add_subplot(n_images, n_col, k)
         plt.imshow(images['Images']['Image'][i])
         k += 1
-        if len(predictions) > 0 and len(predictions.Images) > 0:
-            plt.title(predictions.Images[filename_column][i] +' raw image')
+        plt.xticks([]), plt.yticks([])
+
+        if labels and len(labels) > 0 and len(labels.Images) > 0:
+            ax = fig.add_subplot(n_images, n_col, k)
+            label_image = np.array(labels['Images']['Image'][i])
+            if len(label_image.shape) == 2:
+                plt.imshow(label_image, cmap=plt.get_cmap('gray'))
+            else:
+                plt.imshow(label_image[:, :, 0], cmap=plt.get_cmap('gray'))
+            k += 1
             plt.xticks([]), plt.yticks([])
 
-        if len(labels) > 0 and len(labels.Images) > 0:
+        if predictions and len(predictions) > 0 and len(predictions.Images) > 0:
             ax = fig.add_subplot(n_images, n_col, k)
-            plt.imshow(np.array(labels['Images']['Image'][i])[:, :, 0])
+            prediction_image = np.array(predictions['Images']['Image'][i])
+            if len(prediction_image.shape) == 2:
+                plt.imshow(prediction_image, cmap=plt.get_cmap('gray'))
+            else:
+                plt.imshow(prediction_image[:, :, 0], cmap=plt.get_cmap('gray'))
             k += 1
-            if len(predictions) > 0 and len(predictions.Images) > 0:
-                plt.title(predictions.Images[filename_column][i] +' ground truth')
-                plt.xticks([]), plt.yticks([])
-
-        if len(predictions) > 0 and len(predictions.Images) > 0:
-            ax = fig.add_subplot(n_images, n_col, k)
-            plt.imshow(np.array(predictions['Images']['Image'][i]))
-            k += 1
-            if len(predictions) > 0 and len(predictions.Images) > 0:
-                plt.title(predictions.Images[filename_column][i] +' prediction')
-                plt.xticks([]), plt.yticks([])
+            plt.xticks([]), plt.yticks([])
 
 
 def create_object_detection_table_no_xml(conn, data_path, coord_type, output, annotation_path=None,
