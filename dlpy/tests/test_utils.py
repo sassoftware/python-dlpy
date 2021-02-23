@@ -96,7 +96,6 @@ class TestUtils(unittest.TestCase):
         self.assertTrue('includeBias' == underscore)
 
     def test_create_object_detection_table(self):
-
         if platform.system().startswith('Win'):
             if self.data_dir is None or self.data_dir_local is None:
                 unittest.TestCase.skipTest(self, "DLPY_DATA_DIR or DLPY_DATA_DIR_LOCAL is not set in "
@@ -612,6 +611,42 @@ class TestUtils(unittest.TestCase):
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
         check_file = self.data_dir + 'vgg16.sashdat'
         self.assertTrue(file_exist_on_server(self.s, file=check_file))
+
+    def test_prepare_segmentation_tables_for_display(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        server_type = get_cas_host_type(self.s).lower()
+
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            sep = '/'
+        else:
+            sep = '\\'
+
+        tbl = create_segmentation_table(self.s,
+                                        path_to_images=self.data_dir+'segmentation_data'+sep+'raw',
+                                        path_to_ground_truth=self.data_dir+'segmentation_data'+sep+'mask')
+        prepare_segmentation_tables_for_display(self.s, tbl, '_image_', tbl, 'labels', None)
+        tbl.partition(casout=dict(name='tmp_tbl', replace=True))
+        prepare_segmentation_tables_for_display(self.s, tbl, '_image_', 'tmp_tbl', 'labels', '_filename_0')
+
+    def test_display_segmentation_images(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        server_type = get_cas_host_type(self.s).lower()
+
+        if server_type.startswith("lin") or server_type.startswith("osx"):
+            sep = '/'
+        else:
+            sep = '\\'
+
+        tbl = create_segmentation_table(self.s,
+                                        path_to_images=self.data_dir+'segmentation_data'+sep+'raw',
+                                        path_to_ground_truth=self.data_dir+'segmentation_data'+sep+'mask')
+        tbl.partition(casout=dict(name='tmp_tbl', replace=True))
+        with self.assertRaises(DLPyError):
+            display_segmentation_images(self.s, 'tmp_tbl', segmentation_labels_table=tbl, filename_column=None)
 
 
 if __name__ == '__main__':

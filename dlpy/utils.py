@@ -2279,8 +2279,12 @@ def prepare_segmentation_tables_for_display(conn, table, image_column, segmentat
     joint_table = random_name('jointTable')
 
     if table == segmentation_table:
-        # change column name temporarily to copy image column
+        # in this case, input images and label images are in the same castable. When we process label images, we copy
+        # input images directly.
+        # change column name temporarily to copy image column, since we can't copy '_image_' column which is usually
+        # the name of input image column.
         conn.altertable(tbl, columns=[dict(name=image_column, rename='raw_images')])
+        # adding need_filename_column in case we need to join this table with predictions
         if need_filename_column:
             res = conn.image.processImages(casout={'name': segmentation_image_processed, 'replace': True},
                                            imagefunctions=[
@@ -2306,12 +2310,15 @@ def prepare_segmentation_tables_for_display(conn, table, image_column, segmentat
         # change the names back
         conn.altertable(tbl, columns=[dict(name='raw_images', rename=image_column)])
         conn.altertable(segmentation_image_processed, columns=[dict(name='raw_images', rename=image_column)])
+        # only keep necessary columns for easier join
         if need_filename_column:
             conn.altertable(segmentation_image_processed, keep=[image_column, segmentation_column, filename_column])
         else:
             conn.altertable(segmentation_image_processed, keep=[image_column, segmentation_column])
         jt_tbl = conn.CASTable(segmentation_image_processed)
 
+    # when input images and label images are from different tables, we process the label images and join the two tables
+    # together. This is because when we call processImages(), the order of images are shuffled.
     else:
         if not isinstance(segmentation_table, CASTable):
             seg_tbl = conn.CASTable(segmentation_table)
