@@ -1454,7 +1454,8 @@ def get_txt_annotation(local_path, coord_type, image_size=(416, 416), label_file
 
 
 def create_object_detection_table(conn, data_path, coord_type, output,
-                                  local_path=None, image_size=(416, 416)):
+                                  local_path=None, image_size=(416, 416),
+                                  check_bbox=False, min_bbox_width=0, min_bbox_height=0):
     '''
     Create an object detection table
 
@@ -1495,6 +1496,18 @@ def create_object_detection_table(conn, data_path, coord_type, output,
         Specifies the size of images to resize.
         If a tuple is passed, the first integer is width and the second value is height.
         Default: (416, 416)
+    check_bbox : bool, optional
+        Specifies whether to check resulting bounding boxes according to image_size.
+        Helps in dropping objects whose bounding boxes would be too small after image resizing.
+        Default : False
+    min_bbox_width : float, optional
+        Specifies the minimum width for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Default : 0
+    min_bbox_height : float, optional
+        Specifies the minimum height for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Default : 0
 
     Returns
     -------
@@ -1503,7 +1516,9 @@ def create_object_detection_table(conn, data_path, coord_type, output,
     '''
 
     return create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
-                                               local_path, image_size, task='object detection')
+                                               local_path, image_size, task='object detection',
+                                               check_bbox=check_bbox, min_bbox_width=min_bbox_width,
+                                               min_bbox_height=min_bbox_height)
 
 
 def create_instance_segmentation_table(conn, data_path, coord_type, output, local_path=None, image_size=(416, 416)):
@@ -1559,7 +1574,8 @@ def create_instance_segmentation_table(conn, data_path, coord_type, output, loca
 
 
 def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
-                                        local_path=None, image_size=(416, 416), task='object detection'):
+                                        local_path=None, image_size=(416, 416), task='object detection',
+                                        check_bbox=False, min_bbox_width=0, min_bbox_height=0):
     '''
     Create an table from PASCAL VOC format annotation files.
 
@@ -1604,6 +1620,18 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
         Specifies the task of table.
         Valid Values: object detection, instance segmentation
         Default: object detection
+    check_bbox : bool, optional
+        Specifies whether to check resulting bounding boxes according to image_size.
+        Helps in dropping objects whose bounding boxes would be too small after image resizing.
+        Default : False
+    min_bbox_width : float, optional
+        Specifies the minimum width for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Default : 0
+    min_bbox_height : float, optional
+        Specifies the minimum height for bounding boxes after image resizing.
+        All bounding boxes below this threshold will be dropped.
+        Default : 0
 
     Returns
     -------
@@ -1629,8 +1657,8 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
         local_path = data_path
 
     conn.retrieve('loadactionset', _messagelevel='error', actionset='image')
-    conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'deepLearn')
-    conn.retrieve('loadactionset', _messagelevel = 'error', actionset = 'transpose')
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='deepLearn')
+    conn.retrieve('loadactionset', _messagelevel='error', actionset='transpose')
 
     # get os path seperator
     if server_type.startswith("lin") or server_type.startswith("osx"):
@@ -1684,7 +1712,7 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     # 3. create a column, idjoin, for later to use
     with caslibify_context(conn, data_path, 'save') as (caslib, path_after_caslib):
         # find all of annotation files under the directory
-        label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
+        label_files = conn.fileinfo(caslib=caslib, path=path_after_caslib, allfiles=True).FileInfo['Name'].values
         # if client and server are on different type of operation system, we assume user parse xml files and put
         # txt files in data_path folder. So skip get_txt_annotation()
         # parse xml or json files and create txt files
@@ -1697,29 +1725,50 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
 
         label_tbl_name = random_name('obj_det')
         # load all of txt files into cas server
-        label_files = conn.fileinfo(caslib = caslib, path = path_after_caslib, allfiles = True).FileInfo['Name'].values
+        label_files = conn.fileinfo(caslib=caslib, path=path_after_caslib, allfiles=True).FileInfo['Name'].values
         label_files = [x for x in label_files if x.endswith('.txt')]
         if len(label_files) == 0:
             raise DLPyError('Can not find any txt file under data_path.')
         idjoin_format_length = len(max(label_files, key=len)) - len('.txt')
-        with sw.option_context(print_messages = False):
+        total_objects = dropped_objects = 0
+        with sw.option_context(print_messages=False):
             for idx, filename in enumerate(label_files):
                 tbl_name = '{}_{}'.format(label_tbl_name, idx)
                 if path_after_caslib != '':
                     caslib_filename = path_after_caslib + filename
                 else:
                     caslib_filename = filename
-                    
-                conn.retrieve('loadtable', caslib = caslib, path = caslib_filename,
-                              casout = dict(name = tbl_name, replace = True),
-                              importOptions = dict(fileType = 'csv', getNames = False,
-                                                   varChars = True, delimiter = ','))
+
+                conn.retrieve('loadtable', caslib=caslib, path=caslib_filename,
+                              casout=dict(name=tbl_name, replace=True),
+                              importOptions=dict(fileType='csv', getNames=False,
+                                                 varChars=True, delimiter=','))
+
+                # check if we need to delete any bounding box
+                if check_bbox:
+                    total_objects += conn.numRows(tbl_name).numrows
+                    if coord_type == 'yolo':
+                        rows_deleted = conn.deleteRows(
+                            dict(name=tbl_name, where='Var4 < {} OR Var5 < {}'.format(min_bbox_width, min_bbox_height)))
+                        dropped_objects += rows_deleted.rowsDeleted
+                        if conn.numRows(tbl_name) == 0:
+                            continue
+                    elif coord_type == 'coco':
+                        min_bbox_width_coco = min_bbox_width * image_size[0]
+                        min_bbox_height_coco = min_bbox_height * image_size[1]
+                        rows_deleted = conn.deleteRows(
+                            dict(name=tbl_name,
+                                 where='Var4 - Var2 < {} OR Var5 - Var3 < {}'.format(min_bbox_width_coco, min_bbox_height_coco)))
+                        dropped_objects += rows_deleted.rowsDeleted
+                        if conn.numRows(tbl_name) == 0:
+                            continue
+
                 conn.retrieve('partition',
-                              table = dict(name = tbl_name,
-                                           compvars = ['idjoin'],
-                                           comppgm = 'length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
-                                                                                              filename[:-len('.txt')])),
-                              casout = dict(name = tbl_name, replace = True))
+                              table=dict(name=tbl_name,
+                                         compvars=['idjoin'],
+                                         comppgm='length idjoin $ {};idjoin="{}";'.format(idjoin_format_length,
+                                                                                          filename[:-len('.txt')])),
+                              casout=dict(name=tbl_name, replace=True))
                 # add sequence id that is used to build column name in transpose process
                 sas_code = '''
                            data {0};
@@ -1728,8 +1777,11 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                            run;
                            '''.format(tbl_name)
                 # nthreads=1 to make sure that order of observation is consistent
-                conn.runcode(code = sas_code, nthreads = 1, _messagelevel = 'error')
+                conn.runcode(code=sas_code, nthreads=1, _messagelevel='error')
 
+    if check_bbox:
+        print('NOTE: Dropped {} objects from a total of {} objects based on selection criteria.'.format(
+            dropped_objects, total_objects))
     input_tbl_name = ['{}_{}'.format(label_tbl_name, i) for i in range(idx + 1)]
     string_input_tbl_name = ' '.join(input_tbl_name)
     # concatenate all of annotation table together
@@ -1739,26 +1791,26 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                 run;
                 '''.format(output, string_input_tbl_name)
     # nthreads=1 to make sure that order of observation is consistent
-    conn.runcode(code = fmt_code, nthreads=1, _messagelevel = 'error')
+    conn.runcode(code=fmt_code, nthreads=1, _messagelevel='error')
     cls_col_format_length = conn.columninfo(output).ColumnInfo.loc[0]['FormattedLength']
     cls_col_format_length = cls_col_format_length if cls_col_format_length >= len('NoObject') else len('NoObject')
 
-    conn.altertable(name = output, columns = [dict(name = 'Var1', rename = var_name[0]),
-                                              dict(name = 'Var2', rename = var_name[1]),
-                                              dict(name = 'Var3', rename = var_name[2]),
-                                              dict(name = 'Var4', rename = var_name[3]),
-                                              dict(name = 'Var5', rename = var_name[4])])
+    conn.altertable(name=output, columns=[dict(name='Var1', rename=var_name[0]),
+                                          dict(name='Var2', rename=var_name[1]),
+                                          dict(name='Var3', rename=var_name[2]),
+                                          dict(name='Var4', rename=var_name[3]),
+                                          dict(name='Var5', rename=var_name[4])])
     # convert long table to wide table
-    with sw.option_context(print_messages = False):
+    with sw.option_context(print_messages=False):
         for var in var_name:
-            conn.transpose(prefix = '_Object', suffix = var, id = 'seq_id', transpose = [var],
-                           table = dict(name = output, groupby = 'idjoin'),
-                           casout = dict(name = 'output{}'.format(var), replace = 1))
-            conn.altertable(name = 'output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
+            conn.transpose(prefix='_Object', suffix=var, id='seq_id', transpose=[var],
+                           table=dict(name=output, groupby='idjoin'),
+                           casout=dict(name='output{}'.format(var), replace=1))
+            conn.altertable(name='output{}'.format(var), columns=[{'name': '_NAME_', 'drop': True}])
     # dljoin the five label columns
-    res = conn.deeplearn.dljoin(table = 'output{}'.format(var_name[0]), id = 'idjoin',
-                                annotatedtable = 'output{}'.format(var_name[1]),
-                                casout = dict(name = output, replace = True), _messagelevel = 'error')
+    res = conn.deeplearn.dljoin(table='output{}'.format(var_name[0]), id='idjoin',
+                                annotatedtable='output{}'.format(var_name[1]),
+                                casout=dict(name=output, replace=True), _messagelevel='error')
     if res.severity > 0:
         for msg in res.messages:
             if msg.startswith('WARNING'):
@@ -1767,8 +1819,8 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
                 raise DLPyError('ERROR: Failed to create the object detection table.')
 
     for var in var_name[2:]:
-        res = conn.deepLearn.dljoin(table = output, id = 'idjoin', annotatedtable = 'output{}'.format(var),
-                                    casout = dict(name = output, replace = True))
+        res = conn.deepLearn.dljoin(table=output, id='idjoin', annotatedtable='output{}'.format(var),
+                                    casout=dict(name=output, replace=True))
         if res.severity > 0:
             for msg in res.messages:
                 if msg.startswith('WARNING'):
@@ -1784,7 +1836,7 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
             _nObjects_ = (dim(_all)-cmiss(of _all[*]))/4;
             run;
             '''.format(output)
-    conn.runcode(code = code, _messagelevel = 'error')
+    conn.runcode(code=code, _messagelevel='error')
     max_instance = int((max(conn.columninfo(output).ColumnInfo['ID'])-1)/5)
     var_order = ['idjoin', '_nObjects_']
     for i in range(max_instance):
@@ -1792,8 +1844,8 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
             var_order.append('_Object'+str(i)+var)
     # change order of columns and unify the formattedlength of class columns
     format_ = '${}.'.format(cls_col_format_length)
-    res = conn.altertable(name = output, columns = [{'name': '_Object{}_'.format(i), 'format': format_}
-                                                    for i in range(max_instance)])
+    res = conn.altertable(name=output, columns=[{'name': '_Object{}_'.format(i), 'format': format_}
+                                                for i in range(max_instance)])
     if res.severity > 0:
         for msg in res.messages:
             if msg.startswith('WARNING'):
@@ -1808,13 +1860,13 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
     image_sas_code = "length idjoin $ {0}; fn=scan(_path_,{1},'/'); idjoin = inputc(substr(fn, 1, length(fn)-4),'{0}.');".format(filename_col_length,
                                                 len(data_path.split('\\')) - 2)
     img_tbl = conn.CASTable(det_img_table,
-                            computedvars = ['idjoin'],
-                            computedvarsprogram = image_sas_code,
-                            vars = [{'name': '_image_'}])
+                            computedvars=['idjoin'],
+                            computedvarsprogram=image_sas_code,
+                            vars=[{'name': '_image_'}])
 
     # join the image table and object detection label table together
-    res = conn.deepLearn.dljoin(table = img_tbl, annotation = output, id = 'idjoin',
-                                casout = {'name': output, 'replace': True, 'replication': 0})
+    res = conn.deepLearn.dljoin(table=img_tbl, annotation=output, id='idjoin',
+                                casout={'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
         for msg in res.messages:
             if msg.startswith('WARNING'):
@@ -1856,16 +1908,16 @@ def create_table_from_pascal_voc_format(conn, data_path, coord_type, output,
         print("NOTE: Masks are processed.")
 
     # rename _image_ column to mask
-    conn.altertable(name = mask_img_table, columns = [dict(name = '_image_', rename = 'mask')])
+    conn.altertable(name=mask_img_table, columns=[dict(name='_image_', rename='mask')])
 
     mask_tbl = conn.CASTable(mask_img_table,
-                             computedvars = ['idjoin'],
-                             computedvarsprogram = image_sas_code,
-                             vars = [{'name': 'mask'}])
+                             computedvars=['idjoin'],
+                             computedvarsprogram=image_sas_code,
+                             vars=[{'name': 'mask'}])
 
     # join the image table and object detection label table together
-    res = conn.deepLearn.dljoin(table = mask_tbl, annotation = output, id = 'idjoin',
-                                casout = {'name': output, 'replace': True, 'replication': 0})
+    res = conn.deepLearn.dljoin(table=mask_tbl, annotation=output, id='idjoin',
+                                casout={'name': output, 'replace': True, 'replication': 0})
     if res.severity > 0:
         for msg in res.messages:
             if msg.startswith('WARNING'):
