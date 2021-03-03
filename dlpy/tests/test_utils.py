@@ -204,6 +204,21 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(self.s.image.summarizeimages('output').Summary.values[0][6], 416)
         self.assertEqual(self.s.image.summarizeimages('output').Summary.values[0][7], 512)
 
+    def test_create_object_detection_table_bbox_filter(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        create_object_detection_table(self.s, data_path=self.data_dir + 'dlpy_obj_det_test',
+                                      coord_type='yolo',
+                                      output='output', image_size=(416, 512),
+                                      check_bbox=True, min_bbox_width=0.06, min_bbox_height=0.06)
+
+        # cleanup generated files
+        cleanup_txt_files(self.s, self.data_dir)
+
+        a = self.s.CASTable('output')
+        self.assertEqual(sorted(list(a['_nObjects_'])), [1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0, 3.0, 3.0, 3.0])
+
     def test_get_anchors(self):
         if platform.system().startswith('Win'):
             if self.data_dir is None or self.data_dir_local is None:
