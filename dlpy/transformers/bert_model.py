@@ -123,7 +123,7 @@ class BERT_Model(Model):
             raise DLPyError('You do not have permission to write to directory ' + cache_dir)
         
         # verify model type is supported
-        hf_base_name = self._base_name.split('-')[0]
+        hf_base_name = self._base_name.split('/')[-1].split('-')[0]
         if hf_base_name not in ['bert', 'roberta', 'distilbert', 'distilroberta']:
             raise DLPyError('You specified an unsupported model variant.'
                             'Only bert-*, roberta-*, and distil*-*'
