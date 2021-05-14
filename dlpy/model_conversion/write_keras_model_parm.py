@@ -35,7 +35,10 @@ conv_layer_classes = ['conv1d', 'conv2d', 'separableconv1d', 'separableconv2d', 
 try:
     from keras.engine.topology import preprocess_weights_for_loading
 except ImportError:
-    from keras.engine.saving import preprocess_weights_for_loading
+    try:
+        from keras.engine.saving import preprocess_weights_for_loading
+    except ImportError:
+        from keras.saving.hdf5_format import preprocess_weights_for_loading     # for Keras 2.3.0 and later
 
 # let Keras read parameters and then transform to format needed for SAS deep learning
 # NOTE: modified version of Keras function load_weights_from_hdf5_group()

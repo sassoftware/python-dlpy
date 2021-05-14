@@ -930,7 +930,7 @@ class Network(Layer):
 
             if (_file_name_ + '_weights' + _extension_) in _file_name_list_:
                 print('NOTE: ' + _file_name_ + '_weights' + _extension_ +
-                      ' is used as model weigths.')
+                      ' is used as model weights.')
 
                 self._retrieve_('table.loadtable',
                                 caslib=cas_lib_name,
@@ -940,7 +940,7 @@ class Network(Layer):
 
                 if (_file_name_ + '_weights_attr' + _extension_) in _file_name_list_:
                     print('NOTE: ' + _file_name_ + '_weights_attr' + _extension_ +
-                          ' is used as weigths attribute.')
+                          ' is used as weights attribute.')
                     self._retrieve_('table.loadtable',
                                     caslib=cas_lib_name,
                                     path=_file_name_ + '_weights_attr' + _extension_,
@@ -1388,7 +1388,7 @@ class Network(Layer):
 
             if (_file_name_ + '_attr' + _extension_) in _file_name_list_:
                 print('NOTE: ' + _file_name_ + '_attr' + _extension_ +
-                      ' is used as weigths attribute.')
+                      ' is used as weights attribute.')
                 self._retrieve_('table.loadtable',
                                 caslib=cas_lib_name,
                                 path=_file_name_ + '_attr' + _extension_,

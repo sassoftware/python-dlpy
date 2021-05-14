@@ -46,6 +46,7 @@ class TestModel(unittest.TestCase):
     server_sep = '/'
     data_dir = None
     data_dir_local = None
+    safe_learning_rate = 1e-5
 
     def setUp(self):
         swat.reset_option()
@@ -90,7 +91,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate)
         if r.severity > 0:
             for msg in r.messages:
                 print(msg)
@@ -119,7 +120,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
@@ -149,15 +150,15 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=3)
         # self.assertTrue(r1.severity == 0)
         self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=2)
         # self.assertTrue(r2.severity == 0)
         self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
@@ -187,7 +188,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
@@ -217,15 +218,15 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=3)
         # self.assertTrue(r1.severity == 0)
         self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=2)
         # self.assertTrue(r2.severity == 0)
         self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
@@ -255,7 +256,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
         if r.severity > 0:
@@ -284,7 +285,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
@@ -314,7 +315,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
         if r.severity > 0:
@@ -350,7 +351,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
@@ -380,7 +381,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
@@ -412,15 +413,15 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=3)
         # self.assertTrue(r1.severity == 0)
         self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=2)
         # self.assertTrue(r2.severity == 0)
         self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
@@ -450,15 +451,15 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, save_best_weights=True)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, save_best_weights=True)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
-        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=3)
+        r1 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=3)
         # self.assertTrue(r1.severity == 0)
         self.assertEqual(r1.severity,0,msg="\n".join([msg for msg in r1.messages]))
 
-        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=2, save_best_weights=True)
+        r2 = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=2, save_best_weights=True)
         # self.assertTrue(r2.severity == 0)
         self.assertEqual(r2.severity,0,msg="\n".join([msg for msg in r2.messages]))
 
@@ -566,7 +567,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=1)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=1)
         # self.assertTrue(r.severity == 0)
         self.assertEqual(r.severity,0,msg="\n".join([msg for msg in r.messages]))
 
@@ -652,7 +653,7 @@ class TestModel(unittest.TestCase):
         model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
         model1.add(OutputLayer(act='IDENTITY'))
         
-        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.001), mini_batch_size=32, 
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=self.safe_learning_rate), mini_batch_size=32, 
                               seed=1234, max_epochs=10)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, 
@@ -730,7 +731,7 @@ class TestModel(unittest.TestCase):
         model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
         model1.add(OutputLayer(act='IDENTITY'))
         
-        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.001), mini_batch_size=32, 
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=self.safe_learning_rate), mini_batch_size=32, 
                               seed=1234, max_epochs=10)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, valid_table=validtbl, optimizer=optimizer, 
@@ -827,7 +828,7 @@ class TestModel(unittest.TestCase):
         model1.add(Recurrent(rnn_type='LSTM', output_type='encoding', n=15, reversed_=False))
         model1.add(OutputLayer(act='IDENTITY'))
         
-        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=0.001), mini_batch_size=32, 
+        optimizer = Optimizer(algorithm=AdamSolver(learning_rate=self.safe_learning_rate), mini_batch_size=32, 
                               seed=1234, max_epochs=10)                    
         seq_spec  = Sequence(**traintbl.sequence_opt)
         result = model1.fit(traintbl, optimizer=optimizer, 
@@ -904,7 +905,7 @@ class TestModel(unittest.TestCase):
                                casout={'name': 'eee', 'replace': True},
                                path=path)
 
-        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=0.001, max_epochs=5)
+        r = model1.fit(data='eee', inputs='_image_', target='_label_', lr=self.safe_learning_rate, max_epochs=5)
         
         # Test default tick_frequency value of 1
         ax = model1.plot_training_history()
@@ -1007,7 +1008,7 @@ class TestModel(unittest.TestCase):
                                offsets=my_im_r.channel_means, pre_trained_weights=True,
                                pre_trained_weights_file=pre_train_weight_file,
                                include_top=False)
-        model.fit(data=my_im_r, mini_batch_size=1, lr=0.001, max_epochs=1)
+        model.fit(data=my_im_r, mini_batch_size=1, lr=self.safe_learning_rate, max_epochs=1)
         model.heat_map_analysis(data=my_im_r, mask_width=None, mask_height=None, step_size=None,
                                  max_display=1)
 
