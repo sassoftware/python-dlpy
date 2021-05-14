@@ -98,7 +98,7 @@ class BERT_Model(Model):
                  num_hidden_layers=None, max_seq_len=128, seed=987654321, 
                  save_embedding=False, verbose=False):
 
-        self._base_name = name.lower()
+        self._base_name = name
         self._cache_dir = cache_dir
         self.model_type = 'RNN'
         self.seed = seed
@@ -123,7 +123,7 @@ class BERT_Model(Model):
             raise DLPyError('You do not have permission to write to directory ' + cache_dir)
         
         # verify model type is supported
-        hf_base_name = self._base_name.split('/')[-1].split('-')[0]
+        hf_base_name = name.lower().split('/')[-1].split('-')[0]
         if hf_base_name not in ['bert', 'roberta', 'distilbert', 'distilroberta']:
             raise DLPyError('You specified an unsupported model variant.'
                             'Only bert-*, roberta-*, and distil*-*'
@@ -265,7 +265,7 @@ class BERT_Model(Model):
     def _write_embedding_table(self):
 
         # embedding table read/written to cache directory
-        embedding_file = os.path.join(self._cache_dir,self._base_name+'_embedding.txt')
+        embedding_file = os.path.join(self._cache_dir,self._base_name.lower().split("/")[-1]+'_embedding.txt')
 
         # create dictionary needed to convert list(s) to dataframe
         embed_dict = {}
@@ -287,7 +287,7 @@ class BERT_Model(Model):
             self._embedding_var_names[ii+1] = "_"+str(ii+1)+"_"                                    
     
         # check whether embedding table already constructed and saved
-        embedding_file = os.path.join(self._cache_dir,self._base_name+'_embedding.txt')
+        embedding_file = os.path.join(self._cache_dir,self._base_name.lower().split("/")[-1]+'_embedding.txt')
         if os.path.isfile(embedding_file):
         
             if self._verbose:
@@ -732,7 +732,7 @@ class BERT_Model(Model):
     
     def _write_huggingface_bert_hdf5(self, sas_layer_info, task_parms):
         
-        self._client_hdf5_file_name = os.path.join(self._cache_dir,self._base_name+'.kerasmodel.h5')
+        self._client_hdf5_file_name = os.path.join(self._cache_dir,self._base_name.lower().split("/")[-1]+'.kerasmodel.h5')
         
         if self._verbose:
             print('NOTE: HDF5 file is ' + self._client_hdf5_file_name)        
