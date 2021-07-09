@@ -41,6 +41,7 @@ FasterRCNN, U-Net, MobileNet, and ShuffleNet
 - Python version 3 or greater is required
 - Install SAS [Scripting Wrapper for Analytics Transfer (SWAT)](https://github.com/sassoftware/python-swat) for Python using `pip install swat` or `conda install -c sas-institute swat`
 - Access to a SAS Viya 3.4 environment with [Visual Data Mining and Machine Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning.html) (VDMML) is required
+- To use timeseries APIs, access to either [SAS Econometrics](https://www.sas.com/en_us/software/econometrics.html) or [SAS Visual Forecasting](https://www.sas.com/en_us/software/visual-forecasting.html) is required
 - A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
 - It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
 - Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
