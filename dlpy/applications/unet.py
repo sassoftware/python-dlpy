@@ -20,6 +20,7 @@ from dlpy.model import Model
 from dlpy.sequential import Sequential
 from dlpy.layers import (Conv2d, Input, Pooling, BN, Conv2DTranspose, Concat, Segmentation)
 from .application_utils import get_layer_options, input_layer_options
+from dlpy.utils import query_layer_parm
 
 
 def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, height=256, scale=1.0/255,
@@ -166,7 +167,12 @@ def UNet(conn, model_table='UNet', n_classes = 2, n_channels=1, width=256, heigh
 
     conv9 = Conv2d(n_classes, 3, act = 'relu', init = init)(conv9)
 
-    seg1 = Segmentation(name = 'Segmentation_1')(conv9)
+    if query_layer_parm(conn,'segmentation','outputImageType') and query_layer_parm(conn,'segmentation','outputImageProb'):
+        seg1 = Segmentation(name='Segmentation_1', output_image_type=output_image_type,
+                           output_image_prob=output_image_prob)(conv9)
+    else:
+        seg1 = Segmentation(name='Segmentation_1')(conv9)
+
     model = Model(conn, inputs = inp, outputs = seg1, model_table = model_table)
     model.compile()
     return model
