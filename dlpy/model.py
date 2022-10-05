@@ -2282,6 +2282,7 @@ class Model(Network):
                         copyvars=copy_vars,
                         casout=dict(replace=True, name=masked_image_table,
                                     blocksize=blocksize),
+                        addColumns=dict(augmentAttributes=['PATCH_X', 'PATCH_Y', 'PATCH_HEIGHT', 'PATCH_WIDTH']),
                         cropList=[dict(sweepImage=True, x=0, y=0,
                                        width=mask_width, height=mask_height,
                                        stepsize=step_size,
