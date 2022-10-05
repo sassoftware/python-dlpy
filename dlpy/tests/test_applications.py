@@ -241,11 +241,11 @@ class TestApplications(unittest.TestCase):
                        random_mutation='random')
 
         model1.print_summary()
-        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        res1 = self.s.fetch(table=model1.model_name, sortby=['_dllayerid_', '_dlkey1_'])
         print(res1)
 
-        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
-        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 1)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 224)
 
     def test_vgg13(self):
         from dlpy.applications import VGG13
@@ -261,11 +261,11 @@ class TestApplications(unittest.TestCase):
                        random_mutation='random')
 
         model1.print_summary()
-        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        res1 = self.s.fetch(table=model1.model_name, sortby=['_dllayerid_', '_dlkey1_'])
         print(res1)
 
-        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
-        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 1)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 224)
 
     def test_vgg16(self):
         from dlpy.applications import VGG16
@@ -274,7 +274,7 @@ class TestApplications(unittest.TestCase):
 
         model = VGG16(self.s)
         model.print_summary()
-        res = self.s.fetch(table=model.model_name, sortby='_dllayerid_')
+        res = self.s.fetch(table=model.model_name, sortby=['_dllayerid_', '_dlkey1_'])
         print(res)
 
         # test random_crop and mutation
@@ -289,8 +289,8 @@ class TestApplications(unittest.TestCase):
         res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
         print(res1)
 
-        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
-        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 2)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 0)
 
     def test_vgg16_2(self):
         if self.data_dir is None:
@@ -351,11 +351,11 @@ class TestApplications(unittest.TestCase):
                        random_mutation='random',
                        include_top=True)
         model1.print_summary()
-        res1 = self.s.fetch(table=model1.model_name, sortby='_dllayerid_')
+        res1 = self.s.fetch(table=model1.model_name, sortby=['_dllayerid_', '_dlkey1_'])
         print(res1)
 
-        self.assertEqual(res1['Fetch'].iloc[10, 3], 4)
-        self.assertEqual(res1['Fetch'].iloc[4, 3], 2)
+        self.assertEqual(res1['Fetch'].iloc[10, 3], 1)
+        self.assertEqual(res1['Fetch'].iloc[4, 3], 224)
 
     def test_vgg19_2(self):
         if self.data_dir is None:
