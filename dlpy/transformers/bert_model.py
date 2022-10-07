@@ -1,3 +1,5 @@
+# Signed-off-by: Ryosuke Horiuchi <ryoiryojoho@gmail.com>
+
 #!/usr/bin/env python
 # encoding: utf-8
 #
@@ -33,7 +35,8 @@ try:
     from transformers import BertTokenizer, BertModel, BertConfig
     from transformers import RobertaTokenizer, RobertaModel, RobertaConfig
     from transformers import DistilBertTokenizer, DistilBertModel, DistilBertConfig
-    
+    from transformers import AutoTokenizer, AutoModel, AutoConfig
+
     from distutils.version import StrictVersion
     import pkg_resources
     import warnings
@@ -134,7 +137,7 @@ class BERT_Model(Model):
             
         # instantiate specified HuggingFace model and tokenizer
         if hf_base_name == 'bert':
-            num_layers = BertConfig.from_pretrained(self._base_name,
+            num_layers = AutoConfig.from_pretrained(self._base_name,
                                                     cache_dir=cache_dir).to_dict()['num_hidden_layers']
         elif hf_base_name == 'roberta':
             num_layers = RobertaConfig.from_pretrained(self._base_name,
@@ -151,11 +154,11 @@ class BERT_Model(Model):
                                 'the base model.')
 
         if hf_base_name == 'bert':
-            self._base_model = BertModel.from_pretrained(self._base_name,
+            self._base_model = AutoModel.from_pretrained(self._base_name,
                                                          cache_dir=cache_dir,
                                                          num_hidden_layers=num_hidden_layers)
-            self._tokenizer = BertTokenizer.from_pretrained(self._base_name)
-            self._config = BertConfig.from_pretrained(self._base_name,
+            self._tokenizer = AutoTokenizer.from_pretrained(self._base_name)
+            self._config = AutoConfig.from_pretrained(self._base_name,
                                                       cache_dir=cache_dir,
                                                       num_hidden_layers=num_hidden_layers).to_dict()
         elif hf_base_name == 'roberta':
