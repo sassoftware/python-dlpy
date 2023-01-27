@@ -607,11 +607,10 @@ def caslibify_context(conn, path, task='save'):
                     yield None, None
                 else:
                     # try-finally construct guarantees that the tear-down is always executed
-                    try:
-                        yield new_caslib, path_split[1]
-                    finally:
-                        if new_caslib is not None:
-                            conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
+                    yield new_caslib, path_split[1]
+                    # finally:
+                    #     if new_caslib is not None:
+                    #         conn.retrieve('dropcaslib', _messagelevel = 'error', caslib = new_caslib)
         else:
             raise DLPyError('We need more than one level of directories. e.g., /dir1/dir2. '
                             'This usually happens when you pass a Windows path to a Unix CAS server, '
