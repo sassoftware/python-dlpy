@@ -332,8 +332,8 @@ class MZModel():
         The path to the model. It could either be the absolute path to the model, or the relative path to the caslib.
     num_classes : int, optional
         The number of classes in the dataset.
-    encoding : boolean, optional
-        Whether to use one-hot encoding for labels.
+    encoding : int, optional
+        Specifies the vector size for one-hot encoding.
 
     Returns
     --------
@@ -342,7 +342,7 @@ class MZModel():
 
     def __init__(self, conn, model_type, model_name=None, model_subtype=None, anchors=None, rnn_type=None,
                  input_size=None, hidden_size=None, num_layers=None, dataset_type="Univariate", caslib=None,
-                 model_path=None, num_classes=10, encoding=False):
+                 model_path=None, num_classes=10, encoding=0):
         self.conn = conn
         self._init_model(model_type, model_name, model_subtype, anchors, rnn_type, input_size, hidden_size, num_layers,
                          dataset_type, caslib, model_path, num_classes, encoding)
@@ -421,9 +421,9 @@ class MZModel():
             self.documents_train['sas']['dlx']['train']['model'][key] = value
             self.documents_score['sas']['dlx']['score']['model'][key] = value
 
-        if encoding is True:
-            self.documents_train['sas']['dlx']['train']['model']['outputs'][0]['size'] = [10]
-            self.documents_score['sas']['dlx']['score']['model']['outputs'][0]['size'] = [10]
+        if encoding > 0:
+            self.documents_train['sas']['dlx']['train']['model']['outputs'][0]['size'] = [encoding]
+            self.documents_score['sas']['dlx']['score']['model']['outputs'][0]['size'] = [encoding]
 
     def add_image_transformation(self, image_resize_type='To_FIX_DIM', image_size=None, target_size=None,
                                  color_transform=None, random_transform=False):
@@ -503,7 +503,7 @@ class MZModel():
             self.index_map = index_map
 
         if self.index_map is not None and self.index_variable is None:
-            raise DLPyError('Please specify index variable is using an index map.')
+            raise DLPyError('Please specify index variable if using an index map.')
 
     def train(self, table, model=None, inputs=None, targets=None, index_variable=None, batch_size=1,
               max_epochs=5, log_level=0, lr=0.01, optimizer=None, valid_table=None, gpu=None, seed=0, n_threads=None,
@@ -739,7 +739,7 @@ class MZModel():
         path : string
             Specifies the server-side path to store the model tables.
         file_name : string
-            Specifies the name of the saved astore file.
+            Specifies the name of the saved CAS table file.
         index_map : string
             The table contains index map.
         """
