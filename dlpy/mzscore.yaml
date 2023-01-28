@@ -1,0 +1,23 @@
+sas:
+  dlx:
+    score:
+      label:
+      dataset:
+        type: "UNIVARIATE"
+      preProcessing:
+        - modelInput:
+            label: input_tensor1
+            imageTransformation:
+      model:
+        type:
+        name:
+        subtype:
+        num_classes: 10
+        inputs:
+          - label: input_tensor1
+            size:
+              - 0
+        outputs:
+          - label: output_tensor1
+            size:
+              - 0
