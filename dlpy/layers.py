@@ -26,7 +26,7 @@ from . import __dev__
 import warnings
 import collections
 from copy import deepcopy
-from collections import Iterable
+from collections.abc import Iterable
 
 PALETTES = dict(
     original={
