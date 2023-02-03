@@ -387,9 +387,12 @@ class MZModel():
 
         self.label_name = random_name('Doc', 6)
 
-        pkg_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        train_yaml_dir = pkg_dir + '\mztrain.yaml'
-        score_yaml_dir = pkg_dir + '\mzscore.yaml'
+        train_filename = os.path.join('datasources', 'mztrain.yaml')
+        score_filename = os.path.join('datasources', 'mzscore.yaml')
+        project_path = os.path.dirname(os.path.abspath(__file__))
+        train_yaml_dir = os.path.join(project_path, train_filename)
+        score_yaml_dir = os.path.join(project_path, score_filename)
+
         with open(train_yaml_dir) as file:
             self.documents_train = yaml.full_load(file)
         with open(score_yaml_dir) as file:
