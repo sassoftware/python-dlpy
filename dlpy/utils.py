@@ -3211,7 +3211,7 @@ def query_layer_parm(conn, layer_type, parm_name):
                     
     return parm_valid
 
-class DLPyDict(collections.MutableMapping):
+class DLPyDict(collections.abc.MutableMapping):
     """ Dictionary that applies an arbitrary key-altering function before accessing the keys """
 
     def __init__(self, *args, **kwargs):
