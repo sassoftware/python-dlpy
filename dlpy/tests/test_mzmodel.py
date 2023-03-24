@@ -22,9 +22,10 @@ import swat
 import swat.utils.testing as tm
 import csv
 import os
+from pathlib import Path
 from dlpy.mzmodel import *
 
-class TestUtils(unittest.TestCase):
+class TestModelzoo(unittest.TestCase):
     '''
         If you are using dlpy on a Windows machine, then copy datasources/dlpy_obj_det_test to both DLPY_DATA_DIR and
         DLPY_DATA_DIR_LOCAL. If you are using dlpy on a linux machine, then copy datasources/dlpy_obj_det_test to
@@ -63,6 +64,7 @@ class TestUtils(unittest.TestCase):
             if self.data_dir_local.endswith(sep_):
                 self.data_dir_local = self.data_dir_local[:-1]
             self.data_dir_local += sep_
+        print(f"DLPY_DATA_DIR: {self.data_dir}")
 
         if 'CODE_COV_SKIP' in os.environ:
             self.code_cov_skip = 1
@@ -297,6 +299,53 @@ class TestUtils(unittest.TestCase):
         if r.severity > 0:
             for msg in r.messages:
                 print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mzmodel_from_client(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir + 'cifar10_small.sashdat', task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        model1 = MZModel(conn=self.s, model_type="torchNative", model_name="resnet", model_subtype="resnet18", num_classes=10)
+        print(model1.documents_train)
+
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        optimizer = Optimizer(seed=54321,
+                              algorithm=SGDSolver(lr=1e-3, momentum=0.9),
+                              batch_size=128,
+                              max_epochs=3
+                              )
+        r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=5)
+        print(r)
+        for msg in r.messages:
+            print(msg)
+        if r.severity != 1:
+            raise DLPyError("WARNING message should appear.")
+        
+        # should print out warning message
+        model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
+        self.s.droptable(model1.model_table_name)
+        model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
+        r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=5)
+        if r.severity:
+            raise DLPyError("WARNING or ERROR message shouldn't appear.")
+        print(r)
+        for msg in r.messages:
+            print(msg)
+        
+        r = model1.score(table="eee", inputs="_image_", targets="xlabels", batch_size=128)
+        for msg in r.messages:
+            print(msg)
+        
         self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
 
         if (caslib is not None) and tmp_caslib:

@@ -19,6 +19,7 @@
 import os
 import yaml
 import inspect
+import swat.datamsghandlers as dmh
 from dlpy.utils import *
 
 model_name_map = {
@@ -304,6 +305,25 @@ class BatchSizeRange(DLPyDict):
     def __init__(self, lower=None, upper=None, value_list=None):
         DLPyDict.__init__(self, lb=lower, ub=upper, valueList=value_list)
 
+class MZModelCal(dmh.CASDataMsgHandler):
+    """
+    Parameters
+    ----------
+    model_local_path : string
+        The path to the model path on client side.
+    """
+    def __init__(self, model_local_path):
+        self.data = [(open(model_local_path, 'rb').read(),)]
+        variables = [dict(name='Data', type='VARBINARY')]  # data column
+        self.model_local_path = model_local_path
+        super(MZModelCal, self).__init__(variables)
+
+    def getrow(self, row):
+        try:
+            return self.data[row]
+        except Exception as e:
+            raise DLPyError(e.message)
+
 class MZModel():
     """
     Parameters
@@ -329,7 +349,7 @@ class MZModel():
     caslib : string, optional
         The CAS library where the model file resides.
     model_path : string, optional
-        The path to the model. It could either be the absolute path to the model, or the relative path to the caslib.
+        The path to the model. It could either be the cas-server side absolute path to the model, or the relative path to the caslib.
     num_classes : int, optional
         The number of classes in the dataset.
     encoding : int, optional
@@ -344,6 +364,7 @@ class MZModel():
                  input_size=None, hidden_size=None, num_layers=None, dataset_type="Univariate", caslib=None,
                  model_path=None, num_classes=10, encoding=0):
         self.conn = conn
+        self.model_table = None
         self._init_model(model_type, model_name, model_subtype, anchors, rnn_type, input_size, hidden_size, num_layers,
                          dataset_type, caslib, model_path, num_classes, encoding)
         self.conn.loadactionset(actionSet='dlModelZoo', _messagelevel='error')
@@ -376,7 +397,7 @@ class MZModel():
                     caslib = caslib_created
                     model_path = path_created
 
-                    if caslib is None and path is None:
+                    if caslib is None and model_path is None:
                         print('Cannot create a caslib for the provided path. Please make sure that the path is accessible from'
                               'the CAS Server. Please also check if there is a subpath that is part of an existing caslib')
             elif caslib is None:
@@ -583,6 +604,9 @@ class MZModel():
                 optimizer = Optimizer(algorithm=SGDSolver(lr=lr),  batch_size=batch_size, max_epochs=max_epochs, seed=seed)
 
         self.inputs = inputs
+        
+        if model is None and self.model_table:
+            model = self.model_table
 
         parameters = DLPyDict(logLevel=log_level_map[log_level], table=table, inputs=inputs, targets=targets,
                               valid_table=valid_table, indexvariables = index_variable,
@@ -594,6 +618,7 @@ class MZModel():
 
         rt = self.conn.retrieve('dlModelZoo.dlmztrain', _messagelevel='note', **parameters)
 
+        # update model table to the trained model
         self.model_table = self.conn.CASTable(self.model_table_name)
         self.index_variable = None
         self.index_map = None
@@ -658,7 +683,7 @@ class MZModel():
         :class:`CASResults`
         """
 
-        if 'model_table' in dir(self):
+        if model is None and self.model_table:
             model = self.model_table
 
         self.init_index(index_variable, index_map)
@@ -813,4 +838,30 @@ class MZModel():
 
                 self.index_map = self.conn.CASTable(self.index_map_name)
 
+    def upload_model_from_client(self, model_local_path: str, replace: bool =False):
+        '''
+        Upload a model stored on client side to CAS server. 
+        It could be helpful in situations where accessing the server filesystem is either difficult or not possible.
 
+        Parameters
+        ----------
+        model_local_path : string
+            Specifies the client-side directory of the file that contains the weight table. 
+            It could be a Torchscript file or Pytorch pickle file.
+        replace : bool
+            Whether replace the model table if exists.
+        '''
+        status = self.conn.tableExists(self.model_table_name)
+        if status.exists:
+            if not replace:
+                print('WARNING: Model table has already existed. Set replace=True to replace the existing one.')
+                return
+            else:
+                self.conn.droptable(self.model_table_name)
+        mzweights = MZModelCal(model_local_path)
+        self.conn.addtable(table=self.model_table_name, **mzweights.args.addtable)
+        status = self.conn.tableExists(self.model_table_name)
+        if status.exists:
+            self.model_table = self.conn.CASTable(self.model_table_name)
+        else:
+            raise DLPyError("Failed to upload client side model to CAS server")
