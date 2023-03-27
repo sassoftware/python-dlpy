@@ -316,9 +316,6 @@ class TestModelzoo(unittest.TestCase):
         model1 = MZModel(conn=self.s, model_type="torchNative", model_name="resnet", model_subtype="resnet18", num_classes=10)
         print(model1.documents_train)
 
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-
         optimizer = Optimizer(seed=54321,
                               algorithm=SGDSolver(lr=1e-3, momentum=0.9),
                               batch_size=128,
