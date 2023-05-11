@@ -249,16 +249,34 @@ class Tuner(DLPyDict):
         Specifies the maximum time.
     pop_size : int, optional
         Specifies the population size.
-    seed, int, optional
+    seed: int, optional
         Specifies the random number seed for the random number generator.
+    fidelity: bool, optional
+        Specifies whether to use fidelity-based hyperparameter tuning.
+    fidelity_start_epochs: int, optional
+        Specifies the number of epochs to use for the first iteration of hyperparameter tuning.
+    fidelity_step_epochs: int, optional
+        Specifies the number of additional epochs to use for each successive iteration of hyperparameter tuning.
+    fidelity_cut_rate: double, optional
+        Specifies the proportion of hyperparameter sets that are eliminated each iteration of hyperparameter tuning.
+    fidelity_max: int, optional
+        Specifies the maximum number of epochs to train a hyperparameter set during hyperparameter tuning.
+        Must be between 0 and 1 (exclusive).
+    fidelity_num_samples: int, optional
+        Specifies the number of hyperparameter sets used for the first iteration of hyperparameter tuning.
+
     Returns
     -------
     :class:`Tuner`
     '''
 
-    def __init__(self, method='RANDOM', max_func=0, max_iterations=10, max_time=0, pop_size=20, seed=0):
+    def __init__(self, method='RANDOM', max_func=0, max_iterations=10, max_time=0, pop_size=20, seed=0, fidelity=False,
+                 fidelity_start_epochs=3, fidelity_step_epochs=3, fidelity_cut_rate=0.2, fidelity_max=100,
+                 fidelity_num_samples=100):
         DLPyDict.__init__(self, searchMethod=method, maxFunc=max_func, maxIterations=max_iterations, maxTime=max_time,
-                          popSize=pop_size, seed=seed)
+                          popSize=pop_size, seed=seed, fidelity=fidelity, fidelityStartEpochs=fidelity_start_epochs,
+                          fidelityStepEpochs=fidelity_step_epochs, fidelityCutRate=fidelity_cut_rate,
+                          fidelityMax=fidelity_max, fidelityNumSamples=fidelity_num_samples)
 
 class HyperRange(DLPyDict):
     '''
@@ -408,6 +426,8 @@ class MZModel():
 
         self.label_name = random_name('Doc', 6)
 
+        self.tune_status_name = "HyperTuneStatus"
+
         train_filename = os.path.join('datasources', 'mztrain.yaml')
         score_filename = os.path.join('datasources', 'mzscore.yaml')
         project_path = os.path.dirname(os.path.abspath(__file__))
@@ -419,11 +439,8 @@ class MZModel():
         with open(score_yaml_dir) as file:
             self.documents_score = yaml.full_load(file)
 
-        self.documents_train['sas']['dlx']['train']['label'] = self.label_name + "_train"
-        self.documents_train['sas']['dlx']['train']['dataset']['type'] = dataset_type
-
-        self.documents_score['sas']['dlx']['score']['label'] = self.label_name + "_score"
-        self.documents_score['sas']['dlx']['score']['dataset']['type'] = dataset_type
+        self.documents_train['sas']['dlx']['label'] = self.label_name
+        self.documents_train['sas']['dlx']['dataset']['type'] = dataset_type
 
         model = {}
         model['type'] = model_type
@@ -442,12 +459,10 @@ class MZModel():
             model['path'] = model_path
 
         for (key, value) in model.items():
-            self.documents_train['sas']['dlx']['train']['model'][key] = value
-            self.documents_score['sas']['dlx']['score']['model'][key] = value
+            self.documents_train['sas']['dlx']['model'][key] = value
 
         if encoding > 0:
-            self.documents_train['sas']['dlx']['train']['model']['outputs'][0]['size'] = [encoding]
-            self.documents_score['sas']['dlx']['score']['model']['outputs'][0]['size'] = [encoding]
+            self.documents_train['sas']['dlx']['model']['outputs'][0]['size'] = [encoding]
 
     def add_image_transformation(self, image_resize_type='To_FIX_DIM', image_size=None, target_size=None,
                                  color_transform=None, random_transform=False):
@@ -487,13 +502,11 @@ class MZModel():
             image_dict['randomTransform']['colorSpace'] = "0.1 0.12 0.15"
 
 
-        if self.documents_train['sas']['dlx']['train']['preProcessing'][0]['modelInput']['imageTransformation'] is None:
-            self.documents_train['sas']['dlx']['train']['preProcessing'][0]['modelInput']['imageTransformation'] = {}
-            self.documents_score['sas']['dlx']['score']['preProcessing'][0]['modelInput']['imageTransformation'] = {}
+        if self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'] is None:
+            self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'] = {}
 
         for (key, value) in image_dict.items():
-            self.documents_train['sas']['dlx']['train']['preProcessing'][0]['modelInput']['imageTransformation'][key] = value
-            self.documents_score['sas']['dlx']['score']['preProcessing'][0]['modelInput']['imageTransformation'][key] = value
+            self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'][key] = value
 
     def add_text_transformation(self, word_embedding="word2Vec"):
         """
@@ -507,13 +520,11 @@ class MZModel():
         text_dict = {}
         text_dict['word_embedding'] = word_embedding
 
-        if self.documents_train['sas']['dlx']['train']['preProcessing'][0]['modelInput']['textTransformation'] is None:
-            self.documents_train['sas']['dlx']['train']['preProcessing'][0]['modelInput']['textTransformation'] = {}
-            self.documents_score['sas']['dlx']['score']['preProcessing'][0]['modelInput']['textTransformation'] = {}
+        if self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'] is None:
+            self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'] = {}
 
         for (key, value) in text_dict.items():
-            self.documents_train['sas']['dlx']['train']['preProcessing'][0]['modelInput']['textTransformation'][key] = value
-            self.documents_score['sas']['dlx']['score']['preProcessing'][0]['modelInput']['textTransformation'][key] = value
+            self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'][key] = value
 
     def init_index(self, index_variable, index_map):
         if 'index_variable' not in dir(self):
@@ -612,9 +623,9 @@ class MZModel():
                               valid_table=valid_table, indexvariables = index_variable,
                               outputIndexmap=dict(name=self.index_map_name, replace=True), model=model, gpu=gpu, optimizer=optimizer,
                               n_threads=n_threads,
-                              options=dict(yaml=str(self.documents_train), label=self.label_name + "_train"),
+                              options=dict(yaml=str(self.documents_train), label=self.label_name),
                               modelOut=dict(name=self.model_table_name, replace=True), dropLast=drop_last, learningRateScheduler=lr_scheduler,
-                              tuner=tuner)
+                              tuner=tuner, autotuneStatusTable=dict(name=self.tune_status_name, caslib="casuser", replace=True))
 
         rt = self.conn.retrieve('dlModelZoo.dlmztrain', _messagelevel='note', **parameters)
 
@@ -622,12 +633,14 @@ class MZModel():
         self.model_table = self.conn.CASTable(self.model_table_name)
         self.index_variable = None
         self.index_map = None
+        self.tune_status = None
         if index_variable is not None:
             self.index_variable = index_variable
             self.index_map = self.conn.CASTable(self.index_map_name)
 
         hyper_tuning = 'HyperparameterValues'
         if hyper_tuning in rt:
+            self.tune_status = self.conn.CASTable(self.tune_status_name)
             self.optimizer = optimizer
             tuning_results = rt[hyper_tuning]
             tuning_list = tuning_results.columns.tolist()
@@ -696,7 +709,7 @@ class MZModel():
         parameters = DLPyDict(logLevel=log_level_map[log_level], table=table, inputs=inputs, targets=targets,
                               model=model, gpu=gpu, n_threads=n_threads, batch_size=batch_size,
                               indexvariables=self.index_variable, inputIndexmap=self.index_map,
-                              options=dict(yaml=str(self.documents_score), label=self.label_name + "_score"),
+                              options=dict(yaml=str(self.documents_train), label=self.label_name),
                               tableOut=temp_table_out, copyvars=copy_vars)
 
         rt = self.conn.retrieve('dlModelZoo.dlmzscore', _messagelevel='note', **parameters)
@@ -865,3 +878,4 @@ class MZModel():
             self.model_table = self.conn.CASTable(self.model_table_name)
         else:
             raise DLPyError("Failed to upload client side model to CAS server")
+

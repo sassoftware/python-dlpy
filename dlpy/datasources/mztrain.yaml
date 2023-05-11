@@ -1,6 +1,5 @@
 sas:
   dlx:
-    train:
       label:
       dataset:
         type: "UNIVARIATE"
@@ -13,7 +12,7 @@ sas:
         type:
         name:
         subtype:
-        num_classes: 10
+        classNumber: 10
         inputs:
           - label: input_tensor1
             size:
