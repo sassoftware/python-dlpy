@@ -38,7 +38,7 @@ model_name_map = {
 obj_detect_model_list = {'SAS_TORCH_YOLO_V5'}
 rnn_model_list = {'SAS_TORCH_DRNN'}
 
-dataset_type_list = ['UNIVARIATE', 'OBJDETECT', 'SEGMENTATION', 'AUTOENCODER']
+dataset_type_list = ['UNIVARIATE', 'OBJDETECT', 'SEGMENTATION', 'AUTOENCODER', 'REGRESSION']
 
 log_level_map = {
     0: 'ERROR',
@@ -653,7 +653,7 @@ class MZModel():
         return rt
 
     def score(self, table, model=None, inputs=None, targets=None, index_variable=None, index_map=None, log_level=0,
-              gpu=None, n_threads=None, batch_size=None):
+              gpu=None, n_threads=None, batch_size=None, loss_func="cross_entropy"):
         """
         Score a deep learning model.
 
@@ -690,6 +690,9 @@ class MZModel():
             When specified, the action uses graphical processing unit hardware.
         n_threads : int, optional
             Specifies the number of threads to use.
+        loss_func : string, optional
+            Specifies the loss function for the optimization method.
+            Possible values: ['cross_entropy', 'mse', 'nll']
 
         Returns
         --------
@@ -710,7 +713,7 @@ class MZModel():
                               model=model, gpu=gpu, n_threads=n_threads, batch_size=batch_size,
                               indexvariables=self.index_variable, inputIndexmap=self.index_map,
                               options=dict(yaml=str(self.documents_train), label=self.label_name),
-                              tableOut=temp_table_out, copyvars=copy_vars)
+                              tableOut=temp_table_out, copyvars=copy_vars, loss=loss_func)
 
         rt = self.conn.retrieve('dlModelZoo.dlmzscore', _messagelevel='note', **parameters)
 
