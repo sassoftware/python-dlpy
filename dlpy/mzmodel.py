@@ -20,7 +20,10 @@ import os
 import yaml
 import inspect
 import swat.datamsghandlers as dmh
+import multiprocessing as mp
+mp.set_start_method("spawn", force=True)                                        
 from dlpy.utils import *
+from dlpy.mzmodel_plot import animate
 
 model_name_map = {
     'LENET': ['SAS_TORCH_LENET'],
@@ -542,7 +545,7 @@ class MZModel():
 
     def train(self, table, model=None, inputs=None, targets=None, index_variable=None, batch_size=1,
               max_epochs=5, log_level=0, lr=0.01, optimizer=None, valid_table=None, gpu=None, seed=0, n_threads=None,
-              drop_last=False, lr_scheduler=None, tuner=None):
+              drop_last=False, lr_scheduler=None, tuner=None, show_plot=False):
         """
         Train a deep learning model.
 
@@ -602,12 +605,21 @@ class MZModel():
             Specifies the learning rate policy.
         tuner : class:`Tuner`, optional
             Specifies the tuning method.
+        show_plot : bool, optional
+            Specifies whether to display real-time plot for tuning.
 
         Returns
         --------
         :class:`CASResults`
         """
 
+        hostname = self.conn._hostname
+        port = self.conn._port
+
+        if show_plot:
+            plot_process = mp.Process(target=animate, args=(hostname, port))
+            plot_process.start()
+        
         if optimizer is None:
             if 'optimizer' in dir(self):
                 optimizer = self.optimizer
@@ -649,6 +661,9 @@ class MZModel():
             for item in tuning_list:
                 if item in optimizer_map:
                     self.optimizer['algorithm'][optimizer_map[item]] = tuning_results[item][0]
+
+        if show_plot:
+            plot_process.join()
 
         return rt
 
