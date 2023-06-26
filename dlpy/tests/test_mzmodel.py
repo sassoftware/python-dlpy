@@ -24,6 +24,7 @@ import csv
 import os
 from pathlib import Path
 from dlpy.mzmodel import *
+from multiprocessing import Process
 
 class TestModelzoo(unittest.TestCase):
     '''
@@ -64,7 +65,6 @@ class TestModelzoo(unittest.TestCase):
             if self.data_dir_local.endswith(sep_):
                 self.data_dir_local = self.data_dir_local[:-1]
             self.data_dir_local += sep_
-        print(f"DLPY_DATA_DIR: {self.data_dir}")
 
         if 'CODE_COV_SKIP' in os.environ:
             self.code_cov_skip = 1
