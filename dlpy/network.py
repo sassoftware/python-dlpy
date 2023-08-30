@@ -33,6 +33,7 @@ import swat as sw
 from copy import deepcopy
 from swat.cas.table import CASTable
 from . import __dev__
+from collections.abc import Iterable
 
 UNSUPPORTED_EXTRACT_LAYER = {20: "FULLCONNECTCAP", 21: "NORMCAP", 30: "ROIALIGN", 31: "NAS_LAYER",
                              32: "MASKRCNN"
@@ -146,11 +147,11 @@ class Network(Layer):
                     self.layers.append(start)
             return
 
-        if not isinstance(inputs, collections.Iterable):
+        if not isinstance(inputs, Iterable):
             inputs = [inputs]
         if any(x.__class__.__name__ != 'Tensor' for x in inputs):
             raise DLPyError('All inputs should be tensors.')
-        if not isinstance(outputs, collections.Iterable):
+        if not isinstance(outputs, Iterable):
             outputs = [outputs]
 
         self.inputs = inputs
@@ -258,7 +259,7 @@ class Network(Layer):
         input_tensors = []
         output_tensors = []
 
-        if not isinstance(stop_layers, collections.Iterable):
+        if not isinstance(stop_layers, Iterable):
             stop_layers = [stop_layers]
         index_l = [self.layers.index(x) for x in stop_layers]
         stop_layers = [copied_model.layers[i] for i in index_l]
@@ -1908,7 +1909,7 @@ def layer_to_node(layer):
         if layer.kernel_size:
             label = '%s %s(%s)' % ('x'.join('%s' % x for x in layer.kernel_size), layer.name, layer.type)
         elif layer.output_size:
-            if not isinstance(layer.output_size, collections.Iterable):
+            if not isinstance(layer.output_size, Iterable):
                 label = '%s %s(%s)' % (layer.output_size, layer.name, layer.type)
             else:
                 label = '%s %s(%s)' % ('x'.join('%s' % x for x in layer.output_size), layer.name, layer.type)

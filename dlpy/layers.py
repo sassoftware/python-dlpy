@@ -182,7 +182,7 @@ class Layer(object):
             self.src_layers = None
         else:
             # to be compatible with network
-            if isinstance(src_layers, collections.Iterable):
+            if isinstance(src_layers, Iterable):
                 self.src_layers = list(src_layers)
             else:
                 self.src_layers = [src_layers]

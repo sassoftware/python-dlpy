@@ -41,6 +41,7 @@ from contextlib import contextmanager
 import locale
 import inspect
 from glob import glob
+from collections.abc import Iterable
 
 
 def random_name(name='ImageData', length=6):
@@ -2948,7 +2949,7 @@ def _ntuple(n):
 
     '''
     def parse(x):
-        if isinstance(x, collections.Iterable):
+        if isinstance(x, Iterable):
             return x
         return tuple(repeat(x, n))
     return parse
