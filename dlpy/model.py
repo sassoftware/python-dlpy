@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import collections
 import sys
+from collections.abc import Iterable
 from .utils import image_blocksize, unify_keys, input_table_check, random_name, check_caslib, caslibify
 from .utils import filter_by_image_id, filter_by_filename, isnotebook
 from dlpy.timeseries import TimeseriesTable
@@ -1088,7 +1089,7 @@ class Model(Network):
 
         classes_not_detected = [x for x in classes_gt if x not in classes]
 
-        if not isinstance(iou_thresholds, collections.Iterable):
+        if not isinstance(iou_thresholds, Iterable):
             iou_thresholds = [iou_thresholds]
         results = []
         for iou_threshold in iou_thresholds:

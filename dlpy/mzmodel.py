@@ -762,7 +762,7 @@ class MZModel():
         parameters = DLPyDict(model=self.model_table,
                         outputAstore=dict(replace=True, name=CAS_tbl_name),
                         inputs=self.inputs, indexvariables=self.index_variable, inputIndexmap=self.index_map,
-                        options=dict(yaml=str(self.documents_score), label=self.label_name + "_score"))
+                        options=dict(yaml=str(self.documents_train), label=self.label_name))
 
         self.conn.retrieve('dlModelZoo.dlmzExport', _messagelevel='note', **parameters)
 
