@@ -605,11 +605,11 @@ class TestModel(unittest.TestCase):
 
         from dlpy.model import Model
 
-        if self.data_dir_local is None:
+        if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR_LOCAL is not set in the environment variables")
 
 
-        path = os.path.join(self.data_dir_local, 'mobilenetv2-1.0.onnx')
+        path = os.path.join(self.data_dir, 'mobilenetv2-1.0.onnx')
 
         onnx_model = onnx.load_model(path)
         model1 = Model.from_onnx_model(self.s,

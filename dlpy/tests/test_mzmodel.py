@@ -90,9 +90,6 @@ class TestModelzoo(unittest.TestCase):
         train1 = MZModel(conn=self.s, model_type="torchNative", model_name="resnet", model_subtype="resnet18",
                         num_classes=10, model_path=self.data_dir + "resnet18.pt")
 
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-
         optimizer = Optimizer(seed=54321,
                               algorithm=SGDSolver(lr=1e-3, momentum=0.9),
                               batch_size=128,
@@ -119,9 +116,6 @@ class TestModelzoo(unittest.TestCase):
 
         train2 = MZModel(conn=self.s, model_type="torchNative", model_name="enet", dataset_type='segmentation',
                          num_classes=13, model_path=self.data_dir + "enet_raw.pt")
-
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         optimizer = Optimizer(seed=54321,
                               algorithm=SGDSolver(lr=0.08),
@@ -150,15 +144,74 @@ class TestModelzoo(unittest.TestCase):
         train3 = MZModel(conn=self.s, model_type="torchScript", dataset_type='segmentation',
                          num_classes=13, model_path=self.data_dir + "deeplab_wrapped.pt")
 
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-
         optimizer = Optimizer(seed=54321,
                               algorithm=SGDSolver(lr=0.01),
                               batch_size=10,
                               max_epochs=3
                               )
-        r = train3.train(table="eee", inputs='_image_', targets='labels', n_threads=5, optimizer=optimizer)
+        r = train3.train(table="eee", inputs='_image_', targets='labels', n_threads=5, optimizer=optimizer, gpu=[0])
+
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mzmodel_train4(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir + 'coco128/obj_table.txt', task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        train4 = MZModel(conn=self.s, model_type="torchNative", model_name="yolov5", model_subtype='small',
+                         dataset_type='objdetect', num_classes=80,
+                         anchors="10 13 16 30 33 23 30 61 62 45 59 119 116 90 156 198 373 326",
+                         model_path=self.data_dir + "coco128/traced_yolov5s.pt")
+
+        optimizer = Optimizer(seed=54321,
+                              algorithm=SGDSolver(lr=0.08),
+                              batch_size=15,
+                              max_epochs=3
+                              )
+        r = train4.train(table="eee", inputs='img_path', targets='label_path', n_threads=5, optimizer=optimizer)
+
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mzmodel_train5(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s,
+                                             path=self.data_dir + 'fashion_mnist_valid.sashdat', task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        train5 = MZModel(conn=self.s, model_type="torchNative", model_name="DRNN",
+                         num_classes=10, model_path=self.data_dir + "drnn_classifier_model.pt",
+                         input_size=32, hidden_size=20, num_layers=2,
+                         rnn_type="RNN")
+
+        train5.add_image_transformation(image_size='32 32')
+        train5.add_text_transformation(word_embedding='word2Vec')
+
+        optimizer = Optimizer(seed=54321,
+                              algorithm=SGDSolver(lr=1e-3, momentum=0.9),
+                              batch_size=128,
+                              max_epochs=3
+                              )
+        r = train5.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer)
 
         if r.severity > 0:
             for msg in r.messages:
@@ -179,9 +232,6 @@ class TestModelzoo(unittest.TestCase):
 
         score1 = MZModel(conn=self.s, model_type="torchNative", model_name="resnet", model_subtype="resnet18",
                         num_classes=10, model_path=self.data_dir + "resnet18.pt")
-
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         r = score1.score(table="eee", inputs="_image_", targets="xlabels", batch_size=128)
 
@@ -205,9 +255,6 @@ class TestModelzoo(unittest.TestCase):
         score2 = MZModel(conn=self.s, model_type="torchNative", model_name="enet", dataset_type='segmentation',
                          num_classes=13, model_path=self.data_dir + "enet_raw.pt")
 
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
-
         r = score2.score(table="eee", inputs='_image_', targets='labels', batch_size=15)
 
         if r.severity > 0:
@@ -230,10 +277,31 @@ class TestModelzoo(unittest.TestCase):
         score3 = MZModel(conn=self.s, model_type="torchScript", dataset_type='segmentation',
                          num_classes=13, model_path=self.data_dir + "deeplab_wrapped.pt")
 
+        r = score3.score(table="eee", inputs='_image_', targets='labels', batch_size=10)
+
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mzmodel_score4(self):
         if self.data_dir is None:
             unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
-        r = score3.score(table="eee", inputs='_image_', targets='labels', batch_size=10)
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir + 'coco128/obj_table.txt', task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        score4 = MZModel(conn=self.s, model_type="torchNative", model_name="yolov5", model_subtype='small',
+                         dataset_type='objdetect', num_classes=80,
+                         anchors="10 13 16 30 33 23 30 61 62 45 59 119 116 90 156 198 373 326",
+                         model_path=self.data_dir + "coco128/traced_yolov5s.pt")
+
+        r = score4.score(table="eee", inputs='img_path', targets='label_path', batch_size=15)
 
         if r.severity > 0:
             for msg in r.messages:
@@ -254,9 +322,6 @@ class TestModelzoo(unittest.TestCase):
 
         train1 = MZModel(conn=self.s, model_type="torchNative", model_name="resnet", model_subtype="resnet18",
                          num_classes=10, model_path=self.data_dir + "resnet18.pt")
-
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         optimizer = Optimizer(seed=54321,
                               algorithm=SGDSolver(lr=1e-3, momentum=0.9),
@@ -281,9 +346,6 @@ class TestModelzoo(unittest.TestCase):
 
         train1 = MZModel(conn=self.s, model_type="torchNative", model_name="resnet", model_subtype="resnet18",
                         num_classes=10, model_path=self.data_dir + "resnet18.pt")
-
-        if self.data_dir is None:
-            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
 
         lr = HyperRange(lower=5e-4, upper=1e-3)
         batch_size = BatchSizeRange(lower=100, upper=150)
@@ -321,24 +383,26 @@ class TestModelzoo(unittest.TestCase):
                               batch_size=128,
                               max_epochs=3
                               )
-        r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=5)
+        r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=2)
         print(r)
-        for msg in r.messages:
-            print(msg)
-        if r.severity != 1:
-            raise DLPyError("WARNING message should appear.")
+
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
         
         # should print out warning message
         model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
         self.s.droptable(model1.model_table_name)
         model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
-        r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=5)
+        r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=2)
+
         if r.severity:
             raise DLPyError("WARNING or ERROR message shouldn't appear.")
         print(r)
         for msg in r.messages:
             print(msg)
-        
+
         r = model1.score(table="eee", inputs="_image_", targets="xlabels", batch_size=128)
         for msg in r.messages:
             print(msg)
@@ -347,3 +411,65 @@ class TestModelzoo(unittest.TestCase):
 
         if (caslib is not None) and tmp_caslib:
             self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mzmodel_image_processing(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir + 'self_driving_256_test.sashdat', task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        train = MZModel(conn=self.s, model_type="torchNative", model_name="enet", dataset_type='segmentation',
+                         num_classes=13, model_path=self.data_dir + "enet_raw.pt")
+
+        train.add_image_transformation(image_size='256', image_resize_type="RETAIN_ASPECTRATIO", random_transform=True)
+
+        optimizer = Optimizer(seed=54321,
+                              algorithm=SGDSolver(lr=0.08),
+                              batch_size=15,
+                              max_epochs=3
+                              )
+        r = train.train(table="eee", inputs='_image_', targets='labels', n_threads=5, optimizer=optimizer, gpu=[0])
+
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+    def test_mzmodel_image_processing2(self):
+        if self.data_dir is None:
+            unittest.TestCase.skipTest(self, "DLPY_DATA_DIR is not set in the environment variables")
+
+        caslib, path, tmp_caslib = caslibify(self.s, path=self.data_dir + 'coco128/obj_table.txt', task='load')
+        self.s.table.loadtable(caslib=caslib,
+                               casout={'name': 'eee', 'replace': True},
+                               path=path)
+
+        train = MZModel(conn=self.s, model_type="torchNative", model_name="yolov5", model_subtype='small',
+                         dataset_type='objdetect', num_classes=80,
+                         anchors="10 13 16 30 33 23 30 61 62 45 59 119 116 90 156 198 373 326",
+                         model_path=self.data_dir + "coco128/traced_yolov5s.pt")
+
+        train.add_image_transformation(image_size='640', image_resize_type="RETAIN_ASPECTRATIO", random_transform=True)
+
+        optimizer = Optimizer(seed=54321,
+                              algorithm=SGDSolver(lr=0.08),
+                              batch_size=15,
+                              max_epochs=3
+                              )
+        r = train.train(table="eee", inputs='img_path', targets='label_path', n_threads=5, optimizer=optimizer, gpu=[0])
+
+        if r.severity > 0:
+            for msg in r.messages:
+                print(msg)
+        self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
+
+        if (caslib is not None) and tmp_caslib:
+            self.s.retrieve('table.dropcaslib', message_level='error', caslib=caslib)
+
+

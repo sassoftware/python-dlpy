@@ -6,8 +6,6 @@ sas:
       preProcessing:
         - modelInput:
             label: input_tensor1
-            imageTransformation:
-            textTransformation:
       model:
         type:
         name:

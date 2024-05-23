@@ -467,8 +467,11 @@ class MZModel():
         if encoding > 0:
             self.documents_train['sas']['dlx']['model']['outputs'][0]['size'] = [encoding]
 
+        if model_type == "TORCHNATIVE" and model['name'] == 'SAS_TORCH_DRNN':
+            self.documents_train['sas']['dlx']['model']['inputs'][0]['size'] = [model['inputSize'], model['inputSize']]
+
     def add_image_transformation(self, image_resize_type='To_FIX_DIM', image_size=None, target_size=None,
-                                 color_transform=None, random_transform=False):
+                                 color_transform=None, random_transform=False, mosaic_prob=0.0):
         """
         Add image transformation to yaml file
 
@@ -484,6 +487,8 @@ class MZModel():
             Specifies the type of color space transformation to be performed for input images.
         random_transform : bool, optional
             Specifies whether to apply random transform to input images.
+        mosaic_prob : double, optional
+            Specifies the probability for Mosaic process. Ignored is random_transform = False.
         """
 
         image_dict = {}
@@ -494,19 +499,23 @@ class MZModel():
         if color_transform is not None:
             image_dict['colorTransform'] = color_transform
         if random_transform is True:
-            image_dict['randomTransform']['mosaicProb'] = 0.2
-            image_dict['randomTransform']['random_flip_h'] = 0.01
-            image_dict['randomTransform']['random_flip_v'] = 0.01
-            image_dict['randomTransform']['degree'] = 0.373
-            image_dict['randomTransform']['translate'] = 0.245
-            image_dict['randomTransform']['scale'] = 0.2
-            image_dict['randomTransform']['shear'] = 0.302
-            image_dict['randomTransform']['perspective'] = 0.003
-            image_dict['randomTransform']['colorSpace'] = "0.1 0.12 0.15"
+            random_dict = {}
+            random_dict['mosaicProb'] = mosaic_prob
+            random_dict['random_flip_h'] = 0.01
+            random_dict['random_flip_v'] = 0.01
+            random_dict['degree'] = 0.373
+            random_dict['translation'] = 0.245
+            random_dict['scale'] = 0.2
+            random_dict['shear'] = 0.302
+            random_dict['perspective'] = 0.003
+            random_dict['colorSpace'] = "0.1 0.12 0.15"
+
+            image_dict['randomTransform'] = {}
+            for (key, value) in random_dict.items():
+                image_dict['randomTransform'][key] = value
 
 
-        if self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'] is None:
-            self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'] = {}
+        self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'] = {}
 
         for (key, value) in image_dict.items():
             self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['imageTransformation'][key] = value
@@ -523,8 +532,7 @@ class MZModel():
         text_dict = {}
         text_dict['word_embedding'] = word_embedding
 
-        if self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'] is None:
-            self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'] = {}
+        self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'] = {}
 
         for (key, value) in text_dict.items():
             self.documents_train['sas']['dlx']['preProcessing'][0]['modelInput']['textTransformation'][key] = value
@@ -545,7 +553,7 @@ class MZModel():
 
     def train(self, table, model=None, inputs=None, targets=None, index_variable=None, batch_size=1,
               max_epochs=5, log_level=0, lr=0.01, optimizer=None, valid_table=None, gpu=None, seed=0, n_threads=None,
-              drop_last=False, lr_scheduler=None, tuner=None, show_plot=False):
+              drop_last=False, lr_scheduler=None, tuner=None, show_plot=False, new_training=False):
         """
         Train a deep learning model.
 
@@ -607,6 +615,9 @@ class MZModel():
             Specifies the tuning method.
         show_plot : bool, optional
             Specifies whether to display real-time plot for tuning.
+        new_training : bool, optional
+            When set to True, the training process starts either from pre-trained weights specified in model
+            construction, or from scratch
 
         Returns
         --------
@@ -628,7 +639,7 @@ class MZModel():
 
         self.inputs = inputs
         
-        if model is None and self.model_table:
+        if model is None and new_training is False and self.model_table:
             model = self.model_table
 
         parameters = DLPyDict(logLevel=log_level_map[log_level], table=table, inputs=inputs, targets=targets,
@@ -668,7 +679,7 @@ class MZModel():
         return rt
 
     def score(self, table, model=None, inputs=None, targets=None, index_variable=None, index_map=None, log_level=0,
-              gpu=None, n_threads=None, batch_size=None, loss_func="cross_entropy"):
+              gpu=None, n_threads=None, batch_size=None, loss_func="cross_entropy", copy_vars=None):
         """
         Score a deep learning model.
 
@@ -708,6 +719,8 @@ class MZModel():
         loss_func : string, optional
             Specifies the loss function for the optimization method.
             Possible values: ['cross_entropy', 'mse', 'nll']
+        copy_vars : list-of-strings, optional
+            Specifies the variables to transfer from the input table to the output table.
 
         Returns
         --------
@@ -720,7 +733,7 @@ class MZModel():
         self.init_index(index_variable, index_map)
 
         input_table = self.conn.CASTable(table)
-        copy_vars = input_table.columns.tolist()
+        # copy_vars = input_table.columns.tolist()
 
         temp_table_out = random_name('Table', 6)
 
