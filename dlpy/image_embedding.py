@@ -179,7 +179,7 @@ class ImageEmbeddingTable(ImageTable):
                     label = os.path.normpath(file).split(os.sep)[label_level]
                     if label in cls.image_file_list_with_labels:
                         cls.image_file_list_with_labels[label] = \
-                            cls.image_file_list_with_labels[label].append(pd.Series([file]))
+                            cls.image_file_list_with_labels[label]._append(pd.Series([file]))
                     else:
                         cls.image_file_list_with_labels[label] = pd.Series([file])
 
@@ -231,18 +231,18 @@ class ImageEmbeddingTable(ImageTable):
                     anchor_label = path_tokens[label_level]
 
                     # generate positive examples
-                    positive_file_list = positive_file_list.append(
+                    positive_file_list = positive_file_list._append(
                         cls.image_file_list_with_labels[anchor_label].sample(n=1, replace=True))
                     # generate negative examples
                     negative_label = anchor_label
                     while negative_label == anchor_label:
                         negative_label = random.choice(list(cls.image_file_list_with_labels.keys()))
-                    negative_file_list = negative_file_list.append(
+                    negative_file_list = negative_file_list._append(
                         cls.image_file_list_with_labels[negative_label].sample(n=1, replace=True))
 
                     # generate another negative examples with quartet
                     if embedding_model_type.lower() == 'quartet':
-                        negative_file_list1 = negative_file_list1.append(
+                        negative_file_list1 = negative_file_list1._append(
                             cls.image_file_list_with_labels[negative_label].sample(n=1, replace=True))
 
                 # load files into a CAS table
@@ -311,18 +311,24 @@ class ImageEmbeddingTable(ImageTable):
             code = code + cls.__generate_codes_for_label(conn, 1, label_level)
             code = code + '_dissimilar_ = 1;'
             code = code + ' if (_label_ = _label_1) then _dissimilar_=0;'
+            code = code + 'length _label_pair_ varchar(*); _label_pair_ = catx(",", _label_, _label_1)'
+
             conn.retrieve('table.partition', _messagelevel='error',
-                          table=dict(computedvars=['_fName_', '_label_', '_fName_1', '_label_1', '_dissimilar_'],
+                          table=dict(computedvars=
+                                     ['_fName_', '_label_', '_fName_1', '_label_1', '_dissimilar_', '_label_pair_'],
                                      computedvarsprogram=code,
                                      name=casout['name']),
                           casout=dict(replace=True, blocksize=32, **casout))
+
         elif embedding_model_type.lower() == 'triplet':
             # generate other labels
             code = code + cls.__generate_codes_for_label(conn, 1, label_level)
             code = code + cls.__generate_codes_for_label(conn, 2, label_level)
+            code = code + 'length _triplet_ varchar(*); _triplet_ = catx(",", _label_, _label_1, _label_2)'
+
             conn.retrieve('table.partition', _messagelevel='error',
                           table=dict(computedvars=['_fName_', '_label_', '_fName_1', '_label_1',
-                                                   '_fName_2', '_label_2'],
+                                                   '_fName_2', '_label_2', '_triplet_'],
                                      computedvarsprogram=code,
                                      name=casout['name']),
                           casout=dict(replace=True, blocksize=32, **casout))
@@ -331,9 +337,11 @@ class ImageEmbeddingTable(ImageTable):
             code = code + cls.__generate_codes_for_label(conn, 1, label_level)
             code = code + cls.__generate_codes_for_label(conn, 2, label_level)
             code = code + cls.__generate_codes_for_label(conn, 3, label_level)
+            code = code + 'length _quartet_ varchar(*); _quartet_ = catx(",", _label_, _label_1, _label_2, _label_3)'
+
             conn.retrieve('table.partition', _messagelevel='error',
                           table=dict(computedvars=['_fName_', '_label_', '_fName_1', '_label_1',
-                                                   '_fName_2', '_label_2', '_fName_3', '_label_3'],
+                                                   '_fName_2', '_label_2', '_fName_3', '_label_3', '_quartet_'],
                                      computedvarsprogram=code,
                                      name=casout['name']),
                           casout=dict(replace=True, blocksize=32, **casout))
@@ -463,9 +471,7 @@ class ImageEmbeddingTable(ImageTable):
         '''
 
         if self.embedding_model_type.lower() == 'siamese':
-            code = 'length _label_pair_ varchar(*); _label_pair_ = catx(",", _label_, _label_1)'
-            out = self._retrieve('simple.freq', table=dict(name=self, computedVars='_label_pair_',
-                                                           computedVarsProgram=code),
+            out = self._retrieve('simple.freq', table=self,
                                  inputs=['_label_', '_label_1', '_dissimilar_', '_label_pair_'])['Frequency']
 
             out = out[['Column', 'FmtVar', 'Level', 'Frequency']]
@@ -501,9 +507,7 @@ class ImageEmbeddingTable(ImageTable):
             return label, label1, label_pair, label_dissimilar
 
         elif self.embedding_model_type.lower() == 'triplet':
-            code = 'length _triplet_ varchar(*); _triplet_ = catx(",", _label_, _label_1, _label_2)'
-            out = self._retrieve('simple.freq', table=dict(name=self, computedVars='_triplet_',
-                                                           computedVarsProgram=code),
+            out = self._retrieve('simple.freq', table=self,
                                  inputs=['_label_', '_label_1', '_label_2', '_triplet_'])['Frequency']
 
             out = out[['Column', 'FmtVar', 'Level', 'Frequency']]
@@ -538,9 +542,7 @@ class ImageEmbeddingTable(ImageTable):
 
             return label, label1, label2, label_triplet
         elif self.embedding_model_type.lower() == 'quartet':
-            code = 'length _quartet_ varchar(*); _quartet_ = catx(",", _label_, _label_1, _label_2, _label_3)'
-            out = self._retrieve('simple.freq', table=dict(name=self, computedVars='_quartet_',
-                                                           computedVarsProgram=code),
+            out = self._retrieve('simple.freq', table=self,
                                  inputs=['_label_', '_label_1', '_label_2', '_label_3', '_quartet_'])['Frequency']
 
             out = out[['Column', 'FmtVar', 'Level', 'Frequency']]
