@@ -392,10 +392,11 @@ class TestModelzoo(unittest.TestCase):
         self.assertLessEqual(r.severity, 1, msg="\n".join([msg for msg in r.messages]))
         
         # should print out warning message
-        model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
+        # model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
         self.s.droptable(model1.model_table_name)
         model1.upload_model_from_client(Path(self.data_dir_local) / "resnet18.pt")
         r = model1.train(table="eee", inputs="_image_", targets="xlabels", optimizer=optimizer, log_level=2)
+        print(r)
 
         if r.severity:
             raise DLPyError("WARNING or ERROR message shouldn't appear.")
