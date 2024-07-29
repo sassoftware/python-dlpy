@@ -30,7 +30,7 @@ def get_file(fname):
 
 setup(
     name='sas-dlpy',
-    version='1.2.1-dev',
+    version='1.3.0',
     description='SAS Deep Learning Interface',
     long_description=get_file('README.md'),
     long_description_content_type='text/markdown',
@@ -56,11 +56,15 @@ setup(
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: Scientific/Engineering',
     ],
 )

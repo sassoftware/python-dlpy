@@ -1,5 +1,12 @@
 # Change Log
 
+## 1.3.0 - 2024-07-25
+- DLModelzoo action support
+- Real-time plot for hyper-parameter tuning with DLModelzoo
+- New examples for APIs with DLModelzoo
+- PNG/base64 output format for segmentation models
+- Additional pre-defined network architectures such as ENet and Efficient-Net
+
 ## 1.2.0 - 2020-03-13
 - Supporting features released with SAS Viya 3.5
 - APIs for Image embeddings
