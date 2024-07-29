@@ -53,7 +53,7 @@ Below is the versions matrix.
 </thead>
 <tbody>
 <tr>
-<td align='left'>.x</td>
+<td align='left'>1.3.x</td>
 <td align='left'>4.0</td>
 </tr>
 <tr>
