@@ -9,6 +9,14 @@ What's New
 
 This document outlines features and improvements from each release.
 
+v1.3.0 (July 25, 2024)
+=======================
+- DLModelzoo action support
+- Real-time plot for hyper-parameter tuning with DLModelzoo
+- New examples for APIs with DLModelzoo
+- PNG/base64 output format for segmentation models
+- Additional pre-defined network architectures such as ENet and Efficient-Net
+
 v1.2.0 (March 13, 2020)
 =======================
 - Supporting features released with SAS Viya 3.5
