@@ -53,10 +53,8 @@ clean:
 	rm -rf $(BUILDDIR)/*
 
 html:
-	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html 
-	mkdir -p $(BUILDDIR)/html/_images/.
-	cp -f _images/* $(BUILDDIR)/html/_images/.
-	${SPHINXDIR}python post-process-sphinx-html $(BUILDDIR)/html
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	python post-process-sphinx-html $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
