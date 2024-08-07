@@ -26,27 +26,27 @@ apply deep learning methods to image, text, and audio data. DLPy APIs
 are created following the [Keras](https://keras.io/) APIs with a touch
 of [PyTorch](https://pytorch.org/) flavor.
 
-### What's Recently Addeda
+### Recently Added Features
 
-* DLModelzoo action support
-* Real-time plot for hyper-parameter tuning with DLModelzoo
-* New examples for APIs with DLModelzoo
-* PNG/base64 output format for segmentation models
-* Additional pre-defined network architectures such as ENet and Efficient-Net
+* DLPy now supports the DLModelzoo action through the use of `MZModel`.
+* Real-time plots for hyper-parameter tuning are available with DLModelzoo.
+* New examples are available for APIs with DLModelzoo.
+* Segmentation models can produce PNG/base64 output.
+* Additional pre-defined network architectures are available. Examples include ENet and Efficient-Net.
 
-### Prerequisitesa
+### Prerequisites
 
-* Python version 3.3 or greater is required
-* Install SAS [Scripting Wrapper for Analytics Transfer (SWAT)](https://github.com/sassoftware/python-swat) for Python using `pip install swat` or `conda install -c sas-institute swat`
-* Access to a SAS Viya 4.0 environment with [Visual Data Mining and Machine Learning](https://www.sas.com/en_us/software/visual-data-mining-machine-learning.html) (VDMML) is required
-* To use timeseries APIs, access to either [SAS Econometrics](https://www.sas.com/en_us/software/econometrics.html) or [SAS Visual Forecasting](https://www.sas.com/en_us/software/visual-forecasting.html) is required
+* You must use Python version 3.3 or greater
+* You must install SAS [Scripting Wrapper for Analytics Transfer (SWAT)](https://github.com/sassoftware/python-swat) for Python. You can install the package from PyPI by using the command `pip install swat` or from the SAS conda repository by using `conda install -c sas-institute swat`.
+* You must have access to a SAS Viya 4.0 environment with [Machine Learning](https://www.sas.com/en_us/software/machine-learning-deep-learning.html) licensed.
+* To use time series APIs, access to either [SAS Econometrics](https://www.sas.com/en_us/software/econometrics.html) or [SAS Visual Forecasting](https://www.sas.com/en_us/software/visual-forecasting.html) is required
 * A user login to your SAS Viya back-end is required. See your system administrator for details if you do not have a SAS Viya account.
 * It is recommended that you install the open source graph visualization software called [Graphviz](https://www.graphviz.org/download/) to enable graphic visualizations of the DLPy deep learning models
 * Install DLPy using `pip install sas-dlpy` or `conda install -c sas-institute sas-dlpy`
 
-#### SAS Viya and VDMML versions vs. DLPY versionsa
+#### SAS Viya and DLPY Versions
 
-DLPy versions are aligned with the SAS Viya and VDMML versions.
+DLPy versions are aligned with SAS Viya versions.
 Below is the versions matrix.
 
 <table>
@@ -116,7 +116,7 @@ Define an input layer to add to `model1`:
 
     NOTE: Input layer added.
 
-Add a 2D convolution layer and a pooling layer:
+Add a 2-D convolution layer and a pooling layer:
 
     # Add 2-Dimensional Convolution Layer to model1
     # that has 8 filters and a kernel size of 7. 
@@ -131,7 +131,7 @@ Add a 2D convolution layer and a pooling layer:
 
     NOTE: Pooling layer added.
   
-Add an additional pair of 2D convolution and pooling layers:
+Add an additional pair of 2-D convolution and pooling layers:
 
     # Add another 2D convolution Layer that has 8 filters and a kernel size of 7 
 
@@ -186,14 +186,12 @@ Finally, add the output layer:
 
 ### Contributing
 
-Have something cool to share? SAS gladly accepts pull requests on GitHub! See the [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) for details.
+Have something cool to share? We gladly accept pull requests on GitHub! See the [Contributor Agreement](https://github.com/sassoftware/python-dlpy/blob/master/ContributorAgreement.txt) for details.
 
 ### Licensing
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
-You may obtain a copy of the License at [LICENSE.txt](https://github.com/sassoftware/python-dlpy/blob/master/LICENSE.txt)
+You can obtain a copy of the License at [LICENSE.txt](https://github.com/sassoftware/python-dlpy/blob/master/LICENSE.txt)
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
-
-### for more products do visit our github and contribute
